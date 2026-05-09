@@ -1,0 +1,115 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  GYM
+}
+
+model User {
+  id              String           @id @default(uuid()) @db.Uuid
+  email           String           @unique
+  password        String
+  name            String
+  role            Role             @default(USER)
+  image           String?
+  bio             String?
+  link            String?
+  isPrivate       Boolean          @default(false)
+  weightUnit      String           @default("kg")
+  distanceUnit    String           @default("km")
+  measurementUnit String           @default("cm")
+  language        String           @default("es")
+  weight          Float?
+  height          Float?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  // Relación recursiva Gym ↔ Clientes
+  gymId           String?          @db.Uuid
+  gym             User?            @relation("GymClients", fields: [gymId], references: [id])
+  clients         User[]           @relation("GymClients")
+
+  routines        Routine[]
+  workoutSessions WorkoutSession[]
+  foodEntries     FoodEntry[]
+}
+
+model Exercise {
+  id               String            @id @default(uuid()) @db.Uuid
+  name             String
+  description      String?
+  muscleGroup      String
+  imageUrl         String?
+  equipment        String?
+  workoutSets      WorkoutSet[]
+  routineExercises RoutineExercise[]
+}
+
+model Routine {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  userId    String   @db.Uuid
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  exercises       RoutineExercise[]
+  workoutSessions WorkoutSession[]
+}
+
+model RoutineExercise {
+  id         String   @id @default(uuid()) @db.Uuid
+  routineId  String   @db.Uuid
+  exerciseId String   @db.Uuid
+  sets       Int
+  reps       Int
+  weight     Float
+  order      Int      @default(0)
+  routine    Routine  @relation(fields: [routineId], references: [id])
+  exercise   Exercise @relation(fields: [exerciseId], references: [id])
+}
+
+model WorkoutSession {
+  id          String       @id @default(uuid()) @db.Uuid
+  userId      String       @db.Uuid
+  routineId   String?      @db.Uuid
+  startTime   DateTime     @default(now())
+  endTime     DateTime?
+  createdAt   DateTime     @default(now())
+  user        User         @relation(fields: [userId], references: [id])
+  routine     Routine?     @relation(fields: [routineId], references: [id])
+  workoutSets WorkoutSet[]
+}
+
+model WorkoutSet {
+  id          String         @id @default(uuid()) @db.Uuid
+  sessionId   String         @db.Uuid
+  exerciseId  String         @db.Uuid
+  weight      Float
+  reps        Int
+  isCompleted Boolean        @default(false)
+  session     WorkoutSession @relation(fields: [sessionId], references: [id])
+  exercise    Exercise       @relation(fields: [exerciseId], references: [id])
+}
+
+model FoodEntry {
+  id       String   @id @default(uuid()) @db.Uuid
+  userId   String   @db.Uuid
+  date     DateTime
+  name     String
+  calories Int
+  protein  Float
+  carbs    Float
+  fat      Float
+  user     User     @relation(fields: [userId], references: [id])
+}

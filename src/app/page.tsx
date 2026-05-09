@@ -1,65 +1,232 @@
-import Image from "next/image";
+"use client";
+
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import Link from "next/link";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { Activity, Apple, Dumbbell, Loader2, ArrowRight, Flame, CalendarDays } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+interface DashboardStats {
+  routinesCount: number;
+  lastWorkoutDate: string | null;
+}
+
+interface FoodEntry {
+  calories: number;
+}
 
 export default function Home() {
+  const { data: session } = useSession();
+  const [isLoading, setIsLoading] = useState(true);
+  const [caloriesToday, setCaloriesToday] = useState(0);
+  const [stats, setStats] = useState<DashboardStats>({
+    routinesCount: 0,
+    lastWorkoutDate: null,
+  });
+
+  const GOAL_CALORIES = 2500; // Objetivo diario de ejemplo
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const today = new Date().toISOString().split("T")[0];
+        
+        // Fetch paralelo para optimizar
+        const [nutritionRes, statsRes] = await Promise.all([
+          fetch(`/api/nutrition?date=${today}`),
+          fetch("/api/dashboard")
+        ]);
+
+        if (nutritionRes.ok) {
+          const foods: FoodEntry[] = await nutritionRes.json();
+          const totalCals = foods.reduce((acc, food) => acc + food.calories, 0);
+          setCaloriesToday(totalCals);
+        }
+
+        if (statsRes.ok) {
+          const statsData = await statsRes.json();
+          setStats(statsData);
+        }
+      } catch (error) {
+        console.error("Error cargando el dashboard:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (session?.user) {
+      fetchDashboardData();
+    } else {
+      setIsLoading(false); // Si no hay sesión, dejamos de cargar
+    }
+  }, [session]);
+
+  const caloriesPercentage = Math.min(Math.round((caloriesToday / GOAL_CALORIES) * 100), 100);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <DashboardLayout>
+      <div className="space-y-8">
+        {/* Cabecera dinámica */}
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+            ¡Hola, <span className="text-indigo-600 dark:text-indigo-400">{session?.user?.name?.split(' ')[0] || "Deportista"}</span>!
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="mt-2 text-slate-600 dark:text-slate-400">
+            Aquí tienes tu resumen de hoy.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+
+        {isLoading ? (
+          <div className="flex h-64 items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+          </div>
+        ) : (
+          <>
+            {/* Tarjetas de Resumen Diario */}
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              
+              {/* Tarjeta 1: Nutrición */}
+              <div className="flex flex-col rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-50 dark:bg-orange-950/30 text-orange-500 dark:text-orange-400">
+                    <Apple className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-slate-900 dark:text-white">Nutrición Hoy</h3>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">Calorías consumidas</p>
+                  </div>
+                </div>
+                <div className="mt-auto">
+                  <div className="flex items-end justify-between mb-2">
+                    <span className="text-3xl font-bold text-slate-900 dark:text-white">
+                      {caloriesToday} <span className="text-base font-normal text-slate-500 dark:text-slate-400">kcal</span>
+                    </span>
+                    <span className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">
+                      / {GOAL_CALORIES} kcal
+                    </span>
+                  </div>
+                  {/* Barra de progreso */}
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                    <div
+                      className={cn(
+                        "h-full rounded-full transition-all duration-1000",
+                        caloriesPercentage > 100 ? "bg-red-500" : "bg-orange-500 dark:bg-orange-600"
+                      )}
+                      style={{ width: `${caloriesPercentage}%` }}
+                    />
+                  </div>
+                  <p className="mt-2 text-xs text-slate-500 dark:text-slate-400 text-right">
+                    Llevas el {caloriesPercentage}% de tu objetivo
+                  </p>
+                </div>
+              </div>
+
+              {/* Tarjeta 2: Entrenamiento */}
+              <div className="flex flex-col rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400">
+                    <Dumbbell className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-slate-900 dark:text-white">Mis Planes</h3>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">Rutinas creadas</p>
+                  </div>
+                </div>
+                <div className="mt-auto">
+                  <span className="text-4xl font-bold text-slate-900 dark:text-white">
+                    {stats.routinesCount}
+                  </span>
+                  <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                    {stats.routinesCount === 1 ? "Rutina lista" : "Rutinas listas"} para entrenar
+                  </p>
+                </div>
+              </div>
+
+              {/* Tarjeta 3: Actividad */}
+              <div className="flex flex-col rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400">
+                    <Activity className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-slate-900 dark:text-white">Actividad</h3>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">Último entrenamiento</p>
+                  </div>
+                </div>
+                <div className="mt-auto">
+                  {stats.lastWorkoutDate ? (
+                    <>
+                      <span className="text-2xl font-bold text-slate-900 dark:text-white">
+                        {new Date(stats.lastWorkoutDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}
+                      </span>
+                      <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                        <CalendarDays className="h-4 w-4" />
+                        Mantén el ritmo
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-xl font-bold text-slate-900 dark:text-white">
+                        Aún sin registros
+                      </span>
+                      <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                        ¡Es hora de sudar un poco!
+                      </p>
+                    </>
+                  )}
+                </div>
+              </div>
+
+            </div>
+
+            {/* Accesos Rápidos */}
+            <div>
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">Accesos Rápidos</h2>
+              <div className="grid gap-4 sm:grid-cols-3">
+                <Link
+                  href="/nutricion"
+                  className="group flex items-center justify-between rounded-xl bg-slate-900 dark:bg-indigo-600 p-4 text-white shadow-sm transition-all hover:bg-slate-800 dark:hover:bg-indigo-700 hover:shadow-md"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-lg bg-white/10 p-2">
+                      <Apple className="h-5 w-5" />
+                    </div>
+                    <span className="font-semibold">Registrar Comida</span>
+                  </div>
+                  <ArrowRight className="h-5 w-5 text-slate-400 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                </Link>
+
+                <Link
+                  href="/gimnasio"
+                  className="group flex items-center justify-between rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 text-slate-900 dark:text-white shadow-sm transition-all hover:border-indigo-500 dark:hover:border-indigo-400 hover:shadow-md"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-lg bg-indigo-50 dark:bg-indigo-950/30 p-2 text-indigo-600 dark:text-indigo-400">
+                      <Dumbbell className="h-5 w-5" />
+                    </div>
+                    <span className="font-semibold">Ir al Gimnasio</span>
+                  </div>
+                  <ArrowRight className="h-5 w-5 text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 group-hover:translate-x-1 transition-all" />
+                </Link>
+
+                <Link
+                  href="/entrenamientos"
+                  className="group flex items-center justify-between rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 text-slate-900 dark:text-white shadow-sm transition-all hover:border-indigo-500 dark:hover:border-indigo-400 hover:shadow-md"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-lg bg-indigo-50 dark:bg-indigo-950/30 p-2 text-indigo-600 dark:text-indigo-400">
+                      <Activity className="h-5 w-5" />
+                    </div>
+                    <span className="font-semibold">Ver Mis Rutinas</span>
+                  </div>
+                  <ArrowRight className="h-5 w-5 text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 group-hover:translate-x-1 transition-all" />
+                </Link>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </DashboardLayout>
   );
 }
