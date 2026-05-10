@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getNow } from "@/lib/timeUtils";
 
 export async function GET(
   _req: Request,
@@ -36,6 +37,8 @@ export async function GET(
         createdAt: true,
         weight: true,
         height: true,
+        subscriptionStatus: true,
+        subscriptionEndDate: true,
         // Last 5 completed workout sessions
         workoutSessions: {
           where: { endTime: { not: null } },
@@ -110,10 +113,13 @@ export async function GET(
       image: client.image,
       weight: client.weight,
       height: client.height,
+      subscriptionStatus: client.subscriptionStatus,
+      subscriptionEndDate: client.subscriptionEndDate?.toISOString() || null,
       createdAt: client.createdAt.toISOString(),
       totalWorkouts: client._count.workoutSessions,
       recentSessions,
       routines,
+      serverNow: (await getNow()).toISOString(),
     });
   } catch (error) {
     console.error("Error fetching client detail:", error);

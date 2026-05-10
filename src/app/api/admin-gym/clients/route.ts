@@ -26,6 +26,8 @@ export async function GET() {
         email: true,
         image: true,
         createdAt: true,
+        subscriptionStatus: true,
+        subscriptionEndDate: true,
         _count: {
           select: {
             workoutSessions: {
@@ -44,6 +46,8 @@ export async function GET() {
       image: c.image,
       createdAt: c.createdAt.toISOString(),
       totalWorkouts: c._count.workoutSessions,
+      subscriptionStatus: c.subscriptionStatus,
+      subscriptionEndDate: c.subscriptionEndDate?.toISOString() || null,
     }));
 
     return NextResponse.json(result);
@@ -126,6 +130,8 @@ export async function POST(req: Request) {
         image: newClient.image,
         createdAt: newClient.createdAt.toISOString(),
         totalWorkouts: 0,
+        subscriptionStatus: "ACTIVE",
+        subscriptionEndDate: null,
       },
       { status: 201 }
     );

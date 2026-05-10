@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getNow } from "@/lib/timeUtils";
 
 export async function GET() {
   try {
@@ -24,7 +25,7 @@ export async function GET() {
     }
 
     // Fechas clave
-    const now = new Date();
+    const now = await getNow();
     const sevenDaysAgo = new Date(now);
     sevenDaysAgo.setDate(now.getDate() - 7);
 

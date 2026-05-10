@@ -25,6 +25,8 @@ interface Client {
   image: string | null;
   createdAt: string;
   totalWorkouts: number;
+  subscriptionStatus: string;
+  subscriptionEndDate: string | null;
 }
 
 export default function ClientesPage() {
@@ -115,7 +117,7 @@ export default function ClientesPage() {
   if (isLoading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -126,7 +128,7 @@ export default function ClientesPage() {
       {toast && (
         <div
           className={cn(
-            "fixed top-6 right-6 z-[100] flex items-center gap-3 rounded-xl px-5 py-3.5 shadow-2xl text-sm font-semibold animate-in slide-in-from-top-4 fade-in duration-300 border",
+            "fixed top-6 right-6 z-[100] flex items-center gap-3 rounded-3xl px-5 py-3.5 shadow-2xl text-sm font-semibold animate-in slide-in-from-top-4 fade-in duration-300 border",
             toast.type === "success"
               ? "bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
               : "bg-red-50 dark:bg-red-950/80 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800"
@@ -148,7 +150,7 @@ export default function ClientesPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
-            <Users className="h-7 w-7 text-indigo-600 dark:text-indigo-400" />
+            <Users className="h-7 w-7 text-primary dark:text-cyan-400" />
             Gestión de Clientes
           </h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
@@ -159,7 +161,7 @@ export default function ClientesPage() {
 
         <button
           onClick={openModal}
-          className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 transition-colors active:scale-95"
+          className="inline-flex items-center gap-2 rounded-3xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary transition-colors active:scale-95"
         >
           <UserPlus className="h-4 w-4" />
           Añadir Cliente
@@ -174,7 +176,7 @@ export default function ClientesPage() {
           placeholder="Buscar por nombre o email..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-3 pl-12 pr-4 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+          className="w-full rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-3 pl-12 pr-4 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none transition-all"
         />
       </div>
 
@@ -183,8 +185,9 @@ export default function ClientesPage() {
         <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
           {/* Table Header */}
           <div className="hidden sm:grid sm:grid-cols-12 gap-4 px-6 py-3 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-            <div className="col-span-5">Cliente</div>
-            <div className="col-span-3">Email</div>
+            <div className="col-span-4">Cliente</div>
+            <div className="col-span-2">Email</div>
+            <div className="col-span-2 text-center">Estado</div>
             <div className="col-span-2 text-center">Entrenamientos</div>
             <div className="col-span-2 text-center">Desde</div>
           </div>
@@ -198,7 +201,7 @@ export default function ClientesPage() {
                 className="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-4 items-center px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer group"
               >
                 {/* Avatar + Name */}
-                <div className="col-span-5 flex items-center gap-4">
+                <div className="col-span-4 flex items-center gap-4">
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden border-2 border-white dark:border-slate-700 shadow-sm">
                     {client.image ? (
                       <img
@@ -211,7 +214,7 @@ export default function ClientesPage() {
                     )}
                   </div>
                   <div>
-                    <p className="font-semibold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                    <p className="font-semibold text-slate-900 dark:text-white group-hover:text-primary dark:group-hover:text-cyan-400 transition-colors">
                       {client.name}
                     </p>
                     <p className="text-xs text-slate-500 sm:hidden">
@@ -221,9 +224,21 @@ export default function ClientesPage() {
                 </div>
 
                 {/* Email */}
-                <div className="hidden sm:flex col-span-3 items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+                <div className="hidden sm:flex col-span-2 items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
                   <Mail className="h-3.5 w-3.5 text-slate-400 dark:text-slate-600 shrink-0" />
                   <span className="truncate">{client.email}</span>
+                </div>
+
+                {/* Status Badge */}
+                <div className="col-span-2 flex items-center justify-center">
+                  <span className={cn(
+                    "px-2.5 py-0.5 rounded-full text-xs font-bold border",
+                    client.subscriptionStatus === "ACTIVE" 
+                      ? "bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800/50"
+                      : "bg-red-50 text-red-700 border-red-100 dark:bg-red-950/30 dark:text-red-400 dark:border-red-800/50"
+                  )}>
+                    {client.subscriptionStatus === "ACTIVE" ? "Activo" : "Inactivo"}
+                  </span>
                 </div>
 
                 {/* Total Workouts */}
@@ -279,7 +294,7 @@ export default function ClientesPage() {
               </p>
               <button
                 onClick={openModal}
-                className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 transition-colors"
+                className="inline-flex items-center gap-2 rounded-3xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary transition-colors"
               >
                 <UserPlus className="h-4 w-4" />
                 Añadir primer cliente
@@ -315,7 +330,7 @@ export default function ClientesPage() {
             <form onSubmit={handleCreateClient} className="px-7 py-6 space-y-5">
               {/* Error Message */}
               {formError && (
-                <div className="flex items-center gap-2 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 px-4 py-3 text-sm font-medium text-red-700 dark:text-red-400 animate-in fade-in duration-200">
+                <div className="flex items-center gap-2 rounded-3xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 px-4 py-3 text-sm font-medium text-red-700 dark:text-red-400 animate-in fade-in duration-200">
                   <AlertCircle className="h-4 w-4 shrink-0" />
                   {formError}
                 </div>
@@ -335,7 +350,7 @@ export default function ClientesPage() {
                     required
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-2.5 pl-10 pr-4 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+                    className="w-full rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-2.5 pl-10 pr-4 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none transition-all"
                     placeholder="Juan Pérez"
                   />
                 </div>
@@ -355,7 +370,7 @@ export default function ClientesPage() {
                     required
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-2.5 pl-10 pr-4 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+                    className="w-full rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-2.5 pl-10 pr-4 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none transition-all"
                     placeholder="cliente@email.com"
                   />
                 </div>
@@ -376,7 +391,7 @@ export default function ClientesPage() {
                     minLength={6}
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-2.5 pl-10 pr-4 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+                    className="w-full rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-2.5 pl-10 pr-4 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none transition-all"
                     placeholder="Mínimo 6 caracteres"
                   />
                 </div>
@@ -390,14 +405,14 @@ export default function ClientesPage() {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="rounded-xl px-5 py-2.5 text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                  className="rounded-3xl px-5 py-2.5 text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-70 transition-colors active:scale-95"
+                  className="inline-flex items-center gap-2 rounded-3xl bg-primary px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary disabled:opacity-70 transition-colors active:scale-95"
                 >
                   {isSubmitting ? (
                     <Loader2 className="h-4 w-4 animate-spin" />

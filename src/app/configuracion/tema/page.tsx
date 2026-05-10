@@ -30,8 +30,8 @@ export default function ThemeConfigPage() {
           className={cn(
             "flex flex-col items-center justify-center gap-3 p-6 rounded-2xl border-2 transition-all",
             theme === "light" 
-              ? "border-indigo-600 bg-indigo-50/50 dark:bg-indigo-500/10" 
-              : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-indigo-300"
+              ? "border-primary bg-cyan-50/50 dark:bg-primary/10" 
+              : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-cyan-300"
           )}
         >
           <div className="h-12 w-12 rounded-full bg-orange-100 flex items-center justify-center">
@@ -46,8 +46,8 @@ export default function ThemeConfigPage() {
           className={cn(
             "flex flex-col items-center justify-center gap-3 p-6 rounded-2xl border-2 transition-all",
             theme === "dark" 
-              ? "border-indigo-600 bg-indigo-50/50 dark:bg-indigo-500/10" 
-              : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-indigo-300"
+              ? "border-primary bg-cyan-50/50 dark:bg-primary/10" 
+              : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-cyan-300"
           )}
         >
           <div className="h-12 w-12 rounded-full bg-slate-800 flex items-center justify-center">
@@ -62,8 +62,8 @@ export default function ThemeConfigPage() {
           className={cn(
             "flex flex-col items-center justify-center gap-3 p-6 rounded-2xl border-2 transition-all",
             theme === "system" 
-              ? "border-indigo-600 bg-indigo-50/50 dark:bg-indigo-500/10" 
-              : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-indigo-300"
+              ? "border-primary bg-cyan-50/50 dark:bg-primary/10" 
+              : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-cyan-300"
           )}
         >
           <div className="h-12 w-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">

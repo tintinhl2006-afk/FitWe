@@ -44,6 +44,12 @@ export async function GET(
       },
     });
 
+    const exercise = await prisma.exercise.findUnique({
+      where: { id },
+      select: { muscleGroup: true }
+    });
+    const isCardio = exercise?.muscleGroup?.toLowerCase() === 'cardio';
+
     // Agrupar los sets por sesión para facilitar el renderizado en el frontend
     const historyBySession: Record<string, any> = {};
 
@@ -89,9 +95,15 @@ export async function GET(
         const volume = weight * reps;
         const epley = weight * (1 + reps / 30);
 
-        if (weight > maxWeight) maxWeight = weight;
-        if (epley > maxEpley) maxEpley = epley;
-        totalVolume += volume;
+        if (!isCardio) {
+          if (weight > maxWeight) maxWeight = weight;
+          if (epley > maxEpley) maxEpley = epley;
+          totalVolume += volume;
+        } else {
+          // Para cardio, "weight" es distancia y "reps" es tiempo
+          if (weight > maxWeight) maxWeight = weight; // Max distancia
+          totalVolume += weight; // Distancia total
+        }
       });
 
       if (!chartDataMap[dateStr]) {

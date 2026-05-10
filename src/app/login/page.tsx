@@ -2,13 +2,15 @@
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Dumbbell, Mail, Lock, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const registeredGym = searchParams.get("registered") === "gym";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -36,7 +38,7 @@ export default function LoginPage() {
       if (session?.user?.role === "GYM") {
         router.push("/admin-gym");
       } else {
-        router.push("/");
+        router.push("/dashboard");
       }
       router.refresh();
     }
@@ -44,22 +46,26 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950 px-4 transition-colors">
-      <div className="w-full max-w-md space-y-8 rounded-2xl bg-white dark:bg-slate-900 p-8 shadow-lg border border-slate-100 dark:border-slate-800">
+      <div className="w-full max-w-md space-y-8 rounded-2xl bg-white dark:bg-slate-900 p-8 shadow-soft border border-slate-100 dark:border-slate-800">
         <div className="flex flex-col items-center text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-900 dark:bg-indigo-600">
-            <Dumbbell className="h-6 w-6 text-white" />
-          </div>
-          <h2 className="mt-6 text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
-            Bienvenido a FitManager
+          <img src="/fitwe-icon.png" alt="FitWe Logo" className="h-40 w-40 object-contain mb-6" />
+          <h2 className="text-6xl font-black tracking-tighter text-slate-900 dark:text-white">
+            <span translate="no" className="notranslate">Fit<span className="text-primary">We</span></span>
           </h2>
           <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
             Inicia sesión en tu cuenta para continuar
           </p>
         </div>
 
+        {registeredGym && (
+          <div className="rounded-3xl bg-cyan-50 dark:bg-cyan-950/30 border border-cyan-200 dark:border-cyan-800 p-3 text-sm text-primary dark:text-cyan-300 text-center">
+            Centro deportivo registrado con éxito. ¡Inicia sesión para acceder a tu panel!
+          </div>
+        )}
+
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
-            <div className="rounded-md bg-red-50 dark:bg-red-950/30 p-3 text-sm text-red-600 dark:text-red-400">
+            <div className="rounded-2xl bg-red-50 dark:bg-red-950/30 p-3 text-sm text-red-600 dark:text-red-400">
               {error}
             </div>
           )}
@@ -81,7 +87,7 @@ export default function LoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 py-2.5 pl-10 pr-3 text-slate-900 dark:text-white shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm"
+                  className="block w-full rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 py-2.5 pl-10 pr-3 text-slate-900 dark:text-white shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-cyan-500 sm:text-sm"
                   placeholder="tu@email.com"
                 />
               </div>
@@ -103,7 +109,7 @@ export default function LoginPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 py-2.5 pl-10 pr-3 text-slate-900 dark:text-white shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm"
+                  className="block w-full rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 py-2.5 pl-10 pr-3 text-slate-900 dark:text-white shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-cyan-500 sm:text-sm"
                   placeholder="••••••••"
                 />
               </div>
@@ -114,7 +120,7 @@ export default function LoginPage() {
             type="submit"
             disabled={isLoading}
             className={cn(
-              "flex w-full justify-center rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 transition-colors",
+              "flex w-full justify-center rounded-2xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary transition-colors",
               isLoading && "opacity-70 cursor-not-allowed"
             )}
           >
@@ -124,7 +130,7 @@ export default function LoginPage() {
 
         <div className="mt-6 text-center text-sm">
           <span className="text-slate-600 dark:text-slate-400">¿No tienes cuenta? </span>
-          <Link href="/register" className="font-medium text-indigo-600 dark:text-indigo-400 hover:underline">
+          <Link href="/register" className="font-medium text-primary dark:text-cyan-400 hover:underline">
             Regístrate aquí
           </Link>
         </div>

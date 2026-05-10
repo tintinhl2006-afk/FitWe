@@ -5,16 +5,16 @@ import { Loader2, Globe, Check, Save } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const LANGUAGES = [
-  { code: "es", label: "Español (España)", flag: "🇪🇸" },
-  { code: "en", label: "English (US)", flag: "🇺🇸" },
-  { code: "fr", label: "Français", flag: "🇫🇷" },
-  { code: "de", label: "Deutsch", flag: "🇩🇪" },
-  { code: "pt", label: "Português", flag: "🇧🇷" },
-  { code: "it", label: "Italiano", flag: "🇮🇹" },
-  { code: "zh-CN", label: "中文 (Simplificado)", flag: "🇨🇳" },
-  { code: "ja", label: "日本語", flag: "🇯🇵" },
-  { code: "ko", label: "한국어", flag: "🇰🇷" },
-  { code: "ar", label: "العربية", flag: "🇸🇦" },
+  { code: "es", label: "Español (España)" },
+  { code: "en", label: "English (US)" },
+  { code: "fr", label: "Français" },
+  { code: "de", label: "Deutsch" },
+  { code: "pt", label: "Português" },
+  { code: "it", label: "Italiano" },
+  { code: "zh-CN", label: "中文 (Simplificado)" },
+  { code: "ja", label: "日本語" },
+  { code: "ko", label: "한국어" },
+  { code: "ar", label: "العربية" },
 ];
 
 function triggerGoogleTranslate(langCode: string) {
@@ -72,7 +72,7 @@ export default function LanguageConfigPage() {
     }
   };
 
-  if (isLoading) return <div className="p-8 flex justify-center"><Loader2 className="h-6 w-6 animate-spin text-indigo-500" /></div>;
+  if (isLoading) return <div className="p-8 flex justify-center"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
 
   return (
     <div className="p-6 md:p-8 max-w-2xl">
@@ -89,18 +89,20 @@ export default function LanguageConfigPage() {
               key={lang.code}
               onClick={() => setSelectedLang(lang.code)}
               className={cn(
-                "flex items-center gap-3 px-4 py-3 rounded-xl border-2 text-left transition-all",
+                "flex items-center gap-3 px-4 py-3 rounded-3xl border-2 text-left transition-all",
                 isSelected
-                  ? "border-indigo-600 bg-indigo-50/60 dark:bg-indigo-500/10"
-                  : "border-slate-200 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-700 bg-white dark:bg-slate-900"
+                  ? "border-primary bg-cyan-50/60 dark:bg-primary/10"
+                  : "border-slate-200 dark:border-slate-800 hover:border-cyan-300 dark:hover:border-cyan-700 bg-white dark:bg-slate-900"
               )}
             >
-              <span className="text-2xl">{lang.flag}</span>
+              <div className="h-10 w-10 flex items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-800">
+                <Globe className="h-5 w-5 text-slate-400" />
+              </div>
               <span className="flex-1 font-medium text-slate-900 dark:text-white text-sm">
                 {lang.label}
               </span>
               {isSelected && (
-                <Check className="h-5 w-5 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                <Check className="h-5 w-5 text-primary dark:text-cyan-400 shrink-0" />
               )}
             </button>
           );
@@ -115,10 +117,12 @@ export default function LanguageConfigPage() {
         <button 
           onClick={handleSave}
           disabled={isSaving || selectedLang === currentLang}
-          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white px-5 py-2.5 rounded-lg font-medium transition-colors"
+          className="flex items-center gap-2 bg-primary hover:bg-primary disabled:opacity-50 text-white px-5 py-2.5 rounded-2xl font-medium transition-colors"
         >
-          {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-          Guardar cambios
+          <span className="flex items-center justify-center w-4 h-4">
+            {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+          </span>
+          <span>Guardar cambios</span>
         </button>
       </div>
     </div>

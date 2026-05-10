@@ -17,8 +17,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FitManager",
+  title: "FitWe",
   description: "Administra tu gimnasio, rutinas y nutrición",
+  icons: {
+    icon: "/fitwe-icon.png",
+  },
 };
 
 export default function RootLayout({
@@ -32,6 +35,9 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        <link rel="icon" href="/fitwe-icon.png" sizes="any" />
+      </head>
       <body className="min-h-full flex flex-col bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors">
         {/* Contenedor oculto para Google Translate */}
         <div id="google_translate_element" />

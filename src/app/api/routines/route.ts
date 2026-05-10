@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getNow } from "@/lib/timeUtils";
 
 export async function GET() {
   try {
@@ -13,6 +14,14 @@ export async function GET() {
 
     const routines = await prisma.routine.findMany({
       where: { userId: session.user.id },
+      include: {
+        exercises: {
+          include: {
+            exercise: true,
+          },
+          orderBy: { order: "asc" },
+        },
+      },
       orderBy: { createdAt: "desc" },
     });
 
@@ -29,6 +38,20 @@ export async function POST(req: Request) {
 
     if (!session?.user?.id) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
+    }
+
+    // Subscription check
+    const now = await getNow();
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { subscriptionStatus: true, subscriptionEndDate: true }
+    });
+
+    const isExpired = user?.subscriptionEndDate && user.subscriptionEndDate < now;
+    if (user?.subscriptionStatus === "INACTIVE" || isExpired) {
+      return NextResponse.json({ 
+        message: "Suscripción inactiva. No puedes realizar esta acción." 
+      }, { status: 403 });
     }
 
     const body = await req.json();

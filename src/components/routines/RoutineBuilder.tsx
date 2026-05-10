@@ -90,7 +90,7 @@ export function RoutineBuilder({
     if (lowerGroup === "cardio") return <Activity size={20} className="text-blue-400" />;
     if (lowerEq === "mancuernas") return <Dumbbell size={20} className="text-amber-400" />;
     if (lowerEq === "peso corporal") return <Accessibility size={20} className="text-green-400" />;
-    if (lowerEq === "barra" || lowerEq === "máquina" || lowerEq === "polea") return <Target size={20} className="text-indigo-400" />;
+    if (lowerEq === "barra" || lowerEq === "máquina" || lowerEq === "polea") return <Target size={20} className="text-cyan-400" />;
     return <BicepsFlexed size={20} className="text-slate-400" />;
   };
 
@@ -257,7 +257,7 @@ export function RoutineBuilder({
       <div className="space-y-6 max-w-2xl">
         <button
           onClick={() => router.push(backUrl)}
-          className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+          className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-cyan-400 transition-colors"
         >
           ← {backLabel}
         </button>
@@ -276,7 +276,7 @@ export function RoutineBuilder({
 
           <form onSubmit={handleCreateRoutine} className="px-7 py-6 space-y-5">
             {error && (
-              <div className="rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 px-4 py-3 text-sm font-medium text-red-700 dark:text-red-400">
+              <div className="rounded-3xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 px-4 py-3 text-sm font-medium text-red-700 dark:text-red-400">
                 {error}
               </div>
             )}
@@ -290,7 +290,7 @@ export function RoutineBuilder({
                 required
                 value={routineName}
                 onChange={(e) => setRoutineName(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-3 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+                className="w-full rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-3 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none transition-all"
                 placeholder="Ej: Día 1 - Pecho y Tríceps"
               />
             </div>
@@ -299,14 +299,14 @@ export function RoutineBuilder({
               <button
                 type="button"
                 onClick={() => router.push(backUrl)}
-                className="rounded-xl px-5 py-2.5 text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                className="rounded-3xl px-5 py-2.5 text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting || !routineName.trim()}
-                className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-70 transition-colors"
+                className="inline-flex items-center gap-2 rounded-3xl bg-primary px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary disabled:opacity-70 transition-colors"
               >
                 {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Continuar"}
               </button>
@@ -333,14 +333,14 @@ export function RoutineBuilder({
         <div className="flex gap-3">
           <button
             onClick={() => { setReplacingExerciseId(null); setStep("picker"); setIsModalOpen(true); }}
-            className="inline-flex items-center gap-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+            className="inline-flex items-center gap-2 rounded-3xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
           >
             <Plus className="h-4 w-4" />
             Añadir Ejercicio
           </button>
           <button
             onClick={handleFinish}
-            className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 transition-colors"
+            className="inline-flex items-center gap-2 rounded-3xl bg-primary px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary transition-colors"
           >
             <CheckCircle2 className="h-4 w-4" />
             Finalizar
@@ -354,12 +354,12 @@ export function RoutineBuilder({
           {routine.exercises.map((re, index) => (
             <div
               key={re.id}
-              className="flex flex-col sm:flex-row items-start sm:items-center justify-between rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm gap-4"
+              className="flex flex-col sm:flex-row items-start sm:items-center justify-between rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm gap-4"
             >
               <div className="flex items-center gap-4 flex-1 w-full">
                 <div className="flex flex-col gap-1 sm:hidden mr-2">
-                  <button onClick={() => handleMoveOrder(index, "up")} disabled={index === 0} className="p-1 text-slate-400 hover:text-indigo-600 disabled:opacity-30"><ArrowUp size={16} /></button>
-                  <button onClick={() => handleMoveOrder(index, "down")} disabled={index === routine.exercises.length - 1} className="p-1 text-slate-400 hover:text-indigo-600 disabled:opacity-30"><ArrowDown size={16} /></button>
+                  <button onClick={() => handleMoveOrder(index, "up")} disabled={index === 0} className="p-1 text-slate-400 hover:text-primary disabled:opacity-30"><ArrowUp size={16} /></button>
+                  <button onClick={() => handleMoveOrder(index, "down")} disabled={index === routine.exercises.length - 1} className="p-1 text-slate-400 hover:text-primary disabled:opacity-30"><ArrowDown size={16} /></button>
                 </div>
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-800">
                   {getExerciseIcon(re.exercise.equipment, re.exercise.muscleGroup)}
@@ -371,10 +371,10 @@ export function RoutineBuilder({
                       {re.exercise.muscleGroup} {re.exercise.equipment && `• ${re.exercise.equipment}`}
                     </span>
                     {re.exercise.muscleGroup.toLowerCase() !== "cardio" && (
-                      <div className="flex items-center gap-1 bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-400 rounded-full px-1 py-0.5 border border-indigo-100 dark:border-indigo-900/50">
-                        <button onClick={() => handleUpdateSets(re.id, -1, re.sets)} disabled={re.sets <= 1} className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-indigo-200 dark:hover:bg-indigo-900/50 transition-colors">-</button>
+                      <div className="flex items-center gap-1 bg-cyan-50 dark:bg-cyan-950/30 text-primary dark:text-cyan-400 rounded-full px-1 py-0.5 border border-cyan-100 dark:border-cyan-900/50">
+                        <button onClick={() => handleUpdateSets(re.id, -1, re.sets)} disabled={re.sets <= 1} className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-cyan-200 dark:hover:bg-cyan-900/50 transition-colors">-</button>
                         <span className="text-xs font-semibold w-12 text-center select-none">{re.sets} Series</span>
-                        <button onClick={() => handleUpdateSets(re.id, 1, re.sets)} disabled={re.sets >= 10} className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-indigo-200 dark:hover:bg-indigo-900/50 transition-colors">+</button>
+                        <button onClick={() => handleUpdateSets(re.id, 1, re.sets)} disabled={re.sets >= 10} className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-cyan-200 dark:hover:bg-cyan-900/50 transition-colors">+</button>
                       </div>
                     )}
                   </div>
@@ -382,13 +382,13 @@ export function RoutineBuilder({
               </div>
               <div className="flex items-center gap-2 w-full sm:w-auto justify-end border-t sm:border-t-0 border-slate-100 dark:border-slate-800 pt-3 sm:pt-0">
                 <div className="hidden sm:flex flex-col gap-0 mr-2">
-                  <button onClick={() => handleMoveOrder(index, "up")} disabled={index === 0} className="p-1 text-slate-400 hover:text-indigo-600 disabled:opacity-30"><ArrowUp size={16} /></button>
-                  <button onClick={() => handleMoveOrder(index, "down")} disabled={index === routine.exercises.length - 1} className="p-1 text-slate-400 hover:text-indigo-600 disabled:opacity-30"><ArrowDown size={16} /></button>
+                  <button onClick={() => handleMoveOrder(index, "up")} disabled={index === 0} className="p-1 text-slate-400 hover:text-primary disabled:opacity-30"><ArrowUp size={16} /></button>
+                  <button onClick={() => handleMoveOrder(index, "down")} disabled={index === routine.exercises.length - 1} className="p-1 text-slate-400 hover:text-primary disabled:opacity-30"><ArrowDown size={16} /></button>
                 </div>
-                <button onClick={() => { setReplacingExerciseId(re.id); setStep("picker"); setIsModalOpen(true); }} className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors border border-slate-200 dark:border-slate-700">
+                <button onClick={() => { setReplacingExerciseId(re.id); setStep("picker"); setIsModalOpen(true); }} className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-2xl transition-colors border border-slate-200 dark:border-slate-700">
                   <RefreshCcw size={16} /> <span className="hidden sm:inline">Cambiar</span>
                 </button>
-                <button onClick={() => handleDeleteExercise(re.id)} className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-red-600 bg-red-50 dark:bg-red-950/30 hover:bg-red-100 dark:hover:bg-red-900/50 rounded-lg transition-colors border border-red-100 dark:border-red-900/50">
+                <button onClick={() => handleDeleteExercise(re.id)} className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-red-600 bg-red-50 dark:bg-red-950/30 hover:bg-red-100 dark:hover:bg-red-900/50 rounded-2xl transition-colors border border-red-100 dark:border-red-900/50">
                   <Trash2 size={16} /> <span className="hidden sm:inline">Quitar</span>
                 </button>
               </div>
@@ -402,7 +402,7 @@ export function RoutineBuilder({
           <p className="mt-2 max-w-sm text-sm text-slate-500">Añade ejercicios para empezar.</p>
           <button
             onClick={() => { setReplacingExerciseId(null); setStep("picker"); setIsModalOpen(true); }}
-            className="mt-4 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500 transition-colors"
+            className="mt-4 inline-flex items-center gap-2 rounded-3xl bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary transition-colors"
           >
             <Plus className="h-4 w-4" />
             Añadir primer ejercicio
@@ -433,7 +433,7 @@ export function RoutineBuilder({
                       placeholder="Buscar ejercicio..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl py-3 pl-10 pr-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-3xl py-3 pl-10 pr-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-cyan-500 outline-none"
                     />
                   </div>
                 </div>
@@ -445,7 +445,7 @@ export function RoutineBuilder({
                         <button
                           key={ex.id}
                           onClick={() => { setSelectedExercise(ex.id); setStep("config"); setSets(ex.muscleGroup.toLowerCase() === "cardio" ? 1 : 3); }}
-                          className="flex items-center gap-4 rounded-xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 p-3 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-indigo-500 transition-all text-left"
+                          className="flex items-center gap-4 rounded-3xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 p-3 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-primary transition-all text-left"
                         >
                           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-900 border border-slate-700">
                             {getExerciseIcon(ex.equipment, ex.muscleGroup)}
@@ -466,7 +466,7 @@ export function RoutineBuilder({
                   if (!exObj) return null;
                   return (
                     <form onSubmit={handleAddExercise} className="space-y-6">
-                      <div className="flex items-center gap-4 mb-6 bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
+                      <div className="flex items-center gap-4 mb-6 bg-slate-50 dark:bg-slate-950 p-4 rounded-3xl border border-slate-100 dark:border-slate-800">
                         <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-slate-900 border border-slate-700">
                           {getExerciseIcon(exObj.equipment, exObj.muscleGroup)}
                         </div>
@@ -475,7 +475,7 @@ export function RoutineBuilder({
                           <p className="text-sm text-slate-500">{exObj.muscleGroup}</p>
                         </div>
                       </div>
-                      <div className="bg-slate-50 dark:bg-slate-950 rounded-xl p-5 border border-slate-100 dark:border-slate-800">
+                      <div className="bg-slate-50 dark:bg-slate-950 rounded-3xl p-5 border border-slate-100 dark:border-slate-800">
                         {exObj.muscleGroup.toLowerCase() === "cardio" ? (
                           <p className="text-slate-600 dark:text-slate-400">Cardio: 1 sesión</p>
                         ) : (
@@ -488,16 +488,16 @@ export function RoutineBuilder({
                               required
                               value={sets}
                               onChange={(e) => setSets(Number(e.target.value))}
-                              className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"
+                              className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-3xl py-3 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-cyan-500 outline-none"
                             />
                           </div>
                         )}
                       </div>
                       <div className="mt-8 flex justify-end gap-3 pt-6 border-t dark:border-slate-800">
-                        <button type="button" onClick={() => setStep("picker")} className="rounded-lg px-6 py-2.5 text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                        <button type="button" onClick={() => setStep("picker")} className="rounded-2xl px-6 py-2.5 text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
                           Volver
                         </button>
-                        <button type="submit" disabled={isSubmitting} className="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-8 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-70 transition-colors">
+                        <button type="submit" disabled={isSubmitting} className="inline-flex items-center justify-center rounded-2xl bg-primary px-8 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary disabled:opacity-70 transition-colors">
                           {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Añadir"}
                         </button>
                       </div>

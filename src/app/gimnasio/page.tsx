@@ -94,7 +94,7 @@ export default function GimnasioPage() {
     if (lowerGroup === 'cardio') return <Activity size={24} className="text-blue-400" />;
     if (lowerEq === 'mancuernas') return <Dumbbell size={24} className="text-amber-400" />;
     if (lowerEq === 'peso corporal') return <Accessibility size={24} className="text-green-400" />;
-    if (lowerEq === 'barra' || lowerEq === 'máquina' || lowerEq === 'polea') return <Target size={24} className="text-indigo-400" />;
+    if (lowerEq === 'barra' || lowerEq === 'máquina' || lowerEq === 'polea') return <Target size={24} className="text-cyan-400" />;
     
     return <BicepsFlexed size={24} className="text-slate-400" />;
   };
@@ -113,7 +113,7 @@ export default function GimnasioPage() {
           </div>
           <button
             onClick={() => setIsCreating(!isCreating)}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 dark:bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 dark:hover:bg-indigo-700 transition-colors"
+            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-900 dark:bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 dark:hover:bg-primary transition-colors"
           >
             <Plus className="h-4 w-4" />
             Nuevo Ejercicio
@@ -121,13 +121,13 @@ export default function GimnasioPage() {
         </div>
 
         {isCreating && (
-          <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm">
+          <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm">
             <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
               Añadir nuevo ejercicio
             </h3>
             <form onSubmit={handleCreateExercise} className="space-y-4">
               {formError && (
-                <div className="rounded-md bg-red-50 dark:bg-red-950/30 p-3 text-sm text-red-600 dark:text-red-400">
+                <div className="rounded-2xl bg-red-50 dark:bg-red-950/30 p-3 text-sm text-red-600 dark:text-red-400">
                   {formError}
                 </div>
               )}
@@ -143,7 +143,7 @@ export default function GimnasioPage() {
                     placeholder="Ej: Press de banca"
                     value={newExercise.name}
                     onChange={(e) => setNewExercise({ ...newExercise, name: e.target.value })}
-                    className="block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 py-2.5 px-3 text-slate-900 dark:text-white shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm"
+                    className="block w-full rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 py-2.5 px-3 text-slate-900 dark:text-white shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-cyan-500 sm:text-sm"
                   />
                 </div>
                 <div>
@@ -154,7 +154,7 @@ export default function GimnasioPage() {
                     required
                     value={newExercise.muscleGroup}
                     onChange={(e) => setNewExercise({ ...newExercise, muscleGroup: e.target.value })}
-                    className="block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 py-2.5 px-3 text-slate-900 dark:text-white shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm"
+                    className="block w-full rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 py-2.5 px-3 text-slate-900 dark:text-white shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-cyan-500 sm:text-sm"
                   >
                     <option value="Pecho">Pecho</option>
                     <option value="Espalda">Espalda</option>
@@ -174,7 +174,7 @@ export default function GimnasioPage() {
                     placeholder="Detalles sobre la técnica o postura..."
                     value={newExercise.description}
                     onChange={(e) => setNewExercise({ ...newExercise, description: e.target.value })}
-                    className="block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 py-2.5 px-3 text-slate-900 dark:text-white shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm"
+                    className="block w-full rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 py-2.5 px-3 text-slate-900 dark:text-white shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-cyan-500 sm:text-sm"
                   />
                 </div>
               </div>
@@ -183,14 +183,14 @@ export default function GimnasioPage() {
                 <button
                   type="button"
                   onClick={() => setIsCreating(false)}
-                  className="rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                  className="rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting || !newExercise.name.trim()}
-                  className="inline-flex min-w-[120px] items-center justify-center rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-70 transition-colors"
+                  className="inline-flex min-w-[120px] items-center justify-center rounded-2xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary disabled:opacity-70 transition-colors"
                 >
                   {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Crear Ejercicio"}
                 </button>
@@ -199,26 +199,26 @@ export default function GimnasioPage() {
           </div>
         )}
 
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
+        <div className="flex flex-col md:flex-row gap-3 min-w-0">
+          <div className="relative flex-1 min-w-0">
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
               <Search className="h-5 w-5 text-slate-400" />
             </div>
             <input
               type="text"
-              className="block w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 py-2.5 pl-10 pr-3 text-slate-900 dark:text-white shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm"
+              className="block w-full min-w-0 rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 py-2.5 pl-10 pr-3 text-slate-900 dark:text-white shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-cyan-500 sm:text-sm"
               placeholder="Buscar por nombre..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <div className="flex gap-3">
+          <div className="grid grid-cols-2 sm:flex gap-3 min-w-0">
             <select
               value={filterMuscle}
               onChange={(e) => setFilterMuscle(e.target.value)}
-              className="block rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 py-2.5 px-3 text-slate-900 dark:text-white shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm"
+              className="block w-full min-w-0 sm:w-auto rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 py-2.5 px-3 text-slate-900 dark:text-white shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-cyan-500 sm:text-sm text-sm truncate"
             >
-              <option value="">Cualquier Grupo</option>
+              <option value="">Grupo</option>
               <option value="Pecho">Pecho</option>
               <option value="Espalda">Espalda</option>
               <option value="Pierna">Pierna</option>
@@ -230,9 +230,9 @@ export default function GimnasioPage() {
             <select
               value={filterEquipment}
               onChange={(e) => setFilterEquipment(e.target.value)}
-              className="block rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 py-2.5 px-3 text-slate-900 dark:text-white shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm"
+              className="block w-full min-w-0 sm:w-auto rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 py-2.5 px-3 text-slate-900 dark:text-white shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-cyan-500 sm:text-sm text-sm truncate"
             >
-              <option value="">Cualquier Equipo</option>
+              <option value="">Equipo</option>
               <option value="Barra">Barra</option>
               <option value="Mancuernas">Mancuernas</option>
               <option value="Máquina">Máquina</option>
@@ -246,12 +246,12 @@ export default function GimnasioPage() {
             <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
           </div>
         ) : filteredExercises.length > 0 ? (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 min-w-0">
             {filteredExercises.map((exercise) => (
               <Link
                 key={exercise.id}
                 href={`/gimnasio/${exercise.id}`}
-                className="group flex items-center gap-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm transition-all hover:shadow-md hover:border-indigo-500 dark:hover:border-indigo-400 cursor-pointer"
+                className="group flex items-center gap-4 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm transition-all hover:shadow-soft hover:border-primary dark:hover:border-cyan-400 cursor-pointer min-w-0"
               >
                 <div className="h-14 w-14 shrink-0 overflow-hidden rounded-full border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 relative">
                   {exercise.imageUrl ? (
@@ -268,8 +268,8 @@ export default function GimnasioPage() {
                     </div>
                   )}
                 </div>
-                <div className="flex-1 overflow-hidden">
-                  <h3 className="font-bold text-slate-900 dark:text-white truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                <div className="flex-1 overflow-hidden min-w-0">
+                  <h3 className="font-bold text-slate-900 dark:text-white truncate group-hover:text-primary dark:group-hover:text-cyan-400 transition-colors">
                     {exercise.name}
                   </h3>
                   <p className="text-sm font-medium text-slate-500 dark:text-slate-400 truncate mt-0.5">
@@ -280,7 +280,7 @@ export default function GimnasioPage() {
             ))}
           </div>
         ) : (
-          <div className="flex h-48 flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 p-6 text-center">
+          <div className="flex h-48 flex-col items-center justify-center rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 p-6 text-center">
             <BicepsFlexed className="h-10 w-10 text-slate-300 dark:text-slate-600 mb-3" />
             <h3 className="text-sm font-semibold text-slate-900 dark:text-white">No se encontraron ejercicios</h3>
             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 max-w-sm">

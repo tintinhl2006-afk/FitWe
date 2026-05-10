@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getNow } from "@/lib/timeUtils";
 
 export async function GET() {
   try {
@@ -16,6 +17,7 @@ export async function GET() {
     }
 
     const gymId = session.user.id;
+    const now = await getNow();
 
     // ── KPI 1: Total clients ──
     const totalClients = await prisma.user.count({
@@ -23,7 +25,7 @@ export async function GET() {
     });
 
     // ── KPI 2: Active clients (at least 1 completed session in last 7 days) ──
-    const sevenDaysAgo = new Date();
+    const sevenDaysAgo = new Date(now);
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     sevenDaysAgo.setHours(0, 0, 0, 0);
 
@@ -39,7 +41,7 @@ export async function GET() {
     const activeClients = activeClientsResult.length;
 
     // ── KPI 3: Workouts this month ──
-    const firstDayOfMonth = new Date();
+    const firstDayOfMonth = new Date(now);
     firstDayOfMonth.setDate(1);
     firstDayOfMonth.setHours(0, 0, 0, 0);
 
@@ -56,7 +58,7 @@ export async function GET() {
     const weeklyData: { day: string; date: string; sessions: number }[] = [];
 
     for (let i = 6; i >= 0; i--) {
-      const d = new Date();
+      const d = new Date(now);
       d.setDate(d.getDate() - i);
       const dayStart = new Date(d.getFullYear(), d.getMonth(), d.getDate());
       const dayEnd = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);

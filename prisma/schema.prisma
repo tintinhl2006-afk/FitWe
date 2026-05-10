@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -12,38 +7,93 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role {
-  USER
-  GYM
+model User {
+  id                  String           @id @default(uuid()) @db.Uuid
+  email               String           @unique
+  password            String
+  name                String
+  role                Role             @default(USER)
+  weight              Float?
+  height              Float?
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+  image               String?
+  bio                 String?
+  distanceUnit        String           @default("km")
+  isPrivate           Boolean          @default(false)
+  language            String           @default("es")
+  link                String?
+  measurementUnit     String           @default("cm")
+  weightUnit          String           @default("kg")
+  gymId               String?          @db.Uuid
+  subscriptionEndDate DateTime?
+  subscriptionStatus  String           @default("ACTIVE")
+  monthlyFee          Float            @default(49.99)
+  bookings            ClassBooking[]
+  classTemplates      ClassTemplate[]  @relation("GymTemplates")
+  foodEntries         FoodEntry[]
+  classes             GymClass[]       @relation("GymClasses")
+  payments            PaymentRecord[]
+  routines            Routine[]
+  gym                 User?             @relation("GymClients", fields: [gymId], references: [id])
+  clients             User[]            @relation("GymClients")
+  workoutSessions     WorkoutSession[]
+  nutritionProfile    NutritionProfile?
+  foodItems           FoodItem[]
+  mealEntries         MealEntry[]
 }
 
-model User {
-  id              String           @id @default(uuid()) @db.Uuid
-  email           String           @unique
-  password        String
-  name            String
-  role            Role             @default(USER)
-  image           String?
-  bio             String?
-  link            String?
-  isPrivate       Boolean          @default(false)
-  weightUnit      String           @default("kg")
-  distanceUnit    String           @default("km")
-  measurementUnit String           @default("cm")
-  language        String           @default("es")
-  weight          Float?
-  height          Float?
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+model PaymentRecord {
+  id          String   @id @default(cuid())
+  userId      String   @db.Uuid
+  amount      Float    @default(0)
+  description String
+  date        DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id])
+}
 
-  // Relación recursiva Gym ↔ Clientes
-  gymId           String?          @db.Uuid
-  gym             User?            @relation("GymClients", fields: [gymId], references: [id])
-  clients         User[]           @relation("GymClients")
+model GymClass {
+  id          String         @id @default(uuid()) @db.Uuid
+  gymId       String         @db.Uuid
+  name        String
+  description String?
+  instructor  String
+  capacity    Int
+  startTime   DateTime
+  endTime     DateTime
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  templateId  String?        @db.Uuid
+  bookings    ClassBooking[]
+  gym         User           @relation("GymClasses", fields: [gymId], references: [id])
+  template    ClassTemplate? @relation(fields: [templateId], references: [id])
+}
 
-  routines        Routine[]
-  workoutSessions WorkoutSession[]
-  foodEntries     FoodEntry[]
+model ClassTemplate {
+  id               String     @id @default(uuid()) @db.Uuid
+  gymId            String     @db.Uuid
+  name             String
+  instructor       String
+  capacity         Int
+  dayOfWeek        Int
+  startTime        String
+  durationMinutes  Int
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  gym              User       @relation("GymTemplates", fields: [gymId], references: [id])
+  generatedClasses GymClass[]
+}
+
+model ClassBooking {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  classId   String   @db.Uuid
+  status    String   @default("CONFIRMED")
+  createdAt DateTime @default(now())
+  class     GymClass @relation(fields: [classId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, classId])
 }
 
 model Exercise {
@@ -51,18 +101,18 @@ model Exercise {
   name             String
   description      String?
   muscleGroup      String
-  imageUrl         String?
   equipment        String?
-  workoutSets      WorkoutSet[]
+  imageUrl         String?
   routineExercises RoutineExercise[]
+  workoutSets      WorkoutSet[]
 }
 
 model Routine {
-  id        String   @id @default(uuid()) @db.Uuid
-  name      String
-  userId    String   @db.Uuid
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id])
+  id              String            @id @default(uuid()) @db.Uuid
+  name            String
+  userId          String            @db.Uuid
+  createdAt       DateTime          @default(now())
+  user            User              @relation(fields: [userId], references: [id])
   exercises       RoutineExercise[]
   workoutSessions WorkoutSession[]
 }
@@ -75,19 +125,19 @@ model RoutineExercise {
   reps       Int
   weight     Float
   order      Int      @default(0)
-  routine    Routine  @relation(fields: [routineId], references: [id])
   exercise   Exercise @relation(fields: [exerciseId], references: [id])
+  routine    Routine  @relation(fields: [routineId], references: [id])
 }
 
 model WorkoutSession {
   id          String       @id @default(uuid()) @db.Uuid
   userId      String       @db.Uuid
+  createdAt   DateTime     @default(now())
+  endTime     DateTime?
   routineId   String?      @db.Uuid
   startTime   DateTime     @default(now())
-  endTime     DateTime?
-  createdAt   DateTime     @default(now())
-  user        User         @relation(fields: [userId], references: [id])
   routine     Routine?     @relation(fields: [routineId], references: [id])
+  user        User         @relation(fields: [userId], references: [id])
   workoutSets WorkoutSet[]
 }
 
@@ -98,8 +148,8 @@ model WorkoutSet {
   weight      Float
   reps        Int
   isCompleted Boolean        @default(false)
-  session     WorkoutSession @relation(fields: [sessionId], references: [id])
   exercise    Exercise       @relation(fields: [exerciseId], references: [id])
+  session     WorkoutSession @relation(fields: [sessionId], references: [id])
 }
 
 model FoodEntry {
@@ -112,4 +162,59 @@ model FoodEntry {
   carbs    Float
   fat      Float
   user     User     @relation(fields: [userId], references: [id])
+}
+
+enum Role {
+  USER
+  GYM
+}
+
+model NutritionProfile {
+  id             String   @id @default(uuid()) @db.Uuid
+  userId         String   @unique @db.Uuid
+  gender         String
+  age            Int
+  weight         Float
+  height         Float
+  activityLevel  String
+  goal           String
+  aggressiveness String
+  targetCalories Int
+  targetProtein  Int
+  targetCarbs    Int
+  targetFat      Int
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model FoodItem {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  name      String
+  brand     String?
+  imageUrl  String?
+  calories  Float    // per 100g
+  protein   Float    // per 100g
+  carbs     Float    // per 100g
+  fat       Float    // per 100g
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mealEntries MealEntry[]
+}
+
+model MealEntry {
+  id            String   @id @default(uuid()) @db.Uuid
+  userId        String   @db.Uuid
+  foodItemId    String   @db.Uuid
+  mealType      String   // BREAKFAST, LUNCH, DINNER, SNACK
+  quantityGrams Float
+  date          DateTime
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  foodItem FoodItem @relation(fields: [foodItemId], references: [id], onDelete: Cascade)
 }

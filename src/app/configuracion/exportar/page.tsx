@@ -15,8 +15,8 @@ export default function ExportDataPage() {
       </p>
 
       <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 flex items-start gap-4">
-        <div className="h-12 w-12 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center shrink-0">
-          <FileSpreadsheet className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+        <div className="h-12 w-12 rounded-full bg-cyan-100 dark:bg-cyan-900/50 flex items-center justify-center shrink-0">
+          <FileSpreadsheet className="h-6 w-6 text-primary dark:text-cyan-400" />
         </div>
         <div className="flex-1">
           <h3 className="font-semibold text-slate-900 dark:text-white">Historial Completo</h3>
@@ -25,7 +25,7 @@ export default function ExportDataPage() {
           </p>
           <button
             onClick={handleExport}
-            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors"
+            className="flex items-center gap-2 bg-primary hover:bg-primary text-white px-5 py-2.5 rounded-2xl font-medium transition-colors"
           >
             <Download className="h-4 w-4" />
             Exportar en CSV

@@ -3,11 +3,13 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { getNow } from "@/lib/timeUtils";
 
 export const authOptions: NextAuthOptions = {
-  // @ts-expect-error - version mismatch but adapter works
-  adapter: PrismaAdapter(prisma),
+  // ... (adapter remains same)
+  adapter: PrismaAdapter(prisma) as any,
   providers: [
+    // ... (provider remains same)
     CredentialsProvider({
       name: "Credentials",
       credentials: {
@@ -38,6 +40,10 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           name: user.name,
           role: user.role,
+          subscriptionStatus: user.subscriptionStatus,
+          subscriptionEndDate: user.subscriptionEndDate?.toISOString() || null,
+          serverNow: (await getNow()).toISOString(),
+          monthlyFee: user.monthlyFee,
         };
       }
     })
@@ -51,11 +57,16 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id;
         token.role = user.role;
         token.name = user.name;
+        token.subscriptionStatus = user.subscriptionStatus;
+        token.subscriptionEndDate = user.subscriptionEndDate;
+        token.serverNow = user.serverNow;
+        token.monthlyFee = user.monthlyFee;
       }
       
-      // Manejar la actualización manual del lado del cliente (update({ name: '...' }))
-      if (trigger === "update" && session?.name) {
-        token.name = session.name;
+      // Manejar la actualización manual del lado del cliente
+      if (trigger === "update") {
+        if (session?.name) token.name = session.name;
+        if (session?.monthlyFee !== undefined) token.monthlyFee = session.monthlyFee;
       }
 
       return token;
@@ -63,8 +74,14 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (token && session.user) {
         session.user.id = token.id as string;
-        session.user.role = token.role as string;
+        session.user.role = token.role as "USER" | "GYM";
         session.user.name = token.name as string;
+        session.user.subscriptionStatus = token.subscriptionStatus as string;
+        session.user.subscriptionEndDate = token.subscriptionEndDate as string;
+        session.user.monthlyFee = token.monthlyFee as number;
+        
+        // Always refresh serverNow from the cookie on each session request
+        session.user.serverNow = (await getNow()).toISOString();
       }
       return session;
     }

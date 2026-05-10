@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useSession } from "next-auth/react";
 import { User, Activity, Calendar, Clock, Dumbbell, Loader2, Camera, X, Eye } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
@@ -40,6 +41,7 @@ interface ProfileData {
 }
 
 export default function ProfilePage() {
+  const { data: session } = useSession();
   const [data, setData] = useState<ProfileData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
@@ -110,7 +112,7 @@ export default function ProfilePage() {
     );
   }
 
-  const now = new Date();
+  const now = session?.user?.serverNow ? new Date(session.user.serverNow) : new Date();
   const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   // getDay(): 0 (Dom) a 6 (Sab). Convertimos a: 0 (Lun) a 6 (Dom)
   const startOffset = (firstDayOfMonth.getDay() + 6) % 7;
@@ -126,15 +128,11 @@ export default function ProfilePage() {
 
   return (
     <DashboardLayout>
-      <div className="relative pb-20 -mx-4 sm:-mx-8 -mt-8">
-        {/* Header / Cover */}
-        <div className="h-40 bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 shadow-inner" />
-        
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 -mt-20">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-8">
           {/* Avatar Section */}
           <div className="flex flex-col items-center">
             <div className="relative">
-              <div className="h-32 w-32 rounded-full border-4 border-white dark:border-slate-800 bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden relative group shadow-lg">
+              <div className="h-32 w-32 rounded-full border-4 border-white dark:border-slate-800 bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden relative group shadow-soft">
                 {data.user.image ? (
                   <img src={data.user.image} alt="Profile" className="h-full w-full object-cover" />
                 ) : (
@@ -166,7 +164,7 @@ export default function ProfilePage() {
             {/* Weekly Time Chart */}
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm">
               <h2 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
-                <Clock className="h-4 w-4 text-indigo-500" /> Tiempo esta semana
+                <Clock className="h-4 w-4 text-primary" /> Tiempo esta semana
               </h2>
               <div className="flex items-baseline gap-2 mb-6">
                 <span className="text-4xl font-black text-slate-900 dark:text-white">{hoursTrained}</span>
@@ -182,7 +180,7 @@ export default function ProfilePage() {
                     <Tooltip 
                       cursor={{ fill: '#f8fafc', radius: 4 }}
                       contentStyle={{ backgroundColor: '#ffffff', border: 'none', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', color: '#0f172a' }}
-                      formatter={(val: number) => [`${val} min`, 'Duración']}
+                      formatter={(val: any) => [`${val} min`, 'Duración']}
                     />
                     <Bar dataKey="minutos" radius={[4, 4, 0, 0]} barSize={24}>
                       {data.stats.weeklyChartData.map((entry, index) => (
@@ -198,9 +196,9 @@ export default function ProfilePage() {
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm flex flex-col">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-indigo-500" /> Actividad del Mes
+                  <Calendar className="h-4 w-4 text-primary" /> Actividad del Mes
                 </h2>
-                <span className="text-[10px] bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded-full font-bold uppercase tracking-tight">
+                <span className="text-[10px] bg-cyan-50 dark:bg-cyan-950/30 text-primary dark:text-cyan-400 px-2 py-0.5 rounded-full font-bold uppercase tracking-tight">
                   {activeDays.size} sesiones
                 </span>
               </div>
@@ -220,9 +218,9 @@ export default function ProfilePage() {
                     <div 
                       key={day} 
                       className={cn(
-                        "aspect-square rounded-lg flex items-center justify-center text-xs font-bold transition-all",
+                        "aspect-square rounded-2xl flex items-center justify-center text-xs font-bold transition-all",
                         activeDays.has(day) 
-                          ? "bg-indigo-600 text-white shadow-md shadow-indigo-100 dark:shadow-none scale-105" 
+                          ? "bg-primary text-white shadow-soft shadow-cyan-100 dark:shadow-none scale-105" 
                           : "bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700"
                       )}
                     >
@@ -237,7 +235,7 @@ export default function ProfilePage() {
           {/* History Feed */}
           <div className="mt-12">
             <h2 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-6 flex items-center gap-2 px-1">
-              <Activity className="h-4 w-4 text-indigo-500" /> Entrenamientos Recientes
+              <Activity className="h-4 w-4 text-primary" /> Entrenamientos Recientes
             </h2>
             
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
@@ -250,15 +248,15 @@ export default function ProfilePage() {
                 data.recentSessions.map(session => (
                   <div 
                     key={session.id} 
-                    className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm hover:border-indigo-200 dark:hover:border-indigo-400 hover:shadow-md transition-all cursor-pointer relative overflow-hidden"
+                    className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm hover:border-cyan-200 dark:hover:border-cyan-400 hover:shadow-soft transition-all cursor-pointer relative overflow-hidden"
                     onClick={() => setExpandedWorkoutId(session.id)}
                   >
                     <div className="flex items-center gap-5 relative z-10">
-                      <div className="h-14 w-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-300">
+                      <div className="h-14 w-14 rounded-2xl bg-cyan-50 dark:bg-cyan-950/30 text-primary dark:text-cyan-400 flex items-center justify-center shrink-0 group-hover:bg-primary group-hover:text-white transition-colors duration-300">
                         <Dumbbell className="h-6 w-6" />
                       </div>
                       <div>
-                        <h3 className="font-black text-slate-900 dark:text-white text-xl leading-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{session.name}</h3>
+                        <h3 className="font-black text-slate-900 dark:text-white text-xl leading-tight group-hover:text-primary dark:group-hover:text-cyan-400 transition-colors">{session.name}</h3>
                         <p className="text-sm font-semibold text-slate-400 dark:text-slate-500 mt-0.5">
                           {new Date(session.date).toLocaleDateString("es-ES", {
                             weekday: 'long',
@@ -280,8 +278,8 @@ export default function ProfilePage() {
                           <p className="font-bold text-slate-900 dark:text-white">{session.totalVolume} kg</p>
                         </div>
                       </div>
-                      <div className="h-10 w-10 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center group-hover:bg-indigo-50 dark:group-hover:bg-indigo-900/50 transition-colors">
-                        <Eye className="h-5 w-5 text-slate-300 dark:text-slate-600 group-hover:text-indigo-500" />
+                      <div className="h-10 w-10 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center group-hover:bg-cyan-50 dark:group-hover:bg-cyan-900/50 transition-colors">
+                        <Eye className="h-5 w-5 text-slate-300 dark:text-slate-600 group-hover:text-primary" />
                       </div>
                     </div>
                   </div>
@@ -290,7 +288,6 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
-      </div>
 
       {/* Modal Pop-up */}
       {selectedWorkout && (
@@ -299,7 +296,7 @@ export default function ProfilePage() {
             <div className="px-8 py-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-white dark:bg-slate-900 relative">
               <div>
                 <h3 className="font-black text-slate-900 dark:text-white text-2xl">{selectedWorkout.name}</h3>
-                <p className="text-sm font-bold text-indigo-500 dark:text-indigo-400 uppercase tracking-wider mt-1">
+                <p className="text-sm font-bold text-primary dark:text-cyan-400 uppercase tracking-wider mt-1">
                   {new Date(selectedWorkout.date).toLocaleDateString("es-ES", {
                     weekday: 'long',
                     day: 'numeric',
@@ -328,7 +325,7 @@ export default function ProfilePage() {
                 return Object.entries(setsByExercise).map(([exerciseName, sets]) => (
                   <div key={exerciseName} className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-5 border border-slate-100 dark:border-slate-800">
                     <h4 className="text-sm font-black text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-                      <div className="h-2 w-2 rounded-full bg-indigo-500" />
+                      <div className="h-2 w-2 rounded-full bg-primary" />
                       {exerciseName}
                     </h4>
                     <div className="grid grid-cols-1 gap-2">
@@ -346,7 +343,7 @@ export default function ProfilePage() {
                         }
 
                         return (
-                          <div key={index} className="flex text-sm items-center justify-between px-3 py-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-700">
+                          <div key={index} className="flex text-sm items-center justify-between px-3 py-2 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-700">
                             <span className="font-bold text-slate-400 dark:text-slate-500">Set {index + 1}</span>
                             <span className="text-slate-900 dark:text-white font-black">{details}</span>
                           </div>
@@ -360,11 +357,11 @@ export default function ProfilePage() {
             
             <div className="px-8 py-5 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50 flex justify-between items-center text-xs font-black text-slate-400 uppercase tracking-widest">
               <span className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-indigo-500" />
+                <Clock className="h-4 w-4 text-primary" />
                 {selectedWorkout.durationMinutes} min
               </span>
               <span className="flex items-center gap-2">
-                <Dumbbell className="h-4 w-4 text-indigo-500" />
+                <Dumbbell className="h-4 w-4 text-primary" />
                 {selectedWorkout.totalVolume} kg
               </span>
             </div>

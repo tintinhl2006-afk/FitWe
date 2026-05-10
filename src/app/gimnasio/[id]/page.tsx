@@ -186,7 +186,8 @@ export default function ExerciseDetailPage({ params }: { params: Promise<{ id: s
                       </span>
                     </div>
                     <div className="px-5 py-2">
-                      <table className="w-full text-sm text-left">
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm text-left">
                         <thead>
                           <tr className="text-slate-400 dark:text-slate-500 font-medium border-b border-slate-100 dark:border-slate-800">
                             <th className="py-2 w-16 text-center">Set</th>
@@ -205,7 +206,8 @@ export default function ExerciseDetailPage({ params }: { params: Promise<{ id: s
                             </tr>
                           ))}
                         </tbody>
-                      </table>
+                        </table>
+                      </div>
                     </div>
                   </div>
                 ))

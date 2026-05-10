@@ -39,22 +39,22 @@ export default function RegisterPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950 px-4 py-12 transition-colors">
-      <div className="w-full max-w-md space-y-8 rounded-2xl bg-white dark:bg-slate-900 p-8 shadow-lg border border-slate-100 dark:border-slate-800">
+      <div className="w-full max-w-md space-y-8 rounded-2xl bg-white dark:bg-slate-900 p-8 shadow-soft border border-slate-100 dark:border-slate-800">
         <div className="flex flex-col items-center text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-900 dark:bg-indigo-600">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-900 dark:bg-primary">
             <Dumbbell className="h-6 w-6 text-white" />
           </div>
           <h2 className="mt-6 text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
             Crea tu cuenta
           </h2>
           <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-            Únete a FitManager y comienza a progresar
+            Únete a <span translate="no" className="notranslate">FitWe</span> y comienza a progresar
           </p>
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
-            <div className="rounded-md bg-red-50 dark:bg-red-950/30 p-3 text-sm text-red-600 dark:text-red-400">
+            <div className="rounded-2xl bg-red-50 dark:bg-red-950/30 p-3 text-sm text-red-600 dark:text-red-400">
               {error}
             </div>
           )}
@@ -75,7 +75,7 @@ export default function RegisterPage() {
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 py-2.5 pl-10 pr-3 text-slate-900 dark:text-white shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm"
+                  className="block w-full rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 py-2.5 pl-10 pr-3 text-slate-900 dark:text-white shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-cyan-500 sm:text-sm"
                   placeholder="Juan Pérez"
                 />
               </div>
@@ -96,7 +96,7 @@ export default function RegisterPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 py-2.5 pl-10 pr-3 text-slate-900 dark:text-white shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm"
+                  className="block w-full rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 py-2.5 pl-10 pr-3 text-slate-900 dark:text-white shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-cyan-500 sm:text-sm"
                   placeholder="tu@email.com"
                 />
               </div>
@@ -117,7 +117,7 @@ export default function RegisterPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 py-2.5 pl-10 pr-3 text-slate-900 dark:text-white shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm"
+                  className="block w-full rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 py-2.5 pl-10 pr-3 text-slate-900 dark:text-white shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-cyan-500 sm:text-sm"
                   placeholder="••••••••"
                 />
               </div>
@@ -128,7 +128,7 @@ export default function RegisterPage() {
             type="submit"
             disabled={isLoading}
             className={cn(
-              "flex w-full justify-center rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 transition-colors",
+              "flex w-full justify-center rounded-2xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary transition-colors",
               isLoading && "opacity-70 cursor-not-allowed"
             )}
           >
@@ -138,7 +138,7 @@ export default function RegisterPage() {
 
         <div className="mt-6 text-center text-sm">
           <span className="text-slate-600 dark:text-slate-400">¿Ya tienes una cuenta? </span>
-          <Link href="/login" className="font-medium text-indigo-600 dark:text-indigo-400 hover:underline">
+          <Link href="/login" className="font-medium text-primary dark:text-cyan-400 hover:underline">
             Inicia sesión aquí
           </Link>
         </div>

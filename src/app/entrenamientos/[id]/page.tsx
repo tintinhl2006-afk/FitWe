@@ -56,7 +56,7 @@ export default function RoutineDetailPage({ params }: { params: Promise<{ id: st
     if (lowerGroup === "cardio") return <Activity size={20} className="text-blue-400" />;
     if (lowerEq === "mancuernas") return <Dumbbell size={20} className="text-amber-400" />;
     if (lowerEq === "peso corporal") return <Accessibility size={20} className="text-green-400" />;
-    if (lowerEq === "barra" || lowerEq === "máquina" || lowerEq === "polea") return <Target size={20} className="text-indigo-400" />;
+    if (lowerEq === "barra" || lowerEq === "máquina" || lowerEq === "polea") return <Target size={20} className="text-cyan-400" />;
     return <BicepsFlexed size={20} className="text-slate-400" />;
   };
 
@@ -229,7 +229,7 @@ export default function RoutineDetailPage({ params }: { params: Promise<{ id: st
           <div className="flex gap-3">
             <button
               onClick={() => { setReplacingExerciseId(null); setStep("picker"); setIsModalOpen(true); }}
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-300 shadow-sm hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-300 shadow-sm hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
             >
               <Plus className="h-4 w-4" />
               Añadir Ejercicio
@@ -237,9 +237,9 @@ export default function RoutineDetailPage({ params }: { params: Promise<{ id: st
             <button
               onClick={handleStartWorkout}
               disabled={isSubmitting || !routine.exercises?.length}
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-70 transition-colors"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary disabled:opacity-70 transition-colors"
             >
-              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "💪 Comenzar"}
+              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Comenzar"}
             </button>
           </div>
         </div>
@@ -249,15 +249,19 @@ export default function RoutineDetailPage({ params }: { params: Promise<{ id: st
             {routine.exercises.map((re, index) => (
               <div
                 key={re.id}
-                className="flex flex-col sm:flex-row items-start sm:items-center justify-between rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm gap-4"
+                className="flex flex-col sm:flex-row items-start sm:items-center justify-between rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm gap-4"
               >
                 <div className="flex items-center gap-4 flex-1 w-full">
                   <div className="flex flex-col gap-1 sm:hidden mr-2">
-                    <button onClick={() => handleMoveOrder(index, 'up')} disabled={index === 0} className="p-1 text-slate-400 dark:text-slate-600 hover:text-indigo-600 disabled:opacity-30"><ArrowUp size={16} /></button>
-                    <button onClick={() => handleMoveOrder(index, 'down')} disabled={index === routine.exercises.length - 1} className="p-1 text-slate-400 dark:text-slate-600 hover:text-indigo-600 disabled:opacity-30"><ArrowDown size={16} /></button>
+                    <button onClick={() => handleMoveOrder(index, 'up')} disabled={index === 0} className="p-1 text-slate-400 dark:text-slate-600 hover:text-primary disabled:opacity-30"><ArrowUp size={16} /></button>
+                    <button onClick={() => handleMoveOrder(index, 'down')} disabled={index === routine.exercises.length - 1} className="p-1 text-slate-400 dark:text-slate-600 hover:text-primary disabled:opacity-30"><ArrowDown size={16} /></button>
                   </div>
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-800 dark:bg-slate-800">
-                    {getExerciseIcon(re.exercise.equipment, re.exercise.muscleGroup)}
+                  <div className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800">
+                    {re.exercise.imageUrl ? (
+                      <Image src={re.exercise.imageUrl} alt={re.exercise.name} fill className="object-cover" />
+                    ) : (
+                      getExerciseIcon(re.exercise.equipment, re.exercise.muscleGroup)
+                    )}
                   </div>
                   <div className="flex-1">
                     <h3 className="font-bold text-slate-900 dark:text-white text-lg">{re.exercise.name}</h3>
@@ -266,10 +270,10 @@ export default function RoutineDetailPage({ params }: { params: Promise<{ id: st
                         {re.exercise.muscleGroup} {re.exercise.equipment && `• ${re.exercise.equipment}`}
                       </span>
                       {re.exercise.muscleGroup.toLowerCase() !== 'cardio' && (
-                        <div className="flex items-center gap-1 bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-400 rounded-full px-1 py-0.5 border border-indigo-100 dark:border-indigo-900/50">
-                          <button onClick={() => handleUpdateSets(re.id, -1, re.sets)} disabled={re.sets <= 1} className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-indigo-200 dark:hover:bg-indigo-900/50 transition-colors">-</button>
+                        <div className="flex items-center gap-1 bg-cyan-50 dark:bg-cyan-950/30 text-primary dark:text-cyan-400 rounded-full px-1 py-0.5 border border-cyan-100 dark:border-cyan-900/50">
+                          <button onClick={() => handleUpdateSets(re.id, -1, re.sets)} disabled={re.sets <= 1} className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-cyan-200 dark:hover:bg-cyan-900/50 transition-colors">-</button>
                           <span className="text-xs font-semibold w-12 text-center select-none">{re.sets} Series</span>
-                          <button onClick={() => handleUpdateSets(re.id, 1, re.sets)} disabled={re.sets >= 10} className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-indigo-200 dark:hover:bg-indigo-900/50 transition-colors">+</button>
+                          <button onClick={() => handleUpdateSets(re.id, 1, re.sets)} disabled={re.sets >= 10} className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-cyan-200 dark:hover:bg-cyan-900/50 transition-colors">+</button>
                         </div>
                       )}
                     </div>
@@ -277,13 +281,13 @@ export default function RoutineDetailPage({ params }: { params: Promise<{ id: st
                 </div>
                 <div className="flex items-center gap-2 w-full sm:w-auto justify-end border-t sm:border-t-0 border-slate-100 dark:border-slate-800 pt-3 sm:pt-0">
                   <div className="hidden sm:flex flex-col gap-0 mr-2">
-                    <button onClick={() => handleMoveOrder(index, 'up')} disabled={index === 0} className="p-1 text-slate-400 dark:text-slate-600 hover:text-indigo-600 disabled:opacity-30"><ArrowUp size={16} /></button>
-                    <button onClick={() => handleMoveOrder(index, 'down')} disabled={index === routine.exercises.length - 1} className="p-1 text-slate-400 dark:text-slate-600 hover:text-indigo-600 disabled:opacity-30"><ArrowDown size={16} /></button>
+                    <button onClick={() => handleMoveOrder(index, 'up')} disabled={index === 0} className="p-1 text-slate-400 dark:text-slate-600 hover:text-primary disabled:opacity-30"><ArrowUp size={16} /></button>
+                    <button onClick={() => handleMoveOrder(index, 'down')} disabled={index === routine.exercises.length - 1} className="p-1 text-slate-400 dark:text-slate-600 hover:text-primary disabled:opacity-30"><ArrowDown size={16} /></button>
                   </div>
-                  <button onClick={() => { setReplacingExerciseId(re.id); setStep("picker"); setIsModalOpen(true); }} className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors border border-slate-200 dark:border-slate-700">
+                  <button onClick={() => { setReplacingExerciseId(re.id); setStep("picker"); setIsModalOpen(true); }} className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-2xl transition-colors border border-slate-200 dark:border-slate-700">
                     <RefreshCcw size={16} /> <span className="hidden sm:inline">Cambiar</span>
                   </button>
-                  <button onClick={() => handleDeleteExercise(re.id)} className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-red-600 bg-red-50 dark:bg-red-950/30 hover:bg-red-100 dark:hover:bg-red-900/50 rounded-lg transition-colors border border-red-100 dark:border-red-900/50">
+                  <button onClick={() => handleDeleteExercise(re.id)} className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-red-600 bg-red-50 dark:bg-red-950/30 hover:bg-red-100 dark:hover:bg-red-900/50 rounded-2xl transition-colors border border-red-100 dark:border-red-900/50">
                     <Trash2 size={16} /> <span className="hidden sm:inline">Quitar</span>
                   </button>
                 </div>
@@ -312,14 +316,20 @@ export default function RoutineDetailPage({ params }: { params: Promise<{ id: st
                   <div className="p-6 pb-2">
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-                      <input type="text" placeholder="Buscar ejercicio..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl py-3 pl-10 pr-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none" />
+                      <input type="text" placeholder="Buscar ejercicio..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-3xl py-3 pl-10 pr-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-cyan-500 outline-none" />
                     </div>
                   </div>
                   <div className="flex-1 overflow-y-auto p-6 pt-4">
                     <div className="grid gap-3 sm:grid-cols-2">
                       {availableExercises.filter(ex => ex.name.toLowerCase().includes(searchQuery.toLowerCase())).map(ex => (
-                        <button key={ex.id} onClick={() => { setSelectedExercise(ex.id); setStep("config"); setSets(ex.muscleGroup.toLowerCase() === 'cardio' ? 1 : 3); }} className="flex items-center gap-4 rounded-xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 p-3 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-indigo-500 transition-all text-left">
-                          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-900 border border-slate-700">{getExerciseIcon(ex.equipment, ex.muscleGroup)}</div>
+                        <button key={ex.id} onClick={() => { setSelectedExercise(ex.id); setStep("config"); setSets(ex.muscleGroup.toLowerCase() === 'cardio' ? 1 : 3); }} className="flex items-center gap-4 rounded-3xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 p-3 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-primary transition-all text-left">
+                          <div className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800">
+                            {ex.imageUrl ? (
+                              <Image src={ex.imageUrl} alt={ex.name} fill className="object-cover" />
+                            ) : (
+                              getExerciseIcon(ex.equipment, ex.muscleGroup)
+                            )}
+                          </div>
                           <div className="flex-1 overflow-hidden">
                             <h4 className="font-semibold text-slate-900 dark:text-white truncate">{ex.name}</h4>
                             <p className="text-xs text-slate-500 truncate">{ex.muscleGroup}</p>
@@ -336,22 +346,28 @@ export default function RoutineDetailPage({ params }: { params: Promise<{ id: st
                     if (!exObj) return null;
                     return (
                       <form onSubmit={handleAddExercise} className="space-y-6">
-                        <div className="flex items-center gap-4 mb-6 bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
-                          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-slate-900 border border-slate-700">{getExerciseIcon(exObj.equipment, exObj.muscleGroup)}</div>
+                        <div className="flex items-center gap-4 mb-6 bg-slate-50 dark:bg-slate-950 p-4 rounded-3xl border border-slate-100 dark:border-slate-800">
+                          <div className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800">
+                            {exObj.imageUrl ? (
+                              <Image src={exObj.imageUrl} alt={exObj.name} fill className="object-cover" />
+                            ) : (
+                              getExerciseIcon(exObj.equipment, exObj.muscleGroup)
+                            )}
+                          </div>
                           <div><h4 className="font-bold text-slate-900 dark:text-white text-lg">{exObj.name}</h4><p className="text-sm text-slate-500">{exObj.muscleGroup}</p></div>
                         </div>
-                        <div className="bg-slate-50 dark:bg-slate-950 rounded-xl p-5 border border-slate-100 dark:border-slate-800">
+                        <div className="bg-slate-50 dark:bg-slate-950 rounded-3xl p-5 border border-slate-100 dark:border-slate-800">
                           {exObj.muscleGroup.toLowerCase() === 'cardio' ? (
                             <p className="text-slate-600 dark:text-slate-400">Cardio: 1 sesión</p>
                           ) : (
                             <div><label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Series Objetivo</label>
-                            <input type="number" min="1" max="10" required value={sets} onChange={(e) => setSets(Number(e.target.value))} className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none" />
+                            <input type="number" min="1" max="10" required value={sets} onChange={(e) => setSets(Number(e.target.value))} className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-3xl py-3 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-cyan-500 outline-none" />
                             </div>
                           )}
                         </div>
                         <div className="mt-8 flex justify-end gap-3 pt-6 border-t dark:border-slate-800">
-                          <button type="button" onClick={() => setStep("picker")} className="rounded-lg px-6 py-2.5 text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Volver</button>
-                          <button type="submit" disabled={isSubmitting} className="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-8 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-70 transition-colors">{isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Añadir"}</button>
+                          <button type="button" onClick={() => setStep("picker")} className="rounded-2xl px-6 py-2.5 text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Volver</button>
+                          <button type="submit" disabled={isSubmitting} className="inline-flex items-center justify-center rounded-2xl bg-primary px-8 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary disabled:opacity-70 transition-colors">{isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Añadir"}</button>
                         </div>
                       </form>
                     );

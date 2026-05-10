@@ -82,7 +82,7 @@ export default function AdminGymDashboard() {
   if (isLoading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -94,9 +94,9 @@ export default function AdminGymDashboard() {
       label: "Clientes Totales",
       value: data.totalClients,
       icon: Users,
-      color: "text-indigo-600 dark:text-indigo-400",
-      bg: "bg-indigo-50 dark:bg-indigo-950/30",
-      border: "border-indigo-100 dark:border-indigo-900/50",
+      color: "text-primary dark:text-cyan-400",
+      bg: "bg-cyan-50 dark:bg-cyan-950/30",
+      border: "border-cyan-100 dark:border-cyan-900/50",
     },
     {
       label: "Activos (7 días)",
@@ -120,30 +120,8 @@ export default function AdminGymDashboard() {
 
   return (
     <div className="space-y-8 max-w-6xl">
-      {/* Welcome Hero */}
-      <div className="relative rounded-3xl bg-gradient-to-br from-indigo-600 via-indigo-500 to-purple-600 p-8 md:p-10 text-white overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
-        <div className="absolute bottom-0 left-0 w-40 h-40 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
-        <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
-              <Building2 className="h-6 w-6" />
-            </div>
-            <span className="text-xs font-bold uppercase tracking-widest bg-white/20 px-3 py-1 rounded-full backdrop-blur-sm">
-              Panel de Gestión
-            </span>
-          </div>
-          <h1 className="text-3xl md:text-4xl font-black leading-tight">
-            Panel de Gestión del Gimnasio
-          </h1>
-          <p className="mt-3 text-indigo-100 text-lg max-w-xl">
-            Administra clientes, ejercicios y métricas desde un solo lugar.
-          </p>
-        </div>
-      </div>
-
       {/* KPI Cards */}
-      <div className="grid gap-6 sm:grid-cols-3">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         {kpis.map((kpi) => (
           <div
             key={kpi.label}
@@ -155,7 +133,7 @@ export default function AdminGymDashboard() {
             <div className="flex items-center justify-between mb-4">
               <div
                 className={cn(
-                  "flex h-11 w-11 items-center justify-center rounded-xl",
+                  "flex h-11 w-11 items-center justify-center rounded-3xl",
                   kpi.bg
                 )}
               >
@@ -179,7 +157,7 @@ export default function AdminGymDashboard() {
         <div className="lg:col-span-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
           <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <CalendarDays className="h-4 w-4 text-indigo-500" />
+              <CalendarDays className="h-4 w-4 text-primary" />
               <h2 className="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                 Actividad del Centro Deportivo
               </h2>
@@ -248,7 +226,7 @@ export default function AdminGymDashboard() {
         {/* Recent Activity Feed */}
         <div className="lg:col-span-2 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden flex flex-col">
           <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
-            <Clock className="h-4 w-4 text-indigo-500" />
+            <Clock className="h-4 w-4 text-primary" />
             <h2 className="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
               Actividad Reciente
             </h2>
@@ -275,7 +253,7 @@ export default function AdminGymDashboard() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-slate-900 dark:text-white">
-                      <span className="font-bold group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                      <span className="font-bold group-hover:text-primary dark:group-hover:text-cyan-400 transition-colors">
                         {s.clientName}
                       </span>{" "}
                       <span className="text-slate-500 dark:text-slate-400">
@@ -292,7 +270,7 @@ export default function AdminGymDashboard() {
                       </span>
                     </div>
                   </div>
-                  <ArrowRight className="h-4 w-4 text-slate-300 dark:text-slate-700 group-hover:text-indigo-400 transition-colors mt-1 shrink-0" />
+                  <ArrowRight className="h-4 w-4 text-slate-300 dark:text-slate-700 group-hover:text-cyan-400 transition-colors mt-1 shrink-0" />
                 </Link>
               ))}
             </div>
@@ -308,21 +286,21 @@ export default function AdminGymDashboard() {
       </div>
 
       {/* Quick Links */}
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         {[
           {
             title: "Gestionar Clientes",
             href: "/admin-gym/clientes",
             icon: Users,
-            color: "text-blue-600 dark:text-blue-400",
+            color: "text-secondary dark:text-blue-400",
             bg: "bg-blue-50 dark:bg-blue-950/30",
           },
           {
-            title: "Catálogo de Ejercicios",
-            href: "/admin-gym/ejercicios",
-            icon: Dumbbell,
-            color: "text-amber-600 dark:text-amber-400",
-            bg: "bg-amber-50 dark:bg-amber-950/30",
+            title: "Estadísticas BI",
+            href: "/admin-gym/estadisticas",
+            icon: TrendingUp,
+            color: "text-emerald-600 dark:text-emerald-400",
+            bg: "bg-emerald-50 dark:bg-emerald-950/30",
           },
           {
             title: "Configuración",
@@ -335,20 +313,20 @@ export default function AdminGymDashboard() {
           <Link
             key={link.href}
             href={link.href}
-            className="flex items-center gap-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm hover:shadow-md hover:border-indigo-200 dark:hover:border-indigo-800 transition-all group"
+            className="flex items-center gap-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm hover:shadow-soft hover:border-cyan-200 dark:hover:border-cyan-800 transition-all group"
           >
             <div
               className={cn(
-                "flex h-10 w-10 items-center justify-center rounded-xl shrink-0",
+                "flex h-10 w-10 items-center justify-center rounded-3xl shrink-0",
                 link.bg
               )}
             >
               <link.icon className={cn("h-5 w-5", link.color)} />
             </div>
-            <span className="font-bold text-slate-900 dark:text-white text-sm group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+            <span className="font-bold text-slate-900 dark:text-white text-sm group-hover:text-primary dark:group-hover:text-cyan-400 transition-colors">
               {link.title}
             </span>
-            <ArrowRight className="ml-auto h-4 w-4 text-slate-300 dark:text-slate-700 group-hover:text-indigo-400 transition-colors" />
+            <ArrowRight className="ml-auto h-4 w-4 text-slate-300 dark:text-slate-700 group-hover:text-cyan-400 transition-colors" />
           </Link>
         ))}
       </div>

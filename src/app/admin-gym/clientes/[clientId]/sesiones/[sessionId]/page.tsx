@@ -80,14 +80,14 @@ export default function SessionDetailPage({
     if (g === "cardio") return <Activity size={18} className="text-blue-400" />;
     if (e === "mancuernas") return <Dumbbell size={18} className="text-amber-400" />;
     if (e === "peso corporal") return <Accessibility size={18} className="text-green-400" />;
-    if (e === "barra" || e === "máquina" || e === "polea") return <Target size={18} className="text-indigo-400" />;
+    if (e === "barra" || e === "máquina" || e === "polea") return <Target size={18} className="text-cyan-400" />;
     return <BicepsFlexed size={18} className="text-slate-400" />;
   };
 
   if (isLoading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -97,7 +97,7 @@ export default function SessionDetailPage({
       <div className="max-w-2xl mx-auto">
         <Link
           href={`/admin-gym/clientes/${clientId}`}
-          className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 mb-8 transition-colors"
+          className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-cyan-400 mb-8 transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
           Volver al cliente
@@ -134,7 +134,7 @@ export default function SessionDetailPage({
       {/* Back */}
       <Link
         href={`/admin-gym/clientes/${clientId}`}
-        className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+        className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-cyan-400 transition-colors"
       >
         <ArrowLeft className="h-4 w-4" />
         Volver al perfil del cliente
@@ -142,9 +142,8 @@ export default function SessionDetailPage({
 
       {/* Header Card */}
       <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
-        <div className="h-20 bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-600" />
-        <div className="px-6 pb-6 -mt-6">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl border-4 border-white dark:border-slate-900 bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 shadow-lg mb-4">
+        <div className="px-6 pb-6 pt-6">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl border-4 border-white dark:border-slate-900 bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 shadow-soft mb-4">
             <Dumbbell className="h-6 w-6" />
           </div>
 
@@ -160,19 +159,19 @@ export default function SessionDetailPage({
 
           {/* Stats Row */}
           <div className="flex flex-wrap gap-3 mt-5">
-            <div className="flex items-center gap-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 px-4 py-2 border border-emerald-100 dark:border-emerald-900/50">
+            <div className="flex items-center gap-2 rounded-3xl bg-emerald-50 dark:bg-emerald-950/30 px-4 py-2 border border-emerald-100 dark:border-emerald-900/50">
               <Clock className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
               <span className="text-sm font-bold text-emerald-700 dark:text-emerald-300">
                 {session.durationMinutes} min
               </span>
             </div>
-            <div className="flex items-center gap-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/30 px-4 py-2 border border-indigo-100 dark:border-indigo-900/50">
-              <TrendingUp className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
-              <span className="text-sm font-bold text-indigo-700 dark:text-indigo-300">
+            <div className="flex items-center gap-2 rounded-3xl bg-cyan-50 dark:bg-cyan-950/30 px-4 py-2 border border-cyan-100 dark:border-cyan-900/50">
+              <TrendingUp className="h-4 w-4 text-primary dark:text-cyan-400" />
+              <span className="text-sm font-bold text-primary dark:text-cyan-300">
                 {session.totalVolume.toLocaleString()} kg vol.
               </span>
             </div>
-            <div className="flex items-center gap-2 rounded-xl bg-slate-50 dark:bg-slate-800 px-4 py-2 border border-slate-100 dark:border-slate-700">
+            <div className="flex items-center gap-2 rounded-3xl bg-slate-50 dark:bg-slate-800 px-4 py-2 border border-slate-100 dark:border-slate-700">
               <Dumbbell className="h-4 w-4 text-slate-500" />
               <span className="text-sm font-bold text-slate-600 dark:text-slate-300">
                 {session.exercises.length} ejercicio{session.exercises.length !== 1 && "s"}
@@ -217,7 +216,10 @@ export default function SessionDetailPage({
                     <tr className="bg-slate-50 dark:bg-slate-950 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                       <th className="px-6 py-2.5 text-left">Serie</th>
                       {isCardio ? (
-                        <th className="px-6 py-2.5 text-right">Tiempo (min)</th>
+                        <>
+                          <th className="px-6 py-2.5 text-right">Distancia ({session.distanceUnit || 'km'})</th>
+                          <th className="px-6 py-2.5 text-right">Tiempo (min)</th>
+                        </>
                       ) : (
                         <>
                           <th className="px-6 py-2.5 text-right">Peso (kg)</th>
@@ -237,9 +239,14 @@ export default function SessionDetailPage({
                           #{s.setNumber}
                         </td>
                         {isCardio ? (
-                          <td className="px-6 py-3 text-right font-mono text-slate-900 dark:text-white">
-                            {s.reps}
-                          </td>
+                          <>
+                            <td className="px-6 py-3 text-right font-mono text-slate-900 dark:text-white">
+                              {s.weight}
+                            </td>
+                            <td className="px-6 py-3 text-right font-mono text-slate-900 dark:text-white">
+                              {s.reps}
+                            </td>
+                          </>
                         ) : (
                           <>
                             <td className="px-6 py-3 text-right font-mono text-slate-900 dark:text-white">

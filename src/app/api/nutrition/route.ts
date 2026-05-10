@@ -39,7 +39,11 @@ export async function GET(req: Request) {
       orderBy: { date: "asc" },
     });
 
-    return NextResponse.json(entries);
+    const profile = await prisma.nutritionProfile.findUnique({
+      where: { userId: session.user.id }
+    });
+
+    return NextResponse.json({ entries, profile });
   } catch (error) {
     console.error("Error fetching nutrition entries:", error);
     return NextResponse.json(
