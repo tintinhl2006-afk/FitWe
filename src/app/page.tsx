@@ -12,6 +12,7 @@ import {
   Zap,
 } from "lucide-react";
 import { LandingNavbar } from "@/components/layout/LandingNavbar";
+import { LegalFooter } from "@/components/layout/LegalFooter";
 
 export default function LandingPage() {
   return (
@@ -39,15 +40,14 @@ export default function LandingPage() {
       <section className="relative z-10 flex min-h-screen flex-col items-center justify-center px-6 pt-16 pb-24 text-center">
         {/* Badge removed as requested */}
         <h1 className="max-w-4xl text-4xl font-extrabold leading-[1.1] tracking-tight sm:text-6xl lg:text-7xl animate-fade-in-up animation-delay-100">
-          Revoluciona tu forma de{" "}
+          Fideliza a tus clientes con tu propia{" "}
           <span className="bg-gradient-to-r from-cyan-400 via-cyan-400 to-cyan-400 bg-clip-text text-transparent">
-            entrenar y gestionar
+            plataforma integral
           </span>
         </h1>
 
         <p className="mt-6 max-w-2xl text-lg text-slate-400 sm:text-xl animate-fade-in-up animation-delay-200">
-          Registra tus entrenamientos en tiempo real, lleva el control de tu
-          nutrición y gestiona tu centro deportivo desde un solo lugar.
+          FitWe es el software de gestión para gimnasios que incluye una app premium de nutrición y entrenamiento para tus socios. Aumenta la retención y el valor de tu cuota.
         </p>
 
         {/* CTA Buttons */}
@@ -58,7 +58,7 @@ export default function LandingPage() {
             className="group inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-8 py-4 text-base font-semibold text-white backdrop-blur-sm hover:bg-white/10 hover:border-white/20 hover:scale-[1.03] active:scale-[0.98] transition-all"
           >
             <Building2 className="h-5 w-5 text-cyan-400" />
-            Soy Centro Deportivo
+            Registrar mi Gimnasio
             <ChevronRight className="h-4 w-4 text-slate-500 transition-transform group-hover:translate-x-1 group-hover:text-white" />
           </Link>
         </div>
@@ -93,7 +93,7 @@ export default function LandingPage() {
 
           {/* Feature cards grid */}
           <div className="grid gap-6 md:grid-cols-3">
-            {/* Card 1 – Seguimiento en Vivo */}
+            {/* Card 1 */}
             <div className="group relative rounded-3xl border border-white/5 bg-white/[0.02] p-8 backdrop-blur-sm hover:bg-white/[0.04] hover:border-primary/20 transition-all duration-500">
               {/* Glow on hover */}
               <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-cyan-600/0 to-cyan-600/0 group-hover:from-cyan-600/5 group-hover:to-cyan-600/5 transition-all duration-500" />
@@ -102,21 +102,15 @@ export default function LandingPage() {
                   <Activity className="h-7 w-7" />
                 </div>
                 <h3 className="text-xl font-bold text-white mb-3">
-                  Seguimiento en Vivo
+                  Gestión B2B Centralizada
                 </h3>
                 <p className="text-slate-400 leading-relaxed">
-                  Registra cada serie, repetición y peso en tiempo real durante
-                  tu sesión de entrenamiento. Visualiza tu progreso histórico y
-                  rompe tus propios récords.
+                  Controla cuotas, automatiza la reserva de clases y gestiona a todos tus clientes desde un panel de control intuitivo.
                 </p>
-                <div className="mt-6 flex items-center gap-1.5 text-sm font-medium text-cyan-400 group-hover:text-cyan-300 transition-colors">
-                  Explorar
-                  <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
-                </div>
               </div>
             </div>
 
-            {/* Card 2 – Planes Nutricionales */}
+            {/* Card 2 */}
             <div className="group relative rounded-3xl border border-white/5 bg-white/[0.02] p-8 backdrop-blur-sm hover:bg-white/[0.04] hover:border-emerald-500/20 transition-all duration-500">
               <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-emerald-600/0 to-cyan-600/0 group-hover:from-emerald-600/5 group-hover:to-cyan-600/5 transition-all duration-500" />
               <div className="relative">
@@ -124,21 +118,15 @@ export default function LandingPage() {
                   <Salad className="h-7 w-7" />
                 </div>
                 <h3 className="text-xl font-bold text-white mb-3">
-                  Planes Nutricionales
+                  Valor Añadido para tus Socios
                 </h3>
                 <p className="text-slate-400 leading-relaxed">
-                  Controla tus calorías diarias, macronutrientes y hábitos
-                  alimenticios con un registro intuitivo. Alcanza tus objetivos
-                  de composición corporal.
+                  Ofréceles acceso incluido a la app para que registren sus entrenamientos en vivo y lleven su diario nutricional.
                 </p>
-                <div className="mt-6 flex items-center gap-1.5 text-sm font-medium text-emerald-400 group-hover:text-emerald-300 transition-colors">
-                  Explorar
-                  <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
-                </div>
               </div>
             </div>
 
-            {/* Card 3 – Gestión Integral B2B */}
+            {/* Card 3 */}
             <div className="group relative rounded-3xl border border-white/5 bg-white/[0.02] p-8 backdrop-blur-sm hover:bg-white/[0.04] hover:border-cyan-500/20 transition-all duration-500">
               <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-cyan-600/0 to-cyan-600/0 group-hover:from-cyan-600/5 group-hover:to-cyan-600/5 transition-all duration-500" />
               <div className="relative">
@@ -146,17 +134,11 @@ export default function LandingPage() {
                   <Zap className="h-7 w-7" />
                 </div>
                 <h3 className="text-xl font-bold text-white mb-3">
-                  Gestión Integral B2B
+                  Aumenta la Retención
                 </h3>
                 <p className="text-slate-400 leading-relaxed">
-                  Panel de administración completo para centros deportivos: CRM
-                  de clientes, asignación de rutinas, métricas agregadas y
-                  analítica en tiempo real.
+                  Diferénciate de la competencia. Los centros que usan tecnología premium reducen su tasa de abandono en un 40%.
                 </p>
-                <div className="mt-6 flex items-center gap-1.5 text-sm font-medium text-cyan-400 group-hover:text-cyan-300 transition-colors">
-                  Explorar
-                  <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
-                </div>
               </div>
             </div>
           </div>
@@ -164,28 +146,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════════ FOOTER ═══════════════════ */}
-      <footer className="relative z-10 border-t border-white/5 py-8">
-        <div className="mx-auto max-w-7xl px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-slate-500">
-            © {new Date().getFullYear()} <span translate="no" className="notranslate">FitWe</span>. Todos los derechos
-            reservados.
-          </p>
-          <div className="flex items-center gap-6">
-            <Link
-              href="/login"
-              className="text-sm text-slate-500 hover:text-slate-300 transition-colors"
-            >
-              Iniciar Sesión
-            </Link>
-            <Link
-              href="/register"
-              className="text-sm text-slate-500 hover:text-slate-300 transition-colors"
-            >
-              Registrarse
-            </Link>
-          </div>
-        </div>
-      </footer>
+      <LegalFooter />
     </div>
   );
 }
