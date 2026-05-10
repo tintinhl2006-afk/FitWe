@@ -5,6 +5,7 @@ import { NextAuthProvider } from "@/components/providers/SessionProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { PreferencesProvider } from "@/context/PreferencesContext";
 import Script from "next/script";
+export const dynamic = "force-dynamic";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
