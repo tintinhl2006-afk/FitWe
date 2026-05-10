@@ -37,12 +37,7 @@ export default function LandingPage() {
 
       {/* ═══════════════════ HERO SECTION ═══════════════════ */}
       <section className="relative z-10 flex min-h-screen flex-col items-center justify-center px-6 pt-16 pb-24 text-center">
-        {/* Badge */}
-        <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-1.5 text-sm font-medium text-cyan-300 backdrop-blur-sm animate-fade-in-up">
-          <Sparkles className="h-3.5 w-3.5" />
-          Plataforma integral de fitness
-        </div>
-
+        {/* Badge removed as requested */}
         <h1 className="max-w-4xl text-4xl font-extrabold leading-[1.1] tracking-tight sm:text-6xl lg:text-7xl animate-fade-in-up animation-delay-100">
           Revoluciona tu forma de{" "}
           <span className="bg-gradient-to-r from-cyan-400 via-cyan-400 to-cyan-400 bg-clip-text text-transparent">
