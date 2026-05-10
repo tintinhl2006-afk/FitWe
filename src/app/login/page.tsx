@@ -129,9 +129,9 @@ export default function LoginPage() {
         </form>
 
         <div className="mt-6 text-center text-sm">
-          <span className="text-slate-600 dark:text-slate-400">¿No tienes cuenta? </span>
-          <Link href="/register" className="font-medium text-primary dark:text-cyan-400 hover:underline">
-            Regístrate aquí
+          <span className="text-slate-600 dark:text-slate-400">¿Eres un gimnasio y no tienes cuenta? </span>
+          <Link href="/registro-gimnasio" className="font-medium text-primary dark:text-cyan-400 hover:underline">
+            Registra tu centro aquí
           </Link>
         </div>
       </div>

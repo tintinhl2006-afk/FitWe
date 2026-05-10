@@ -183,12 +183,7 @@ export default function RegistroGimnasioPage() {
             </Link>
           </div>
 
-          <div className="text-center text-sm">
-            <span className="text-slate-500">¿Eres un atleta? </span>
-            <Link href="/register" className="font-medium text-cyan-400 hover:text-cyan-300 transition-colors">
-              Regístrate como usuario
-            </Link>
-          </div>
+
         </div>
       </div>
     </div>

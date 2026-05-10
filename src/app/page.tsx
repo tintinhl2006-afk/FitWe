@@ -53,16 +53,6 @@ export default function LandingPage() {
         {/* CTA Buttons */}
         <div className="mt-10 flex flex-col sm:flex-row items-center gap-4 animate-fade-in-up animation-delay-300">
           <Link
-            href="/register"
-            id="cta-athlete"
-            className="group relative inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-500 to-cyan-600 px-8 py-4 text-base font-semibold text-white shadow-2xl shadow-cyan-500/25 hover:shadow-cyan-500/40 hover:scale-[1.03] active:scale-[0.98] transition-all"
-          >
-            <Heart className="h-5 w-5" />
-            Soy Atleta · Empezar Gratis
-            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-          </Link>
-
-          <Link
             href="/registro-gimnasio"
             id="cta-gym"
             className="group inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-8 py-4 text-base font-semibold text-white backdrop-blur-sm hover:bg-white/10 hover:border-white/20 hover:scale-[1.03] active:scale-[0.98] transition-all"

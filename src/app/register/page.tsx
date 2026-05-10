@@ -45,10 +45,10 @@ export default function RegisterPage() {
             <Dumbbell className="h-6 w-6 text-white" />
           </div>
           <h2 className="mt-6 text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
-            Crea tu cuenta
+            Registra tu Gimnasio
           </h2>
           <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-            Únete a <span translate="no" className="notranslate">FitWe</span> y comienza a progresar
+            Únete a <span translate="no" className="notranslate">FitWe</span> como Centro Deportivo
           </p>
         </div>
 
