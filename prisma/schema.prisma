@@ -23,6 +23,7 @@ model User {
   isPrivate           Boolean            @default(false)
   language            String             @default("es")
   link                String?
+  location            String?
   measurementUnit     String             @default("cm")
   weightUnit          String             @default("kg")
   gymId               String?            @db.Uuid

@@ -3,12 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Dumbbell, Mail, Lock, User, Loader2 } from "lucide-react";
+import { Dumbbell, Mail, Lock, Building2, MapPin, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function RegisterPage() {
   const router = useRouter();
   const [name, setName] = useState("");
+  const [location, setLocation] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -23,7 +24,7 @@ export default function RegisterPage() {
       const res = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email, password, location }),
       });
 
       const data = await res.json();
@@ -62,11 +63,11 @@ export default function RegisterPage() {
           <div className="space-y-4">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                Nombre completo
+                Nombre del Gimnasio
               </label>
               <div className="relative mt-1">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                  <User className="h-5 w-5 text-slate-400 dark:text-slate-500" />
+                  <Building2 className="h-5 w-5 text-slate-400 dark:text-slate-500" />
                 </div>
                 <input
                   id="name"
@@ -76,7 +77,7 @@ export default function RegisterPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="block w-full rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 py-2.5 pl-10 pr-3 text-slate-900 dark:text-white shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-cyan-500 sm:text-sm"
-                  placeholder="Juan Pérez"
+                  placeholder="Ej: Iron Fitness Club"
                 />
               </div>
             </div>
@@ -119,6 +120,27 @@ export default function RegisterPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   className="block w-full rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 py-2.5 pl-10 pr-3 text-slate-900 dark:text-white shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-cyan-500 sm:text-sm"
                   placeholder="••••••••"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="location" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                Ubicación del Gimnasio
+              </label>
+              <div className="relative mt-1">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                  <MapPin className="h-5 w-5 text-slate-400 dark:text-slate-500" />
+                </div>
+                <input
+                  id="location"
+                  name="location"
+                  type="text"
+                  required
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  className="block w-full rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 py-2.5 pl-10 pr-3 text-slate-900 dark:text-white shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-cyan-500 sm:text-sm"
+                  placeholder="Ej: Madrid, España"
                 />
               </div>
             </div>
