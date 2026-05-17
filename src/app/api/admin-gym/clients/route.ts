@@ -28,6 +28,7 @@ export async function GET() {
         createdAt: true,
         subscriptionStatus: true,
         subscriptionEndDate: true,
+        plan: { select: { id: true, name: true, price: true, durationDays: true } },
         _count: {
           select: {
             workoutSessions: {
@@ -48,6 +49,7 @@ export async function GET() {
       totalWorkouts: c._count.workoutSessions,
       subscriptionStatus: c.subscriptionStatus,
       subscriptionEndDate: c.subscriptionEndDate?.toISOString() || null,
+      plan: c.plan,
     }));
 
     return NextResponse.json(result);

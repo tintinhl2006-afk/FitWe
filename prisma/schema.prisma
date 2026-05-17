@@ -8,48 +8,68 @@ datasource db {
 }
 
 model User {
-  id                  String           @id @default(uuid()) @db.Uuid
-  email               String           @unique
+  id                  String             @id @default(uuid()) @db.Uuid
+  email               String             @unique
   password            String
   name                String
-  role                Role             @default(USER)
+  role                Role               @default(USER)
   weight              Float?
   height              Float?
-  createdAt           DateTime         @default(now())
-  updatedAt           DateTime         @updatedAt
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
   image               String?
   bio                 String?
-  distanceUnit        String           @default("km")
-  isPrivate           Boolean          @default(false)
-  language            String           @default("es")
+  distanceUnit        String             @default("km")
+  isPrivate           Boolean            @default(false)
+  language            String             @default("es")
   link                String?
-  measurementUnit     String           @default("cm")
-  weightUnit          String           @default("kg")
-  gymId               String?          @db.Uuid
+  measurementUnit     String             @default("cm")
+  weightUnit          String             @default("kg")
+  gymId               String?            @db.Uuid
   subscriptionEndDate DateTime?
-  subscriptionStatus  String           @default("ACTIVE")
-  monthlyFee          Float            @default(49.99)
+  subscriptionStatus  String             @default("ACTIVE")
+  monthlyFee          Float              @default(49.99)
+  planId              String?            @db.Uuid
   bookings            ClassBooking[]
-  classTemplates      ClassTemplate[]  @relation("GymTemplates")
+  classTemplates      ClassTemplate[]    @relation("GymTemplates")
   foodEntries         FoodEntry[]
-  classes             GymClass[]       @relation("GymClasses")
+  classes             GymClass[]         @relation("GymClasses")
   payments            PaymentRecord[]
   routines            Routine[]
-  gym                 User?             @relation("GymClients", fields: [gymId], references: [id])
-  clients             User[]            @relation("GymClients")
+  gym                 User?              @relation("GymClients", fields: [gymId], references: [id])
+  clients             User[]             @relation("GymClients")
   workoutSessions     WorkoutSession[]
   nutritionProfile    NutritionProfile?
   foodItems           FoodItem[]
   mealEntries         MealEntry[]
+  plan                SubscriptionPlan?  @relation("UserPlan", fields: [planId], references: [id])
+  gymPlans            SubscriptionPlan[] @relation("GymPlans")
+}
+
+model SubscriptionPlan {
+  id           String          @id @default(uuid()) @db.Uuid
+  gymId        String          @db.Uuid
+  name         String
+  price        Float
+  durationDays Int
+  description  String?
+  isActive     Boolean         @default(true)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  gym          User            @relation("GymPlans", fields: [gymId], references: [id])
+  users        User[]          @relation("UserPlan")
+  payments     PaymentRecord[]
 }
 
 model PaymentRecord {
-  id          String   @id @default(cuid())
-  userId      String   @db.Uuid
-  amount      Float    @default(0)
+  id          String            @id @default(cuid())
+  userId      String            @db.Uuid
+  amount      Float             @default(0)
   description String
-  date        DateTime @default(now())
-  user        User     @relation(fields: [userId], references: [id])
+  date        DateTime          @default(now())
+  planId      String?           @db.Uuid
+  user        User              @relation(fields: [userId], references: [id])
+  plan        SubscriptionPlan? @relation(fields: [planId], references: [id])
 }
 
 model GymClass {

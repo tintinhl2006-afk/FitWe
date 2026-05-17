@@ -95,7 +95,9 @@ export async function POST(req: Request) {
 
     // ── Simulación de pago exitoso ──
 
-    // Obtener datos del usuario para conocer la cuota
+    const { planId } = body;
+
+    // Obtener datos del usuario
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
       select: { monthlyFee: true, gymId: true },
@@ -108,20 +110,43 @@ export async function POST(req: Request) {
       );
     }
 
-    const amount = user.monthlyFee;
+    let amount = user.monthlyFee;
+    let durationDays = 30;
+    let planName = "Cuota mensual";
+    let resolvedPlanId: string | null = null;
 
-    // Calcular nueva fecha de fin de suscripción (30 días desde ahora)
+    // Si se proporciona un planId, buscar el plan
+    if (planId) {
+      const plan = await prisma.subscriptionPlan.findUnique({
+        where: { id: planId },
+      });
+
+      if (!plan || plan.gymId !== user.gymId || !plan.isActive) {
+        return NextResponse.json(
+          { message: "Plan no válido o no disponible." },
+          { status: 400 }
+        );
+      }
+
+      amount = plan.price;
+      durationDays = plan.durationDays;
+      planName = plan.name;
+      resolvedPlanId = plan.id;
+    }
+
+    // Calcular nueva fecha de fin de suscripción
     const newEndDate = new Date();
-    newEndDate.setDate(newEndDate.getDate() + 30);
+    newEndDate.setDate(newEndDate.getDate() + durationDays);
 
-    // Transacción: registrar pago + actualizar suscripción
+    // Transacción: registrar pago + actualizar suscripción + asignar plan
     const [payment] = await prisma.$transaction([
       prisma.paymentRecord.create({
         data: {
           userId: session.user.id,
           amount,
-          description: `Pago mensual - Tarjeta ****${cleanCardNumber.slice(-4)}`,
+          description: `${planName} - Tarjeta ****${cleanCardNumber.slice(-4)}`,
           date: new Date(),
+          planId: resolvedPlanId,
         },
       }),
       prisma.user.update({
@@ -129,6 +154,7 @@ export async function POST(req: Request) {
         data: {
           subscriptionStatus: "ACTIVE",
           subscriptionEndDate: newEndDate,
+          ...(resolvedPlanId && { planId: resolvedPlanId }),
         },
       }),
     ]);

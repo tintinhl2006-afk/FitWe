@@ -27,6 +27,7 @@ interface Client {
   totalWorkouts: number;
   subscriptionStatus: string;
   subscriptionEndDate: string | null;
+  plan: { id: string; name: string; price: number; durationDays: number } | null;
 }
 
 export default function ClientesPage() {
@@ -188,7 +189,7 @@ export default function ClientesPage() {
             <div className="col-span-4">Cliente</div>
             <div className="col-span-2">Email</div>
             <div className="col-span-2 text-center">Estado</div>
-            <div className="col-span-2 text-center">Entrenamientos</div>
+            <div className="col-span-2 text-center">Tarifa</div>
             <div className="col-span-2 text-center">Desde</div>
           </div>
 
@@ -241,19 +242,15 @@ export default function ClientesPage() {
                   </span>
                 </div>
 
-                {/* Total Workouts */}
+                {/* Plan Info */}
                 <div className="col-span-2 flex items-center justify-center">
-                  <span
-                    className={cn(
-                      "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold",
-                      client.totalWorkouts > 0
-                        ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400"
-                        : "bg-slate-100 dark:bg-slate-800 text-slate-500"
-                    )}
-                  >
-                    <Dumbbell className="h-3.5 w-3.5" />
-                    {client.totalWorkouts}
-                  </span>
+                  {client.plan ? (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-cyan-50 dark:bg-cyan-950/30 border border-cyan-100 dark:border-cyan-900/50 px-2.5 py-0.5 text-xs font-bold text-primary dark:text-cyan-400">
+                      {client.plan.name}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-slate-400">Sin tarifa</span>
+                  )}
                 </div>
 
                 {/* Joined Date */}

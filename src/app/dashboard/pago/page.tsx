@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
@@ -13,13 +13,27 @@ import {
   Building2,
   ArrowLeft,
   Shield,
+  Clock,
+  Tag,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
+interface Plan {
+  id: string;
+  name: string;
+  price: number;
+  durationDays: number;
+  description: string | null;
+}
+
 export default function PaymentPage() {
   const { data: session, update } = useSession();
   const router = useRouter();
+
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+  const [isLoadingPlans, setIsLoadingPlans] = useState(true);
 
   const [cardNumber, setCardNumber] = useState("");
   const [cardHolder, setCardHolder] = useState("");
@@ -31,10 +45,49 @@ export default function PaymentPage() {
     lastFour: string;
     amount: number;
     endDate: string;
+    planName: string;
   } | null>(null);
 
-  const monthlyFee = session?.user?.monthlyFee || 49.99;
   const gymName = session?.user?.gymName || "Tu Gimnasio";
+
+  // Fetch available plans from user's gym
+  useEffect(() => {
+    const fetchPlans = async () => {
+      try {
+        const res = await fetch("/api/user/plans");
+        if (res.ok) {
+          const data = await res.json();
+          setPlans(data.plans);
+          // Auto-select current plan or first plan
+          if (data.currentPlanId) {
+            setSelectedPlanId(data.currentPlanId);
+          } else if (data.plans.length > 0) {
+            setSelectedPlanId(data.plans[0].id);
+          }
+        }
+      } catch (e) {
+        console.error("Error fetching plans:", e);
+      } finally {
+        setIsLoadingPlans(false);
+      }
+    };
+    fetchPlans();
+  }, []);
+
+  const selectedPlan = plans.find((p) => p.id === selectedPlanId);
+  const displayPrice = selectedPlan?.price ?? session?.user?.monthlyFee ?? 49.99;
+
+  const formatDuration = (days: number) => {
+    if (days === 1) return "1 día";
+    if (days === 7) return "1 semana";
+    if (days === 14) return "2 semanas";
+    if (days === 30) return "1 mes";
+    if (days === 60) return "2 meses";
+    if (days === 90) return "3 meses";
+    if (days === 180) return "6 meses";
+    if (days === 365) return "1 año";
+    return `${days} días`;
+  };
 
   // Formatea el número de tarjeta con espacios cada 4 dígitos
   const formatCardNumber = (value: string) => {
@@ -76,6 +129,7 @@ export default function PaymentPage() {
           cardHolder,
           expiryDate,
           cvv,
+          planId: selectedPlanId,
         }),
       });
 
@@ -89,6 +143,7 @@ export default function PaymentPage() {
         lastFour: data.payment.lastFourDigits,
         amount: data.payment.amount,
         endDate: data.subscription.endDate,
+        planName: selectedPlan?.name || "Cuota mensual",
       });
 
       // Actualizar la sesión para reflejar la nueva suscripción
@@ -120,6 +175,12 @@ export default function PaymentPage() {
             </p>
 
             <div className="rounded-2xl bg-slate-50 dark:bg-slate-800/50 p-5 mb-6 space-y-3 text-left">
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-500 dark:text-slate-400">Plan</span>
+                <span className="font-bold text-slate-900 dark:text-white">
+                  {success.planName}
+                </span>
+              </div>
               <div className="flex justify-between text-sm">
                 <span className="text-slate-500 dark:text-slate-400">Importe</span>
                 <span className="font-bold text-slate-900 dark:text-white">
@@ -180,12 +241,12 @@ export default function PaymentPage() {
         </Link>
 
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-6">
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-3xl bg-cyan-50 dark:bg-cyan-950/30 text-primary dark:text-cyan-400">
               <CreditCard className="h-5 w-5" />
             </div>
-            Pagar Cuota Mensual
+            Pagar Cuota
           </h1>
           <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
             Renueva tu suscripción en{" "}
@@ -195,22 +256,91 @@ export default function PaymentPage() {
           </p>
         </div>
 
-        {/* Amount card */}
-        <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-gradient-to-br from-slate-900 to-slate-800 dark:from-slate-800 dark:to-slate-900 p-6 mb-6 text-white">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2 text-slate-400">
-              <Building2 className="h-4 w-4" />
-              <span className="text-sm">{gymName}</span>
+        {/* Plan Selection */}
+        {isLoadingPlans ? (
+          <div className="flex h-24 items-center justify-center mb-6">
+            <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+          </div>
+        ) : plans.length > 0 ? (
+          <div className="mb-6">
+            <h2 className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-2">
+              <Tag className="h-4 w-4" />
+              Elige tu tarifa
+            </h2>
+            <div className="grid gap-3">
+              {plans.map((plan) => (
+                <button
+                  key={plan.id}
+                  type="button"
+                  onClick={() => setSelectedPlanId(plan.id)}
+                  className={cn(
+                    "flex items-center justify-between rounded-2xl border-2 p-4 text-left transition-all",
+                    selectedPlanId === plan.id
+                      ? "border-primary bg-cyan-50/50 dark:bg-cyan-950/20 shadow-sm"
+                      : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
+                  )}
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <h3
+                        className={cn(
+                          "font-bold",
+                          selectedPlanId === plan.id
+                            ? "text-primary dark:text-cyan-400"
+                            : "text-slate-900 dark:text-white"
+                        )}
+                      >
+                        {plan.name}
+                      </h3>
+                      <span className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
+                        <Clock className="h-3 w-3" />
+                        {formatDuration(plan.durationDays)}
+                      </span>
+                    </div>
+                    {plan.description && (
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                        {plan.description}
+                      </p>
+                    )}
+                  </div>
+                  <div className="text-right ml-4">
+                    <span
+                      className={cn(
+                        "text-xl font-black",
+                        selectedPlanId === plan.id
+                          ? "text-primary dark:text-cyan-400"
+                          : "text-slate-900 dark:text-white"
+                      )}
+                    >
+                      {plan.price.toFixed(2)}
+                    </span>
+                    <span className="text-sm text-slate-500 ml-0.5">€</span>
+                  </div>
+                </button>
+              ))}
             </div>
-            <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold">
-              Mensual
-            </span>
           </div>
-          <div className="text-4xl font-bold">
-            {monthlyFee.toFixed(2)} <span className="text-xl font-normal text-slate-400">€</span>
+        ) : (
+          /* Fallback when gym has no plans */
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-gradient-to-br from-slate-900 to-slate-800 dark:from-slate-800 dark:to-slate-900 p-6 mb-6 text-white">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2 text-slate-400">
+                <Building2 className="h-4 w-4" />
+                <span className="text-sm">{gymName}</span>
+              </div>
+              <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold">
+                Mensual
+              </span>
+            </div>
+            <div className="text-4xl font-bold">
+              {displayPrice.toFixed(2)}{" "}
+              <span className="text-xl font-normal text-slate-400">€</span>
+            </div>
+            <p className="mt-1 text-sm text-slate-400">
+              Cuota del mes · 30 días de acceso
+            </p>
           </div>
-          <p className="mt-1 text-sm text-slate-400">Cuota del mes · 30 días de acceso</p>
-        </div>
+        )}
 
         {/* Payment form */}
         <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm">
@@ -294,7 +424,9 @@ export default function PaymentPage() {
                     required
                     maxLength={4}
                     value={cvv}
-                    onChange={(e) => setCvv(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                    onChange={(e) =>
+                      setCvv(e.target.value.replace(/\D/g, "").slice(0, 4))
+                    }
                     className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-3 px-4 text-slate-900 dark:text-white text-sm font-mono text-center tracking-widest focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none transition-all"
                     placeholder="•••"
                   />
@@ -320,7 +452,7 @@ export default function PaymentPage() {
               ) : (
                 <>
                   <Lock className="h-4 w-4" />
-                  Pagar {monthlyFee.toFixed(2)} €
+                  Pagar {displayPrice.toFixed(2)} €
                 </>
               )}
             </button>

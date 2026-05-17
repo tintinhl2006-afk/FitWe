@@ -17,12 +17,14 @@ import {
   FlaskConical,
   Menu,
   X,
+  Tag,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const gymNavItems = [
   { title: "Dashboard", href: "/admin-gym", icon: LayoutDashboard },
   { title: "Clientes", href: "/admin-gym/clientes", icon: Users },
+  { title: "Tarifas", href: "/admin-gym/tarifas", icon: Tag },
   { title: "Clases", href: "/admin-gym/clases", icon: Calendar },
   { title: "Estadísticas", href: "/admin-gym/estadisticas", icon: BarChart3 },
   { title: "Testing Lab", href: "/admin-gym/testing", icon: FlaskConical },
