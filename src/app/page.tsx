@@ -69,12 +69,13 @@ export default function LandingPage() {
         <div className="mt-16 w-full max-w-6xl animate-fade-in-up animation-delay-400">
           <div className="relative rounded-3xl overflow-hidden border border-white/10 shadow-2xl shadow-cyan-500/20 bg-slate-900/50 backdrop-blur-sm p-2 sm:p-4">
             <Image
-              src="/fitwe_dashboard.png"
-              alt="FitWe Dashboard Interface"
+              src="/fitwe_dashboard_animation.webp"
+              alt="FitWe Dashboard Interface en Acción"
               width={1600}
               height={900}
-              className="rounded-xl sm:rounded-2xl w-full object-cover"
+              className="rounded-xl sm:rounded-2xl w-full object-cover opacity-90"
               priority
+              unoptimized
             />
             {/* Glowing effect behind image */}
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent z-10 pointer-events-none" />
