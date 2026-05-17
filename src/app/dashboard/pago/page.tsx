@@ -213,7 +213,7 @@ export default function PaymentPage() {
 
             <div className="flex items-center justify-center gap-2 text-xs text-slate-400 mb-6">
               <Shield className="h-3.5 w-3.5" />
-              Pago simulado · No se ha realizado ningún cargo real
+              Pago simulado
             </div>
 
             <button
