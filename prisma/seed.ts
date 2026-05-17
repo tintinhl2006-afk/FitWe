@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -6,162 +7,653 @@ const curatedExercises = [
   // PECHO
   { name: 'Press de Banca', primaryMuscle: 'Pecho', equipment: 'Barra', description: 'Ejercicio básico para el pectoral. Acuéstate en el banco, agarra la barra a una anchura ligeramente superior a los hombros y bájala hasta rozar el pecho medio.' },
   { name: 'Press de Banca Inclinado', primaryMuscle: 'Pecho', equipment: 'Barra', description: 'Enfocado en el haz clavicular (pecho superior). Banco a 30-45 grados. Baja la barra hasta la parte alta del pecho.' },
-  { name: 'Press de Banca Declinado', primaryMuscle: 'Pecho', equipment: 'Barra', description: 'Enfocado en la porción inferior del pectoral. Banco declinado. Baja la barra hasta la parte baja del esternón.' },
   { name: 'Press con Mancuernas', primaryMuscle: 'Pecho', equipment: 'Mancuernas', description: 'Permite mayor rango de recorrido que la barra. Junta las mancuernas arriba sin que lleguen a chocar.' },
-  { name: 'Press Inclinado con Mancuernas', primaryMuscle: 'Pecho', equipment: 'Mancuernas', description: 'Ideal para hipertrofia del pecho superior. Controla la bajada para sentir el estiramiento.' },
   { name: 'Aperturas con Mancuernas', primaryMuscle: 'Pecho', equipment: 'Mancuernas', description: 'Movimiento de aislamiento. Mantén una ligera flexión de codo y abre los brazos como si fueras a dar un abrazo.' },
-  { name: 'Aperturas Inclinadas', primaryMuscle: 'Pecho', equipment: 'Mancuernas', description: 'Aislamiento para el pecho superior. No bajes excesivamente para proteger el hombro.' },
-  { name: 'Cruce de Poleas Alto', primaryMuscle: 'Pecho', equipment: 'Polea', description: 'Tira de las poleas desde arriba hacia el centro de tu cadera. Excelente para el pecho inferior.' },
-  { name: 'Cruce de Poleas Medio', primaryMuscle: 'Pecho', equipment: 'Polea', description: 'Tira de las poleas a la altura de tu pecho. Gran contracción máxima.' },
-  { name: 'Cruce de Poleas Bajo', primaryMuscle: 'Pecho', equipment: 'Polea', description: 'Desde las poleas bajas, eleva los brazos hacia el pecho superior.' },
-  { name: 'Peck Deck (Contracción Pectoral)', primaryMuscle: 'Pecho', equipment: 'Máquina', description: 'Máquina guiada para aislar el pectoral sin requerir estabilización.' },
   { name: 'Press de Pecho en Máquina', primaryMuscle: 'Pecho', equipment: 'Máquina', description: 'Versión guiada del press. Ideal para llegar al fallo muscular con seguridad.' },
-  { name: 'Fondos en Paralelas', primaryMuscle: 'Pecho', equipment: 'Peso Corporal', description: 'Inclina el torso hacia adelante para enfatizar el trabajo en el pectoral.' },
-  { name: 'Flexiones (Push-ups)', primaryMuscle: 'Pecho', equipment: 'Peso Corporal', description: 'Ejercicio clásico de peso corporal. Mantén el core apretado y baja hasta rozar el suelo.' },
-  { name: 'Pullover con Mancuerna', primaryMuscle: 'Pecho', equipment: 'Mancuernas', description: 'Trabaja el pecho y la espalda (dorsal). Cruza el banco perpendicularmente.' },
 
   // ESPALDA
-  { name: 'Dominadas Prinas', primaryMuscle: 'Espalda', equipment: 'Peso Corporal', description: 'Agarre ancho. Sube hasta pasar la barbilla por encima de la barra.' },
-  { name: 'Dominadas Supinas (Chin-ups)', primaryMuscle: 'Espalda', equipment: 'Peso Corporal', description: 'Agarre invertido (palmas hacia ti). Involucra más fuertemente el bíceps.' },
+  { name: 'Dominadas Pronas', primaryMuscle: 'Espalda', equipment: 'Peso Corporal', description: 'Agarre ancho. Sube hasta pasar la barbilla por encima de la barra.' },
   { name: 'Jalón al Pecho', primaryMuscle: 'Espalda', equipment: 'Polea', description: 'Tira de la barra hacia la clavícula retrayendo las escápulas. No te balancees excesivamente.' },
-  { name: 'Jalón con Triángulo', primaryMuscle: 'Espalda', equipment: 'Polea', description: 'Agarre estrecho y neutro. Mayor enfoque en el dorsal ancho inferior.' },
   { name: 'Remo con Barra', primaryMuscle: 'Espalda', equipment: 'Barra', description: 'Inclina el torso a unos 45 grados. Lleva la barra hacia tu ombligo.' },
-  { name: 'Remo Pendlay', primaryMuscle: 'Espalda', equipment: 'Barra', description: 'Torso paralelo al suelo. La barra descansa en el suelo en cada repetición. Pura fuerza.' },
-  { name: 'Remo en Punta (T-Bar)', primaryMuscle: 'Espalda', equipment: 'Barra', description: 'Usa una barra anclada en una esquina o máquina específica. Tira hacia el estómago.' },
   { name: 'Remo con Mancuerna a 1 Mano', primaryMuscle: 'Espalda', equipment: 'Mancuernas', description: 'Apoya una rodilla y mano en un banco. Tira de la mancuerna llevando el codo hacia la cadera.' },
   { name: 'Remo Gironda (Polea Baja)', primaryMuscle: 'Espalda', equipment: 'Polea', description: 'Sentado en el suelo, tira del triángulo hacia el estómago manteniendo la espalda neutra.' },
-  { name: 'Remo en Máquina', primaryMuscle: 'Espalda', equipment: 'Máquina', description: 'Remo soportado en el pecho, aísla la espalda al eliminar el trabajo del lumbar.' },
-  { name: 'Pullover en Polea Alta', primaryMuscle: 'Espalda', equipment: 'Polea', description: 'Brazos semiflexionados. Lleva la barra recta desde arriba hasta tus muslos aislando el dorsal.' },
   { name: 'Peso Muerto Clásico', primaryMuscle: 'Espalda', equipment: 'Barra', description: 'Levanta el peso desde el suelo con espalda recta. Trabaja cadena posterior completa.' },
-  { name: 'Peso Muerto Sumo', primaryMuscle: 'Espalda', equipment: 'Barra', description: 'Postura abierta de piernas. Reduce la tensión lumbar comparado con el clásico.' },
-  { name: 'Hiperextensiones', primaryMuscle: 'Espalda', equipment: 'Peso Corporal', description: 'En banco romano. Enfocado en los erectores espinales (zona lumbar).' },
-  
+
   // HOMBRO
   { name: 'Press Militar de Pie', primaryMuscle: 'Hombro', equipment: 'Barra', description: 'Empuje vertical por excelencia. Aprieta glúteos y core para no arquear la espalda.' },
   { name: 'Press de Hombro Sentado', primaryMuscle: 'Hombro', equipment: 'Mancuernas', description: 'Sentado con banco a 90 grados. Empuja las mancuernas por encima de la cabeza.' },
-  { name: 'Press Arnold', primaryMuscle: 'Hombro', equipment: 'Mancuernas', description: 'Variante que incluye rotación de muñeca. Involucra las tres cabezas del deltoides.' },
   { name: 'Elevaciones Laterales', primaryMuscle: 'Hombro', equipment: 'Mancuernas', description: 'Aislamiento clave para la anchura de hombros. Eleva los codos ligeramente por delante del torso.' },
-  { name: 'Elevaciones Laterales en Polea', primaryMuscle: 'Hombro', equipment: 'Polea', description: 'Mantiene tensión constante en todo el recorrido. Cruza el cable por detrás o delante.' },
-  { name: 'Elevaciones Frontales', primaryMuscle: 'Hombro', equipment: 'Mancuernas', description: 'Levanta el peso hacia el frente hasta la altura de los ojos.' },
-  { name: 'Pájaros (Elevaciones Posteriores)', primaryMuscle: 'Hombro', equipment: 'Mancuernas', description: 'Torso inclinado hacia adelante. Abre los brazos para aislar el deltoides posterior.' },
-  { name: 'Pájaros en Máquina (Peck Deck Inverso)', primaryMuscle: 'Hombro', equipment: 'Máquina', description: 'Siéntate al revés en la máquina de pecho y abre hacia atrás.' },
   { name: 'Face Pull', primaryMuscle: 'Hombro', equipment: 'Polea', description: 'Usa la cuerda en polea alta y tira hacia tu cara, separando las manos al final.' },
-  { name: 'Remo al Cuello (Upright Row)', primaryMuscle: 'Hombro', equipment: 'Barra', description: 'Agarre a la anchura de los hombros, tira de la barra hacia la barbilla levantando los codos.' },
-  { name: 'Encogimientos (Shrugs)', primaryMuscle: 'Hombro', equipment: 'Barra', description: 'Ejercicio para trapecios. Encoge los hombros hacia las orejas sin rotar.' },
-  { name: 'Encogimientos con Mancuernas', primaryMuscle: 'Hombro', equipment: 'Mancuernas', description: 'Permite un agarre más natural a los lados del cuerpo.' },
 
   // PIERNA
   { name: 'Sentadilla Libre', primaryMuscle: 'Pierna', equipment: 'Barra', description: 'El rey de los ejercicios. Barra en la espalda alta, desciende hasta romper el paralelo.' },
-  { name: 'Sentadilla Frontal', primaryMuscle: 'Pierna', equipment: 'Barra', description: 'Barra apoyada en clavículas. Exige más verticalidad y enfoca más los cuádriceps.' },
-  { name: 'Sentadilla Búlgara', primaryMuscle: 'Pierna', equipment: 'Mancuernas', description: 'Unilateral. Apoya el pie trasero en un banco y baja el peso de forma controlada.' },
-  { name: 'Sentadilla Goblet', primaryMuscle: 'Pierna', equipment: 'Mancuernas', description: 'Sostén una mancuerna o kettlebell pegada al pecho y haz sentadillas.' },
-  { name: 'Sentadilla Hack', primaryMuscle: 'Pierna', equipment: 'Máquina', description: 'Sentadilla guiada. Ideal para enfatizar cuádriceps al permitir bajar muy profundo con seguridad.' },
-  { name: 'Sentadilla en Máquina Smith', primaryMuscle: 'Pierna', equipment: 'Máquina', description: 'Sentadilla guiada con barra fija. Ajusta los pies ligeramente hacia adelante.' },
   { name: 'Prensa de Piernas', primaryMuscle: 'Pierna', equipment: 'Máquina', description: 'Ajusta los pies bajos y juntos para cuádriceps, o altos y separados para glúteos e isquios.' },
   { name: 'Extensiones de Cuádriceps', primaryMuscle: 'Pierna', equipment: 'Máquina', description: 'Aislamiento puro para cuádriceps. Aprieta fuerte un segundo arriba.' },
-  { name: 'Peso Muerto Rumano', primaryMuscle: 'Pierna', equipment: 'Barra', description: 'Piernas semiflexionadas. Echa la cadera hacia atrás hasta sentir el estiramiento en isquiosurales.' },
-  { name: 'Peso Muerto Piernas Rígidas', primaryMuscle: 'Pierna', equipment: 'Barra', description: 'Mayor tensión isométrica. Las rodillas no se flexionan durante la bajada.' },
-  { name: 'Curl Femoral Tumbado', primaryMuscle: 'Pierna', equipment: 'Máquina', description: 'Aislamiento para isquiosurales recostado boca abajo.' },
   { name: 'Curl Femoral Sentado', primaryMuscle: 'Pierna', equipment: 'Máquina', description: 'Aislamiento para isquiosurales. Mantiene el músculo en mayor elongación inicial.' },
-  { name: 'Zancadas Estáticas (Lunges)', primaryMuscle: 'Pierna', equipment: 'Mancuernas', description: 'Sube y baja en el sitio manteniendo el torso recto.' },
-  { name: 'Zancadas Caminando', primaryMuscle: 'Pierna', equipment: 'Mancuernas', description: 'Avanza en cada repetición. Muy demandante cardiovascularmente.' },
   { name: 'Hip Thrust (Empuje de Cadera)', primaryMuscle: 'Pierna', equipment: 'Barra', description: 'El mejor ejercicio para aislar el glúteo. Empuja con fuerza usando los talones.' },
-  { name: 'Abducción de Cadera', primaryMuscle: 'Pierna', equipment: 'Máquina', description: 'Máquina de abrir piernas. Trabaja glúteo medio.' },
-  { name: 'Elevación de Gemelos de Pie', primaryMuscle: 'Pierna', equipment: 'Máquina', description: 'Rodillas estiradas. Enfatiza el gastrocnemio.' },
-  { name: 'Elevación de Gemelos Sentado', primaryMuscle: 'Pierna', equipment: 'Máquina', description: 'Rodillas flexionadas. Enfatiza el músculo sóleo.' },
 
-  // BÍCEPS
-  { name: 'Curl con Barra', primaryMuscle: 'Brazo', equipment: 'Barra', description: 'Construcción de masa básica para bíceps. No balancees el cuerpo.' },
+  // BRAZO
   { name: 'Curl con Barra EZ', primaryMuscle: 'Brazo', equipment: 'Barra', description: 'Versión más amigable con las muñecas gracias al agarre curvado.' },
   { name: 'Curl de Bíceps Alterno', primaryMuscle: 'Brazo', equipment: 'Mancuernas', description: 'Sube una mancuerna y luego la otra, supinando la muñeca.' },
   { name: 'Curl Martillo', primaryMuscle: 'Brazo', equipment: 'Mancuernas', description: 'Agarre neutro. Trabaja el bíceps braquial y braquiorradial (antebrazo).' },
-  { name: 'Curl Concentrado', primaryMuscle: 'Brazo', equipment: 'Mancuernas', description: 'Apoya el codo en la cara interna del muslo para estricto aislamiento.' },
-  { name: 'Curl Predicador (Banco Scott)', primaryMuscle: 'Brazo', equipment: 'Barra', description: 'Elimina todo impulso. Asegura la máxima contracción del bíceps.' },
-  { name: 'Curl en Polea Baja', primaryMuscle: 'Brazo', equipment: 'Polea', description: 'Usa barra recta o cuerda. Tensión constante en todo momento.' },
-  { name: 'Curl Bayesian', primaryMuscle: 'Brazo', equipment: 'Polea', description: 'De espaldas a la polea. Permite estirar el bíceps detrás de la línea del cuerpo.' },
-
-  // TRÍCEPS
   { name: 'Press Francés', primaryMuscle: 'Brazo', equipment: 'Barra', description: 'Tumbado, lleva la barra hacia la frente o detrás de la cabeza flexionando los codos.' },
-  { name: 'Press de Banca Agarre Cerrado', primaryMuscle: 'Brazo', equipment: 'Barra', description: 'Manos a la anchura de los hombros. Empuja priorizando la fuerza de los tríceps.' },
   { name: 'Extensión de Tríceps con Cuerda', primaryMuscle: 'Brazo', equipment: 'Polea', description: 'Abre la cuerda al final del movimiento para mayor contracción lateral.' },
-  { name: 'Extensión de Tríceps con Barra', primaryMuscle: 'Brazo', equipment: 'Polea', description: 'Empuje hacia abajo manteniendo codos fijos pegados al torso.' },
-  { name: 'Extensión Tras Nuca en Polea', primaryMuscle: 'Brazo', equipment: 'Polea', description: 'Codos arriba. Enfatiza la cabeza larga del tríceps.' },
-  { name: 'Extensión Tras Nuca con Mancuerna', primaryMuscle: 'Brazo', equipment: 'Mancuernas', description: 'Sostiene la mancuerna por detrás del cuello y estira los brazos.' },
-  { name: 'Patada de Tríceps', primaryMuscle: 'Brazo', equipment: 'Mancuernas', description: 'Torso paralelo al suelo. Extiende el codo hacia atrás.' },
-  { name: 'Fondos de Tríceps', primaryMuscle: 'Brazo', equipment: 'Peso Corporal', description: 'Manos apoyadas detrás en un banco. Baja la cadera rectamente.' },
 
   // CORE
   { name: 'Crunch Abdominal', primaryMuscle: 'Core', equipment: 'Peso Corporal', description: 'Encogimiento clásico. Eleva solo los hombros del suelo apretando el abdomen.' },
-  { name: 'Crunch en Polea', primaryMuscle: 'Core', equipment: 'Polea', description: 'De rodillas, sujeta la cuerda tras el cuello y enrolla tu torso hacia abajo.' },
-  { name: 'Elevación de Piernas Colgado', primaryMuscle: 'Core', equipment: 'Peso Corporal', description: 'Colgado en barra, sube las rodillas o pies rectos hacia el pecho.' },
-  { name: 'Elevación de Piernas Tumbado', primaryMuscle: 'Core', equipment: 'Peso Corporal', description: 'Trabajo de abdomen inferior. Controla el descenso de las piernas.' },
   { name: 'Plancha Abdominal (Plank)', primaryMuscle: 'Core', equipment: 'Peso Corporal', description: 'Isométrico apoyado en antebrazos. Mantén el cuerpo en línea recta.' },
-  { name: 'Rueda Abdominal', primaryMuscle: 'Core', equipment: 'Peso Corporal', description: 'Gran estiramiento del core. Rueda hacia adelante desde las rodillas y vuelve.' },
-  { name: 'Russian Twists', primaryMuscle: 'Core', equipment: 'Peso Corporal', description: 'Giro de torso sentado para oblicuos.' },
-  { name: 'Woodchopper', primaryMuscle: 'Core', equipment: 'Polea', description: 'Movimiento diagonal de leñador para trabajar oblicuos rotando el torso.' },
 
-  // CARDIO / OTROS
-  { name: 'Paseo del Granjero', primaryMuscle: 'Core', equipment: 'Mancuernas', description: 'Agarra dos pesas pesadas y camina. Fortalece agarre, core y trapecios.' },
+  // CARDIO
   { name: 'Cinta de Correr', primaryMuscle: 'Cardio', equipment: 'Máquina', description: 'Trabajo aeróbico o HIIT caminando, trotando o corriendo.' },
-  { name: 'Bicicleta Estática', primaryMuscle: 'Cardio', equipment: 'Máquina', description: 'Cardio de bajo impacto articular.' },
-  { name: 'Elíptica', primaryMuscle: 'Cardio', equipment: 'Máquina', description: 'Movimiento global de brazos y piernas sin impacto.' },
-  { name: 'Remo Ergómetro', primaryMuscle: 'Cardio', equipment: 'Máquina', description: 'Cardio exigente de cuerpo completo, empuje de piernas y tirón de espalda.' },
-  { name: 'Máquina de Escaleras', primaryMuscle: 'Cardio', equipment: 'Máquina', description: 'Quemagrasas muy exigente para glúteos y piernas.' },
-  { name: 'Salto a la Comba', primaryMuscle: 'Cardio', equipment: 'Peso Corporal', description: 'Trabajo de resistencia, agilidad y coordinación.' }
+  { name: 'Bicicleta Estática', primaryMuscle: 'Cardio', equipment: 'Máquina', description: 'Cardio de bajo impacto articular.' }
 ];
 
 async function main() {
-  console.log('Iniciando reseteo y siembra del catálogo curado de ejercicios sin imágenes (UI minimalista)...');
-  
-  try {
-    console.log('Limpiando base de datos de ejercicios sin uso...');
-    const unusedExercises = await prisma.exercise.findMany({
-      where: {
-        routineExercises: { none: {} },
-        workoutSets: { none: {} }
+  console.log('⚡ Iniciando proceso de siembra premium de base de datos...');
+
+  // 1. Clean previous seeded users to prevent unique constraint failures
+  const testEmails = [
+    'gimnasio@gmail.com',
+    'cliente@gmail.com',
+    'sofia.valencia@gmail.com',
+    'lucas.rodriguez@gmail.com',
+    'marta.sanz@gmail.com',
+    'javier.gomez@gmail.com',
+    'elena.ruiz@gmail.com',
+    'alejandro.ortiz@gmail.com',
+    'valeria.castro@gmail.com',
+    'diego.morales@gmail.com',
+    'clara.benitez@gmail.com'
+  ];
+
+  console.log('🧹 Eliminando datos previos del catálogo y usuarios de test...');
+  await prisma.foodEntry.deleteMany({ where: { user: { email: { in: testEmails } } } });
+  await prisma.mealEntry.deleteMany({ where: { user: { email: { in: testEmails } } } });
+  await prisma.workoutSet.deleteMany({ where: { session: { user: { email: { in: testEmails } } } } });
+  await prisma.workoutSession.deleteMany({ where: { user: { email: { in: testEmails } } } });
+  await prisma.routineExercise.deleteMany({ where: { routine: { user: { email: { in: testEmails } } } } });
+  await prisma.routine.deleteMany({ where: { user: { email: { in: testEmails } } } });
+  await prisma.nutritionProfile.deleteMany({ where: { user: { email: { in: testEmails } } } });
+  await prisma.classBooking.deleteMany({ where: { user: { email: { in: testEmails } } } });
+  await prisma.paymentRecord.deleteMany({ where: { user: { email: { in: testEmails } } } });
+  await prisma.gymClass.deleteMany({ where: { gym: { email: 'gimnasio@gmail.com' } } });
+  await prisma.subscriptionPlan.deleteMany({ where: { gym: { email: 'gimnasio@gmail.com' } } });
+  await prisma.user.deleteMany({ where: { email: { in: testEmails } } });
+
+  // 2. Ensure Exercises Curated Catalog Exists
+  console.log('💪 Asegurando catálogo curado de ejercicios...');
+  for (const ex of curatedExercises) {
+    await prisma.exercise.upsert({
+      where: { id: '00000000-0000-0000-0000-000000000000' }, // Dummy or match by name manually
+      create: {
+        name: ex.name,
+        muscleGroup: ex.primaryMuscle,
+        equipment: ex.equipment,
+        description: ex.description,
       },
-      select: { id: true }
+      update: {}
+    }).catch(async () => {
+      // If upsert unique failed on id, simply find or create by name
+      const exists = await prisma.exercise.findFirst({ where: { name: ex.name } });
+      if (!exists) {
+        await prisma.exercise.create({
+          data: {
+            name: ex.name,
+            muscleGroup: ex.primaryMuscle,
+            equipment: ex.equipment,
+            description: ex.description,
+          }
+        });
+      }
+    });
+  }
+
+  // Get all active exercises mapped by name for easy reference later
+  const exerciseMap: Record<string, any> = {};
+  const dbExercises = await prisma.exercise.findMany();
+  dbExercises.forEach(e => {
+    exerciseMap[e.name] = e;
+  });
+
+  // Helper hash function
+  const gymPasswordHash = await bcrypt.hash('gimnasio123', 10);
+  const clientPasswordHash = await bcrypt.hash('client123', 10);
+
+  // 3. Create Gym Account
+  console.log('🏛️ Creando cuenta de gimnasio "Iron Temple Fitness"...');
+  const gym = await prisma.user.create({
+    data: {
+      email: 'gimnasio@gmail.com',
+      password: gymPasswordHash,
+      name: 'Iron Temple Fitness',
+      role: 'GYM',
+      monthlyFee: 39.99,
+      subscriptionStatus: 'ACTIVE',
+    }
+  });
+
+  // 4. Create Curated Plans for the Gym
+  console.log('💳 Creando tarifas y planes del gimnasio...');
+  const planStandard = await prisma.subscriptionPlan.create({
+    data: {
+      gymId: gym.id,
+      name: 'Pase Mensual Estándar',
+      price: 39.99,
+      durationDays: 30,
+      description: 'Acceso total a la sala de musculación, vestuarios y taquillas.'
+    }
+  });
+
+  const planTrimestral = await prisma.subscriptionPlan.create({
+    data: {
+      gymId: gym.id,
+      name: 'Bono Trimestral Ahorro',
+      price: 99.99,
+      durationDays: 90,
+      description: 'Acceso total por 3 meses con descuento especial.'
+    }
+  });
+
+  const planAnual = await prisma.subscriptionPlan.create({
+    data: {
+      gymId: gym.id,
+      name: 'Anual Premium Club',
+      price: 359.99,
+      durationDays: 365,
+      description: 'Acceso ilimitado por un año completo con toalla y asesoría inicial gratuita.'
+    }
+  });
+
+  // 5. Create Realistic Gym Classes
+  console.log('🗓️ Creando clases grupales...');
+  const classCrossfit = await prisma.gymClass.create({
+    data: {
+      gymId: gym.id,
+      name: 'CrossFit Elite',
+      description: 'Entrenamiento funcional de alta intensidad que combina halterofilia, gimnasia y cardio.',
+      instructor: 'Marcos Peña',
+      capacity: 20,
+      startTime: new Date('2026-05-19T10:00:00Z'),
+      endTime: new Date('2026-05-19T11:00:00Z'),
+    }
+  });
+
+  const classCycling = await prisma.gymClass.create({
+    data: {
+      gymId: gym.id,
+      name: 'Ciclo Indoor Virtual',
+      description: 'Sesión de ciclismo indoor con música estimulante y recorridos virtuales exigentes.',
+      instructor: 'Laura Serna',
+      capacity: 25,
+      startTime: new Date('2026-05-20T18:00:00Z'),
+      endTime: new Date('2026-05-20T19:00:00Z'),
+    }
+  });
+
+  const classYoga = await prisma.gymClass.create({
+    data: {
+      gymId: gym.id,
+      name: 'Power Yoga Flow',
+      description: 'Clase dinámica para trabajar fuerza, flexibilidad, core y meditación activa.',
+      instructor: 'Diana Mendoza',
+      capacity: 15,
+      startTime: new Date('2026-05-21T09:00:00Z'),
+      endTime: new Date('2026-05-21T10:00:00Z'),
+    }
+  });
+
+  // 6. Create 10 Premium, Realistic Gym Clients
+  console.log('👥 Creando 10 clientes con suscripciones y estados realistas...');
+
+  const clientsData = [
+    {
+      name: 'Sofia Valencia',
+      email: 'sofia.valencia@gmail.com',
+      weight: 62.5,
+      height: 165.0,
+      plan: planStandard,
+      status: 'ACTIVE',
+      daysRemaining: 22,
+    },
+    {
+      name: 'Lucas Rodríguez',
+      email: 'lucas.rodriguez@gmail.com',
+      weight: 88.0,
+      height: 182.0,
+      plan: planTrimestral,
+      status: 'ACTIVE',
+      daysRemaining: 1, // Ending very soon!
+    },
+    {
+      name: 'Marta Sanz',
+      email: 'marta.sanz@gmail.com',
+      weight: 58.0,
+      height: 160.0,
+      plan: planStandard,
+      status: 'EXPIRED',
+      daysRemaining: -4, // Expired 4 days ago
+    },
+    {
+      name: 'Javier Gómez',
+      email: 'javier.gomez@gmail.com',
+      weight: 79.2,
+      height: 175.0,
+      plan: planAnual,
+      status: 'ACTIVE',
+      daysRemaining: 180,
+    },
+    {
+      name: 'Elena Ruiz',
+      email: 'elena.ruiz@gmail.com',
+      weight: 66.8,
+      height: 169.0,
+      plan: planTrimestral,
+      status: 'ACTIVE',
+      daysRemaining: 45,
+    },
+    {
+      name: 'Alejandro Ortiz',
+      email: 'alejandro.ortiz@gmail.com',
+      weight: 94.5,
+      height: 188.0,
+      plan: planStandard,
+      status: 'EXPIRED',
+      daysRemaining: -12, // Expired 12 days ago
+    },
+    {
+      name: 'Valeria Castro',
+      email: 'valeria.castro@gmail.com',
+      weight: 55.4,
+      height: 163.0,
+      plan: planStandard,
+      status: 'ACTIVE',
+      daysRemaining: 14,
+    },
+    {
+      name: 'Diego Morales',
+      email: 'diego.morales@gmail.com',
+      weight: 84.1,
+      height: 180.0,
+      plan: planStandard,
+      status: 'ACTIVE',
+      daysRemaining: 8,
+    },
+    {
+      name: 'Clara Benítez',
+      email: 'clara.benitez@gmail.com',
+      weight: 60.2,
+      height: 167.0,
+      plan: planTrimestral,
+      status: 'ACTIVE',
+      daysRemaining: 5,
+    }
+  ];
+
+  for (const c of clientsData) {
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate() + c.daysRemaining);
+
+    const clientUser = await prisma.user.create({
+      data: {
+        email: c.email,
+        password: clientPasswordHash,
+        name: c.name,
+        role: 'USER',
+        gymId: gym.id,
+        weight: c.weight,
+        height: c.height,
+        planId: c.plan.id,
+        subscriptionStatus: c.status,
+        subscriptionEndDate: endDate,
+      }
     });
 
-    if (unusedExercises.length > 0) {
-      const unusedIds = unusedExercises.map(e => e.id);
-      const deleted = await prisma.exercise.deleteMany({
-        where: { id: { in: unusedIds } }
+    // Create a payment record
+    await prisma.paymentRecord.create({
+      data: {
+        userId: clientUser.id,
+        amount: c.plan.price,
+        description: `Pago de tarifa: ${c.plan.name}`,
+        date: new Date(new Date().setDate(new Date().getDate() - (c.plan.durationDays - Math.max(0, c.daysRemaining)))),
+        planId: c.plan.id
+      }
+    });
+
+    // Create a simple routine
+    const routine = await prisma.routine.create({
+      data: {
+        name: 'Rutina General Acondicionamiento',
+        userId: clientUser.id,
+      }
+    });
+
+    if (exerciseMap['Press de Banca'] && exerciseMap['Sentadilla Libre']) {
+      await prisma.routineExercise.createMany({
+        data: [
+          { routineId: routine.id, exerciseId: exerciseMap['Press de Banca'].id, sets: 4, reps: 10, weight: 50.0, order: 0 },
+          { routineId: routine.id, exerciseId: exerciseMap['Sentadilla Libre'].id, sets: 4, reps: 10, weight: 60.0, order: 1 }
+        ]
       });
-      console.log(`Borrados ${deleted.count} ejercicios.`);
     }
 
-    console.log(`Insertando ${curatedExercises.length} ejercicios en español puro...`);
-    
-    const existing = await prisma.exercise.findMany({ select: { name: true } });
-    const existingNames = new Set(existing.map(e => e.name));
-
-    const toInsert = curatedExercises
-      .filter(ex => !existingNames.has(ex.name))
-      .map(ex => ({
-          name: ex.name,
-          muscleGroup: ex.primaryMuscle,
-          equipment: ex.equipment,
-          description: ex.description,
-          imageUrl: null, // Minimalista, sin imagen de stock
-      }));
-
-    if (toInsert.length > 0) {
-      const result = await prisma.exercise.createMany({
-        data: toInsert,
-        skipDuplicates: true
-      });
-      console.log(`✅ ¡Catálogo creado con éxito! Insertados ${result.count} ejercicios premium.`);
-    } else {
-      console.log('✅ El catálogo ya estaba instalado.');
-    }
-
-  } catch (error) {
-    console.error('Error durante la inserción:', error);
-    process.exit(1);
-  } finally {
-    await prisma.$disconnect();
+    // Book a class
+    await prisma.classBooking.create({
+      data: {
+        userId: clientUser.id,
+        classId: classCrossfit.id,
+        status: 'CONFIRMED'
+      }
+    });
   }
+
+  // 7. Create The Important Main Client: cliente@gmail.com (Carlos Mendoza)
+  console.log('🔥 Creando el cliente estrella: cliente@gmail.com (Carlos Mendoza)...');
+  const mainClientEndDate = new Date();
+  mainClientEndDate.setDate(mainClientEndDate.getDate() + 25);
+
+  const mainClient = await prisma.user.create({
+    data: {
+      email: 'cliente@gmail.com',
+      password: clientPasswordHash,
+      name: 'Carlos Mendoza',
+      role: 'USER',
+      gymId: gym.id,
+      weight: 82.5,
+      height: 178.0,
+      planId: planStandard.id,
+      subscriptionStatus: 'ACTIVE',
+      subscriptionEndDate: mainClientEndDate,
+    }
+  });
+
+  // Create payment record
+  await prisma.paymentRecord.create({
+    data: {
+      userId: mainClient.id,
+      amount: planStandard.price,
+      description: `Pago de tarifa: ${planStandard.name}`,
+      date: new Date('2026-05-01T10:00:00Z'),
+      planId: planStandard.id
+    }
+  });
+
+  // Create Nutrition Profile
+  console.log('🥗 Creando Perfil de Nutrición de Carlos Mendoza...');
+  await prisma.nutritionProfile.create({
+    data: {
+      userId: mainClient.id,
+      gender: 'male',
+      age: 28,
+      weight: 82.5,
+      height: 178.0,
+      activityLevel: 'ACTIVE',
+      goal: 'LOSE',
+      aggressiveness: 'NORMAL',
+      targetCalories: 2350,
+      targetProtein: 180,
+      targetFat: 75,
+      targetCarbs: 220,
+    }
+  });
+
+  // Create 3 premium routines for Carlos
+  console.log('📋 Creando rutinas de Carlos...');
+  const routineEmpuje = await prisma.routine.create({
+    data: { name: 'Empuje (Pecho/Hombro/Tríceps)', userId: mainClient.id }
+  });
+  const routineTiron = await prisma.routine.create({
+    data: { name: 'Tirón (Espalda/Bíceps)', userId: mainClient.id }
+  });
+  const routinePiernas = await prisma.routine.create({
+    data: { name: 'Piernas Enfoque Glúteo', userId: mainClient.id }
+  });
+
+  // Add routine exercises
+  if (exerciseMap['Press de Banca'] && exerciseMap['Press Militar de Pie'] && exerciseMap['Extensión de Tríceps con Cuerda']) {
+    await prisma.routineExercise.createMany({
+      data: [
+        { routineId: routineEmpuje.id, exerciseId: exerciseMap['Press de Banca'].id, sets: 4, reps: 8, weight: 70.0, order: 0 },
+        { routineId: routineEmpuje.id, exerciseId: exerciseMap['Press Militar de Pie'].id, sets: 3, reps: 10, weight: 40.0, order: 1 },
+        { routineId: routineEmpuje.id, exerciseId: exerciseMap['Extensión de Tríceps con Cuerda'].id, sets: 3, reps: 12, weight: 22.5, order: 2 }
+      ]
+    });
+  }
+
+  if (exerciseMap['Jalón al Pecho'] && exerciseMap['Remo con Barra'] && exerciseMap['Curl de Bíceps Alterno']) {
+    await prisma.routineExercise.createMany({
+      data: [
+        { routineId: routineTiron.id, exerciseId: exerciseMap['Jalón al Pecho'].id, sets: 4, reps: 10, weight: 60.0, order: 0 },
+        { routineId: routineTiron.id, exerciseId: exerciseMap['Remo con Barra'].id, sets: 4, reps: 8, weight: 65.0, order: 1 },
+        { routineId: routineTiron.id, exerciseId: exerciseMap['Curl de Bíceps Alterno'].id, sets: 3, reps: 12, weight: 14.0, order: 2 }
+      ]
+    });
+  }
+
+  if (exerciseMap['Sentadilla Libre'] && exerciseMap['Hip Thrust (Empuje de Cadera)'] && exerciseMap['Cinta de Correr']) {
+    await prisma.routineExercise.createMany({
+      data: [
+        { routineId: routinePiernas.id, exerciseId: exerciseMap['Sentadilla Libre'].id, sets: 4, reps: 8, weight: 90.0, order: 0 },
+        { routineId: routinePiernas.id, exerciseId: exerciseMap['Hip Thrust (Empuje de Cadera)'].id, sets: 4, reps: 10, weight: 110.0, order: 1 },
+        { routineId: routinePiernas.id, exerciseId: exerciseMap['Cinta de Correr'].id, sets: 1, reps: 1, weight: 5.0, order: 2 } // Distance 5 km
+      ]
+    });
+  }
+
+  // 8. Populate Completed Workout Sessions from May 5th to May 12th, 2026
+  console.log('🏋️‍♂️ Generando historial de entrenamientos completados del 5 al 12 de Mayo...');
+
+  const workouts = [
+    {
+      date: '2026-05-05',
+      startTime: '2026-05-05T18:00:00Z',
+      endTime: '2026-05-05T19:15:00Z',
+      routineId: routineEmpuje.id,
+      sets: [
+        { exercise: 'Press de Banca', weight: 70.0, reps: 8 },
+        { exercise: 'Press de Banca', weight: 70.0, reps: 8 },
+        { exercise: 'Press de Banca', weight: 72.5, reps: 7 },
+        { exercise: 'Press Militar de Pie', weight: 40.0, reps: 10 },
+        { exercise: 'Press Militar de Pie', weight: 40.0, reps: 9 },
+        { exercise: 'Extensión de Tríceps con Cuerda', weight: 22.5, reps: 12 },
+        { exercise: 'Extensión de Tríceps con Cuerda', weight: 25.0, reps: 10 }
+      ]
+    },
+    {
+      date: '2026-05-07',
+      startTime: '2026-05-07T18:30:00Z',
+      endTime: '2026-05-07T19:45:00Z',
+      routineId: routineTiron.id,
+      sets: [
+        { exercise: 'Jalón al Pecho', weight: 60.0, reps: 10 },
+        { exercise: 'Jalón al Pecho', weight: 60.0, reps: 10 },
+        { exercise: 'Remo con Barra', weight: 65.0, reps: 8 },
+        { exercise: 'Remo con Barra', weight: 65.0, reps: 8 },
+        { exercise: 'Curl de Bíceps Alterno', weight: 14.0, reps: 12 },
+        { exercise: 'Curl de Bíceps Alterno', weight: 14.0, reps: 12 }
+      ]
+    },
+    {
+      date: '2026-05-09',
+      startTime: '2026-05-09T10:00:00Z',
+      endTime: '2026-05-09T11:20:00Z',
+      routineId: routinePiernas.id,
+      sets: [
+        { exercise: 'Sentadilla Libre', weight: 90.0, reps: 8 },
+        { exercise: 'Sentadilla Libre', weight: 90.0, reps: 8 },
+        { exercise: 'Sentadilla Libre', weight: 95.0, reps: 6 },
+        { exercise: 'Hip Thrust (Empuje de Cadera)', weight: 110.0, reps: 10 },
+        { exercise: 'Hip Thrust (Empuje de Cadera)', weight: 120.0, reps: 8 },
+        { exercise: 'Cinta de Correr', weight: 5.2, reps: 1 } // 5.2 km distance
+      ]
+    },
+    {
+      date: '2026-05-11',
+      startTime: '2026-05-11T19:00:00Z',
+      endTime: '2026-05-11T20:15:00Z',
+      routineId: routineEmpuje.id,
+      sets: [
+        { exercise: 'Press de Banca', weight: 72.5, reps: 8 }, // PR!
+        { exercise: 'Press de Banca', weight: 72.5, reps: 8 },
+        { exercise: 'Press de Banca', weight: 75.0, reps: 6 },
+        { exercise: 'Press Militar de Pie', weight: 42.5, reps: 10 },
+        { exercise: 'Extensión de Tríceps con Cuerda', weight: 25.0, reps: 12 }
+      ]
+    },
+    {
+      date: '2026-05-12',
+      startTime: '2026-05-12T17:30:00Z',
+      endTime: '2026-05-12T18:40:00Z',
+      routineId: routineTiron.id,
+      sets: [
+        { exercise: 'Jalón al Pecho', weight: 62.5, reps: 10 },
+        { exercise: 'Jalón al Pecho', weight: 65.0, reps: 8 },
+        { exercise: 'Remo con Barra', weight: 67.5, reps: 8 },
+        { exercise: 'Curl de Bíceps Alterno', weight: 16.0, reps: 10 }
+      ]
+    }
+  ];
+
+  for (const w of workouts) {
+    const session = await prisma.workoutSession.create({
+      data: {
+        userId: mainClient.id,
+        routineId: w.routineId,
+        startTime: new Date(w.startTime),
+        endTime: new Date(w.endTime),
+        createdAt: new Date(w.startTime)
+      }
+    });
+
+    for (const s of w.sets) {
+      const exRecord = exerciseMap[s.exercise];
+      if (exRecord) {
+        await prisma.workoutSet.create({
+          data: {
+            sessionId: session.id,
+            exerciseId: exRecord.id,
+            weight: s.weight,
+            reps: s.reps,
+            isCompleted: true
+          }
+        });
+      }
+    }
+  }
+
+  // 9. Populate Completed Food Logs from May 5th to May 12th, 2026
+  console.log('🍏 Generando bitácora diaria de comidas del 5 al 12 de Mayo...');
+
+  const mealsData = [
+    {
+      date: '2026-05-05',
+      meals: [
+        { name: 'Avena con plátano y proteína', calories: 540, protein: 38, carbs: 65, fat: 12 },
+        { name: 'Pechuga de pollo con arroz jazmín y brócoli', calories: 680, protein: 52, carbs: 80, fat: 14 },
+        { name: 'Batido de proteína con almendras', calories: 320, protein: 30, carbs: 10, fat: 16 },
+        { name: 'Salmón a la plancha con puré de patatas', calories: 620, protein: 45, carbs: 40, fat: 25 }
+      ]
+    },
+    {
+      date: '2026-05-06',
+      meals: [
+        { name: 'Tortilla de 3 huevos con espinacas y tostadas', calories: 480, protein: 32, carbs: 35, fat: 18 },
+        { name: 'Ternera magra guisada con patatas y zanahorias', calories: 720, protein: 48, carbs: 75, fat: 22 },
+        { name: 'Yogur griego con arándanos y nueces', calories: 290, protein: 20, carbs: 18, fat: 15 },
+        { name: 'Ensalada César templada con pollo', calories: 510, protein: 42, carbs: 15, fat: 30 }
+      ]
+    },
+    {
+      date: '2026-05-07',
+      meals: [
+        { name: 'Tostadas integrales con aguacate y queso fresco', calories: 460, protein: 18, carbs: 42, fat: 24 },
+        { name: 'Pasta integral con salsa boloñesa de pavo', calories: 710, protein: 46, carbs: 95, fat: 15 },
+        { name: 'Manzana con crema de cacahuete', calories: 280, protein: 8, carbs: 22, fat: 18 },
+        { name: 'Dorada al horno con verduras asadas', calories: 490, protein: 38, carbs: 25, fat: 12 }
+      ]
+    },
+    {
+      date: '2026-05-08',
+      meals: [
+        { name: 'Avena con plátano y proteína', calories: 540, protein: 38, carbs: 65, fat: 12 },
+        { name: 'Pechuga de pollo con arroz jazmín y brócoli', calories: 680, protein: 52, carbs: 80, fat: 14 },
+        { name: 'Batido de proteína con almendras', calories: 320, protein: 30, carbs: 10, fat: 16 },
+        { name: 'Revuelto de claras con jamón y espárragos', calories: 410, protein: 40, carbs: 8, fat: 20 }
+      ]
+    },
+    {
+      date: '2026-05-09',
+      meals: [
+        { name: 'Tortilla de 3 huevos con espinacas y tostadas', calories: 480, protein: 32, carbs: 35, fat: 18 },
+        { name: 'Ternera magra guisada con patatas y zanahorias', calories: 720, protein: 48, carbs: 75, fat: 22 },
+        { name: 'Tortitas de arroz con pavo y queso crema', calories: 260, protein: 16, carbs: 30, fat: 8 },
+        { name: 'Salmón a la plancha con puré de patatas', calories: 620, protein: 45, carbs: 40, fat: 25 }
+      ]
+    },
+    {
+      date: '2026-05-10',
+      meals: [
+        { name: 'Avena con fresas y proteína', calories: 510, protein: 38, carbs: 58, fat: 10 },
+        { name: 'Lentejas estofadas con verduras y arroz', calories: 650, protein: 28, carbs: 90, fat: 12 },
+        { name: 'Yogur griego con arándanos y nueces', calories: 290, protein: 20, carbs: 18, fat: 15 },
+        { name: 'Ensalada César templada con pollo', calories: 510, protein: 42, carbs: 15, fat: 30 }
+      ]
+    },
+    {
+      date: '2026-05-11',
+      meals: [
+        { name: 'Tortilla de 3 huevos con espinacas y tostadas', calories: 480, protein: 32, carbs: 35, fat: 18 },
+        { name: 'Pasta integral con salsa boloñesa de pavo', calories: 710, protein: 46, carbs: 95, fat: 15 },
+        { name: 'Batido de proteína con almendras', calories: 320, protein: 30, carbs: 10, fat: 16 },
+        { name: 'Salmón a la plancha con puré de patatas', calories: 620, protein: 45, carbs: 40, fat: 25 }
+      ]
+    },
+    {
+      date: '2026-05-12',
+      meals: [
+        { name: 'Tostadas integrales con aguacate y queso fresco', calories: 460, protein: 18, carbs: 42, fat: 24 },
+        { name: 'Pechuga de pollo con arroz jazmín y brócoli', calories: 680, protein: 52, carbs: 80, fat: 14 },
+        { name: 'Yogur griego con arándanos y nueces', calories: 290, protein: 20, carbs: 18, fat: 15 },
+        { name: 'Revuelto de claras con jamón y espárragos', calories: 410, protein: 40, carbs: 8, fat: 20 }
+      ]
+    }
+  ];
+
+  for (const day of mealsData) {
+    const mealDate = new Date(`${day.date}T12:00:00Z`);
+
+    for (const m of day.meals) {
+      await prisma.foodEntry.create({
+        data: {
+          userId: mainClient.id,
+          date: mealDate,
+          name: m.name,
+          calories: m.calories,
+          protein: m.protein,
+          carbs: m.carbs,
+          fat: m.fat,
+        }
+      });
+    }
+  }
+
+  // 10. Book a class for Carlos
+  console.log('🎟️ Registrando reserva a clases para Carlos...');
+  await prisma.classBooking.create({
+    data: {
+      userId: mainClient.id,
+      classId: classCycling.id,
+      status: 'CONFIRMED'
+    }
+  });
+
+  console.log('🚀 ✅ ¡Siembra de datos premium completada exitosamente! Todas las cuentas de producción listas para tu presentación.');
 }
 
-main();
+main()
+  .catch(e => {
+    console.error('❌ Error en el proceso de siembra:', e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
