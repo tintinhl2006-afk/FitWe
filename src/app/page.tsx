@@ -38,14 +38,14 @@ export default function LandingPage() {
       <LandingNavbar />
 
       {/* ═══════════════════ HERO SECTION ═══════════════════ */}
-      <section className="relative z-10 flex min-h-screen flex-col items-center justify-center px-6 pt-16 pb-24 text-center">
-        {/* Badge removed as requested */}
-        <h1 className="max-w-4xl text-4xl font-extrabold leading-[1.1] tracking-tight sm:text-6xl lg:text-7xl animate-fade-in-up animation-delay-100">
-          Fideliza a tus clientes con tu propia{" "}
-          <span className="bg-gradient-to-r from-cyan-400 via-cyan-400 to-cyan-400 bg-clip-text text-transparent">
-            plataforma integral
-          </span>
-        </h1>
+      <section className="relative z-10 flex min-h-screen flex-col items-center justify-center pt-24 pb-24 text-center">
+        <div className="mx-auto max-w-6xl w-full px-6 sm:px-8 lg:px-12 flex flex-col items-center">
+          <h1 className="max-w-4xl text-4xl font-extrabold leading-[1.1] tracking-tight sm:text-6xl lg:text-7xl animate-fade-in-up animation-delay-100">
+            Fideliza a tus clientes con tu propia{" "}
+            <span className="bg-gradient-to-r from-cyan-400 via-cyan-400 to-cyan-400 bg-clip-text text-transparent">
+              plataforma integral
+            </span>
+          </h1>
 
         <p className="mt-6 max-w-2xl text-lg text-slate-400 sm:text-xl animate-fade-in-up animation-delay-200">
           FitWe es el software de gestión para gimnasios que incluye una app premium de nutrición y entrenamiento para tus socios. Aumenta la retención y el valor de tu cuota.
@@ -131,6 +131,7 @@ export default function LandingPage() {
             <div className="absolute -top-40 -right-40 h-[400px] w-[400px] bg-cyan-500/10 blur-[100px] rounded-full pointer-events-none" />
           </div>
         </div>
+        </div>
 
         {/* Scroll indicator */}
         <div className="absolute bottom-4 sm:bottom-10 left-1/2 -translate-x-1/2 animate-bounce z-20">
@@ -141,8 +142,8 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════════ APP SHOWCASE SECTION ═══════════════════ */}
-      <section className="relative z-10 px-6 py-24 sm:py-32 bg-slate-900/50">
-        <div className="mx-auto max-w-7xl grid gap-12 lg:grid-cols-2 items-center">
+      <section className="relative z-10 px-4 sm:px-6 py-24 sm:py-32 bg-slate-900/50 flex justify-center">
+        <div className="mx-auto w-full max-w-6xl grid gap-12 lg:grid-cols-2 items-center">
           <div className="order-2 lg:order-1 relative flex justify-center">
              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full bg-emerald-500/20 blur-[100px] pointer-events-none" />
              
@@ -241,8 +242,8 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════════ FEATURES SECTION ═══════════════════ */}
-      <section id="features" className="relative z-10 px-6 pb-32">
-        <div className="mx-auto max-w-7xl">
+      <section id="features" className="relative z-10 px-4 sm:px-6 pb-32 flex justify-center">
+        <div className="mx-auto w-full max-w-6xl">
           {/* Section header */}
           <div className="mb-16 text-center">
             <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-cyan-400">
@@ -315,8 +316,8 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════════ FINAL CTA SECTION ═══════════════════ */}
-      <section className="relative z-10 px-6 py-24 sm:py-32">
-        <div className="mx-auto max-w-5xl rounded-[2.5rem] bg-gradient-to-b from-cyan-900/40 to-slate-900 border border-cyan-500/20 p-8 sm:p-16 text-center relative overflow-hidden">
+      <section className="relative z-10 px-4 sm:px-6 py-24 sm:py-32 flex justify-center">
+        <div className="mx-auto w-full max-w-5xl rounded-[2.5rem] bg-gradient-to-b from-cyan-900/40 to-slate-900 border border-cyan-500/20 p-8 sm:p-16 text-center relative overflow-hidden">
           {/* Subtle background glow */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg h-full bg-cyan-500/20 blur-[120px] pointer-events-none" />
           
