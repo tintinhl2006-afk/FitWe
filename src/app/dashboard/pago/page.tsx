@@ -220,7 +220,7 @@ export default function PaymentPage() {
               onClick={() => router.push("/dashboard")}
               className="w-full rounded-2xl bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-primary/90 transition-colors"
             >
-              Volver al Dashboard
+              Volver
             </button>
           </div>
         </div>
