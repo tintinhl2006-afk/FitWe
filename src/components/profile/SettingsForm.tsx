@@ -10,7 +10,6 @@ interface SettingsFormProps {
     name: string;
     email: string;
     role?: string;
-    monthlyFee?: number;
   };
 }
 
@@ -18,7 +17,6 @@ export function SettingsForm({ user }: SettingsFormProps) {
   const { update } = useSession();
   const [name, setName] = useState(user.name);
   const [newPassword, setNewPassword] = useState("");
-  const [monthlyFee, setMonthlyFee] = useState(user.monthlyFee?.toString() || "49.99");
   const [isSaving, setIsSaving] = useState(false);
   const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
@@ -37,9 +35,6 @@ export function SettingsForm({ user }: SettingsFormProps) {
       if (newPassword.length > 0) {
         body.newPassword = newPassword;
       }
-      if (user.role === "GYM") {
-        body.monthlyFee = monthlyFee;
-      }
 
       const res = await fetch("/api/user/settings", {
         method: "PATCH",
@@ -54,11 +49,7 @@ export function SettingsForm({ user }: SettingsFormProps) {
       }
 
       // Sync the session data with NextAuth
-      const updatePayload: any = { name: name.trim() };
-      if (user.role === "GYM") {
-        updatePayload.monthlyFee = parseFloat(monthlyFee);
-      }
-      await update(updatePayload);
+      await update({ name: name.trim() });
 
       setNewPassword("");
       showToast("success", data.message || "Cambios guardados correctamente");
@@ -157,29 +148,7 @@ export function SettingsForm({ user }: SettingsFormProps) {
           </p>
         </div>
 
-        {/* Monthly Fee field (only for GYM) */}
-        {user.role === "GYM" && (
-          <div>
-            <label htmlFor="settings-fee" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-              Precio de Cuota Mensual Estándar (€)
-            </label>
-            <div className="relative">
-              <input
-                id="settings-fee"
-                type="number"
-                step="0.01"
-                min="0"
-                value={monthlyFee}
-                onChange={(e) => setMonthlyFee(e.target.value)}
-                required
-                className="w-full rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 py-2.5 px-4 text-slate-900 dark:text-white shadow-sm focus:border-primary focus:ring-2 focus:ring-cyan-500/20 outline-none transition-all sm:text-sm"
-              />
-            </div>
-            <p className="mt-1.5 text-xs text-slate-400 dark:text-slate-600">
-              Este es el precio que se registrará automáticamente cuando renueves a un cliente B2B.
-            </p>
-          </div>
-        )}
+
 
         {/* Submit */}
         <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex justify-end">
