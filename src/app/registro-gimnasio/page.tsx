@@ -117,7 +117,6 @@ export default function RegistroGimnasioPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="block w-full rounded-3xl border border-slate-700 bg-slate-900 py-3 pl-10 pr-3 text-white shadow-sm placeholder:text-slate-600 focus:border-primary focus:outline-none focus:ring-1 focus:ring-cyan-500 sm:text-sm"
-                  placeholder="Mi Gimnasio Fitness"
                 />
               </div>
             </div>
@@ -139,7 +138,6 @@ export default function RegistroGimnasioPage() {
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   className="block w-full rounded-3xl border border-slate-700 bg-slate-900 py-3 pl-10 pr-3 text-white shadow-sm placeholder:text-slate-600 focus:border-primary focus:outline-none focus:ring-1 focus:ring-cyan-500 sm:text-sm"
-                  placeholder="Ej: Madrid, España"
                 />
               </div>
             </div>
@@ -162,7 +160,6 @@ export default function RegistroGimnasioPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="block w-full rounded-3xl border border-slate-700 bg-slate-900 py-3 pl-10 pr-3 text-white shadow-sm placeholder:text-slate-600 focus:border-primary focus:outline-none focus:ring-1 focus:ring-cyan-500 sm:text-sm"
-                  placeholder="contacto@migimnasio.com"
                 />
               </div>
             </div>
@@ -185,7 +182,6 @@ export default function RegistroGimnasioPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="block w-full rounded-3xl border border-slate-700 bg-slate-900 py-3 pl-10 pr-3 text-white shadow-sm placeholder:text-slate-600 focus:border-primary focus:outline-none focus:ring-1 focus:ring-cyan-500 sm:text-sm"
-                  placeholder="••••••••"
                 />
               </div>
             </div>

@@ -258,7 +258,6 @@ export default function GymPlansPage() {
                       setFormData({ ...formData, name: e.target.value })
                     }
                     className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-2.5 px-4 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none transition-all"
-                    placeholder="Ej: Mensual, Trimestral, Anual..."
                   />
                 </div>
 
@@ -279,7 +278,6 @@ export default function GymPlansPage() {
                           setFormData({ ...formData, price: e.target.value })
                         }
                         className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-2.5 pl-9 pr-4 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none transition-all"
-                        placeholder="29.99"
                       />
                     </div>
                   </div>
@@ -316,7 +314,6 @@ export default function GymPlansPage() {
                       setFormData({ ...formData, description: e.target.value })
                     }
                     className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-2.5 px-4 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none transition-all resize-none"
-                    placeholder="Acceso ilimitado a todas las instalaciones..."
                   />
                 </div>
 

@@ -140,7 +140,6 @@ export default function GimnasioPage() {
                   <input
                     type="text"
                     required
-                    placeholder="Ej: Press de banca"
                     value={newExercise.name}
                     onChange={(e) => setNewExercise({ ...newExercise, name: e.target.value })}
                     className="block w-full rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 py-2.5 px-3 text-slate-900 dark:text-white shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-cyan-500 sm:text-sm"
@@ -171,7 +170,6 @@ export default function GimnasioPage() {
                   </label>
                   <textarea
                     rows={2}
-                    placeholder="Detalles sobre la técnica o postura..."
                     value={newExercise.description}
                     onChange={(e) => setNewExercise({ ...newExercise, description: e.target.value })}
                     className="block w-full rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 py-2.5 px-3 text-slate-900 dark:text-white shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-cyan-500 sm:text-sm"

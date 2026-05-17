@@ -110,8 +110,7 @@ export default function NutritionOnboardingPage() {
                   max="120"
                   value={formData.age} 
                   onChange={e => setFormData({ ...formData, age: e.target.value })} 
-                  className="w-full rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-4 py-3 text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-cyan-500/20 outline-none transition-all" 
-                  placeholder="Ej. 28"
+                  className="w-full rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-4 py-3 text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-cyan-500/20 outline-none transition-all"
                 />
               </div>
 
@@ -124,8 +123,7 @@ export default function NutritionOnboardingPage() {
                     max="500"
                     value={formData.weight} 
                     onChange={e => setFormData({ ...formData, weight: e.target.value })} 
-                    className="w-full rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-4 py-3 text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-cyan-500/20 outline-none transition-all" 
-                    placeholder="Ej. 75"
+                    className="w-full rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-4 py-3 text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-cyan-500/20 outline-none transition-all"
                   />
                 </div>
                 <div>
@@ -136,8 +134,7 @@ export default function NutritionOnboardingPage() {
                     max="300"
                     value={formData.height} 
                     onChange={e => setFormData({ ...formData, height: e.target.value })} 
-                    className="w-full rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-4 py-3 text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-cyan-500/20 outline-none transition-all" 
-                    placeholder="Ej. 180"
+                    className="w-full rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-4 py-3 text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-cyan-500/20 outline-none transition-all"
                   />
                 </div>
               </div>

@@ -446,7 +446,7 @@ export default function GymClassesPage() {
             <form onSubmit={handleCreateSingleClass} className="p-6 space-y-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Nombre del Evento</label>
-                <input required type="text" value={singleClassFormData.name} onChange={(e) => setSingleClassFormData({...singleClassFormData, name: e.target.value})} placeholder="Ej: Masterclass de Yoga" className="w-full rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-4 py-2.5 text-sm text-slate-900 dark:text-white outline-none focus:border-primary" />
+                <input required type="text" value={singleClassFormData.name} onChange={(e) => setSingleClassFormData({...singleClassFormData, name: e.target.value})} className="w-full rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-4 py-2.5 text-sm text-slate-900 dark:text-white outline-none focus:border-primary" />
               </div>
 
               <div className="grid grid-cols-2 gap-4">

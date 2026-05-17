@@ -348,7 +348,6 @@ export default function ClientesPage() {
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     className="w-full rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-2.5 pl-10 pr-4 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none transition-all"
-                    placeholder="Juan Pérez"
                   />
                 </div>
               </div>
@@ -368,7 +367,6 @@ export default function ClientesPage() {
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     className="w-full rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-2.5 pl-10 pr-4 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none transition-all"
-                    placeholder="cliente@email.com"
                   />
                 </div>
               </div>
@@ -389,7 +387,6 @@ export default function ClientesPage() {
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     className="w-full rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-2.5 pl-10 pr-4 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none transition-all"
-                    placeholder="Mínimo 6 caracteres"
                   />
                 </div>
                 <p className="mt-1.5 text-xs text-slate-400 dark:text-slate-500">

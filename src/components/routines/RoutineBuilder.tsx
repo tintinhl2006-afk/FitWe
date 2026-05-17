@@ -291,7 +291,6 @@ export function RoutineBuilder({
                 value={routineName}
                 onChange={(e) => setRoutineName(e.target.value)}
                 className="w-full rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-3 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none transition-all"
-                placeholder="Ej: Día 1 - Pecho y Tríceps"
               />
             </div>
 
