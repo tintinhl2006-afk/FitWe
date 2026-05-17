@@ -2,7 +2,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import { Home, Dumbbell, CalendarRange, Calendar, Apple, LogIn, LogOut, User, Settings, FlaskConical, Menu, X, CreditCard } from "lucide-react";
+import { Home, Dumbbell, CalendarRange, Calendar, Apple, LogIn, LogOut, User, Settings, Menu, X, CreditCard } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NavItem } from "@/types";
 
@@ -97,21 +97,7 @@ export function Sidebar() {
               </div>
             </Link>
             <div className="space-y-1 pb-4 md:pb-0">
-              {session.user.role === "GYM" && (
-                <Link
-                  onClick={() => setIsMobileOpen(false)}
-                  href="/admin-gym/testing"
-                  className={cn(
-                    "flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-colors border border-dashed border-indigo-200 dark:border-indigo-900/50 bg-indigo-50/10 dark:bg-indigo-950/10 mb-2",
-                    pathname.startsWith("/admin-gym/testing")
-                      ? "bg-indigo-100 text-indigo-900 dark:bg-indigo-900 dark:text-white"
-                      : "text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30"
-                  )}
-                >
-                  <FlaskConical className="h-5 w-5" />
-                  Testing Lab
-                </Link>
-              )}
+
               {session.user.role === "USER" && (
                 <Link
                   onClick={() => setIsMobileOpen(false)}

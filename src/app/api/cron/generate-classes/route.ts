@@ -1,21 +1,16 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { generateClassesFromTemplate } from "@/lib/classUtils";
 
 export async function GET(req: Request) {
   try {
-    // Auth Check: Either Bearer Secret (CRON) OR Session (Testing Lab)
+    // Auth Check: Only Bearer Secret (CRON)
     const authHeader = req.headers.get("authorization");
     const cronSecret = process.env.CRON_SECRET;
     
     const isSecretValid = cronSecret && authHeader === `Bearer ${cronSecret}`;
-    
-    const session = await getServerSession(authOptions);
-    const isSessionValid = session?.user?.role === "GYM";
 
-    if (!isSecretValid && !isSessionValid) {
+    if (!isSecretValid) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 

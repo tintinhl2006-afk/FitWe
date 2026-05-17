@@ -14,7 +14,6 @@ import {
   Building2,
   ChevronRight,
   Calendar,
-  FlaskConical,
   Menu,
   X,
   Tag,
@@ -27,7 +26,7 @@ const gymNavItems = [
   { title: "Tarifas", href: "/admin-gym/tarifas", icon: Tag },
   { title: "Clases", href: "/admin-gym/clases", icon: Calendar },
   { title: "Estadísticas", href: "/admin-gym/estadisticas", icon: BarChart3 },
-  { title: "Testing Lab", href: "/admin-gym/testing", icon: FlaskConical },
+
   { title: "Configuración", href: "/admin-gym/configuracion", icon: Settings },
 ];
 
