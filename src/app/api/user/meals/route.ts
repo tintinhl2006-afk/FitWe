@@ -27,11 +27,14 @@ export async function POST(req: Request) {
       );
     }
 
-    // Verify foodItem belongs to the user
+    // Verify foodItem belongs to the user or is a global food (userId: null)
     const foodItem = await prisma.foodItem.findFirst({
       where: {
         id: foodItemId,
-        userId: session.user.id,
+        OR: [
+          { userId: session.user.id },
+          { userId: null },
+        ],
       },
     });
 

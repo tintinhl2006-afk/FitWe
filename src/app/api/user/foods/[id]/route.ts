@@ -3,8 +3,9 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
@@ -14,7 +15,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     const { name, brand, calories, protein, carbs, fat } = body;
 
     const existingFood = await prisma.foodItem.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!existingFood) {
@@ -27,7 +28,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     }
 
     const updatedFood = await prisma.foodItem.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         name: name !== undefined ? name : existingFood.name,
         brand: brand !== undefined ? brand : existingFood.brand,

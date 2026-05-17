@@ -17,6 +17,7 @@ import {
   Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useCustomAlert } from "@/components/providers/CustomAlertProvider";
 
 interface GymClass {
   id: string;
@@ -58,6 +59,7 @@ const DAYS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "
 
 export default function GymClassesPage() {
   const { data: session } = useSession();
+  const { showConfirm, showAlert } = useCustomAlert();
   const [activeTab, setActiveTab] = useState<"calendar" | "templates">("calendar");
   const [classes, setClasses] = useState<GymClass[]>([]);
   const [templates, setTemplates] = useState<ClassTemplate[]>([]);
@@ -177,25 +179,27 @@ export default function GymClassesPage() {
     finally { setIsSubmitting(false); }
   };
 
-  const handleDeleteTemplate = async (id: string) => {
-    if (!confirm("¿Eliminar esta plantilla? Las clases ya generadas no se eliminarán.")) return;
-    try {
-      await fetch(`/api/admin-gym/templates?id=${id}`, { method: "DELETE" });
-      fetchTemplates();
-    } catch (e) { console.error(e); }
+  const handleDeleteTemplate = (id: string) => {
+    showConfirm("¿Eliminar esta plantilla? Las clases ya generadas no se eliminarán.", async () => {
+      try {
+        await fetch(`/api/admin-gym/templates?id=${id}`, { method: "DELETE" });
+        fetchTemplates();
+      } catch (e) { console.error(e); }
+    });
   };
 
-  const handleCancelClass = async (id: string) => {
-    if (!confirm("¿Cancelar esta clase? Se eliminarán todas las reservas asociadas.")) return;
-    setDeletingId(id);
-    try {
-      const res = await fetch(`/api/admin-gym/classes?id=${id}`, { method: "DELETE" });
-      if (res.ok) {
-        setToast({ msg: "Clase cancelada correctamente", type: "ok" });
-        fetchClasses();
-      }
-    } catch (e) { console.error(e); }
-    finally { setDeletingId(null); }
+  const handleCancelClass = (id: string) => {
+    showConfirm("¿Cancelar esta clase? Se eliminarán todas las reservas asociadas.", async () => {
+      setDeletingId(id);
+      try {
+        const res = await fetch(`/api/admin-gym/classes?id=${id}`, { method: "DELETE" });
+        if (res.ok) {
+          setToast({ msg: "Clase cancelada correctamente", type: "ok" });
+          fetchClasses();
+        }
+      } catch (e) { console.error(e); }
+      finally { setDeletingId(null); }
+    });
   };
 
   const handleViewClassDetails = async (c: GymClass) => {
@@ -215,18 +219,19 @@ export default function GymClassesPage() {
     }
   };
 
-  const handleCancelBooking = async (bookingId: string, classId: string) => {
-    if (!confirm("¿Liberar plaza de este usuario?")) return;
-    setIsCancelingBookingId(bookingId);
-    try {
-      const res = await fetch(`/api/admin-gym/classes/${classId}/bookings?bookingId=${bookingId}`, { method: "DELETE" });
-      if (res.ok) {
-        setToast({ msg: "Reserva cancelada (Plaza liberada)", type: "ok" });
-        setClassBookings(prev => prev.filter(b => b.id !== bookingId));
-        setClasses(prev => prev.map(c => c.id === classId ? { ...c, _count: { bookings: Math.max(0, c._count.bookings - 1) } } : c));
-      }
-    } catch (e) { console.error(e); }
-    finally { setIsCancelingBookingId(null); }
+  const handleCancelBooking = (bookingId: string, classId: string) => {
+    showConfirm("¿Liberar plaza de este usuario?", async () => {
+      setIsCancelingBookingId(bookingId);
+      try {
+        const res = await fetch(`/api/admin-gym/classes/${classId}/bookings?bookingId=${bookingId}`, { method: "DELETE" });
+        if (res.ok) {
+          setToast({ msg: "Reserva cancelada (Plaza liberada)", type: "ok" });
+          setClassBookings(prev => prev.filter(b => b.id !== bookingId));
+          setClasses(prev => prev.map(c => c.id === classId ? { ...c, _count: { bookings: Math.max(0, c._count.bookings - 1) } } : c));
+        }
+      } catch (e) { console.error(e); }
+      finally { setIsCancelingBookingId(null); }
+    });
   };
 
   // Group classes by date

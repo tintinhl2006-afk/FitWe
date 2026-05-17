@@ -19,6 +19,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useCustomAlert } from "@/components/providers/CustomAlertProvider";
 
 interface Exercise {
   id: string;
@@ -66,6 +67,7 @@ export function RoutineBuilder({
   backLabel = "Volver",
 }: RoutineBuilderProps) {
   const router = useRouter();
+  const { showConfirm, showAlert } = useCustomAlert();
 
   // Phase: "create" (name input) or "edit" (exercise management)
   const [phase, setPhase] = useState<"create" | "edit">("create");
@@ -155,7 +157,7 @@ export function RoutineBuilder({
     if (!selectedExercise || !routine) return;
 
     if (!replacingExerciseId && routine.exercises?.some((re) => re.exerciseId === selectedExercise)) {
-      window.alert("Este ejercicio ya está en la rutina.");
+      showAlert("Este ejercicio ya está en la rutina.");
       return;
     }
 
@@ -187,14 +189,16 @@ export function RoutineBuilder({
     }
   };
 
-  const handleDeleteExercise = async (routineExerciseId: string) => {
-    if (!routine || !window.confirm("¿Seguro que quieres eliminar este ejercicio?")) return;
-    try {
-      const res = await fetch(`/api/routines/${routine.id}/exercises/${routineExerciseId}`, { method: "DELETE" });
-      if (res.ok) await fetchRoutineDetails(routine.id);
-    } catch (e) {
-      console.error("Error deleting exercise:", e);
-    }
+  const handleDeleteExercise = (routineExerciseId: string) => {
+    if (!routine) return;
+    showConfirm("¿Seguro que quieres eliminar este ejercicio?", async () => {
+      try {
+        const res = await fetch(`/api/routines/${routine.id}/exercises/${routineExerciseId}`, { method: "DELETE" });
+        if (res.ok) await fetchRoutineDetails(routine.id);
+      } catch (e) {
+        console.error("Error deleting exercise:", e);
+      }
+    });
   };
 
   const handleUpdateSets = async (routineExerciseId: string, delta: number, currentSets: number) => {

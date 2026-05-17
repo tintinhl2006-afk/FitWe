@@ -4,10 +4,12 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, ArrowRight, Activity, Target as TargetIcon, Scale, User, CheckCircle2, ArrowLeft, Wand2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { usePreferences } from "@/context/PreferencesContext";
 
 export default function NutritionOnboardingPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { weightUnit, measurementUnit } = usePreferences();
   const isEditing = searchParams.get("edit") === "true";
   
   const [isWizardMode, setIsWizardMode] = useState(false);
@@ -346,7 +348,7 @@ export default function NutritionOnboardingPage() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Peso (kg)</label>
+                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Peso ({weightUnit})</label>
                       <input 
                         type="number" 
                         min="1"
@@ -357,7 +359,7 @@ export default function NutritionOnboardingPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Altura (cm)</label>
+                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Altura ({measurementUnit})</label>
                       <input 
                         type="number" 
                         min="1"

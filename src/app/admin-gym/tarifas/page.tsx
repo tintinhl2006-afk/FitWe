@@ -14,6 +14,7 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useCustomAlert } from "@/components/providers/CustomAlertProvider";
 
 interface Plan {
   id: string;
@@ -26,6 +27,7 @@ interface Plan {
 }
 
 export default function GymPlansPage() {
+  const { showConfirm, showAlert } = useCustomAlert();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -82,20 +84,20 @@ export default function GymPlansPage() {
     }
   };
 
-  const handleDelete = async (planId: string) => {
-    if (!confirm("¿Seguro que quieres eliminar esta tarifa?")) return;
-
-    try {
-      const res = await fetch(`/api/admin-gym/plans/${planId}`, {
-        method: "DELETE",
-      });
-      const data = await res.json();
-      setSuccess(data.message);
-      setTimeout(() => setSuccess(""), 3000);
-      await fetchPlans();
-    } catch (e) {
-      console.error("Error deleting plan:", e);
-    }
+  const handleDelete = (planId: string) => {
+    showConfirm("¿Seguro que quieres eliminar esta tarifa?", async () => {
+      try {
+        const res = await fetch(`/api/admin-gym/plans/${planId}`, {
+          method: "DELETE",
+        });
+        const data = await res.json();
+        setSuccess(data.message);
+        setTimeout(() => setSuccess(""), 3000);
+        await fetchPlans();
+      } catch (e) {
+        console.error("Error deleting plan:", e);
+      }
+    });
   };
 
   const formatDuration = (days: number) => {

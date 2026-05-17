@@ -7,6 +7,7 @@ import { Plus, ArrowLeft, Loader2, Dumbbell, Trash2, Search, Target, Activity, A
 import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { useCustomAlert } from "@/components/providers/CustomAlertProvider";
 
 interface Exercise {
   id: string;
@@ -37,6 +38,7 @@ interface Routine {
 export default function RoutineDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const { id } = use(params);
+  const { showConfirm, showAlert } = useCustomAlert();
   
   const [routine, setRoutine] = useState<Routine | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -98,7 +100,7 @@ export default function RoutineDetailPage({ params }: { params: Promise<{ id: st
     if (!selectedExercise) return;
 
     if (!replacingExerciseId && routine?.exercises?.some(re => re.exerciseId === selectedExercise)) {
-      window.alert("Este ejercicio ya está en la rutina.");
+      showAlert("Este ejercicio ya está en la rutina.");
       return;
     }
 
@@ -147,14 +149,15 @@ export default function RoutineDetailPage({ params }: { params: Promise<{ id: st
     }
   };
 
-  const handleDeleteExercise = async (routineExerciseId: string) => {
-    if (!window.confirm("¿Seguro que quieres eliminar este ejercicio?")) return;
-    try {
-      const res = await fetch(`/api/routines/${id}/exercises/${routineExerciseId}`, { method: "DELETE" });
-      if (res.ok) await fetchRoutineDetails();
-    } catch (error) {
-      console.error("Error al eliminar ejercicio:", error);
-    }
+  const handleDeleteExercise = (routineExerciseId: string) => {
+    showConfirm("¿Seguro que quieres eliminar este ejercicio?", async () => {
+      try {
+        const res = await fetch(`/api/routines/${id}/exercises/${routineExerciseId}`, { method: "DELETE" });
+        if (res.ok) await fetchRoutineDetails();
+      } catch (error) {
+        console.error("Error al eliminar ejercicio:", error);
+      }
+    });
   };
 
   const handleUpdateSets = async (routineExerciseId: string, delta: number, currentSets: number) => {

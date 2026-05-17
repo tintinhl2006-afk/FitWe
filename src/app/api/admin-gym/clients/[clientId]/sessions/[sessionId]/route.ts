@@ -24,7 +24,7 @@ export async function GET(
     // IDOR barrier 1: verify client belongs to this gym
     const client = await prisma.user.findFirst({
       where: { id: clientId, gymId, role: "USER" },
-      select: { id: true, name: true, distanceUnit: true },
+      select: { id: true, name: true, distanceUnit: true, weightUnit: true },
     });
 
     if (!client) {
@@ -108,7 +108,8 @@ export async function GET(
     return NextResponse.json({
       id: workoutSession.id,
       clientName: client.name,
-      distanceUnit: client.distanceUnit,
+      distanceUnit: client.distanceUnit || "km",
+      weightUnit: client.weightUnit || "kg",
       routineName: workoutSession.routine?.name || "Entrenamiento Libre",
       startTime: workoutSession.startTime.toISOString(),
       endTime: workoutSession.endTime?.toISOString() || null,

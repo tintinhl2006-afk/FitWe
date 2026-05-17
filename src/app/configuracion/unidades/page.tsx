@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { Loader2, Save } from "lucide-react";
+import { usePreferences } from "@/context/PreferencesContext";
 
 export default function UnitsConfigPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const { refreshPreferences } = usePreferences();
   const [units, setUnits] = useState({
     weightUnit: "kg",
     distanceUnit: "km",
@@ -43,6 +45,7 @@ export default function UnitsConfigPage() {
         body: JSON.stringify(units)
       });
       if (res.ok) {
+        await refreshPreferences();
         alert("Unidades guardadas correctamente");
       }
     } catch (e) {

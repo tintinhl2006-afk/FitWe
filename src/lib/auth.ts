@@ -89,6 +89,13 @@ export const authOptions: NextAuthOptions = {
         session.user.gymId = token.gymId as string | null;
         session.user.gymName = token.gymName as string | null;
         
+        // Fetch image directly from DB (too large for JWT/cookie)
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: { image: true },
+        });
+        session.user.image = dbUser?.image || null;
+        
         // Always refresh serverNow from the cookie on each session request
         session.user.serverNow = (await getNow()).toISOString();
       }

@@ -27,8 +27,19 @@ export async function POST(req: Request) {
       targetFat
     } = body;
 
+    // Fetch user units to perform correct BMR conversion (Mifflin-St Jeor)
+    const userPref = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { weightUnit: true, measurementUnit: true }
+    });
+    const weightUnit = userPref?.weightUnit || "kg";
+    const measurementUnit = userPref?.measurementUnit || "cm";
+
     let bioData: BioData;
     let targets: { targetCalories: number; targetProtein: number; targetCarbs: number; targetFat: number };
+
+    const weightVal = Number(weight) || 0;
+    const heightVal = Number(height) || 0;
 
     if (isManual) {
       // Manual mode: save user-provided targets
@@ -36,8 +47,8 @@ export async function POST(req: Request) {
       bioData = {
         gender: gender || "none",
         age: Number(age) || 30,
-        weight: Number(weight) || 70,
-        height: Number(height) || 170,
+        weight: weightVal || 70,
+        height: heightVal || 170,
         activityLevel: activityLevel || "none",
         goal: goal || "none",
         aggressiveness: aggressiveness || "none",
@@ -53,8 +64,8 @@ export async function POST(req: Request) {
       bioData = {
         gender,
         age: Number(age),
-        weight: Number(weight),
-        height: Number(height),
+        weight: weightVal,
+        height: heightVal,
         activityLevel,
         goal,
         aggressiveness,
@@ -67,7 +78,17 @@ export async function POST(req: Request) {
         );
       }
 
-      targets = calculateMetabolicTargets(bioData);
+      // Convert to metric (kg and cm) for formula calculations (Mifflin-St Jeor)
+      const weightInKg = weightUnit === "lbs" ? weightVal / 2.20462 : weightVal;
+      const heightInCm = measurementUnit === "in" ? heightVal / 0.393701 : heightVal;
+
+      const bioDataForCalc = {
+        ...bioData,
+        weight: weightInKg,
+        height: heightInCm,
+      };
+
+      targets = calculateMetabolicTargets(bioDataForCalc);
     }
 
     // Save or update to Prisma

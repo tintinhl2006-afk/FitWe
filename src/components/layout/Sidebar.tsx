@@ -88,11 +88,8 @@ export function Sidebar() {
                 )}
               </div>
               <div className="flex flex-col overflow-hidden">
-                <span className="truncate text-sm font-medium text-slate-900 dark:text-white">
+                <span className="truncate text-sm font-bold text-slate-900 dark:text-white">
                   {session.user?.name || "Usuario"}
-                </span>
-                <span className="text-xs text-slate-500 dark:text-slate-400 capitalize">
-                  {session.user?.role?.toLowerCase() || "Cliente"}
                 </span>
               </div>
             </Link>

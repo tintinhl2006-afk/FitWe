@@ -24,12 +24,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "La imagen es demasiado grande (máximo 2MB)" }, { status: 413 });
     }
 
-    await prisma.user.update({
+    const updatedUser = await prisma.user.update({
       where: { id: session.user.id },
       data: { image },
+      select: { image: true },
     });
 
-    return NextResponse.json({ message: "Imagen actualizada correctamente" });
+    return NextResponse.json({ message: "Imagen actualizada correctamente", image: updatedUser.image });
   } catch (error) {
     console.error("Error updating profile image:", error);
     return NextResponse.json(

@@ -6,6 +6,7 @@ import { Plus, Loader2, Dumbbell, Calendar, Trash2, MoreHorizontal } from "lucid
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { SubscriptionBanner, useIsSubscriptionActive } from "@/components/shared/SubscriptionBanner";
+import { useCustomAlert } from "@/components/providers/CustomAlertProvider";
 
 interface Routine {
   id: string;
@@ -20,6 +21,7 @@ interface Routine {
 
 export default function EntrenamientosPage() {
   const isActive = useIsSubscriptionActive();
+  const { showConfirm } = useCustomAlert();
   const [routines, setRoutines] = useState<Routine[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
@@ -80,28 +82,28 @@ export default function EntrenamientosPage() {
     }
   };
 
-  const handleDeleteRoutine = async (e: React.MouseEvent, id: string) => {
+  const handleDeleteRoutine = (e: React.MouseEvent, id: string) => {
     e.preventDefault();
     if (!isActive) return;
-    if (!window.confirm("¿Seguro que quieres borrar esta rutina? Se perderán todos sus ejercicios.")) return;
+    showConfirm("¿Seguro que quieres borrar esta rutina? Se perderán todos sus ejercicios.", async () => {
+      setDeletingId(id);
+      try {
+        const res = await fetch(`/api/routines/${id}`, {
+          method: "DELETE",
+        });
 
-    setDeletingId(id);
-    try {
-      const res = await fetch(`/api/routines/${id}`, {
-        method: "DELETE",
-      });
-
-      if (res.ok) {
-        await fetchRoutines();
-      } else {
-        const data = await res.json();
-        console.error("Error deleting routine:", data.message);
+        if (res.ok) {
+          await fetchRoutines();
+        } else {
+          const data = await res.json();
+          console.error("Error deleting routine:", data.message);
+        }
+      } catch (error) {
+        console.error("Error al borrar rutina:", error);
+      } finally {
+        setDeletingId(null);
       }
-    } catch (error) {
-      console.error("Error al borrar rutina:", error);
-    } finally {
-      setDeletingId(null);
-    }
+    });
   };
 
   return (

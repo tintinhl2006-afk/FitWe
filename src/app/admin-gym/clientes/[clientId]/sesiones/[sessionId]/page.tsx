@@ -36,6 +36,8 @@ interface ExerciseGroup {
 interface SessionDetail {
   id: string;
   clientName: string;
+  weightUnit: string;
+  distanceUnit: string;
   routineName: string;
   startTime: string;
   endTime: string | null;
@@ -143,10 +145,6 @@ export default function SessionDetailPage({
       {/* Header Card */}
       <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
         <div className="px-6 pb-6 pt-6">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl border-4 border-white dark:border-slate-900 bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 shadow-soft mb-4">
-            <Dumbbell className="h-6 w-6" />
-          </div>
-
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
             {session.routineName}
           </h1>
@@ -168,7 +166,7 @@ export default function SessionDetailPage({
             <div className="flex items-center gap-2 rounded-3xl bg-cyan-50 dark:bg-cyan-950/30 px-4 py-2 border border-cyan-100 dark:border-cyan-900/50">
               <TrendingUp className="h-4 w-4 text-primary dark:text-cyan-400" />
               <span className="text-sm font-bold text-primary dark:text-cyan-300">
-                {session.totalVolume.toLocaleString()} kg vol.
+                {session.totalVolume.toLocaleString()} {session.weightUnit || "kg"} vol.
               </span>
             </div>
             <div className="flex items-center gap-2 rounded-3xl bg-slate-50 dark:bg-slate-800 px-4 py-2 border border-slate-100 dark:border-slate-700">
@@ -222,7 +220,7 @@ export default function SessionDetailPage({
                         </>
                       ) : (
                         <>
-                          <th className="px-6 py-2.5 text-right">Peso (kg)</th>
+                          <th className="px-6 py-2.5 text-right">Peso ({session.weightUnit || "kg"})</th>
                           <th className="px-6 py-2.5 text-right">Reps</th>
                         </>
                       )}

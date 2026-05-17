@@ -2,10 +2,12 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
+import { useCustomAlert } from "@/components/providers/CustomAlertProvider";
 import { User, Activity, Calendar, Clock, Dumbbell, Loader2, Camera, X, Eye } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { cn } from "@/lib/utils";
+import { usePreferences } from "@/context/PreferencesContext";
 
 interface SessionData {
   id: string;
@@ -41,7 +43,9 @@ interface ProfileData {
 }
 
 export default function ProfilePage() {
-  const { data: session } = useSession();
+  const { data: session, update } = useSession();
+  const { weightUnit, distanceUnit } = usePreferences();
+  const { showAlert } = useCustomAlert();
   const [data, setData] = useState<ProfileData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
@@ -71,7 +75,7 @@ export default function ProfilePage() {
     if (!file) return;
 
     if (file.size > 2 * 1024 * 1024) {
-      alert("La imagen es demasiado grande. El máximo permitido es 2MB.");
+      showAlert("La imagen es demasiado grande. El máximo permitido es 2MB.");
       return;
     }
 
@@ -88,13 +92,15 @@ export default function ProfilePage() {
 
         if (res.ok) {
           await fetchProfileData();
+          // Refresh the NextAuth session so the sidebar avatar picks up the new image from DB
+          await update({});
         } else {
           const errorData = await res.json();
-          alert(`Error al subir imagen: ${errorData.message}`);
+          showAlert(`Error al subir imagen: ${errorData.message}`);
         }
       } catch (error) {
         console.error("Error uploading image:", error);
-        alert("Ocurrió un error al subir la imagen.");
+        showAlert("Ocurrió un error al subir la imagen.");
       } finally {
         setIsUploading(false);
       }
@@ -252,9 +258,6 @@ export default function ProfilePage() {
                     onClick={() => setExpandedWorkoutId(session.id)}
                   >
                     <div className="flex items-center gap-5 relative z-10">
-                      <div className="h-14 w-14 rounded-2xl bg-cyan-50 dark:bg-cyan-950/30 text-primary dark:text-cyan-400 flex items-center justify-center shrink-0 group-hover:bg-primary group-hover:text-white transition-colors duration-300">
-                        <Dumbbell className="h-6 w-6" />
-                      </div>
                       <div>
                         <h3 className="font-black text-slate-900 dark:text-white text-xl leading-tight group-hover:text-primary dark:group-hover:text-cyan-400 transition-colors">{session.name}</h3>
                         <p className="text-sm font-semibold text-slate-400 dark:text-slate-500 mt-0.5">
@@ -275,7 +278,7 @@ export default function ProfilePage() {
                         </div>
                         <div>
                           <p className="text-[10px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-widest mb-1">Volumen</p>
-                          <p className="font-bold text-slate-900 dark:text-white">{session.totalVolume} kg</p>
+                          <p className="font-bold text-slate-900 dark:text-white">{session.totalVolume} {weightUnit}</p>
                         </div>
                       </div>
                       <div className="h-10 w-10 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center group-hover:bg-cyan-50 dark:group-hover:bg-cyan-900/50 transition-colors">
@@ -339,7 +342,7 @@ export default function ProfilePage() {
                         } else if (isBodyweight) {
                           details = `${set.reps} reps`;
                         } else {
-                          details = `${set.weight} kg x ${set.reps}`;
+                          details = `${set.weight} ${weightUnit} x ${set.reps}`;
                         }
 
                         return (
@@ -362,7 +365,7 @@ export default function ProfilePage() {
               </span>
               <span className="flex items-center gap-2">
                 <Dumbbell className="h-4 w-4 text-primary" />
-                {selectedWorkout.totalVolume} kg
+                {selectedWorkout.totalVolume} {weightUnit}
               </span>
             </div>
           </div>

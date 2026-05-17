@@ -3,10 +3,11 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { Plus, Flame, Beef, Wheat, Droplet, Calendar as CalendarIcon, Loader2, Trash2, X, Search, Image as ImageIcon, Settings, Target as TargetIcon, Edit3 } from "lucide-react";
+import { Plus, Flame, Beef, Wheat, Droplet, Calendar as CalendarIcon, Loader2, Trash2, X, Search, Settings, Target as TargetIcon, Edit3, BarChart3, PieChart } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import { useCustomAlert } from "@/components/providers/CustomAlertProvider";
 
 interface FoodItem {
   id: string;
@@ -37,6 +38,7 @@ const MEAL_TYPES = [
 export default function NutricionPage() {
   const router = useRouter();
   const { data: session } = useSession();
+  const { showConfirm, showAlert } = useCustomAlert();
   
   const [profile, setProfile] = useState<any>(null);
   const [meals, setMeals] = useState<MealEntry[]>([]);
@@ -48,6 +50,7 @@ export default function NutricionPage() {
   const [modalMealType, setModalMealType] = useState<string>("BREAKFAST");
   const [activeTab, setActiveTab] = useState<"mis_alimentos" | "nuevo_alimento" | "editar_alimento">("mis_alimentos");
   const [editingFoodId, setEditingFoodId] = useState<string | null>(null);
+  const [isSummaryOpen, setIsSummaryOpen] = useState(false);
   
   // Search & Foods
   const [foods, setFoods] = useState<FoodItem[]>([]);
@@ -165,7 +168,7 @@ export default function NutricionPage() {
         setActiveTab("mis_alimentos");
         fetchFoods();
       } else {
-        alert("Error al guardar el alimento");
+        showAlert("Error al guardar el alimento");
       }
     } catch (error) {
       console.error(error);
@@ -178,9 +181,9 @@ export default function NutricionPage() {
     if (!selectedFood || !quantityGrams) return;
     setIsLoggingMeal(true);
     try {
-      const entryDate = new Date(selectedDate);
+      const [year, month, day] = selectedDate.split("-").map(Number);
       const now = session?.user?.serverNow ? new Date(session.user.serverNow) : new Date();
-      entryDate.setHours(now.getHours(), now.getMinutes(), now.getSeconds());
+      const entryDate = new Date(Date.UTC(year, month - 1, day, now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds()));
 
       const res = await fetch("/api/user/meals", {
         method: "POST",
@@ -204,19 +207,20 @@ export default function NutricionPage() {
     }
   };
 
-  const handleDeleteMeal = async (id: string) => {
-    if (!window.confirm("¿Seguro que quieres borrar este alimento de tu diario?")) return;
-    setDeletingId(id);
-    try {
-      const res = await fetch(`/api/user/meals/${id}`, { method: "DELETE" });
-      if (res.ok) {
-        fetchNutritionData(selectedDate);
+  const handleDeleteMeal = (id: string) => {
+    showConfirm("¿Seguro que quieres borrar este alimento de tu diario?", async () => {
+      setDeletingId(id);
+      try {
+        const res = await fetch(`/api/user/meals/${id}`, { method: "DELETE" });
+        if (res.ok) {
+          fetchNutritionData(selectedDate);
+        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setDeletingId(null);
       }
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setDeletingId(null);
-    }
+    });
   };
 
   // Calcular consumos
@@ -243,6 +247,54 @@ export default function NutricionPage() {
     { calories: 0, protein: 0, carbs: 0, fat: 0 }
   );
 
+  // Desglose por tipo de comida
+  const mealBreakdowns = MEAL_TYPES.map((type) => {
+    const sectionMeals = meals.filter((m) => m.mealType === type.id);
+    const cals = sectionMeals.reduce((acc, m) => acc + calcNutrients(m).cal, 0);
+    const pro = sectionMeals.reduce((acc, m) => acc + calcNutrients(m).pro, 0);
+    const car = sectionMeals.reduce((acc, m) => acc + calcNutrients(m).car, 0);
+    const fat = sectionMeals.reduce((acc, m) => acc + calcNutrients(m).fat, 0);
+    return {
+      id: type.id,
+      label: type.label,
+      cals,
+      pro,
+      car,
+      fat,
+    };
+  });
+
+  // Top 3 alimentos que aportan a cada macro
+  const getTopContributors = (macro: "pro" | "car" | "fat") => {
+    const contributions = meals.map((m) => {
+      const nutrients = calcNutrients(m);
+      return {
+        name: m.foodItem.name,
+        brand: m.foodItem.brand,
+        value: nutrients[macro],
+      };
+    });
+
+    const grouped: { [key: string]: { name: string; brand: string | null; value: number } } = {};
+    contributions.forEach((c) => {
+      const key = `${c.name}-${c.brand || ""}`;
+      if (grouped[key]) {
+        grouped[key].value += c.value;
+      } else {
+        grouped[key] = { name: c.name, brand: c.brand, value: c.value };
+      }
+    });
+
+    return Object.values(grouped)
+      .filter((item) => item.value > 0)
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 3);
+  };
+
+  const topProtein = getTopContributors("pro");
+  const topCarbs = getTopContributors("car");
+  const topFat = getTopContributors("fat");
+
   return (
     <DashboardLayout>
       <div className="space-y-6 max-w-5xl mx-auto">
@@ -257,6 +309,14 @@ export default function NutricionPage() {
           </div>
           
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsSummaryOpen(true)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-cyan-500 hover:bg-cyan-400 dark:bg-cyan-600 dark:hover:bg-cyan-500 text-white font-semibold transition-all shadow-sm shadow-cyan-500/10"
+              title="Ver desglose y resumen nutricional"
+            >
+              <BarChart3 className="w-5 h-5" />
+              Ver Resumen
+            </button>
             <button
               onClick={() => router.push("/nutricion/onboarding?edit=true")}
               className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-bold transition-all shadow-sm shadow-yellow-500/20"
@@ -348,13 +408,6 @@ export default function NutricionPage() {
                       return (
                         <div key={meal.id} className="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/20 transition-colors">
                           <div className="flex items-center gap-4">
-                            <div className="relative w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-3xl overflow-hidden flex-shrink-0 flex items-center justify-center border border-slate-200 dark:border-slate-700">
-                              {meal.foodItem.imageUrl ? (
-                                <img src={meal.foodItem.imageUrl} alt={meal.foodItem.name} className="w-full h-full object-cover" />
-                              ) : (
-                                <ImageIcon className="w-5 h-5 text-slate-400" />
-                              )}
-                            </div>
                             <div>
                               <p className="font-semibold text-slate-900 dark:text-white text-sm md:text-base">
                                 {meal.foodItem.name} {meal.foodItem.brand && <span className="text-slate-500 font-normal text-xs ml-1">({meal.foodItem.brand})</span>}
@@ -455,9 +508,6 @@ export default function NutricionPage() {
                       foods.map(food => (
                         <div key={food.id} className="border border-slate-200 dark:border-slate-800 rounded-3xl p-3 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between hover:border-primary/50 dark:hover:border-primary/50 transition-colors bg-white dark:bg-slate-900">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center border border-slate-200 dark:border-slate-700 overflow-hidden">
-                              {food.imageUrl ? <img src={food.imageUrl} alt="" className="w-full h-full object-cover" /> : <ImageIcon className="w-4 h-4 text-slate-400" />}
-                            </div>
                             <div>
                               <p className="font-semibold text-sm text-slate-900 dark:text-white line-clamp-1">{food.name}</p>
                               <p className="text-xs text-slate-500">100g • {food.calories}kcal</p>
@@ -559,6 +609,255 @@ export default function NutricionPage() {
                   </div>
                 </form>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isSummaryOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl w-full max-w-3xl overflow-hidden max-h-[90vh] flex flex-col animate-scale-up">
+            {/* Modal Header */}
+            <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between bg-slate-50/50 dark:bg-slate-950/20">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-cyan-500/10 text-cyan-500 rounded-2xl">
+                  <PieChart className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-slate-900 dark:text-white">Resumen Nutricional</h2>
+                  <p className="text-xs text-slate-500 mt-0.5">{selectedDate}</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setIsSummaryOpen(false)}
+                className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-2xl transition-all"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 overflow-y-auto space-y-6 custom-scrollbar flex-1 bg-slate-50/30 dark:bg-slate-950/10">
+              
+              {/* COMPARATIVA DE OBJETIVOS VS CONSUMIDO */}
+              <div className="space-y-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 p-5">
+                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider">Objetivos vs Consumido</h3>
+                
+                <div className="space-y-4">
+                  {/* Calorías */}
+                  <div>
+                    <div className="flex justify-between items-baseline mb-1">
+                      <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Calorías</span>
+                      <span className="text-sm font-bold text-slate-900 dark:text-white">
+                        {Math.round(totals.calories)} / {profile?.targetCalories || 0} kcal
+                      </span>
+                    </div>
+                    <div className="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden">
+                      <div 
+                        className="bg-amber-500 h-full rounded-full transition-all duration-500"
+                        style={{ width: `${Math.min(100, (totals.calories / (profile?.targetCalories || 1)) * 100)}%` }}
+                      />
+                    </div>
+                    <p className={cn(
+                      "text-xs font-semibold mt-1",
+                      (profile?.targetCalories || 0) - totals.calories > 0 ? "text-slate-500" : "text-rose-500"
+                    )}>
+                      {(profile?.targetCalories || 0) - totals.calories > 0 
+                        ? `Faltan ${Math.round((profile?.targetCalories || 0) - totals.calories)} kcal para el objetivo`
+                        : `Te has excedido por ${Math.round(totals.calories - (profile?.targetCalories || 0))} kcal`
+                      }
+                    </p>
+                  </div>
+
+                  {/* Macros Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+                    {/* Proteína */}
+                    <div className="p-3 bg-slate-50 dark:bg-slate-950/40 rounded-2xl border border-slate-100 dark:border-slate-805">
+                      <div className="flex justify-between items-baseline mb-1.5">
+                        <span className="text-xs font-bold text-slate-500">Proteína</span>
+                        <span className="text-xs font-bold text-slate-900 dark:text-white">
+                          {Math.round(totals.protein)}/{profile?.targetProtein || 0}g
+                        </span>
+                      </div>
+                      <div className="w-full bg-slate-200 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                        <div 
+                          className="bg-rose-500 h-full rounded-full transition-all"
+                          style={{ width: `${Math.min(100, (totals.protein / (profile?.targetProtein || 1)) * 100)}%` }}
+                        />
+                      </div>
+                      <p className={cn(
+                        "text-[10px] font-bold mt-1",
+                        (profile?.targetProtein || 0) - totals.protein > 0 ? "text-slate-400" : "text-rose-500"
+                      )}>
+                        {(profile?.targetProtein || 0) - totals.protein > 0
+                          ? `Faltan ${Math.round((profile?.targetProtein || 0) - totals.protein)}g`
+                          : `Excedido por ${Math.round(totals.protein - (profile?.targetProtein || 0))}g`
+                        }
+                      </p>
+                    </div>
+
+                    {/* Carbohidratos */}
+                    <div className="p-3 bg-slate-50 dark:bg-slate-950/40 rounded-2xl border border-slate-100 dark:border-slate-805">
+                      <div className="flex justify-between items-baseline mb-1.5">
+                        <span className="text-xs font-bold text-slate-500">Carbohidratos</span>
+                        <span className="text-xs font-bold text-slate-900 dark:text-white">
+                          {Math.round(totals.carbs)}/{profile?.targetCarbs || 0}g
+                        </span>
+                      </div>
+                      <div className="w-full bg-slate-200 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                        <div 
+                          className="bg-emerald-500 h-full rounded-full transition-all"
+                          style={{ width: `${Math.min(100, (totals.carbs / (profile?.targetCarbs || 1)) * 100)}%` }}
+                        />
+                      </div>
+                      <p className={cn(
+                        "text-[10px] font-bold mt-1",
+                        (profile?.targetCarbs || 0) - totals.carbs > 0 ? "text-slate-400" : "text-rose-500"
+                      )}>
+                        {(profile?.targetCarbs || 0) - totals.carbs > 0
+                          ? `Faltan ${Math.round((profile?.targetCarbs || 0) - totals.carbs)}g`
+                          : `Excedido por ${Math.round(totals.carbs - (profile?.targetCarbs || 0))}g`
+                        }
+                      </p>
+                    </div>
+
+                    {/* Grasas */}
+                    <div className="p-3 bg-slate-50 dark:bg-slate-950/40 rounded-2xl border border-slate-100 dark:border-slate-805">
+                      <div className="flex justify-between items-baseline mb-1.5">
+                        <span className="text-xs font-bold text-slate-500">Grasas</span>
+                        <span className="text-xs font-bold text-slate-900 dark:text-white">
+                          {Math.round(totals.fat)}/{profile?.targetFat || 0}g
+                        </span>
+                      </div>
+                      <div className="w-full bg-slate-200 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                        <div 
+                          className="bg-yellow-500 h-full rounded-full transition-all"
+                          style={{ width: `${Math.min(100, (totals.fat / (profile?.targetFat || 1)) * 100)}%` }}
+                        />
+                      </div>
+                      <p className={cn(
+                        "text-[10px] font-bold mt-1",
+                        (profile?.targetFat || 0) - totals.fat > 0 ? "text-slate-400" : "text-rose-500"
+                      )}>
+                        {(profile?.targetFat || 0) - totals.fat > 0
+                          ? `Faltan ${Math.round((profile?.targetFat || 0) - totals.fat)}g`
+                          : `Excedido por ${Math.round(totals.fat - (profile?.targetFat || 0))}g`
+                        }
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* DISTRIBUCIÓN POR COMIDAS */}
+              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 p-5 space-y-4">
+                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider">Desglose por Momentos del Día</h3>
+                
+                <div className="divide-y divide-slate-100 dark:divide-slate-800/60 space-y-3">
+                  {mealBreakdowns.map((m) => {
+                    const pct = totals.calories > 0 ? Math.round((m.cals / totals.calories) * 100) : 0;
+                    return (
+                      <div key={m.id} className="pt-3 first:pt-0 flex items-center justify-between">
+                        <div className="space-y-1 flex-1 pr-4">
+                          <div className="flex justify-between items-baseline">
+                            <span className="text-sm font-bold text-slate-850 dark:text-slate-200">{m.label}</span>
+                            <span className="text-sm font-bold text-slate-950 dark:text-white">
+                              {Math.round(m.cals)} kcal <span className="text-xs text-slate-400 font-normal">({pct}%)</span>
+                            </span>
+                          </div>
+                          {m.cals > 0 ? (
+                            <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mt-1">
+                              <span>{Math.round(m.pro)}g P • {Math.round(m.car)}g C • {Math.round(m.fat)}g G</span>
+                              <div className="w-24 bg-slate-100 dark:bg-slate-950 h-1.5 rounded-full overflow-hidden">
+                                <div className="bg-cyan-500 h-full" style={{ width: `${pct}%` }} />
+                              </div>
+                            </div>
+                          ) : (
+                            <p className="text-xs text-slate-400 italic mt-0.5">Sin comidas registradas</p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* FUENTES PRINCIPALES DE NUTRIENTES */}
+              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 p-5 space-y-4">
+                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider">Principales Fuentes de Nutrientes</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Proteínas */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800/80 pb-2">
+                      <div className="w-1.5 h-3 bg-rose-500 rounded-full" />
+                      <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Fuentes de Proteína</span>
+                    </div>
+                    {topProtein.length > 0 ? (
+                      <div className="space-y-1.5">
+                        {topProtein.map((item, idx) => (
+                          <div key={idx} className="flex justify-between items-center text-xs">
+                            <span className="text-slate-600 dark:text-slate-400 font-medium truncate max-w-[130px]" title={item.name}>{item.name}</span>
+                            <span className="font-bold text-slate-900 dark:text-white shrink-0">{Math.round(item.value)}g</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-[11px] text-slate-400 italic">Sin registros</p>
+                    )}
+                  </div>
+
+                  {/* Carbohidratos */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800/80 pb-2">
+                      <div className="w-1.5 h-3 bg-emerald-500 rounded-full" />
+                      <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Fuentes de Carbohidratos</span>
+                    </div>
+                    {topCarbs.length > 0 ? (
+                      <div className="space-y-1.5">
+                        {topCarbs.map((item, idx) => (
+                          <div key={idx} className="flex justify-between items-center text-xs">
+                            <span className="text-slate-600 dark:text-slate-400 font-medium truncate max-w-[130px]" title={item.name}>{item.name}</span>
+                            <span className="font-bold text-slate-900 dark:text-white shrink-0">{Math.round(item.value)}g</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-[11px] text-slate-400 italic">Sin registros</p>
+                    )}
+                  </div>
+
+                  {/* Grasas */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800/80 pb-2">
+                      <div className="w-1.5 h-3 bg-yellow-500 rounded-full" />
+                      <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Fuentes de Grasas</span>
+                    </div>
+                    {topFat.length > 0 ? (
+                      <div className="space-y-1.5">
+                        {topFat.map((item, idx) => (
+                          <div key={idx} className="flex justify-between items-center text-xs">
+                            <span className="text-slate-600 dark:text-slate-400 font-medium truncate max-w-[130px]" title={item.name}>{item.name}</span>
+                            <span className="font-bold text-slate-900 dark:text-white shrink-0">{Math.round(item.value)}g</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-[11px] text-slate-400 italic">Sin registros</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-4 border-t border-slate-100 dark:border-slate-800/80 flex justify-end bg-slate-50/30 dark:bg-slate-950/20">
+              <button 
+                onClick={() => setIsSummaryOpen(false)}
+                className="px-5 py-2 bg-slate-900 dark:bg-primary hover:bg-slate-800 dark:hover:bg-primary/95 text-white font-semibold rounded-2xl text-sm transition-all"
+              >
+                Entendido
+              </button>
             </div>
           </div>
         </div>

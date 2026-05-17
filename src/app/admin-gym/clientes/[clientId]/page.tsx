@@ -22,6 +22,7 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useCustomAlert } from "@/components/providers/CustomAlertProvider";
 
 interface PaymentRecord {
   id: string;
@@ -67,6 +68,7 @@ export default function ClientDetailPage({
 }) {
   const router = useRouter();
   const { clientId } = use(params);
+  const { showConfirm } = useCustomAlert();
 
   const [client, setClient] = useState<ClientDetail | null>(null);
   const [payments, setPayments] = useState<PaymentRecord[]>([]);
@@ -114,10 +116,16 @@ export default function ClientDetailPage({
   }, [clientId]);
 
   const handleSubscriptionUpdate = async (status?: string, addDays?: number, exactEndDate?: string) => {
-    if (addDays && !window.confirm(`¿Seguro que quieres extender la suscripción de ${client?.name} por ${addDays} días?`)) {
+    if (addDays) {
+      showConfirm(`¿Seguro que quieres extender la suscripción de ${client?.name} por ${addDays} días?`, () => {
+        executeSubscriptionUpdate(status, addDays, exactEndDate);
+      });
       return;
     }
+    executeSubscriptionUpdate(status, addDays, exactEndDate);
+  };
 
+  const executeSubscriptionUpdate = async (status?: string, addDays?: number, exactEndDate?: string) => {
     setIsUpdating(true);
     try {
       const res = await fetch(`/api/admin-gym/clients/${clientId}/subscription`, {
@@ -421,9 +429,6 @@ export default function ClientDetailPage({
                   className="flex items-center justify-between px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors cursor-pointer group"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-3xl bg-cyan-50 dark:bg-cyan-950/30 text-primary dark:text-cyan-400">
-                      <Dumbbell className="h-5 w-5" />
-                    </div>
                     <div>
                       <p className="font-semibold text-slate-900 dark:text-white text-sm group-hover:text-primary dark:group-hover:text-cyan-400 transition-colors">
                         {s.routineName}

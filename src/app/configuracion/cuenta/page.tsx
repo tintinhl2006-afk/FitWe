@@ -3,9 +3,11 @@
 import { useState, useEffect } from "react";
 import { Loader2, KeyRound, AlertTriangle } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
+import { useCustomAlert } from "@/components/providers/CustomAlertProvider";
 
 export default function AccountConfigPage() {
   const { data: session } = useSession();
+  const { showConfirm, showAlert } = useCustomAlert();
   const [isLoading, setIsLoading] = useState(true);
   const [passwords, setPasswords] = useState({ current: "", newPass: "" });
   const [isChangingPass, setIsChangingPass] = useState(false);
@@ -25,32 +27,36 @@ export default function AccountConfigPage() {
       });
       const data = await res.json();
       if (res.ok) {
-        alert("Contraseña actualizada correctamente");
+        showAlert("Contraseña actualizada correctamente");
         setPasswords({ current: "", newPass: "" });
       } else {
-        alert(data.message || "Error al cambiar contraseña");
+        showAlert(data.message || "Error al cambiar contraseña");
       }
     } catch (e) {
-      alert("Error interno");
+      showAlert("Error interno");
     } finally {
       setIsChangingPass(false);
     }
   };
 
-  const handleDeleteAccount = async () => {
-    if (!window.confirm("ADVERTENCIA EXTREMA\n\n¿Estás absolutamente seguro de querer eliminar tu cuenta? Se borrarán TODOS tus entrenamientos, rutinas e historial para siempre.")) return;
-    if (!window.confirm("¿Última confirmación? Esta acción NO se puede deshacer.")) return;
-
-    try {
-      const res = await fetch("/api/settings/delete-account", { method: "POST" });
-      if (res.ok) {
-        signOut({ callbackUrl: "/" });
-      } else {
-        alert("Error al eliminar la cuenta");
+  const handleDeleteAccount = () => {
+    showConfirm(
+      "ADVERTENCIA EXTREMA\n\n¿Estás absolutamente seguro de querer eliminar tu cuenta? Se borrarán TODOS tus entrenamientos, rutinas e historial para siempre.",
+      () => {
+        showConfirm("¿Última confirmación? Esta acción NO se puede deshacer.", async () => {
+          try {
+            const res = await fetch("/api/settings/delete-account", { method: "POST" });
+            if (res.ok) {
+              signOut({ callbackUrl: "/" });
+            } else {
+              showAlert("Error al eliminar la cuenta");
+            }
+          } catch (e) {
+            showAlert("Error interno");
+          }
+        });
       }
-    } catch (e) {
-      alert("Error interno");
-    }
+    );
   };
 
   if (isLoading) return <div className="p-8 flex justify-center"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;

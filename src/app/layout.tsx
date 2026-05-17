@@ -5,6 +5,7 @@ import { NextAuthProvider } from "@/components/providers/SessionProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { PreferencesProvider } from "@/context/PreferencesContext";
 import Script from "next/script";
+import { CustomAlertProvider } from "@/components/providers/CustomAlertProvider";
 export const dynamic = "force-dynamic";
 
 const geistSans = Geist({
@@ -45,8 +46,10 @@ export default function RootLayout({
 
         <NextAuthProvider>
           <PreferencesProvider>
-            <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-              {children}
+            <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+              <CustomAlertProvider>
+                {children}
+              </CustomAlertProvider>
             </ThemeProvider>
           </PreferencesProvider>
         </NextAuthProvider>
