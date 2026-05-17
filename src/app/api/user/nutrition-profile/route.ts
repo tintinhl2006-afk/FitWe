@@ -67,3 +67,24 @@ export async function POST(req: Request) {
     );
   }
 }
+
+export async function GET() {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ message: "No autorizado" }, { status: 401 });
+    }
+
+    const profile = await prisma.nutritionProfile.findUnique({
+      where: { userId: session.user.id },
+    });
+
+    return NextResponse.json(profile || null);
+  } catch (error) {
+    console.error("Error fetching nutrition profile:", error);
+    return NextResponse.json(
+      { error: "Error interno del servidor" },
+      { status: 500 }
+    );
+  }
+}

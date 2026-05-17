@@ -1,14 +1,18 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Loader2, ArrowRight, Activity, Target as TargetIcon, Scale, User, CheckCircle2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Loader2, ArrowRight, Activity, Target as TargetIcon, Scale, User, CheckCircle2, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function NutritionOnboardingPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isEditing = searchParams.get("edit") === "true";
+  
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   
   const [formData, setFormData] = useState({
     gender: "",
@@ -19,6 +23,35 @@ export default function NutritionOnboardingPage() {
     goal: "",
     aggressiveness: "",
   });
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await fetch("/api/user/nutrition-profile");
+        if (res.ok) {
+          const profile = await res.json();
+          if (profile) {
+            setFormData({
+              gender: profile.gender || "",
+              age: profile.age?.toString() || "",
+              weight: profile.weight?.toString() || "",
+              height: profile.height?.toString() || "",
+              activityLevel: profile.activityLevel || "",
+              goal: profile.goal || "",
+              aggressiveness: profile.aggressiveness || "",
+            });
+          } else if (isEditing) {
+            // User shouldn't be editing if they have no profile
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+      } finally {
+        setIsLoadingProfile(false);
+      }
+    };
+    fetchProfile();
+  }, [isEditing]);
 
   const handleNext = () => setStep((s) => Math.min(s + 1, 4));
   const handleBack = () => setStep((s) => Math.max(s - 1, 1));
@@ -56,7 +89,21 @@ export default function NutritionOnboardingPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-6 transition-colors">
+      {isLoadingProfile ? (
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-cyan-500" />
+          <p className="text-slate-500 dark:text-slate-400">Cargando perfil...</p>
+        </div>
+      ) : (
       <div className="w-full max-w-lg">
+        {isEditing && (
+          <button 
+            onClick={() => router.push("/nutricion")} 
+            className="mb-4 flex items-center gap-2 text-sm text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" /> Volver sin guardar
+          </button>
+        )}
         {/* Progress bar */}
         <div className="mb-8">
           <div className="flex justify-between mb-2">
@@ -276,6 +323,7 @@ export default function NutritionOnboardingPage() {
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 }
