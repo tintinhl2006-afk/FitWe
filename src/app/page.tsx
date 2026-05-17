@@ -242,7 +242,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════════ FEATURES SECTION ═══════════════════ */}
-      <section id="features" className="relative z-10 px-4 sm:px-6 pb-32 flex justify-center">
+      <section id="features" className="relative z-10 px-4 sm:px-6 py-24 sm:py-32 flex justify-center">
         <div className="mx-auto w-full max-w-6xl">
           {/* Section header */}
           <div className="mb-16 text-center">
