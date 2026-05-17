@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import {
   Activity,
   ArrowRight,
@@ -65,20 +64,71 @@ export default function LandingPage() {
           </Link>
         </div>
 
-        {/* Dashboard Mockup Image */}
-        <div className="mt-16 w-full max-w-6xl animate-fade-in-up animation-delay-400">
-          <div className="relative rounded-3xl overflow-hidden border border-white/10 shadow-2xl shadow-cyan-500/20 bg-slate-900/50 backdrop-blur-sm p-2 sm:p-4">
-            <Image
-              src="/fitwe_dashboard_animation.webp"
-              alt="FitWe Dashboard Interface en Acción"
-              width={1600}
-              height={900}
-              className="rounded-xl sm:rounded-2xl w-full object-cover opacity-90"
-              priority
-              unoptimized
-            />
-            {/* Glowing effect behind image */}
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent z-10 pointer-events-none" />
+        {/* Native CSS Dashboard Mockup */}
+        <div className="mt-16 w-full max-w-5xl animate-fade-in-up animation-delay-400 mx-auto">
+          <div className="relative rounded-3xl border border-white/10 shadow-[0_0_80px_-20px_rgba(6,182,212,0.3)] bg-slate-950/80 backdrop-blur-xl p-4 sm:p-6 w-full h-[300px] sm:h-[500px] flex overflow-hidden">
+            {/* Sidebar Skeleton */}
+            <div className="hidden sm:flex w-56 border-r border-white/10 pr-6 flex-col gap-6">
+              <div className="h-8 w-28 bg-gradient-to-r from-cyan-500/40 to-cyan-500/10 rounded-lg animate-pulse" />
+              <div className="space-y-4 mt-8">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="flex items-center gap-3 opacity-60">
+                    <div className="h-5 w-5 bg-white/10 rounded-md" />
+                    <div className="h-4 w-24 bg-white/5 rounded-md" />
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            {/* Main Content Skeleton */}
+            <div className="flex-1 sm:pl-8 pt-2 flex flex-col gap-6 sm:gap-8">
+              {/* Header */}
+              <div className="flex justify-between items-center">
+                <div className="h-6 w-32 sm:w-48 bg-white/10 rounded-md" />
+                <div className="flex gap-3 items-center">
+                  <div className="hidden sm:block h-8 w-32 bg-white/5 rounded-full" />
+                  <div className="h-8 w-8 bg-cyan-500/20 rounded-full border border-cyan-500/30" />
+                </div>
+              </div>
+              
+              {/* Stats Cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                <div className="h-20 sm:h-28 bg-gradient-to-br from-white/5 to-transparent rounded-2xl border border-white/5 p-4 flex flex-col justify-between relative overflow-hidden group">
+                  <div className="absolute inset-0 bg-cyan-500/5 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+                  <div className="h-3 w-16 bg-white/20 rounded-full" />
+                  <div className="h-6 sm:h-8 w-20 sm:w-24 bg-cyan-400/80 rounded-md" />
+                </div>
+                <div className="h-20 sm:h-28 bg-gradient-to-br from-white/5 to-transparent rounded-2xl border border-white/5 p-4 flex flex-col justify-between relative overflow-hidden group">
+                  <div className="absolute inset-0 bg-emerald-500/5 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+                  <div className="h-3 w-16 bg-white/20 rounded-full" />
+                  <div className="h-6 sm:h-8 w-20 sm:w-24 bg-emerald-400/80 rounded-md" />
+                </div>
+                <div className="hidden sm:flex h-28 bg-gradient-to-br from-white/5 to-transparent rounded-2xl border border-white/5 p-4 flex-col justify-between relative overflow-hidden group">
+                  <div className="absolute inset-0 bg-purple-500/5 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+                  <div className="h-3 w-16 bg-white/20 rounded-full" />
+                  <div className="h-8 w-24 bg-purple-400/80 rounded-md" />
+                </div>
+              </div>
+              
+              {/* Animated Chart Area */}
+              <div className="flex-1 bg-white/[0.02] rounded-2xl border border-white/5 relative overflow-hidden flex items-end p-4 sm:p-6 gap-2 sm:gap-4">
+                {[40, 70, 45, 90, 60, 80, 50, 100, 75, 65, 85, 40, 55].map((h, i) => (
+                  <div 
+                    key={i} 
+                    className="flex-1 bg-cyan-500/40 rounded-t-md hover:bg-cyan-400 transition-colors" 
+                    style={{ 
+                      height: `${h}%`, 
+                      animation: `pulse 3s ease-in-out infinite`, 
+                      animationDelay: `${i * 150}ms` 
+                    }} 
+                  />
+                ))}
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent pointer-events-none" />
+              </div>
+            </div>
+            
+            {/* Ambient inner glow */}
+            <div className="absolute -top-40 -right-40 h-[400px] w-[400px] bg-cyan-500/10 blur-[100px] rounded-full pointer-events-none" />
           </div>
         </div>
 
@@ -93,16 +143,72 @@ export default function LandingPage() {
       {/* ═══════════════════ APP SHOWCASE SECTION ═══════════════════ */}
       <section className="relative z-10 px-6 py-24 sm:py-32 bg-slate-900/50">
         <div className="mx-auto max-w-7xl grid gap-12 lg:grid-cols-2 items-center">
-          <div className="order-2 lg:order-1 relative">
-             <div className="absolute -inset-4 rounded-full bg-cyan-500/20 blur-[100px]" />
-             <div className="relative rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
-               <Image
-                 src="/fitwe_mobile.png"
-                 alt="FitWe Mobile App"
-                 width={800}
-                 height={800}
-                 className="w-full h-auto object-cover"
-               />
+          <div className="order-2 lg:order-1 relative flex justify-center">
+             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full bg-emerald-500/20 blur-[100px] pointer-events-none" />
+             
+             {/* Native CSS Mobile Mockup */}
+             <div className="relative w-[280px] h-[580px] bg-slate-950 rounded-[3rem] border-[8px] border-slate-800 shadow-2xl overflow-hidden ring-1 ring-white/10 z-10">
+                {/* Phone Notch */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-7 bg-slate-800 rounded-b-3xl z-20" />
+                
+                {/* App Content */}
+                <div className="absolute inset-0 bg-slate-900 p-5 pt-14 flex flex-col gap-6">
+                  {/* Header */}
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-2">
+                      <div className="h-2.5 w-16 bg-white/20 rounded-full" />
+                      <div className="h-4 w-28 bg-white/80 rounded-full" />
+                    </div>
+                    <div className="h-10 w-10 bg-emerald-500/20 rounded-full flex items-center justify-center border border-emerald-500/30">
+                      <div className="h-4 w-4 bg-emerald-400 rounded-full shadow-[0_0_10px_rgba(52,211,153,0.8)]" />
+                    </div>
+                  </div>
+                  
+                  {/* Macro card */}
+                  <div className="h-36 bg-gradient-to-br from-emerald-500/20 to-emerald-900/20 rounded-3xl border border-emerald-500/20 p-5 flex gap-5 items-center relative overflow-hidden">
+                     <div className="absolute -top-10 -right-10 w-32 h-32 bg-emerald-500/10 blur-[20px] rounded-full" />
+                     {/* Circular progress */}
+                     <div className="relative h-20 w-20 shrink-0">
+                       <svg className="w-full h-full -rotate-90 animate-[spin_10s_linear_infinite]" viewBox="0 0 100 100">
+                         <circle cx="50" cy="50" r="40" className="stroke-emerald-500/20 stroke-[8px] fill-transparent" />
+                         <circle cx="50" cy="50" r="40" className="stroke-emerald-400 stroke-[8px] fill-transparent" strokeDasharray="250" strokeDashoffset="60" strokeLinecap="round" />
+                       </svg>
+                       <div className="absolute inset-0 flex items-center justify-center">
+                         <div className="h-2 w-6 bg-emerald-400 rounded-full" />
+                       </div>
+                     </div>
+                     <div className="space-y-3 flex-1">
+                       <div className="h-2.5 w-full bg-emerald-500/30 rounded-full overflow-hidden">
+                         <div className="h-full w-3/4 bg-emerald-400 rounded-full" />
+                       </div>
+                       <div className="h-2.5 w-full bg-cyan-500/30 rounded-full overflow-hidden">
+                         <div className="h-full w-1/2 bg-cyan-400 rounded-full" />
+                       </div>
+                       <div className="h-2.5 w-full bg-purple-500/30 rounded-full overflow-hidden">
+                         <div className="h-full w-5/6 bg-purple-400 rounded-full" />
+                       </div>
+                     </div>
+                  </div>
+                  
+                  {/* Routine List */}
+                  <div className="space-y-3 mt-2 flex-1">
+                    <div className="flex justify-between items-center mb-4">
+                      <div className="h-3 w-24 bg-white/40 rounded-full" />
+                      <div className="h-2 w-8 bg-white/20 rounded-full" />
+                    </div>
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="h-16 bg-white/[0.03] rounded-2xl border border-white/5 p-3 flex items-center gap-4 hover:bg-white/[0.06] transition-colors">
+                        <div className="h-10 w-10 bg-white/10 rounded-xl flex items-center justify-center shrink-0">
+                          <div className="h-4 w-4 bg-white/40 rounded-sm" />
+                        </div>
+                        <div className="space-y-2 flex-1">
+                          <div className="h-2.5 w-3/4 bg-white/60 rounded-full" />
+                          <div className="h-2 w-1/2 bg-white/20 rounded-full" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
              </div>
           </div>
           <div className="order-1 lg:order-2 space-y-6">
