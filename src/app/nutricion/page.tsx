@@ -435,6 +435,7 @@ export default function NutricionPage() {
                             <div className="flex items-center gap-2 w-full sm:w-auto">
                               <input 
                                 type="number" 
+                                min="1"
                                 placeholder="Gramos" 
                                 autoFocus
                                 value={quantityGrams}
@@ -491,19 +492,19 @@ export default function NutricionPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Calorías (kcal) *</label>
-                      <input required type="number" step="0.1" value={newFood.calories} onChange={e => setNewFood({...newFood, calories: e.target.value})} className="w-full px-3 py-2 rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-primary transition-all text-sm" />
+                      <input required type="number" step="0.1" min="0" value={newFood.calories} onChange={e => setNewFood({...newFood, calories: e.target.value})} className="w-full px-3 py-2 rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-primary transition-all text-sm" />
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Proteínas (g) *</label>
-                      <input required type="number" step="0.1" value={newFood.protein} onChange={e => setNewFood({...newFood, protein: e.target.value})} className="w-full px-3 py-2 rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-primary transition-all text-sm" />
+                      <input required type="number" step="0.1" min="0" value={newFood.protein} onChange={e => setNewFood({...newFood, protein: e.target.value})} className="w-full px-3 py-2 rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-primary transition-all text-sm" />
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Carbohidratos (g) *</label>
-                      <input required type="number" step="0.1" value={newFood.carbs} onChange={e => setNewFood({...newFood, carbs: e.target.value})} className="w-full px-3 py-2 rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-primary transition-all text-sm" />
+                      <input required type="number" step="0.1" min="0" value={newFood.carbs} onChange={e => setNewFood({...newFood, carbs: e.target.value})} className="w-full px-3 py-2 rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-primary transition-all text-sm" />
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Grasas (g) *</label>
-                      <input required type="number" step="0.1" value={newFood.fat} onChange={e => setNewFood({...newFood, fat: e.target.value})} className="w-full px-3 py-2 rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-primary transition-all text-sm" />
+                      <input required type="number" step="0.1" min="0" value={newFood.fat} onChange={e => setNewFood({...newFood, fat: e.target.value})} className="w-full px-3 py-2 rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-primary transition-all text-sm" />
                     </div>
                   </div>
 

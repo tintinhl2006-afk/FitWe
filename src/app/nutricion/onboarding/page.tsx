@@ -106,6 +106,8 @@ export default function NutritionOnboardingPage() {
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Edad (años)</label>
                 <input 
                   type="number" 
+                  min="1"
+                  max="120"
                   value={formData.age} 
                   onChange={e => setFormData({ ...formData, age: e.target.value })} 
                   className="w-full rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-4 py-3 text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-cyan-500/20 outline-none transition-all" 
@@ -118,6 +120,8 @@ export default function NutritionOnboardingPage() {
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Peso (kg)</label>
                   <input 
                     type="number" 
+                    min="1"
+                    max="500"
                     value={formData.weight} 
                     onChange={e => setFormData({ ...formData, weight: e.target.value })} 
                     className="w-full rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-4 py-3 text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-cyan-500/20 outline-none transition-all" 
@@ -128,6 +132,8 @@ export default function NutritionOnboardingPage() {
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Altura (cm)</label>
                   <input 
                     type="number" 
+                    min="1"
+                    max="300"
                     value={formData.height} 
                     onChange={e => setFormData({ ...formData, height: e.target.value })} 
                     className="w-full rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-4 py-3 text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-cyan-500/20 outline-none transition-all" 

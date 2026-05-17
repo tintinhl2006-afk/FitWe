@@ -51,6 +51,13 @@ export async function POST(req: Request) {
       );
     }
 
+    if (Number(calories) < 0 || Number(protein) < 0 || Number(carbs) < 0 || Number(fat) < 0) {
+      return NextResponse.json(
+        { message: "Los valores nutricionales no pueden ser negativos" },
+        { status: 400 }
+      );
+    }
+
     const food = await prisma.foodItem.create({
       data: {
         userId: session.user.id,

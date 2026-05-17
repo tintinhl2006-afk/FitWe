@@ -34,8 +34,8 @@ export async function PATCH(
     const updatedSet = await prisma.workoutSet.update({
       where: { id: setId },
       data: {
-        reps: Math.round(Number(reps)) || 0,
-        weight: Number(weight),
+        reps: Math.max(0, Math.round(Number(reps)) || 0),
+        weight: Math.max(0, Number(weight) || 0),
         isCompleted: Boolean(isCompleted),
       },
     });

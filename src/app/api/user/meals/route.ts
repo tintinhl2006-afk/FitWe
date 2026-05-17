@@ -20,6 +20,13 @@ export async function POST(req: Request) {
       );
     }
 
+    if (Number(quantityGrams) <= 0) {
+      return NextResponse.json(
+        { message: "La cantidad debe ser mayor que 0" },
+        { status: 400 }
+      );
+    }
+
     // Verify foodItem belongs to the user
     const foodItem = await prisma.foodItem.findFirst({
       where: {

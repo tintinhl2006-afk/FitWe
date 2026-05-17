@@ -277,6 +277,7 @@ function SetRow({ set, index, historicalSet, onUpdate, weightUnit, distanceUnit 
         <div className="flex-1 px-1">
           <input
             type="number"
+            min="0"
             step={isCardio ? "0.01" : "1"}
             value={weight}
             onChange={(e) => setWeight(e.target.value)}
@@ -295,6 +296,7 @@ function SetRow({ set, index, historicalSet, onUpdate, weightUnit, distanceUnit 
       <div className="flex-1 px-1">
         <input
           type="number"
+          min="0"
           value={reps}
           onChange={(e) => setReps(e.target.value)}
           onBlur={handleBlur}

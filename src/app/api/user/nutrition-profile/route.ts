@@ -33,6 +33,14 @@ export async function POST(req: Request) {
       aggressiveness,
     };
 
+    // Validate biometric values
+    if (bioData.age <= 0 || bioData.weight <= 0 || bioData.height <= 0) {
+      return NextResponse.json(
+        { message: "Edad, peso y altura deben ser valores positivos" },
+        { status: 400 }
+      );
+    }
+
     // Calculate targets
     const targets = calculateMetabolicTargets(bioData);
 

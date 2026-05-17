@@ -456,7 +456,7 @@ export default function GymClassesPage() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Aforo Máximo</label>
-                  <input required type="number" value={singleClassFormData.capacity} onChange={(e) => setSingleClassFormData({...singleClassFormData, capacity: e.target.value})} className="w-full rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-4 py-2.5 text-sm text-slate-900 dark:text-white outline-none" />
+                  <input required type="number" min="1" value={singleClassFormData.capacity} onChange={(e) => setSingleClassFormData({...singleClassFormData, capacity: e.target.value})} className="w-full rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-4 py-2.5 text-sm text-slate-900 dark:text-white outline-none" />
                 </div>
               </div>
 
@@ -510,7 +510,7 @@ export default function GymClassesPage() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Aforo Máximo</label>
-                  <input required type="number" value={templateFormData.capacity} onChange={(e) => setTemplateFormData({...templateFormData, capacity: e.target.value})} className="w-full rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-4 py-2.5 text-sm text-slate-900 dark:text-white outline-none" />
+                  <input required type="number" min="1" value={templateFormData.capacity} onChange={(e) => setTemplateFormData({...templateFormData, capacity: e.target.value})} className="w-full rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-4 py-2.5 text-sm text-slate-900 dark:text-white outline-none" />
                 </div>
               </div>
 
@@ -527,7 +527,7 @@ export default function GymClassesPage() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Duración (min)</label>
-                  <input required type="number" value={templateFormData.durationMinutes} onChange={(e) => setTemplateFormData({...templateFormData, durationMinutes: e.target.value})} className="w-full rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-4 py-2.5 text-sm text-slate-900 dark:text-white outline-none" />
+                  <input required type="number" min="1" value={templateFormData.durationMinutes} onChange={(e) => setTemplateFormData({...templateFormData, durationMinutes: e.target.value})} className="w-full rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-4 py-2.5 text-sm text-slate-900 dark:text-white outline-none" />
                 </div>
               </div>
 
