@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { Plus, Flame, Beef, Wheat, Droplet, Calendar as CalendarIcon, Loader2, Trash2, X, Search, Image as ImageIcon, Settings } from "lucide-react";
+import { Plus, Flame, Beef, Wheat, Droplet, Calendar as CalendarIcon, Loader2, Trash2, X, Search, Image as ImageIcon, Settings, Target as TargetIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
@@ -240,10 +240,11 @@ export default function NutricionPage() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => router.push("/nutricion/onboarding?edit=true")}
-              className="p-2.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-500 hover:text-cyan-500 hover:border-cyan-500/50 transition-colors shadow-sm"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-bold transition-all shadow-sm shadow-yellow-500/20"
               title="Ajustar perfil nutricional"
             >
-              <Settings className="w-5 h-5" />
+              <TargetIcon className="w-5 h-5" />
+              Establecer Objetivos
             </button>
             <div className="relative">
               <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500 dark:text-slate-400" />

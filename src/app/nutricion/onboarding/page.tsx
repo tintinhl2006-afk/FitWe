@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Loader2, ArrowRight, Activity, Target as TargetIcon, Scale, User, CheckCircle2, ArrowLeft } from "lucide-react";
+import { Loader2, ArrowRight, Activity, Target as TargetIcon, Scale, User, CheckCircle2, ArrowLeft, Wand2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function NutritionOnboardingPage() {
@@ -10,6 +10,7 @@ export default function NutritionOnboardingPage() {
   const searchParams = useSearchParams();
   const isEditing = searchParams.get("edit") === "true";
   
+  const [isWizardMode, setIsWizardMode] = useState(false);
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
@@ -22,6 +23,13 @@ export default function NutritionOnboardingPage() {
     activityLevel: "",
     goal: "",
     aggressiveness: "",
+  });
+
+  const [manualTargets, setManualTargets] = useState({
+    calories: 2000,
+    proteinPct: 30,
+    carbsPct: 40,
+    fatPct: 30,
   });
 
   useEffect(() => {
@@ -40,8 +48,20 @@ export default function NutritionOnboardingPage() {
               goal: profile.goal || "",
               aggressiveness: profile.aggressiveness || "",
             });
-          } else if (isEditing) {
-            // User shouldn't be editing if they have no profile
+
+            if (profile.targetCalories) {
+              const cal = profile.targetCalories;
+              const pPct = Math.round((profile.targetProtein * 4 / cal) * 100) || 30;
+              const fPct = Math.round((profile.targetFat * 9 / cal) * 100) || 30;
+              const cPct = 100 - pPct - fPct;
+
+              setManualTargets({
+                calories: cal,
+                proteinPct: pPct,
+                carbsPct: cPct,
+                fatPct: fPct,
+              });
+            }
           }
         }
       } catch (error) {
@@ -56,7 +76,67 @@ export default function NutritionOnboardingPage() {
   const handleNext = () => setStep((s) => Math.min(s + 1, 4));
   const handleBack = () => setStep((s) => Math.max(s - 1, 1));
 
-  const handleSubmit = async () => {
+  const handleManualSlider = (macro: "proteinPct" | "carbsPct" | "fatPct", value: number) => {
+    setManualTargets(prev => {
+      const next = { ...prev, [macro]: value };
+      
+      // Auto-adjust others to maintain 100%
+      // Simple logic: adjust carbs if protein/fat changes, or fat if carbs changes
+      if (macro === "proteinPct" || macro === "fatPct") {
+        next.carbsPct = Math.max(0, 100 - next.proteinPct - next.fatPct);
+      } else if (macro === "carbsPct") {
+        next.fatPct = Math.max(0, 100 - next.proteinPct - next.carbsPct);
+      }
+      
+      return next;
+    });
+  };
+
+  const calculateGrams = () => {
+    return {
+      protein: Math.round((manualTargets.calories * (manualTargets.proteinPct / 100)) / 4),
+      carbs: Math.round((manualTargets.calories * (manualTargets.carbsPct / 100)) / 4),
+      fat: Math.round((manualTargets.calories * (manualTargets.fatPct / 100)) / 9),
+    };
+  };
+
+  const handleManualSubmit = async () => {
+    const totalPct = manualTargets.proteinPct + manualTargets.carbsPct + manualTargets.fatPct;
+    if (totalPct !== 100) {
+      alert(`Los porcentajes deben sumar 100%. Actualmente suman ${totalPct}%`);
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const grams = calculateGrams();
+      const res = await fetch("/api/user/nutrition-profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          isManual: true,
+          targetCalories: manualTargets.calories,
+          targetProtein: grams.protein,
+          targetCarbs: grams.carbs,
+          targetFat: grams.fat,
+          // Send bio data if exists just to not clear it completely
+          ...formData
+        }),
+      });
+
+      if (res.ok) {
+        router.push("/nutricion");
+      } else {
+        alert("Error al guardar el perfil");
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleWizardSubmit = async () => {
     setIsSubmitting(true);
     try {
       const res = await fetch("/api/user/nutrition-profile", {
@@ -87,6 +167,9 @@ export default function NutritionOnboardingPage() {
     }
   };
 
+  const grams = calculateGrams();
+  const totalPct = manualTargets.proteinPct + manualTargets.carbsPct + manualTargets.fatPct;
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-6 transition-colors">
       {isLoadingProfile ? (
@@ -104,224 +187,342 @@ export default function NutritionOnboardingPage() {
             <ArrowLeft className="h-4 w-4" /> Volver sin guardar
           </button>
         )}
-        {/* Progress bar */}
-        <div className="mb-8">
-          <div className="flex justify-between mb-2">
-            {[1, 2, 3, 4].map((s) => (
-              <div 
-                key={s} 
-                className={cn(
-                  "h-1.5 flex-1 mx-1 rounded-full transition-all duration-300",
-                  s <= step ? "bg-primary" : "bg-slate-200 dark:bg-slate-800"
-                )}
-              />
-            ))}
-          </div>
-          <p className="text-sm font-medium text-slate-500 dark:text-slate-400 text-center">
-            Paso {step} de 4
-          </p>
-        </div>
 
-        <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-800 p-8 sm:p-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          
-          {step === 1 && (
+        {!isWizardMode ? (
+          <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-800 p-8 sm:p-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="text-center mb-8">
+              <div className="mx-auto bg-yellow-100 dark:bg-yellow-500/20 w-16 h-16 flex items-center justify-center rounded-2xl mb-4 text-yellow-500">
+                <TargetIcon size={32} />
+              </div>
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Establecer Objetivos</h1>
+              <p className="text-slate-500 dark:text-slate-400 mt-2">Configura tus macros y calorías diarias de forma manual.</p>
+            </div>
+
             <div className="space-y-6">
-              <div className="text-center mb-8">
-                <div className="mx-auto bg-cyan-50 dark:bg-cyan-950/30 w-16 h-16 flex items-center justify-center rounded-2xl mb-4 text-primary">
-                  <User size={32} />
-                </div>
-                <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Sobre ti</h1>
-                <p className="text-slate-500 dark:text-slate-400 mt-2">Necesitamos algunos datos biométricos para calcular tu metabolismo basal.</p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div 
-                  onClick={() => setFormData({ ...formData, gender: "male" })}
-                  className={cn("p-4 rounded-2xl border-2 text-center cursor-pointer transition-all", formData.gender === "male" ? "border-primary bg-cyan-50/50 dark:bg-cyan-900/20 text-primary dark:text-cyan-300" : "border-slate-200 dark:border-slate-800 hover:border-cyan-200 dark:hover:border-cyan-800")}
-                >
-                  <p className="font-semibold">Hombre</p>
-                </div>
-                <div 
-                  onClick={() => setFormData({ ...formData, gender: "female" })}
-                  className={cn("p-4 rounded-2xl border-2 text-center cursor-pointer transition-all", formData.gender === "female" ? "border-primary bg-cyan-50/50 dark:bg-cyan-900/20 text-primary dark:text-cyan-300" : "border-slate-200 dark:border-slate-800 hover:border-cyan-200 dark:hover:border-cyan-800")}
-                >
-                  <p className="font-semibold">Mujer</p>
-                </div>
-              </div>
-
+              {/* Calories */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Edad (años)</label>
+                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Calorías Totales (kcal)</label>
                 <input 
                   type="number" 
-                  min="1"
-                  max="120"
-                  value={formData.age} 
-                  onChange={e => setFormData({ ...formData, age: e.target.value })} 
-                  className="w-full rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-4 py-3 text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-cyan-500/20 outline-none transition-all"
+                  min="500"
+                  max="10000"
+                  step="50"
+                  value={manualTargets.calories}
+                  onChange={(e) => setManualTargets({...manualTargets, calories: Number(e.target.value)})}
+                  className="w-full text-center text-2xl font-bold rounded-3xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-4 py-3 text-slate-900 dark:text-white focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 outline-none transition-all"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Peso (kg)</label>
-                  <input 
-                    type="number" 
-                    min="1"
-                    max="500"
-                    value={formData.weight} 
-                    onChange={e => setFormData({ ...formData, weight: e.target.value })} 
-                    className="w-full rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-4 py-3 text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-cyan-500/20 outline-none transition-all"
-                  />
+              {/* Macros Distribution */}
+              <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="font-bold text-slate-900 dark:text-white">Distribución de Macros</h3>
+                  <span className={cn("text-sm font-semibold px-2 py-1 rounded-md", totalPct === 100 ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400" : "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400")}>
+                    {totalPct}%
+                  </span>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Altura (cm)</label>
-                  <input 
-                    type="number" 
-                    min="1"
-                    max="300"
-                    value={formData.height} 
-                    onChange={e => setFormData({ ...formData, height: e.target.value })} 
-                    className="w-full rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-4 py-3 text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-cyan-500/20 outline-none transition-all"
-                  />
+
+                <div className="space-y-5">
+                  {/* Protein */}
+                  <div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="font-semibold text-rose-500">Proteína ({manualTargets.proteinPct}%)</span>
+                      <span className="text-slate-500">{grams.protein}g</span>
+                    </div>
+                    <input 
+                      type="range" 
+                      min="0" max="100" 
+                      value={manualTargets.proteinPct} 
+                      onChange={(e) => handleManualSlider("proteinPct", Number(e.target.value))}
+                      className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-rose-500"
+                    />
+                  </div>
+
+                  {/* Carbs */}
+                  <div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="font-semibold text-amber-500">Carbohidratos ({manualTargets.carbsPct}%)</span>
+                      <span className="text-slate-500">{grams.carbs}g</span>
+                    </div>
+                    <input 
+                      type="range" 
+                      min="0" max="100" 
+                      value={manualTargets.carbsPct} 
+                      onChange={(e) => handleManualSlider("carbsPct", Number(e.target.value))}
+                      className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                    />
+                  </div>
+
+                  {/* Fat */}
+                  <div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="font-semibold text-sky-500">Grasas ({manualTargets.fatPct}%)</span>
+                      <span className="text-slate-500">{grams.fat}g</span>
+                    </div>
+                    <input 
+                      type="range" 
+                      min="0" max="100" 
+                      value={manualTargets.fatPct} 
+                      onChange={(e) => handleManualSlider("fatPct", Number(e.target.value))}
+                      className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-sky-500"
+                    />
+                  </div>
                 </div>
+              </div>
+
+              <button 
+                onClick={handleManualSubmit}
+                disabled={totalPct !== 100 || isSubmitting}
+                className="w-full flex justify-center items-center gap-2 py-4 px-4 rounded-3xl font-bold text-slate-900 bg-yellow-500 hover:bg-yellow-400 disabled:opacity-50 transition-all shadow-xl shadow-yellow-500/20 mt-4"
+              >
+                {isSubmitting ? <Loader2 className="animate-spin w-5 h-5" /> : "Guardar Objetivos"}
+              </button>
+
+              <div className="text-center mt-6">
+                <button 
+                  onClick={() => setIsWizardMode(true)}
+                  className="inline-flex items-center gap-2 text-sm text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300 font-medium"
+                >
+                  <Wand2 className="w-4 h-4" />
+                  ¿No sabes qué objetivos ponerte? Calculadora automática
+                </button>
               </div>
             </div>
-          )}
-
-          {step === 2 && (
-            <div className="space-y-6">
-              <div className="text-center mb-8">
-                <div className="mx-auto bg-amber-50 dark:bg-amber-950/30 w-16 h-16 flex items-center justify-center rounded-2xl mb-4 text-amber-500">
-                  <Activity size={32} />
-                </div>
-                <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Nivel de Actividad</h1>
-                <p className="text-slate-500 dark:text-slate-400 mt-2">¿Cómo de activo eres en tu día a día?</p>
-              </div>
-
-              <div className="space-y-3">
-                {[
-                  { id: "SEDENTARY", label: "Sedentario", desc: "Trabajo de oficina, poco o ningún ejercicio." },
-                  { id: "LIGHT", label: "Ligero", desc: "Ejercicio ligero 1-3 días a la semana." },
-                  { id: "MODERATE", label: "Moderado", desc: "Ejercicio moderado 3-5 días a la semana." },
-                  { id: "ACTIVE", label: "Activo", desc: "Ejercicio fuerte 6-7 días a la semana." },
-                  { id: "VERY_ACTIVE", label: "Muy Activo", desc: "Trabajo físico o entrenamiento doble diario." },
-                ].map(level => (
+          </div>
+        ) : (
+          <>
+            {/* Progress bar for Wizard */}
+            <div className="mb-8">
+              <div className="flex justify-between mb-2">
+                {[1, 2, 3, 4].map((s) => (
                   <div 
-                    key={level.id}
-                    onClick={() => setFormData({ ...formData, activityLevel: level.id })}
-                    className={cn("p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-center justify-between", formData.activityLevel === level.id ? "border-amber-500 bg-amber-50/50 dark:bg-amber-900/20" : "border-slate-200 dark:border-slate-800 hover:border-amber-200 dark:hover:border-amber-800")}
-                  >
-                    <div>
-                      <p className={cn("font-bold text-lg", formData.activityLevel === level.id ? "text-amber-700 dark:text-amber-400" : "text-slate-900 dark:text-white")}>{level.label}</p>
-                      <p className="text-sm text-slate-500 dark:text-slate-400">{level.desc}</p>
-                    </div>
-                    {formData.activityLevel === level.id && <CheckCircle2 className="text-amber-500" />}
-                  </div>
+                    key={s} 
+                    className={cn(
+                      "h-1.5 flex-1 mx-1 rounded-full transition-all duration-300",
+                      s <= step ? "bg-cyan-500" : "bg-slate-200 dark:bg-slate-800"
+                    )}
+                  />
                 ))}
               </div>
-            </div>
-          )}
-
-          {step === 3 && (
-            <div className="space-y-6">
-              <div className="text-center mb-8">
-                <div className="mx-auto bg-blue-50 dark:bg-blue-950/30 w-16 h-16 flex items-center justify-center rounded-2xl mb-4 text-secondary">
-                  <TargetIcon size={32} />
-                </div>
-                <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Tu Objetivo</h1>
-                <p className="text-slate-500 dark:text-slate-400 mt-2">¿Qué quieres lograr con tu nutrición?</p>
+              <div className="flex justify-between items-center">
+                <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                  Paso {step} de 4
+                </p>
+                <button 
+                  onClick={() => setIsWizardMode(false)}
+                  className="text-xs font-medium text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                >
+                  Volver a modo manual
+                </button>
               </div>
+            </div>
 
-              <div className="space-y-3">
-                {[
-                  { id: "LOSE", label: "Perder Grasa", desc: "Déficit calórico para definir." },
-                  { id: "MAINTAIN", label: "Mantenimiento", desc: "Mantener tu peso actual y recomponer." },
-                  { id: "GAIN", label: "Ganar Masa Muscular", desc: "Superávit calórico controlado." },
-                ].map(goal => (
-                  <div 
-                    key={goal.id}
-                    onClick={() => setFormData({ ...formData, goal: goal.id })}
-                    className={cn("p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-center justify-between", formData.goal === goal.id ? "border-blue-500 bg-blue-50/50 dark:bg-blue-900/20" : "border-slate-200 dark:border-slate-800 hover:border-blue-200 dark:hover:border-blue-800")}
-                  >
-                    <div>
-                      <p className={cn("font-bold text-lg", formData.goal === goal.id ? "text-blue-700 dark:text-blue-400" : "text-slate-900 dark:text-white")}>{goal.label}</p>
-                      <p className="text-sm text-slate-500 dark:text-slate-400">{goal.desc}</p>
+            <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-800 p-8 sm:p-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              
+              {step === 1 && (
+                <div className="space-y-6">
+                  <div className="text-center mb-8">
+                    <div className="mx-auto bg-cyan-50 dark:bg-cyan-950/30 w-16 h-16 flex items-center justify-center rounded-2xl mb-4 text-cyan-500">
+                      <User size={32} />
                     </div>
-                    {formData.goal === goal.id && <CheckCircle2 className="text-secondary" />}
+                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Sobre ti</h1>
+                    <p className="text-slate-500 dark:text-slate-400 mt-2">Necesitamos algunos datos biométricos para calcular tu metabolismo basal.</p>
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
 
-          {step === 4 && (
-            <div className="space-y-6">
-              <div className="text-center mb-8">
-                <div className="mx-auto bg-purple-50 dark:bg-purple-950/30 w-16 h-16 flex items-center justify-center rounded-2xl mb-4 text-purple-500">
-                  <Scale size={32} />
-                </div>
-                <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Agresividad</h1>
-                <p className="text-slate-500 dark:text-slate-400 mt-2">¿A qué velocidad quieres {formData.goal === "LOSE" ? "perder peso" : "ganar masa"}?</p>
-              </div>
-
-              {formData.goal === "MAINTAIN" ? (
-                <div className="text-center p-6 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-800">
-                  <p className="text-slate-900 dark:text-white font-medium mb-2">Has elegido mantenimiento</p>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">Calcularemos tus calorías de mantenimiento exactas sin déficit ni superávit. Estás listo para continuar.</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {[
-                    { id: "SLOW", label: "Lento y Sostenible", desc: formData.goal === "LOSE" ? "Déficit de -300 kcal. Ideal para retener músculo." : "Superávit de +300 kcal. Ganancia muy limpia." },
-                    { id: "NORMAL", label: "Estándar", desc: formData.goal === "LOSE" ? "Déficit de -500 kcal. Un balance perfecto." : "Superávit de +500 kcal. Ganancia notable." },
-                    { id: "AGGRESSIVE", label: "Agresivo", desc: formData.goal === "LOSE" ? "Déficit de -700 kcal. Requiere disciplina alta." : "Superávit de +700 kcal. Cuidado con la grasa." },
-                  ].map(agg => (
+                  <div className="grid grid-cols-2 gap-4">
                     <div 
-                      key={agg.id}
-                      onClick={() => setFormData({ ...formData, aggressiveness: agg.id })}
-                      className={cn("p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-center justify-between", formData.aggressiveness === agg.id ? "border-purple-500 bg-purple-50/50 dark:bg-purple-900/20" : "border-slate-200 dark:border-slate-800 hover:border-purple-200 dark:hover:border-purple-800")}
+                      onClick={() => setFormData({ ...formData, gender: "male" })}
+                      className={cn("p-4 rounded-2xl border-2 text-center cursor-pointer transition-all", formData.gender === "male" ? "border-cyan-500 bg-cyan-50/50 dark:bg-cyan-900/20 text-cyan-600 dark:text-cyan-300" : "border-slate-200 dark:border-slate-800 hover:border-cyan-200 dark:hover:border-cyan-800")}
                     >
-                      <div>
-                        <p className={cn("font-bold text-lg", formData.aggressiveness === agg.id ? "text-purple-700 dark:text-purple-400" : "text-slate-900 dark:text-white")}>{agg.label}</p>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">{agg.desc}</p>
-                      </div>
-                      {formData.aggressiveness === agg.id && <CheckCircle2 className="text-purple-500" />}
+                      <p className="font-semibold">Hombre</p>
                     </div>
-                  ))}
+                    <div 
+                      onClick={() => setFormData({ ...formData, gender: "female" })}
+                      className={cn("p-4 rounded-2xl border-2 text-center cursor-pointer transition-all", formData.gender === "female" ? "border-cyan-500 bg-cyan-50/50 dark:bg-cyan-900/20 text-cyan-600 dark:text-cyan-300" : "border-slate-200 dark:border-slate-800 hover:border-cyan-200 dark:hover:border-cyan-800")}
+                    >
+                      <p className="font-semibold">Mujer</p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Edad (años)</label>
+                    <input 
+                      type="number" 
+                      min="1"
+                      max="120"
+                      value={formData.age} 
+                      onChange={e => setFormData({ ...formData, age: e.target.value })} 
+                      className="w-full rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-4 py-3 text-slate-900 dark:text-white focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 outline-none transition-all"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Peso (kg)</label>
+                      <input 
+                        type="number" 
+                        min="1"
+                        max="500"
+                        value={formData.weight} 
+                        onChange={e => setFormData({ ...formData, weight: e.target.value })} 
+                        className="w-full rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-4 py-3 text-slate-900 dark:text-white focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 outline-none transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Altura (cm)</label>
+                      <input 
+                        type="number" 
+                        min="1"
+                        max="300"
+                        value={formData.height} 
+                        onChange={e => setFormData({ ...formData, height: e.target.value })} 
+                        className="w-full rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-4 py-3 text-slate-900 dark:text-white focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 outline-none transition-all"
+                      />
+                    </div>
+                  </div>
                 </div>
               )}
-            </div>
-          )}
 
-          <div className="mt-10 flex gap-4 pt-6 border-t border-slate-100 dark:border-slate-800">
-            {step > 1 && (
-              <button 
-                onClick={handleBack}
-                className="flex-1 py-3.5 px-4 rounded-3xl font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors"
-              >
-                Volver
-              </button>
-            )}
-            
-            {step < 4 ? (
-              <button 
-                onClick={handleNext}
-                disabled={!isStepValid()}
-                className="flex-[2] flex justify-center items-center gap-2 py-3.5 px-4 rounded-3xl font-semibold text-white bg-primary hover:bg-primary disabled:opacity-50 transition-all shadow-soft shadow-cyan-500/20"
-              >
-                Siguiente <ArrowRight size={18} />
-              </button>
-            ) : (
-              <button 
-                onClick={handleSubmit}
-                disabled={!isStepValid() || isSubmitting}
-                className="flex-[2] flex justify-center items-center gap-2 py-3.5 px-4 rounded-3xl font-bold text-white bg-primary hover:bg-primary disabled:opacity-50 transition-all shadow-xl shadow-cyan-500/30"
-              >
-                {isSubmitting ? <Loader2 className="animate-spin w-5 h-5" /> : "Generar Plan"}
-              </button>
-            )}
-          </div>
-        </div>
+              {step === 2 && (
+                <div className="space-y-6">
+                  <div className="text-center mb-8">
+                    <div className="mx-auto bg-amber-50 dark:bg-amber-950/30 w-16 h-16 flex items-center justify-center rounded-2xl mb-4 text-amber-500">
+                      <Activity size={32} />
+                    </div>
+                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Nivel de Actividad</h1>
+                    <p className="text-slate-500 dark:text-slate-400 mt-2">¿Cómo de activo eres en tu día a día?</p>
+                  </div>
+
+                  <div className="space-y-3">
+                    {[
+                      { id: "SEDENTARY", label: "Sedentario", desc: "Trabajo de oficina, poco o ningún ejercicio." },
+                      { id: "LIGHT", label: "Ligero", desc: "Ejercicio ligero 1-3 días a la semana." },
+                      { id: "MODERATE", label: "Moderado", desc: "Ejercicio moderado 3-5 días a la semana." },
+                      { id: "ACTIVE", label: "Activo", desc: "Ejercicio fuerte 6-7 días a la semana." },
+                      { id: "VERY_ACTIVE", label: "Muy Activo", desc: "Trabajo físico o entrenamiento doble diario." },
+                    ].map(level => (
+                      <div 
+                        key={level.id}
+                        onClick={() => setFormData({ ...formData, activityLevel: level.id })}
+                        className={cn("p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-center justify-between", formData.activityLevel === level.id ? "border-amber-500 bg-amber-50/50 dark:bg-amber-900/20" : "border-slate-200 dark:border-slate-800 hover:border-amber-200 dark:hover:border-amber-800")}
+                      >
+                        <div>
+                          <p className={cn("font-bold text-lg", formData.activityLevel === level.id ? "text-amber-700 dark:text-amber-400" : "text-slate-900 dark:text-white")}>{level.label}</p>
+                          <p className="text-sm text-slate-500 dark:text-slate-400">{level.desc}</p>
+                        </div>
+                        {formData.activityLevel === level.id && <CheckCircle2 className="text-amber-500" />}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {step === 3 && (
+                <div className="space-y-6">
+                  <div className="text-center mb-8">
+                    <div className="mx-auto bg-blue-50 dark:bg-blue-950/30 w-16 h-16 flex items-center justify-center rounded-2xl mb-4 text-blue-500">
+                      <TargetIcon size={32} />
+                    </div>
+                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Tu Objetivo</h1>
+                    <p className="text-slate-500 dark:text-slate-400 mt-2">¿Qué quieres lograr con tu nutrición?</p>
+                  </div>
+
+                  <div className="space-y-3">
+                    {[
+                      { id: "LOSE", label: "Perder Grasa", desc: "Déficit calórico para definir." },
+                      { id: "MAINTAIN", label: "Mantenimiento", desc: "Mantener tu peso actual y recomponer." },
+                      { id: "GAIN", label: "Ganar Masa Muscular", desc: "Superávit calórico controlado." },
+                    ].map(goal => (
+                      <div 
+                        key={goal.id}
+                        onClick={() => setFormData({ ...formData, goal: goal.id })}
+                        className={cn("p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-center justify-between", formData.goal === goal.id ? "border-blue-500 bg-blue-50/50 dark:bg-blue-900/20" : "border-slate-200 dark:border-slate-800 hover:border-blue-200 dark:hover:border-blue-800")}
+                      >
+                        <div>
+                          <p className={cn("font-bold text-lg", formData.goal === goal.id ? "text-blue-700 dark:text-blue-400" : "text-slate-900 dark:text-white")}>{goal.label}</p>
+                          <p className="text-sm text-slate-500 dark:text-slate-400">{goal.desc}</p>
+                        </div>
+                        {formData.goal === goal.id && <CheckCircle2 className="text-blue-500" />}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {step === 4 && (
+                <div className="space-y-6">
+                  <div className="text-center mb-8">
+                    <div className="mx-auto bg-emerald-50 dark:bg-emerald-950/30 w-16 h-16 flex items-center justify-center rounded-2xl mb-4 text-emerald-500">
+                      <Scale size={32} />
+                    </div>
+                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Agresividad del Plan</h1>
+                    <p className="text-slate-500 dark:text-slate-400 mt-2">
+                      {formData.goal === "LOSE" ? "¿Qué tan rápido quieres perder peso?" : 
+                       formData.goal === "GAIN" ? "¿A qué ritmo quieres ganar masa?" : 
+                       "Confirmar mantenimiento"}
+                    </p>
+                  </div>
+
+                  {formData.goal === "MAINTAIN" ? (
+                    <div className="bg-emerald-50 dark:bg-emerald-900/20 p-6 rounded-2xl border border-emerald-200 dark:border-emerald-800 text-center">
+                      <CheckCircle2 className="mx-auto text-emerald-500 mb-2 w-10 h-10" />
+                      <p className="text-emerald-800 dark:text-emerald-300 font-medium">Todo listo para generar tu plan de mantenimiento.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {[
+                        { id: "MILD", label: "Suave", desc: formData.goal === "LOSE" ? "Déficit del 10%. Pérdida lenta pero muy sostenible." : "Superávit del 10%. Ganancia muy limpia." },
+                        { id: "MODERATE", label: "Moderado", desc: formData.goal === "LOSE" ? "Déficit del 20%. Ritmo estándar recomendado." : "Superávit del 20%. Balance ideal." },
+                        { id: "AGGRESSIVE", label: "Agresivo", desc: formData.goal === "LOSE" ? "Déficit del 30%. Rápido, requiere disciplina." : "Superávit del 30%. Ganancia rápida (más grasa)." },
+                      ].map(agg => (
+                        <div 
+                          key={agg.id}
+                          onClick={() => setFormData({ ...formData, aggressiveness: agg.id })}
+                          className={cn("p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-center justify-between", formData.aggressiveness === agg.id ? "border-emerald-500 bg-emerald-50/50 dark:bg-emerald-900/20" : "border-slate-200 dark:border-slate-800 hover:border-emerald-200 dark:hover:border-emerald-800")}
+                        >
+                          <div>
+                            <p className={cn("font-bold text-lg", formData.aggressiveness === agg.id ? "text-emerald-700 dark:text-emerald-400" : "text-slate-900 dark:text-white")}>{agg.label}</p>
+                            <p className="text-sm text-slate-500 dark:text-slate-400">{agg.desc}</p>
+                          </div>
+                          {formData.aggressiveness === agg.id && <CheckCircle2 className="text-emerald-500" />}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="mt-10 flex gap-3">
+                {step > 1 && (
+                  <button 
+                    onClick={handleBack}
+                    className="flex-1 py-3.5 px-4 rounded-3xl font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors"
+                  >
+                    Atrás
+                  </button>
+                )}
+                
+                {step < 4 ? (
+                  <button 
+                    onClick={handleNext}
+                    disabled={!isStepValid()}
+                    className="flex-[2] flex justify-center items-center gap-2 py-3.5 px-4 rounded-3xl font-semibold text-white bg-cyan-500 hover:bg-cyan-600 disabled:opacity-50 transition-all shadow-soft shadow-cyan-500/20"
+                  >
+                    Siguiente <ArrowRight size={18} />
+                  </button>
+                ) : (
+                  <button 
+                    onClick={handleWizardSubmit}
+                    disabled={!isStepValid() || isSubmitting}
+                    className="flex-[2] flex justify-center items-center gap-2 py-3.5 px-4 rounded-3xl font-bold text-white bg-cyan-500 hover:bg-cyan-600 disabled:opacity-50 transition-all shadow-xl shadow-cyan-500/30"
+                  >
+                    {isSubmitting ? <Loader2 className="animate-spin w-5 h-5" /> : "Generar Plan"}
+                  </button>
+                )}
+              </div>
+            </div>
+          </>
+        )}
       </div>
       )}
     </div>
