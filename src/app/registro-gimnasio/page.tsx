@@ -3,12 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Building2, Mail, Lock, Loader2, CheckCircle2 } from "lucide-react";
+import { Building2, Mail, Lock, Loader2, CheckCircle2, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function RegistroGimnasioPage() {
   const router = useRouter();
   const [name, setName] = useState("");
+  const [location, setLocation] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -23,7 +24,7 @@ export default function RegistroGimnasioPage() {
       const res = await fetch("/api/register-gym", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email, password, location }),
       });
 
       const data = await res.json();
@@ -114,6 +115,28 @@ export default function RegistroGimnasioPage() {
                   onChange={(e) => setName(e.target.value)}
                   className="block w-full rounded-3xl border border-slate-700 bg-slate-900 py-3 pl-10 pr-3 text-white shadow-sm placeholder:text-slate-600 focus:border-primary focus:outline-none focus:ring-1 focus:ring-cyan-500 sm:text-sm"
                   placeholder="Mi Gimnasio Fitness"
+                />
+              </div>
+            </div>
+
+            {/* Ubicación del gimnasio */}
+            <div>
+              <label htmlFor="gym-location" className="block text-sm font-medium text-slate-300">
+                Ubicación del Gimnasio
+              </label>
+              <div className="relative mt-1.5">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                  <MapPin className="h-5 w-5 text-slate-500" />
+                </div>
+                <input
+                  id="gym-location"
+                  name="location"
+                  type="text"
+                  required
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  className="block w-full rounded-3xl border border-slate-700 bg-slate-900 py-3 pl-10 pr-3 text-white shadow-sm placeholder:text-slate-600 focus:border-primary focus:outline-none focus:ring-1 focus:ring-cyan-500 sm:text-sm"
+                  placeholder="Ej: Madrid, España"
                 />
               </div>
             </div>
