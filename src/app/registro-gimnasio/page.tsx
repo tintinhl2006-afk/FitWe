@@ -40,12 +40,15 @@ export default function RegistroGimnasioPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-slate-950">
+    <div className="flex min-h-screen bg-slate-950 relative overflow-hidden">
+      {/* Global Background glows */}
+      <div className="pointer-events-none absolute inset-0 z-0">
+        <div className="absolute -top-32 -left-32 h-[600px] w-[600px] rounded-full bg-primary/20 blur-[120px]" />
+        <div className="absolute bottom-0 right-0 h-[600px] w-[600px] rounded-full bg-cyan-600/15 blur-[120px]" />
+      </div>
+
       {/* ── Left panel: branding ── */}
-      <div className="hidden lg:flex lg:w-1/2 relative flex-col items-center justify-center overflow-hidden">
-        {/* Background glows */}
-        <div className="absolute -top-32 -left-32 h-[500px] w-[500px] rounded-full bg-primary/20 blur-[100px]" />
-        <div className="absolute -bottom-32 -right-32 h-[400px] w-[400px] rounded-full bg-cyan-600/15 blur-[100px]" />
+      <div className="hidden lg:flex lg:w-1/2 relative z-10 flex-col items-center justify-center">
 
         <div className="relative z-10 max-w-md px-12 text-center">
           <div className="mx-auto mb-8 flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-cyan-500 to-cyan-600 shadow-2xl shadow-cyan-500/30">
@@ -75,7 +78,7 @@ export default function RegistroGimnasioPage() {
       </div>
 
       {/* ── Right panel: form ── */}
-      <div className="flex flex-1 items-center justify-center px-6 py-12">
+      <div className="flex flex-1 items-center justify-center px-6 py-12 relative z-10">
         <div className="w-full max-w-md space-y-8">
           {/* Mobile branding (hidden on lg) */}
           <div className="flex flex-col items-center text-center lg:items-start lg:text-left">
