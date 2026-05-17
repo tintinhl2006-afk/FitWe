@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import {
   Activity,
   ArrowRight,
@@ -10,6 +11,7 @@ import {
   Salad,
   Sparkles,
   Zap,
+  CheckCircle2,
 } from "lucide-react";
 import { LandingNavbar } from "@/components/layout/LandingNavbar";
 import { LegalFooter } from "@/components/layout/LegalFooter";
@@ -63,10 +65,72 @@ export default function LandingPage() {
           </Link>
         </div>
 
+        </div>
+
+        {/* Dashboard Mockup Image */}
+        <div className="mt-16 w-full max-w-6xl animate-fade-in-up animation-delay-400">
+          <div className="relative rounded-3xl overflow-hidden border border-white/10 shadow-2xl shadow-cyan-500/20 bg-slate-900/50 backdrop-blur-sm p-2 sm:p-4">
+            <Image
+              src="/fitwe_dashboard.png"
+              alt="FitWe Dashboard Interface"
+              width={1600}
+              height={900}
+              className="rounded-xl sm:rounded-2xl w-full object-cover"
+              priority
+            />
+            {/* Glowing effect behind image */}
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent z-10 pointer-events-none" />
+          </div>
+        </div>
+
         {/* Scroll indicator */}
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce">
-          <div className="h-10 w-6 rounded-full border-2 border-white/20 p-1">
+        <div className="absolute bottom-4 sm:bottom-10 left-1/2 -translate-x-1/2 animate-bounce z-20">
+          <div className="h-10 w-6 rounded-full border-2 border-white/20 p-1 bg-slate-950/50 backdrop-blur-sm">
             <div className="h-2 w-2 rounded-full bg-white/40 mx-auto animate-scroll-dot" />
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════ APP SHOWCASE SECTION ═══════════════════ */}
+      <section className="relative z-10 px-6 py-24 sm:py-32 bg-slate-900/50">
+        <div className="mx-auto max-w-7xl grid gap-12 lg:grid-cols-2 items-center">
+          <div className="order-2 lg:order-1 relative">
+             <div className="absolute -inset-4 rounded-full bg-cyan-500/20 blur-[100px]" />
+             <div className="relative rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
+               <Image
+                 src="/fitwe_mobile.png"
+                 alt="FitWe Mobile App"
+                 width={800}
+                 height={800}
+                 className="w-full h-auto object-cover"
+               />
+             </div>
+          </div>
+          <div className="order-1 lg:order-2 space-y-6">
+            <p className="text-sm font-semibold uppercase tracking-widest text-emerald-400">
+              Experiencia Premium para el Socio
+            </p>
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl text-white">
+              Tu propio ecosistema móvil.
+            </h2>
+            <p className="text-lg text-slate-400 leading-relaxed">
+              Tus clientes no solo van a entrenar, vivirán una experiencia completa. Desde la palma de su mano podrán visualizar sus rutinas en 3D, llevar su diario nutricional hiperpersonalizado, reservar clases y pagar su cuota automáticamente.
+            </p>
+            <ul className="space-y-4 pt-4">
+              {[
+                "Diario Nutricional Interactivo y Macros",
+                "Rutinas y Registro de Entrenamientos",
+                "Reservas de Clases con un toque",
+                "Pagos y Renovaciones automatizadas"
+              ].map((item, i) => (
+                <li key={i} className="flex items-center gap-3 text-slate-300">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400">
+                    <CheckCircle2 className="h-4 w-4" />
+                  </div>
+                  {item}
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </section>
@@ -141,6 +205,30 @@ export default function LandingPage() {
                 </p>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════ FINAL CTA SECTION ═══════════════════ */}
+      <section className="relative z-10 px-6 py-24 sm:py-32">
+        <div className="mx-auto max-w-5xl rounded-[2.5rem] bg-gradient-to-b from-cyan-900/40 to-slate-900 border border-cyan-500/20 p-8 sm:p-16 text-center relative overflow-hidden">
+          {/* Subtle background glow */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg h-full bg-cyan-500/20 blur-[120px] pointer-events-none" />
+          
+          <div className="relative z-10">
+            <h2 className="text-3xl font-bold tracking-tight sm:text-5xl text-white mb-6">
+              Lleva tu gimnasio al siguiente nivel
+            </h2>
+            <p className="text-lg text-cyan-100/80 max-w-2xl mx-auto mb-10">
+              Únete a la red de centros deportivos de élite que confían en FitWe para digitalizar, fidelizar y potenciar su negocio.
+            </p>
+            <Link
+              href="/registro-gimnasio"
+              className="inline-flex items-center gap-2 rounded-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 px-8 py-4 text-lg font-bold transition-all hover:scale-105 active:scale-95 shadow-lg shadow-cyan-500/25"
+            >
+              <Building2 className="h-5 w-5" />
+              Registrar mi Centro Deportivo ahora
+            </Link>
           </div>
         </div>
       </section>
