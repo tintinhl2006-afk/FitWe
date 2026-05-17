@@ -76,20 +76,8 @@ export default function NutritionOnboardingPage() {
   const handleNext = () => setStep((s) => Math.min(s + 1, 4));
   const handleBack = () => setStep((s) => Math.max(s - 1, 1));
 
-  const handleManualSlider = (macro: "proteinPct" | "carbsPct" | "fatPct", value: number) => {
-    setManualTargets(prev => {
-      const next = { ...prev, [macro]: value };
-      
-      // Auto-adjust others to maintain 100%
-      // Simple logic: adjust carbs if protein/fat changes, or fat if carbs changes
-      if (macro === "proteinPct" || macro === "fatPct") {
-        next.carbsPct = Math.max(0, 100 - next.proteinPct - next.fatPct);
-      } else if (macro === "carbsPct") {
-        next.fatPct = Math.max(0, 100 - next.proteinPct - next.carbsPct);
-      }
-      
-      return next;
-    });
+  const handleManualInput = (macro: "proteinPct" | "carbsPct" | "fatPct", value: number) => {
+    setManualTargets(prev => ({ ...prev, [macro]: value }));
   };
 
   const calculateGrams = () => {
@@ -230,11 +218,11 @@ export default function NutritionOnboardingPage() {
                       <span className="text-slate-500">{grams.protein}g</span>
                     </div>
                     <input 
-                      type="range" 
+                      type="number" 
                       min="0" max="100" 
-                      value={manualTargets.proteinPct} 
-                      onChange={(e) => handleManualSlider("proteinPct", Number(e.target.value))}
-                      className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-rose-500"
+                      value={manualTargets.proteinPct || ""} 
+                      onChange={(e) => handleManualInput("proteinPct", Number(e.target.value))}
+                      className="w-full text-center font-bold rounded-2xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-4 py-2 text-slate-900 dark:text-white focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 outline-none transition-all"
                     />
                   </div>
 
@@ -245,11 +233,11 @@ export default function NutritionOnboardingPage() {
                       <span className="text-slate-500">{grams.carbs}g</span>
                     </div>
                     <input 
-                      type="range" 
+                      type="number" 
                       min="0" max="100" 
-                      value={manualTargets.carbsPct} 
-                      onChange={(e) => handleManualSlider("carbsPct", Number(e.target.value))}
-                      className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                      value={manualTargets.carbsPct || ""} 
+                      onChange={(e) => handleManualInput("carbsPct", Number(e.target.value))}
+                      className="w-full text-center font-bold rounded-2xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-4 py-2 text-slate-900 dark:text-white focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none transition-all"
                     />
                   </div>
 
@@ -260,11 +248,11 @@ export default function NutritionOnboardingPage() {
                       <span className="text-slate-500">{grams.fat}g</span>
                     </div>
                     <input 
-                      type="range" 
+                      type="number" 
                       min="0" max="100" 
-                      value={manualTargets.fatPct} 
-                      onChange={(e) => handleManualSlider("fatPct", Number(e.target.value))}
-                      className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-sky-500"
+                      value={manualTargets.fatPct || ""} 
+                      onChange={(e) => handleManualInput("fatPct", Number(e.target.value))}
+                      className="w-full text-center font-bold rounded-2xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-4 py-2 text-slate-900 dark:text-white focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 outline-none transition-all"
                     />
                   </div>
                 </div>
