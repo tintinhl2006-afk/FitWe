@@ -65,8 +65,6 @@ export default function LandingPage() {
           </Link>
         </div>
 
-        </div>
-
         {/* Dashboard Mockup Image */}
         <div className="mt-16 w-full max-w-6xl animate-fade-in-up animation-delay-400">
           <div className="relative rounded-3xl overflow-hidden border border-white/10 shadow-2xl shadow-cyan-500/20 bg-slate-900/50 backdrop-blur-sm p-2 sm:p-4">
