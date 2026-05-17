@@ -1,7 +1,8 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { AlertTriangle, Lock } from "lucide-react";
+import { AlertTriangle, Lock, CreditCard } from "lucide-react";
+import Link from "next/link";
 
 export function SubscriptionBanner() {
   const { data: session } = useSession();
@@ -26,11 +27,15 @@ export function SubscriptionBanner() {
         Cuota Caducada
       </h2>
       <p className="text-slate-600 dark:text-slate-400 max-w-md mx-auto mb-6">
-        Tu suscripción ha finalizado o ha sido desactivada. Por favor, pasa por la recepción de tu centro deportivo para renovarla y seguir entrenando.
+        Tu suscripción ha finalizado o ha sido desactivada. Renuévala ahora para seguir disfrutando de todos los servicios de tu centro deportivo.
       </p>
-      <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-3xl font-bold text-sm shadow-soft shadow-red-500/20">
-        Acceso Restringido
-      </div>
+      <Link
+        href="/dashboard/pago"
+        className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-3xl font-bold text-sm shadow-soft shadow-cyan-500/20 hover:shadow-cyan-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all"
+      >
+        <CreditCard className="h-4 w-4" />
+        Pagar Cuota Mensual
+      </Link>
     </div>
   );
 }

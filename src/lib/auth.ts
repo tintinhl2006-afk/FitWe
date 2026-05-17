@@ -22,7 +22,8 @@ export const authOptions: NextAuthOptions = {
         }
 
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email }
+          where: { email: credentials.email },
+          include: { gym: { select: { id: true, name: true } } },
         });
 
         if (!user || !user.password) {
@@ -44,6 +45,8 @@ export const authOptions: NextAuthOptions = {
           subscriptionEndDate: user.subscriptionEndDate?.toISOString() || null,
           serverNow: (await getNow()).toISOString(),
           monthlyFee: user.monthlyFee,
+          gymId: user.gymId || null,
+          gymName: user.gym?.name || null,
         };
       }
     })
@@ -61,12 +64,16 @@ export const authOptions: NextAuthOptions = {
         token.subscriptionEndDate = user.subscriptionEndDate;
         token.serverNow = user.serverNow;
         token.monthlyFee = user.monthlyFee;
+        token.gymId = user.gymId;
+        token.gymName = user.gymName;
       }
       
       // Manejar la actualización manual del lado del cliente
       if (trigger === "update") {
         if (session?.name) token.name = session.name;
         if (session?.monthlyFee !== undefined) token.monthlyFee = session.monthlyFee;
+        if (session?.subscriptionStatus) token.subscriptionStatus = session.subscriptionStatus;
+        if (session?.subscriptionEndDate) token.subscriptionEndDate = session.subscriptionEndDate;
       }
 
       return token;
@@ -79,6 +86,8 @@ export const authOptions: NextAuthOptions = {
         session.user.subscriptionStatus = token.subscriptionStatus as string;
         session.user.subscriptionEndDate = token.subscriptionEndDate as string;
         session.user.monthlyFee = token.monthlyFee as number;
+        session.user.gymId = token.gymId as string | null;
+        session.user.gymName = token.gymName as string | null;
         
         // Always refresh serverNow from the cookie on each session request
         session.user.serverNow = (await getNow()).toISOString();

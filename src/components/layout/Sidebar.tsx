@@ -2,7 +2,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import { Home, Dumbbell, CalendarRange, Calendar, Apple, LogIn, LogOut, User, Settings, FlaskConical, Menu, X } from "lucide-react";
+import { Home, Dumbbell, CalendarRange, Calendar, Apple, LogIn, LogOut, User, Settings, FlaskConical, Menu, X, CreditCard } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NavItem } from "@/types";
 
@@ -110,6 +110,21 @@ export function Sidebar() {
                 >
                   <FlaskConical className="h-5 w-5" />
                   Testing Lab
+                </Link>
+              )}
+              {session.user.role === "USER" && (
+                <Link
+                  onClick={() => setIsMobileOpen(false)}
+                  href="/dashboard/pago"
+                  className={cn(
+                    "flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-colors",
+                    pathname.startsWith("/dashboard/pago")
+                      ? "bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white"
+                      : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 hover:text-slate-900 dark:hover:text-white"
+                  )}
+                >
+                  <CreditCard className="h-5 w-5" />
+                  Mi Cuota
                 </Link>
               )}
               <Link

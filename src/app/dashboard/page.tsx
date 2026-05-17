@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { Activity, Apple, Dumbbell, Loader2, ArrowRight, Flame, CalendarDays } from "lucide-react";
+import { Activity, Apple, Building2, Dumbbell, Loader2, ArrowRight, Flame, CalendarDays } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SubscriptionBanner } from "@/components/shared/SubscriptionBanner";
 
@@ -80,6 +80,12 @@ export default function DashboardPage() {
           <p className="mt-2 text-slate-600 dark:text-slate-400">
             Aquí tienes tu resumen de hoy.
           </p>
+          {session?.user?.gymName && (
+            <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-cyan-50 dark:bg-cyan-950/30 border border-cyan-100 dark:border-cyan-900/50 px-3.5 py-1.5 text-xs font-semibold text-primary dark:text-cyan-400">
+              <Building2 className="h-3.5 w-3.5" />
+              {session.user.gymName}
+            </div>
+          )}
         </div>
 
         <SubscriptionBanner />

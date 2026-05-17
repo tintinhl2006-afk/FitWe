@@ -8,6 +8,8 @@ declare module "next-auth" {
     subscriptionEndDate: string | null;
     serverNow: string;
     monthlyFee?: number;
+    gymId?: string | null;
+    gymName?: string | null;
   }
 
   interface Session {
@@ -18,6 +20,8 @@ declare module "next-auth" {
       subscriptionEndDate: string | null;
       serverNow: string;
       monthlyFee?: number;
+      gymId?: string | null;
+      gymName?: string | null;
     };
   }
 }
@@ -30,5 +34,8 @@ declare module "next-auth/jwt" {
     subscriptionEndDate: string | null;
     serverNow: string;
     monthlyFee?: number;
+    gymId?: string | null;
+    gymName?: string | null;
   }
 }
+
