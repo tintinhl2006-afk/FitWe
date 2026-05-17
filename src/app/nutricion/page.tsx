@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { Plus, Flame, Beef, Wheat, Droplet, Calendar as CalendarIcon, Loader2, Trash2, X, Search, Image as ImageIcon, Settings, Target as TargetIcon } from "lucide-react";
+import { Plus, Flame, Beef, Wheat, Droplet, Calendar as CalendarIcon, Loader2, Trash2, X, Search, Image as ImageIcon, Settings, Target as TargetIcon, Edit3 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
@@ -17,6 +17,7 @@ interface FoodItem {
   protein: number;
   carbs: number;
   fat: number;
+  userId: string | null;
 }
 
 interface MealEntry {
@@ -45,7 +46,8 @@ export default function NutricionPage() {
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMealType, setModalMealType] = useState<string>("BREAKFAST");
-  const [activeTab, setActiveTab] = useState<"mis_alimentos" | "nuevo_alimento">("mis_alimentos");
+  const [activeTab, setActiveTab] = useState<"mis_alimentos" | "nuevo_alimento" | "editar_alimento">("mis_alimentos");
+  const [editingFoodId, setEditingFoodId] = useState<string | null>(null);
   
   // Search & Foods
   const [foods, setFoods] = useState<FoodItem[]>([]);
@@ -55,7 +57,7 @@ export default function NutricionPage() {
   // Create Food
   const [isCreatingFood, setIsCreatingFood] = useState(false);
   const [newFood, setNewFood] = useState({
-    name: "", brand: "", imageUrl: "", calories: "", protein: "", carbs: "", fat: ""
+    name: "", brand: "", calories: "", protein: "", carbs: "", fat: ""
   });
 
   // Log Meal
@@ -131,22 +133,39 @@ export default function NutricionPage() {
     setSearchQuery("");
   };
 
+  const handleEditClick = (food: FoodItem) => {
+    setEditingFoodId(food.id);
+    setNewFood({
+      name: food.name,
+      brand: food.brand || "",
+      calories: food.calories.toString(),
+      protein: food.protein.toString(),
+      carbs: food.carbs.toString(),
+      fat: food.fat.toString()
+    });
+    setActiveTab("editar_alimento");
+  };
+
   const handleCreateFood = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsCreatingFood(true);
     try {
-      const res = await fetch("/api/user/foods", {
-        method: "POST",
+      const url = editingFoodId ? `/api/user/foods/${editingFoodId}` : "/api/user/foods";
+      const method = editingFoodId ? "PUT" : "POST";
+      
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newFood),
       });
 
       if (res.ok) {
-        setNewFood({ name: "", brand: "", imageUrl: "", calories: "", protein: "", carbs: "", fat: "" });
+        setNewFood({ name: "", brand: "", calories: "", protein: "", carbs: "", fat: "" });
+        setEditingFoodId(null);
         setActiveTab("mis_alimentos");
         fetchFoods();
       } else {
-        alert("Error al crear alimento");
+        alert("Error al guardar el alimento");
       }
     } catch (error) {
       console.error(error);
@@ -404,10 +423,14 @@ export default function NutricionPage() {
                 Mis Alimentos
               </button>
               <button
-                onClick={() => setActiveTab("nuevo_alimento")}
-                className={cn("flex-1 py-3 text-sm font-semibold transition-colors border-b-2", activeTab === "nuevo_alimento" ? "border-primary text-primary dark:text-cyan-400" : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300")}
+                onClick={() => {
+                  setEditingFoodId(null);
+                  setNewFood({ name: "", brand: "", calories: "", protein: "", carbs: "", fat: "" });
+                  setActiveTab("nuevo_alimento");
+                }}
+                className={cn("flex-1 py-3 text-sm font-semibold transition-colors border-b-2", (activeTab === "nuevo_alimento" || activeTab === "editar_alimento") ? "border-primary text-primary dark:text-cyan-400" : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300")}
               >
-                Crear Nuevo
+                {activeTab === "editar_alimento" ? "Editar Alimento" : "Crear Nuevo"}
               </button>
             </div>
 
@@ -461,12 +484,23 @@ export default function NutricionPage() {
                               </button>
                             </div>
                           ) : (
-                            <button 
-                              onClick={() => setSelectedFood(food)}
-                              className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-2xl text-sm font-medium transition-colors w-full sm:w-auto"
-                            >
-                              Seleccionar
-                            </button>
+                            <div className="flex items-center gap-2 w-full sm:w-auto">
+                              {food.userId === session?.user?.id && (
+                                <button 
+                                  onClick={() => handleEditClick(food)}
+                                  className="p-1.5 text-slate-400 hover:text-cyan-500 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 rounded-xl transition-colors"
+                                  title="Editar alimento"
+                                >
+                                  <Edit3 className="w-4 h-4" />
+                                </button>
+                              )}
+                              <button 
+                                onClick={() => setSelectedFood(food)}
+                                className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-2xl text-sm font-medium transition-colors w-full sm:w-auto"
+                              >
+                                Seleccionar
+                              </button>
+                            </div>
                           )}
                         </div>
                       ))
@@ -484,14 +518,10 @@ export default function NutricionPage() {
                     <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Nombre del Alimento *</label>
                     <input required type="text" value={newFood.name} onChange={e => setNewFood({...newFood, name: e.target.value})} className="w-full px-3 py-2 rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-primary transition-all text-sm" />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4">
                     <div>
                       <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Marca (Opcional)</label>
                       <input type="text" value={newFood.brand} onChange={e => setNewFood({...newFood, brand: e.target.value})} className="w-full px-3 py-2 rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-primary transition-all text-sm" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">URL Imagen (Opcional)</label>
-                      <input type="url" value={newFood.imageUrl} onChange={e => setNewFood({...newFood, imageUrl: e.target.value})} className="w-full px-3 py-2 rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-primary transition-all text-sm" placeholder="https://..." />
                     </div>
                   </div>
                   

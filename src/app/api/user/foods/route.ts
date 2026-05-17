@@ -15,13 +15,16 @@ export async function GET(req: Request) {
 
     const foods = await prisma.foodItem.findMany({
       where: {
-        userId: session.user.id,
+        OR: [
+          { userId: session.user.id },
+          { userId: null },
+        ],
         name: {
           contains: query,
           mode: "insensitive",
         },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { name: "asc" },
     });
 
     return NextResponse.json(foods);
@@ -42,7 +45,7 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { name, brand, imageUrl, calories, protein, carbs, fat } = body;
+    const { name, brand, calories, protein, carbs, fat } = body;
 
     if (!name || calories === undefined || protein === undefined || carbs === undefined || fat === undefined) {
       return NextResponse.json(
@@ -63,7 +66,6 @@ export async function POST(req: Request) {
         userId: session.user.id,
         name,
         brand: brand || null,
-        imageUrl: imageUrl || null,
         calories: Number(calories),
         protein: Number(protein),
         carbs: Number(carbs),

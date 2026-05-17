@@ -1,0 +1,46 @@
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+
+export async function PUT(req: Request, { params }: { params: { id: string } }) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ message: "No autorizado" }, { status: 401 });
+    }
+
+    const body = await req.json();
+    const { name, brand, calories, protein, carbs, fat } = body;
+
+    const existingFood = await prisma.foodItem.findUnique({
+      where: { id: params.id },
+    });
+
+    if (!existingFood) {
+      return NextResponse.json({ message: "Alimento no encontrado" }, { status: 404 });
+    }
+
+    // Only allow editing foods they created (not global ones or other people's)
+    if (existingFood.userId !== session.user.id) {
+      return NextResponse.json({ message: "No tienes permiso para editar este alimento" }, { status: 403 });
+    }
+
+    const updatedFood = await prisma.foodItem.update({
+      where: { id: params.id },
+      data: {
+        name: name !== undefined ? name : existingFood.name,
+        brand: brand !== undefined ? brand : existingFood.brand,
+        calories: calories !== undefined ? Number(calories) : existingFood.calories,
+        protein: protein !== undefined ? Number(protein) : existingFood.protein,
+        carbs: carbs !== undefined ? Number(carbs) : existingFood.carbs,
+        fat: fat !== undefined ? Number(fat) : existingFood.fat,
+      },
+    });
+
+    return NextResponse.json(updatedFood);
+  } catch (error) {
+    console.error("Error updating food:", error);
+    return NextResponse.json({ error: "Error interno" }, { status: 500 });
+  }
+}
