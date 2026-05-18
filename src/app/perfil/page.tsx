@@ -50,15 +50,17 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [expandedWorkoutId, setExpandedWorkoutId] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    fetchProfileData();
-  }, []);
+    fetchProfileData(selectedDate);
+  }, [selectedDate]);
 
-  const fetchProfileData = async () => {
+  const fetchProfileData = async (dateFilter?: string) => {
     try {
-      const res = await fetch("/api/profile");
+      const url = dateFilter ? `/api/profile?date=${dateFilter}` : "/api/profile";
+      const res = await fetch(url);
       if (res.ok) {
         const json = await res.json();
         setData(json);
@@ -240,9 +242,28 @@ export default function ProfilePage() {
 
           {/* History Feed */}
           <div className="mt-12">
-            <h2 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-6 flex items-center gap-2 px-1">
-              <Activity className="h-4 w-4 text-primary" /> Entrenamientos Recientes
-            </h2>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 px-1">
+              <h2 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                <Activity className="h-4 w-4 text-primary" /> Historial de Entrenamientos
+              </h2>
+              <div className="flex items-center gap-2">
+                <input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  className="px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-slate-900 dark:text-white shadow-sm focus:outline-none focus:ring-1 focus:ring-cyan-500 text-sm"
+                />
+                {selectedDate && (
+                  <button 
+                    onClick={() => setSelectedDate("")}
+                    className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl transition-all"
+                    title="Mostrar todos"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            </div>
             
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
               {data.recentSessions.length === 0 ? (

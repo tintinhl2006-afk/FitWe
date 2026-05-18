@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getNow } from "@/lib/timeUtils";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const session = await getServerSession(authOptions);
 
@@ -13,6 +13,8 @@ export async function GET() {
     }
 
     const userId = session.user.id;
+    const { searchParams } = new URL(request.url);
+    const dateParam = searchParams.get("date");
 
     // Obtener datos básicos del usuario
     const user = await prisma.user.findUnique({
@@ -95,14 +97,25 @@ export async function GET() {
     });
     const monthlyDates = monthlySessions.map(s => s.startTime.toISOString());
 
-    // Últimos 5 entrenamientos (History Feed)
+    let sessionsWhereClause: any = {
+      userId,
+      endTime: { not: null },
+    };
+
+    if (dateParam) {
+      const [year, month, day] = dateParam.split("-").map(Number);
+      const startOfDay = new Date(year, month - 1, day, 0, 0, 0);
+      const endOfDay = new Date(year, month - 1, day, 23, 59, 59, 999);
+      sessionsWhereClause.startTime = {
+        gte: startOfDay,
+        lte: endOfDay,
+      };
+    }
+
+    // Todos los entrenamientos (o filtrados por fecha)
     const last5SessionsRaw = await prisma.workoutSession.findMany({
-      where: {
-        userId,
-        endTime: { not: null },
-      },
+      where: sessionsWhereClause,
       orderBy: { startTime: 'desc' },
-      take: 5,
       include: {
         routine: { select: { name: true } },
         workoutSets: {
