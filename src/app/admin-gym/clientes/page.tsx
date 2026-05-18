@@ -109,11 +109,16 @@ export default function ClientesPage() {
     setIsModalOpen(true);
   };
 
-  const filtered = clients.filter(
-    (c) =>
-      c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.email.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const normalizeText = (str: string) =>
+    str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+  const filtered = clients.filter((c) => {
+    const normalizedQuery = normalizeText(searchQuery);
+    return (
+      normalizeText(c.name).includes(normalizedQuery) ||
+      normalizeText(c.email).includes(normalizedQuery)
+    );
+  });
 
   if (isLoading) {
     return (

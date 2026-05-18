@@ -443,7 +443,11 @@ export function RoutineBuilder({
                 <div className="flex-1 overflow-y-auto p-6 pt-4">
                   <div className="grid gap-3 sm:grid-cols-2">
                     {availableExercises
-                      .filter((ex) => ex.name.toLowerCase().includes(searchQuery.toLowerCase()))
+                      .filter((ex) => {
+                        const normalizeText = (str: string) =>
+                          str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+                        return normalizeText(ex.name).includes(normalizeText(searchQuery));
+                      })
                       .map((ex) => (
                         <button
                           key={ex.id}

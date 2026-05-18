@@ -324,7 +324,11 @@ export default function RoutineDetailPage({ params }: { params: Promise<{ id: st
                   </div>
                   <div className="flex-1 overflow-y-auto p-6 pt-4">
                     <div className="grid gap-3 sm:grid-cols-2">
-                      {availableExercises.filter(ex => ex.name.toLowerCase().includes(searchQuery.toLowerCase())).map(ex => (
+                      {availableExercises.filter(ex => {
+                        const normalizeText = (str: string) =>
+                          str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+                        return normalizeText(ex.name).includes(normalizeText(searchQuery));
+                      }).map(ex => (
                         <button key={ex.id} onClick={() => { setSelectedExercise(ex.id); setStep("config"); setSets(ex.muscleGroup.toLowerCase() === 'cardio' ? 1 : 3); }} className="flex items-center gap-4 rounded-3xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 p-3 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-primary transition-all text-left">
                           <div className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800">
                             {ex.imageUrl ? (

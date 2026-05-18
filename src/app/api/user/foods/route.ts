@@ -13,21 +13,25 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const query = searchParams.get("query") || "";
 
-    const foods = await prisma.foodItem.findMany({
+    const allFoods = await prisma.foodItem.findMany({
       where: {
         OR: [
           { userId: session.user.id },
           { userId: null },
         ],
-        name: {
-          contains: query,
-          mode: "insensitive",
-        },
       },
       orderBy: { name: "asc" },
     });
 
-    return NextResponse.json(foods);
+    const normalizeText = (str: string) =>
+      str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+    const normalizedQuery = normalizeText(query);
+    const filteredFoods = allFoods.filter((food) =>
+      normalizeText(food.name).includes(normalizedQuery)
+    );
+
+    return NextResponse.json(filteredFoods);
   } catch (error) {
     console.error("Error fetching foods:", error);
     return NextResponse.json(
