@@ -296,7 +296,7 @@ export default function AdminGymDashboard() {
             bg: "bg-blue-50 dark:bg-blue-950/30",
           },
           {
-            title: "Estadísticas BI",
+            title: "Estadísticas",
             href: "/admin-gym/estadisticas",
             icon: TrendingUp,
             color: "text-emerald-600 dark:text-emerald-400",
