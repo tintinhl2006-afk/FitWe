@@ -245,7 +245,7 @@ export default function ClientesPage() {
                 {/* Plan Info */}
                 <div className="col-span-2 flex items-center justify-center">
                   {client.plan ? (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-cyan-50 dark:bg-cyan-950/30 border border-cyan-100 dark:border-cyan-900/50 px-2.5 py-0.5 text-xs font-bold text-primary dark:text-cyan-400">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-cyan-50 dark:bg-cyan-950/30 border border-cyan-100 dark:border-cyan-900/50 px-2.5 py-0.5 text-xs font-bold text-primary dark:text-cyan-400 whitespace-nowrap">
                       {client.plan.name}
                     </span>
                   ) : (
