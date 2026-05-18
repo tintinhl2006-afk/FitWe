@@ -281,16 +281,6 @@ export default function GymClassesPage() {
         </div>
       </div>
 
-      {/* Info Banner */}
-      <div className="flex items-start gap-3 rounded-3xl bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/50 px-5 py-4">
-        <Zap className="h-5 w-5 text-indigo-500 mt-0.5 shrink-0" />
-        <div>
-          <p className="text-sm font-semibold text-indigo-700 dark:text-indigo-300">Generación Inteligente</p>
-          <p className="text-xs text-indigo-600/80 dark:text-indigo-400/80 mt-0.5">
-            Las plantillas generan clases para los próximos 7 días al instante. El sistema CRON mantiene el calendario lleno automáticamente.
-          </p>
-        </div>
-      </div>
 
       {/* Tabs */}
       <div className="flex border-b border-slate-200 dark:border-slate-800">
