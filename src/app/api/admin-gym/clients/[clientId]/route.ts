@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getNow } from "@/lib/timeUtils";
+import bcrypt from "bcryptjs";
 
 export async function GET(
   _req: Request,
@@ -123,6 +124,69 @@ export async function GET(
     });
   } catch (error) {
     console.error("Error fetching client detail:", error);
+    return NextResponse.json(
+      { error: "Error interno del servidor" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(
+  req: Request,
+  { params }: { params: Promise<{ clientId: string }> }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ message: "No autorizado" }, { status: 401 });
+    }
+
+    if (session.user.role !== "GYM") {
+      return NextResponse.json({ message: "Acceso prohibido" }, { status: 403 });
+    }
+
+    const { clientId } = await params;
+    const gymId = session.user.id;
+    const { newPassword } = await req.json();
+
+    if (!newPassword || newPassword.trim().length < 4) {
+      return NextResponse.json(
+        { message: "La contraseña debe tener al menos 4 caracteres" },
+        { status: 400 }
+      );
+    }
+
+    // Verify client belongs to this gym
+    const client = await prisma.user.findFirst({
+      where: {
+        id: clientId,
+        gymId: gymId,
+        role: "USER",
+      },
+    });
+
+    if (!client) {
+      return NextResponse.json(
+        { message: "Cliente no encontrado" },
+        { status: 404 }
+      );
+    }
+
+    // Hash the new password securely
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+    // Update the password in database
+    await prisma.user.update({
+      where: { id: clientId },
+      data: { password: hashedPassword },
+    });
+
+    return NextResponse.json({
+      message: "Contraseña cambiada con éxito",
+    });
+  } catch (error) {
+    console.error("Error resetting client password:", error);
     return NextResponse.json(
       { error: "Error interno del servidor" },
       { status: 500 }

@@ -20,6 +20,7 @@ import {
   Edit,
   History,
   X,
+  Key,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCustomAlert } from "@/components/providers/CustomAlertProvider";
@@ -78,6 +79,45 @@ export default function ClientDetailPage({
 
   const [isDateModalOpen, setIsDateModalOpen] = useState(false);
   const [exactDate, setExactDate] = useState("");
+
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordSuccess, setPasswordSuccess] = useState("");
+  const [isPasswordSubmitting, setIsPasswordSubmitting] = useState(false);
+
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError("");
+    setPasswordSuccess("");
+    setIsPasswordSubmitting(true);
+
+    try {
+      const res = await fetch(`/api/admin-gym/clients/${clientId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ newPassword }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setPasswordSuccess("Contraseña cambiada correctamente");
+        setNewPassword("");
+        setTimeout(() => {
+          setIsPasswordModalOpen(false);
+          setPasswordSuccess("");
+        }, 1500);
+      } else {
+        setPasswordError(data.message || "Error al cambiar la contraseña");
+      }
+    } catch (e) {
+      console.error(e);
+      setPasswordError("Error al conectar con el servidor");
+    } finally {
+      setIsPasswordSubmitting(false);
+    }
+  };
 
   const fetchClient = async () => {
     try {
@@ -202,13 +242,22 @@ export default function ClientDetailPage({
           <ArrowLeft className="h-4 w-4" />
           Volver a Clientes
         </Link>
-        <Link
-          href={`/admin-gym/clientes/${clientId}/rutina/nueva`}
-          className="inline-flex items-center gap-2 rounded-3xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary transition-colors active:scale-95"
-        >
-          <Plus className="h-4 w-4" />
-          Asignar Nueva Rutina
-        </Link>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setIsPasswordModalOpen(true)}
+            className="inline-flex items-center gap-2 rounded-3xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-5 py-2.5 text-sm font-semibold border border-slate-200 dark:border-slate-700 transition-all active:scale-95"
+          >
+            <Key className="h-4 w-4" />
+            Cambiar Contraseña
+          </button>
+          <Link
+            href={`/admin-gym/clientes/${clientId}/rutina/nueva`}
+            className="inline-flex items-center gap-2 rounded-3xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary transition-colors active:scale-95"
+          >
+            <Plus className="h-4 w-4" />
+            Asignar Nueva Rutina
+          </Link>
+        </div>
       </div>
 
       {/* ── Client Header Card ── */}
@@ -542,6 +591,79 @@ export default function ClientDetailPage({
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Change Password Modal ── */}
+      {isPasswordModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+          <div className="w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <Key className="h-5 w-5 text-primary" />
+                Cambiar Contraseña
+              </h3>
+              <button 
+                onClick={() => {
+                  setIsPasswordModalOpen(false);
+                  setPasswordError("");
+                  setPasswordSuccess("");
+                }} 
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <form onSubmit={handlePasswordChange} className="space-y-4">
+              {passwordError && (
+                <div className="rounded-xl bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/30 p-3 text-xs font-semibold text-red-600 dark:text-red-400">
+                  {passwordError}
+                </div>
+              )}
+              {passwordSuccess && (
+                <div className="rounded-xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/30 p-3 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                  {passwordSuccess}
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                  Nueva Contraseña para {client.name}
+                </label>
+                <input
+                  type="text"
+                  required
+                  minLength={4}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Introduce la nueva contraseña..."
+                  className="block w-full rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 py-2.5 px-4 text-slate-900 dark:text-white shadow-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none text-sm transition-all"
+                />
+              </div>
+
+              <div className="mt-8 flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsPasswordModalOpen(false);
+                    setPasswordError("");
+                    setPasswordSuccess("");
+                  }}
+                  className="rounded-2xl px-4 py-2.5 text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={isPasswordSubmitting || !newPassword}
+                  className="inline-flex items-center justify-center rounded-2xl bg-primary px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary disabled:opacity-70 transition-colors active:scale-95"
+                >
+                  {isPasswordSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Guardar Contraseña"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
