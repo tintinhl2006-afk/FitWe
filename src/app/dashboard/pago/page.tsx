@@ -246,14 +246,40 @@ export default function PaymentPage() {
             <div className="flex h-10 w-10 items-center justify-center rounded-3xl bg-cyan-50 dark:bg-cyan-950/30 text-primary dark:text-cyan-400">
               <CreditCard className="h-5 w-5" />
             </div>
-            Pagar Cuota
+            Mi Cuota y Suscripción
           </h1>
           <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-            Renueva tu suscripción en{" "}
+            Gestiona tu tarifa y pagos en{" "}
             <span className="font-semibold text-slate-700 dark:text-slate-300">
               {gymName}
             </span>
           </p>
+
+          {session?.user?.subscriptionEndDate && session.user.subscriptionStatus === "ACTIVE" ? (
+            <div className="mt-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/10 p-4 flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400 shrink-0">
+                <CheckCircle2 className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-emerald-400 uppercase tracking-wide">Suscripción Activa</p>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Tu pase es válido hasta el <span className="font-bold text-slate-200">{new Date(session.user.subscriptionEndDate).toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" })}</span>.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="mt-4 rounded-2xl bg-red-500/5 border border-red-500/10 p-4 flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-500/10 text-red-400 shrink-0">
+                <AlertCircle className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-red-400 uppercase tracking-wide">Suscripción Expirada</p>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Tu cuota ha vencido o está inactiva. Selecciona un plan a continuación para renovarla.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Plan Selection */}

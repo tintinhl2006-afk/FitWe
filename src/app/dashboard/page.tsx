@@ -77,12 +77,20 @@ export default function DashboardPage() {
                 </h1>
                 <p className="mt-2 text-slate-400 font-medium">Aquí tienes tu resumen de hoy.</p>
               </div>
-              {session?.user?.gymName && (
-                <div className="inline-flex items-center gap-2 rounded-full bg-white/5 backdrop-blur-md border border-white/10 px-4 py-2 text-xs font-bold text-cyan-300 self-start sm:self-auto">
-                  <Building2 className="h-3.5 w-3.5" />
-                  {session.user.gymName}
-                </div>
-              )}
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 self-start sm:self-auto">
+                {session?.user?.gymName && (
+                  <div className="inline-flex items-center gap-2 rounded-full bg-white/5 backdrop-blur-md border border-white/10 px-4 py-2 text-xs font-bold text-cyan-300">
+                    <Building2 className="h-3.5 w-3.5" />
+                    {session.user.gymName}
+                  </div>
+                )}
+                {session?.user?.subscriptionEndDate && session.user.subscriptionStatus === "ACTIVE" && (
+                  <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/10 backdrop-blur-md border border-emerald-500/20 px-4 py-2 text-xs font-bold text-emerald-400">
+                    <Clock className="h-3.5 w-3.5" />
+                    Cuota activa hasta: {new Date(session.user.subscriptionEndDate).toLocaleDateString("es-ES", { day: "numeric", month: "short" })}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Mini Stats Row */}
