@@ -308,10 +308,10 @@ export default function NutricionPage() {
             </p>
           </div>
           
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 w-full sm:w-auto mt-4 sm:mt-0">
             <button
               onClick={() => setIsSummaryOpen(true)}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-cyan-500 hover:bg-cyan-400 dark:bg-cyan-600 dark:hover:bg-cyan-500 text-white font-semibold transition-all shadow-sm shadow-cyan-500/10"
+              className="flex flex-1 items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-cyan-500 hover:bg-cyan-400 dark:bg-cyan-600 dark:hover:bg-cyan-500 text-white font-semibold transition-all shadow-sm shadow-cyan-500/10"
               title="Ver desglose y resumen nutricional"
             >
               <BarChart3 className="w-5 h-5" />
@@ -319,19 +319,19 @@ export default function NutricionPage() {
             </button>
             <button
               onClick={() => router.push("/nutricion/onboarding?edit=true")}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-bold transition-all shadow-sm shadow-yellow-500/20"
+              className="flex flex-1 items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-bold transition-all shadow-sm shadow-yellow-500/20"
               title="Ajustar perfil nutricional"
             >
               <TargetIcon className="w-5 h-5" />
               Establecer Objetivos
             </button>
-            <div className="relative">
+            <div className="relative w-full sm:w-auto">
               <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500 dark:text-slate-400" />
               <input
                 type="date"
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
-                className="pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-2xl text-slate-900 dark:text-white shadow-sm focus:outline-none focus:ring-1 focus:ring-cyan-500 sm:text-sm"
+                className="w-full sm:w-auto pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-2xl text-slate-900 dark:text-white shadow-sm focus:outline-none focus:ring-1 focus:ring-cyan-500 sm:text-sm"
               />
             </div>
           </div>
