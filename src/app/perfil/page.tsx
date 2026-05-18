@@ -181,8 +181,8 @@ export default function ProfilePage() {
               
               <div className="h-32 w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={data.stats.weeklyChartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-                    <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 600 }} />
+                  <BarChart data={data.stats.weeklyChartData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+                    <XAxis dataKey="day" axisLine={false} tickLine={false} interval={0} tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 600 }} />
                     <Tooltip 
                       cursor={{ fill: '#f8fafc', radius: 4 }}
                       contentStyle={{ backgroundColor: '#ffffff', border: 'none', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', color: '#0f172a' }}
