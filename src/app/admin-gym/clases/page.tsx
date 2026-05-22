@@ -75,6 +75,7 @@ export default function GymClassesPage() {
   const [classBookings, setClassBookings] = useState<BookingUser[]>([]);
   const [isBookingsLoading, setIsBookingsLoading] = useState(false);
   const [isCancelingBookingId, setIsCancelingBookingId] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string>("");
 
   const [templateFormData, setTemplateFormData] = useState({
     name: "",
@@ -236,9 +237,17 @@ export default function GymClassesPage() {
 
   // Group classes by date
   const now = session?.user?.serverNow ? new Date(session.user.serverNow) : new Date();
-  const upcomingClasses = classes.filter(c => new Date(c.startTime) >= now);
+  
+  // If a date is selected, we filter ALL classes on that date (even if past).
+  // If NO date is selected, we only show upcoming classes.
+  const filteredClasses = selectedDate
+    ? classes.filter((c) => {
+        const classDate = new Date(c.startTime).toISOString().split("T")[0];
+        return classDate === selectedDate;
+      })
+    : classes.filter(c => new Date(c.startTime) >= now);
 
-  const groupedUpcoming = upcomingClasses.reduce<Record<string, GymClass[]>>((acc, c) => {
+  const groupedUpcoming = filteredClasses.reduce<Record<string, GymClass[]>>((acc, c) => {
     const dateKey = new Date(c.startTime).toLocaleDateString("es-ES", {
       weekday: "long", day: "numeric", month: "long",
     });
@@ -313,7 +322,35 @@ export default function GymClassesPage() {
         <div className="p-12 flex justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
       ) : activeTab === "calendar" ? (
         /* CALENDAR TAB */
-        <div className="space-y-8">
+        <div className="space-y-8 animate-in fade-in duration-300">
+          {(classes.length > 0 || selectedDate) && (
+            <div className="flex flex-wrap items-center gap-4 bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 animate-in fade-in duration-300">
+              <div className="flex items-center gap-2">
+                <CalendarDays className="h-5 w-5 text-primary dark:text-cyan-400" />
+                <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                  Filtrar por fecha:
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  className="rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-4 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-primary dark:focus:border-cyan-400 transition-all cursor-pointer"
+                />
+                {selectedDate && (
+                  <button
+                    onClick={() => setSelectedDate("")}
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 px-3 py-2 rounded-3xl bg-slate-200/50 dark:bg-slate-800 transition-colors"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                    Ver todas
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
           {Object.keys(groupedUpcoming).length > 0 ? (
             Object.entries(groupedUpcoming).map(([date, items]) => (
               <div key={date}>
@@ -332,8 +369,8 @@ export default function GymClassesPage() {
                           <div className="flex items-center gap-3">
                             <h3 className="font-bold text-slate-900 dark:text-white group-hover:text-primary dark:group-hover:text-cyan-400 transition-colors">{c.name}</h3>
                             <span className={cn(
-                              "text-xs font-bold px-2.5 py-0.5 rounded-full",
-                              isFull ? "bg-red-100 dark:bg-red-950/30 text-red-700 dark:text-red-400" : "bg-cyan-100 dark:bg-cyan-950/30 text-primary dark:text-cyan-400"
+                                "text-xs font-bold px-2.5 py-0.5 rounded-full",
+                                isFull ? "bg-red-100 dark:bg-red-950/30 text-red-700 dark:text-red-400" : "bg-cyan-100 dark:bg-cyan-950/30 text-primary dark:text-cyan-400"
                             )}>
                               {c._count.bookings}/{c.capacity}
                             </span>
@@ -376,6 +413,20 @@ export default function GymClassesPage() {
                 </div>
               </div>
             ))
+          ) : selectedDate ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+              <Calendar className="h-12 w-12 text-slate-300 dark:text-slate-700 mb-4 animate-bounce" />
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">No hay clases para este día</h3>
+              <p className="text-slate-500 max-w-sm mb-4">
+                No hay ninguna actividad programada para la fecha seleccionada.
+              </p>
+              <button
+                onClick={() => setSelectedDate("")}
+                className="inline-flex items-center gap-2 rounded-3xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:opacity-90 transition-all"
+              >
+                Ver todas las clases
+              </button>
+            </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-16 text-center rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
               <Calendar className="h-12 w-12 text-slate-300 dark:text-slate-700 mb-4" />

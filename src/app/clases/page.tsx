@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import {
   Calendar,
+  CalendarDays,
   Clock,
   Users,
   Loader2,
@@ -50,6 +51,7 @@ export default function ClasesPage() {
   const [actionId, setActionId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ msg: string; type: "ok" | "err" } | null>(null);
   const [noGym, setNoGym] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string>("");
 
   useEffect(() => {
     fetchClasses();
@@ -116,8 +118,16 @@ export default function ClasesPage() {
     }
   };
 
+  // Filter classes by selectedDate if set
+  const filteredClasses = selectedDate
+    ? classes.filter((c) => {
+        const classDate = new Date(c.startTime).toISOString().split("T")[0];
+        return classDate === selectedDate;
+      })
+    : classes;
+
   // Group by date
-  const grouped = classes.reduce<Record<string, ClassItem[]>>((acc, c) => {
+  const grouped = filteredClasses.reduce<Record<string, ClassItem[]>>((acc, c) => {
     const dateKey = new Date(c.startTime).toLocaleDateString("es-ES", {
       weekday: "long",
       day: "numeric",
@@ -161,6 +171,34 @@ export default function ClasesPage() {
           </div>
         )}
 
+        {!isLoading && !noGym && (classes.length > 0 || selectedDate) && (
+          <div className="flex flex-wrap items-center gap-4 bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 animate-in fade-in duration-300">
+            <div className="flex items-center gap-2">
+              <CalendarDays className="h-5 w-5 text-primary dark:text-cyan-400" />
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                Filtrar por fecha:
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-4 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-primary dark:focus:border-cyan-400 transition-all cursor-pointer"
+              />
+              {selectedDate && (
+                <button
+                  onClick={() => setSelectedDate("")}
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 px-3 py-2 rounded-3xl bg-slate-200/50 dark:bg-slate-800 transition-colors"
+                >
+                  <X className="h-3.5 w-3.5" />
+                  Ver todas
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
         {isLoading ? (
           <div className="flex h-48 items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -174,6 +212,22 @@ export default function ClasesPage() {
             <p className="text-slate-500 max-w-sm">
               Tu cuenta no está vinculada a ningún gimnasio. Contacta con tu centro deportivo.
             </p>
+          </div>
+        ) : Object.keys(grouped).length === 0 && selectedDate ? (
+          <div className="flex flex-col items-center justify-center py-16 text-center rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+            <Calendar className="h-12 w-12 text-slate-300 dark:text-slate-700 mb-4 animate-bounce" />
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">
+              No hay clases para este día
+            </h3>
+            <p className="text-slate-500 max-w-sm mb-4">
+              No hay ninguna actividad programada para la fecha seleccionada.
+            </p>
+            <button
+              onClick={() => setSelectedDate("")}
+              className="inline-flex items-center gap-2 rounded-3xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:opacity-90 transition-all"
+            >
+              Ver todas las clases
+            </button>
           </div>
         ) : Object.keys(grouped).length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
