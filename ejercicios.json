@@ -1,0 +1,738 @@
+[
+  {
+    "id": "54041da5-13d6-43a6-be86-7b50f91671ef",
+    "name": "Abducción de Cadera",
+    "description": "Máquina de abrir piernas. Trabaja glúteo medio.",
+    "muscleGroup": "Pierna",
+    "equipment": "Máquina",
+    "imageUrl": "/abducciones_maquina.jpeg"
+  },
+  {
+    "id": "ce773da2-887c-475b-9be0-b68d53792a4b",
+    "name": "Aperturas Inclinadas",
+    "description": "Aislamiento para el pecho superior. No bajes excesivamente para proteger el hombro.",
+    "muscleGroup": "Pecho",
+    "equipment": "Mancuernas",
+    "imageUrl": "/aperturas_inclinadas.jpeg"
+  },
+  {
+    "id": "26ec54a8-3f1b-47f7-a1b3-331926722391",
+    "name": "Aperturas con Mancuernas",
+    "description": "Movimiento de aislamiento. Mantén una ligera flexión de codo y abre los brazos como si fueras a dar un abrazo.",
+    "muscleGroup": "Pecho",
+    "equipment": "Mancuernas",
+    "imageUrl": "/aperturas_mancuerna.jpeg"
+  },
+  {
+    "id": "0befafe5-af84-4b93-ba9b-1993544f9d10",
+    "name": "Bicicleta Estática",
+    "description": "Cardio de bajo impacto articular.",
+    "muscleGroup": "Cardio",
+    "equipment": "Máquina",
+    "imageUrl": "/bicicleta.jpg"
+  },
+  {
+    "id": "2c04f9d4-6597-4bdc-ab08-7977b3c5efda",
+    "name": "Cinta de Correr",
+    "description": "Trabajo aeróbico o HIIT caminando, trotando o corriendo.",
+    "muscleGroup": "Cardio",
+    "equipment": "Máquina",
+    "imageUrl": "/cinta_correr.jpg"
+  },
+  {
+    "id": "a8a5ef76-cc78-411c-a0cf-10e7eb27f119",
+    "name": "Cruce de Poleas Alto",
+    "description": "Tira de las poleas desde arriba hacia el centro de tu cadera. Excelente para el pecho inferior.",
+    "muscleGroup": "Pecho",
+    "equipment": "Polea",
+    "imageUrl": "/cruce_polea_alto.jpg"
+  },
+  {
+    "id": "42fc6f68-5547-4a3e-b598-c17a7e843446",
+    "name": "Cruce de Poleas Bajo",
+    "description": "Desde las poleas bajas, eleva los brazos hacia el pecho superior.",
+    "muscleGroup": "Pecho",
+    "equipment": "Polea",
+    "imageUrl": "/cruces_polea_bajo.jpg"
+  },
+  {
+    "id": "c23af9c0-b7df-4846-bf77-13d1d1ea2478",
+    "name": "Cruce de Poleas Medio",
+    "description": "Tira de las poleas a la altura de tu pecho. Gran contracción máxima.",
+    "muscleGroup": "Pecho",
+    "equipment": "Polea",
+    "imageUrl": "/cruce_poleas_medio.jpg"
+  },
+  {
+    "id": "e47b43f6-9e49-4ef2-969a-bc30ca3143c0",
+    "name": "Crunch Abdominal",
+    "description": "Encogimiento clásico. Eleva solo los hombros del suelo apretando el abdomen.",
+    "muscleGroup": "Core",
+    "equipment": "Peso Corporal",
+    "imageUrl": "/crunch_abdominal.jpg"
+  },
+  {
+    "id": "89be1984-dbd2-4ce1-89e6-3142d78702bc",
+    "name": "Crunch en Polea",
+    "description": "De rodillas, sujeta la cuerda tras el cuello y enrolla tu torso hacia abajo.",
+    "muscleGroup": "Core",
+    "equipment": "Polea",
+    "imageUrl": "/crunch_polea.jpg"
+  },
+  {
+    "id": "588ed878-6609-4d04-bfad-44820a314854",
+    "name": "Curl Bayesian",
+    "description": "De espaldas a la polea. Permite estirar el bíceps detrás de la línea del cuerpo.",
+    "muscleGroup": "Brazo",
+    "equipment": "Polea",
+    "imageUrl": "/curl_bayesian.jpg"
+  },
+  {
+    "id": "dd45156e-5cb6-4d64-8d70-56efe05c48b4",
+    "name": "Curl Concentrado",
+    "description": "Apoya el codo en la cara interna del muslo para estricto aislamiento.",
+    "muscleGroup": "Brazo",
+    "equipment": "Mancuernas",
+    "imageUrl": "/curl_concentrado.jpg"
+  },
+  {
+    "id": "5dc7d67b-871b-41da-858e-4b1ba27f0b74",
+    "name": "Curl Femoral Sentado",
+    "description": "Aislamiento para isquiosurales. Mantiene el músculo en mayor elongación inicial.",
+    "muscleGroup": "Pierna",
+    "equipment": "Máquina",
+    "imageUrl": "/curl_femoral.jpg"
+  },
+  {
+    "id": "b48214f0-8462-45ae-ac6e-849181f86cc6",
+    "name": "Curl Femoral Tumbado",
+    "description": "Aislamiento para isquiosurales recostado boca abajo.",
+    "muscleGroup": "Pierna",
+    "equipment": "Máquina",
+    "imageUrl": "/curl_femoral.jpg"
+  },
+  {
+    "id": "d4b94ae5-d269-4b96-b79c-5b2d2b9ab6fb",
+    "name": "Curl Martillo",
+    "description": "Agarre neutro. Trabaja el bíceps braquial y braquiorradial (antebrazo).",
+    "muscleGroup": "Brazo",
+    "equipment": "Mancuernas",
+    "imageUrl": "/curl_martillo.jpg"
+  },
+  {
+    "id": "9b4fb8d9-8d4a-421d-8b71-de3b2cf8587f",
+    "name": "Curl Predicador (Banco Scott)",
+    "description": "Elimina todo impulso. Asegura la máxima contracción del bíceps.",
+    "muscleGroup": "Brazo",
+    "equipment": "Barra",
+    "imageUrl": "/curl_predicador_barra.jpg"
+  },
+  {
+    "id": "fa02e00b-9546-4059-b6ad-04affc4bec33",
+    "name": "Curl con Barra",
+    "description": "Construcción de masa básica para bíceps. No balancees el cuerpo.",
+    "muscleGroup": "Brazo",
+    "equipment": "Barra",
+    "imageUrl": "/curl_barra_ez.jpg"
+  },
+  {
+    "id": "a35ed97d-af28-4d39-ac73-7ae4155dc345",
+    "name": "Curl con Barra EZ",
+    "description": "Versión más amigable con las muñecas gracias al agarre curvado.",
+    "muscleGroup": "Brazo",
+    "equipment": "Barra",
+    "imageUrl": "/curl_barra_ez.jpg"
+  },
+  {
+    "id": "9391532b-1a84-4883-8d22-4a7bdff52f72",
+    "name": "Curl de Bíceps Alterno",
+    "description": "Sube una mancuerna y luego la otra, supinando la muñeca.",
+    "muscleGroup": "Brazo",
+    "equipment": "Mancuernas",
+    "imageUrl": "/curl_biceps_alterno.jpg"
+  },
+  {
+    "id": "7d1b36af-60ad-4ba7-b30b-19049fd3d119",
+    "name": "Curl en Polea Baja",
+    "description": "Usa barra recta o cuerda. Tensión constante en todo momento.",
+    "muscleGroup": "Brazo",
+    "equipment": "Polea",
+    "imageUrl": "/curl_biceps_polea.jpg"
+  },
+  {
+    "id": "8ae32a9e-163d-411c-9114-0d316d1d3109",
+    "name": "Dominadas Prinas",
+    "description": "Agarre ancho. Sube hasta pasar la barbilla por encima de la barra.",
+    "muscleGroup": "Espalda",
+    "equipment": "Peso Corporal",
+    "imageUrl": "/dominadas.jpg"
+  },
+  {
+    "id": "4ec8e640-9f6f-47f8-a933-9b3981eb53e9",
+    "name": "Dominadas Pronas",
+    "description": "Agarre ancho. Sube hasta pasar la barbilla por encima de la barra.",
+    "muscleGroup": "Espalda",
+    "equipment": "Peso Corporal",
+    "imageUrl": "/dominadas.jpg"
+  },
+  {
+    "id": "d9bd92ba-a1ea-4e43-a081-9386dfd98194",
+    "name": "Dominadas Supinas (Chin-ups)",
+    "description": "Agarre invertido (palmas hacia ti). Involucra más fuertemente el bíceps.",
+    "muscleGroup": "Espalda",
+    "equipment": "Peso Corporal",
+    "imageUrl": "/dominadas.jpg"
+  },
+  {
+    "id": "8c155599-fb4d-4dce-8c39-c287bb43cf31",
+    "name": "Elevaciones Frontales",
+    "description": "Levanta el peso hacia el frente hasta la altura de los ojos.",
+    "muscleGroup": "Hombro",
+    "equipment": "Mancuernas",
+    "imageUrl": "/elevaciones_frontales.jpg"
+  },
+  {
+    "id": "033f6166-8607-4ebe-8cf9-a562b2ff8813",
+    "name": "Elevaciones Laterales",
+    "description": "Aislamiento clave para la anchura de hombros. Eleva los codos ligeramente por delante del torso.",
+    "muscleGroup": "Hombro",
+    "equipment": "Mancuernas",
+    "imageUrl": "/elevaciones_laterales_mancuerna.jpg"
+  },
+  {
+    "id": "43c635bc-164b-4f7f-a2d1-a2aada444641",
+    "name": "Elevaciones Laterales en Polea",
+    "description": "Mantiene tensión constante en todo el recorrido. Cruza el cable por detrás o delante.",
+    "muscleGroup": "Hombro",
+    "equipment": "Polea",
+    "imageUrl": "/elevaciones_laterales_polea.jpg"
+  },
+  {
+    "id": "5eab31a4-4ae7-4e79-a093-37b1cde4d70c",
+    "name": "Elevación de Gemelos Sentado",
+    "description": "Rodillas flexionadas. Enfatiza el músculo sóleo.",
+    "muscleGroup": "Pierna",
+    "equipment": "Máquina",
+    "imageUrl": "/elevacion_gemelo_sentado.jpg"
+  },
+  {
+    "id": "c90503fd-5dcd-455b-a20c-91f41a440e4f",
+    "name": "Elevación de Gemelos de Pie",
+    "description": "Rodillas estiradas. Enfatiza el gastrocnemio.",
+    "muscleGroup": "Pierna",
+    "equipment": "Máquina",
+    "imageUrl": "/elevacion_gemelo_de_pie.jpg"
+  },
+  {
+    "id": "5d173d01-f14b-4e54-8054-8ee19b680da3",
+    "name": "Elevación de Piernas Colgado",
+    "description": "Colgado en barra, sube las rodillas o pies rectos hacia el pecho.",
+    "muscleGroup": "Core",
+    "equipment": "Peso Corporal",
+    "imageUrl": "/elevacion_piernas_colgado.jpg"
+  },
+  {
+    "id": "4d1ef733-61db-44e8-9120-d40789a0869e",
+    "name": "Elevación de Piernas Tumbado",
+    "description": "Trabajo de abdomen inferior. Controla el descenso de las piernas.",
+    "muscleGroup": "Core",
+    "equipment": "Peso Corporal",
+    "imageUrl": "/elevacion_piernas_tumbado.jpg"
+  },
+  {
+    "id": "9aac8c24-0a53-41a9-9142-20dd1628adbe",
+    "name": "Elíptica",
+    "description": "Movimiento global de brazos y piernas sin impacto.",
+    "muscleGroup": "Cardio",
+    "equipment": "Máquina",
+    "imageUrl": "/eliptica.jpg"
+  },
+  {
+    "id": "f41fefc8-2fa4-4690-97c8-4c1591de80ef",
+    "name": "Encogimientos (Shrugs)",
+    "description": "Ejercicio para trapecios. Encoge los hombros hacia las orejas sin rotar.",
+    "muscleGroup": "Hombro",
+    "equipment": "Barra",
+    "imageUrl": "/encogimientos_barra.jpg"
+  },
+  {
+    "id": "de77484b-bfb7-4a36-8ee3-758b471fcfb9",
+    "name": "Encogimientos con Mancuernas",
+    "description": "Permite un agarre más natural a los lados del cuerpo.",
+    "muscleGroup": "Hombro",
+    "equipment": "Mancuernas",
+    "imageUrl": "/encogimiento_mancuerna.jpg"
+  },
+  {
+    "id": "b7057bfa-8d7a-4bfe-b883-1ccb8760270c",
+    "name": "Extensiones de Cuádriceps",
+    "description": "Aislamiento puro para cuádriceps. Aprieta fuerte un segundo arriba.",
+    "muscleGroup": "Pierna",
+    "equipment": "Máquina",
+    "imageUrl": "/extension_cuadriceps.jpg"
+  },
+  {
+    "id": "cfa20bb4-5411-48f9-b796-289c1eafa688",
+    "name": "Extensión Tras Nuca con Mancuerna",
+    "description": "Sostiene la mancuerna por detrás del cuello y estira los brazos.",
+    "muscleGroup": "Brazo",
+    "equipment": "Mancuernas",
+    "imageUrl": "/extension_tras_nuca_con_mancuerna.jpg"
+  },
+  {
+    "id": "43ef8e48-d331-4ab5-8fd5-114be2425203",
+    "name": "Extensión Tras Nuca en Polea",
+    "description": "Codos arriba. Enfatiza la cabeza larga del tríceps.",
+    "muscleGroup": "Brazo",
+    "equipment": "Polea",
+    "imageUrl": "/extension_tras_nuca_polea.jpg"
+  },
+  {
+    "id": "ea00b7d6-5ff0-4e4c-8cb2-72ea4b3ab787",
+    "name": "Extensión de Tríceps con Barra",
+    "description": "Empuje hacia abajo manteniendo codos fijos pegados al torso.",
+    "muscleGroup": "Brazo",
+    "equipment": "Polea",
+    "imageUrl": "/extension_triceps_barra.jpg"
+  },
+  {
+    "id": "422ca1b5-8082-417d-877a-d59580489c90",
+    "name": "Extensión de Tríceps con Cuerda",
+    "description": "Abre la cuerda al final del movimiento para mayor contracción lateral.",
+    "muscleGroup": "Brazo",
+    "equipment": "Polea",
+    "imageUrl": "/extension_triceps_cuerda.jpg"
+  },
+  {
+    "id": "e7241d45-eaa9-4c9a-8528-a966c2f4f9e5",
+    "name": "Face Pull",
+    "description": "Usa la cuerda en polea alta y tira hacia tu cara, separando las manos al final.",
+    "muscleGroup": "Hombro",
+    "equipment": "Polea",
+    "imageUrl": "/face_pull.jpg"
+  },
+  {
+    "id": "11d1e384-3b88-4f76-ae64-3beed384ef3a",
+    "name": "Flexiones (Push-ups)",
+    "description": "Ejercicio clásico de peso corporal. Mantén el core apretado y baja hasta rozar el suelo.",
+    "muscleGroup": "Pecho",
+    "equipment": "Peso Corporal",
+    "imageUrl": "/flexiones.jpg"
+  },
+  {
+    "id": "ba3bc9d0-ad98-4dc2-9870-96deef4a00b7",
+    "name": "Fondos de Tríceps",
+    "description": "Manos apoyadas detrás en un banco. Baja la cadera rectamente.",
+    "muscleGroup": "Brazo",
+    "equipment": "Peso Corporal",
+    "imageUrl": "/fondos_triceps.jpg"
+  },
+  {
+    "id": "4645f678-db09-4896-8cfd-a89ad4dc5a54",
+    "name": "Fondos en Paralelas",
+    "description": "Inclina el torso hacia adelante para enfatizar el trabajo en el pectoral.",
+    "muscleGroup": "Pecho",
+    "equipment": "Peso Corporal",
+    "imageUrl": "/fondos_paralela.jpg"
+  },
+  {
+    "id": "6ea0d16b-01ca-4a47-b00d-ccb5c669c8fe",
+    "name": "Hip Thrust (Empuje de Cadera)",
+    "description": "El mejor ejercicio para aislar el glúteo. Empuja con fuerza usando los talones.",
+    "muscleGroup": "Pierna",
+    "equipment": "Barra",
+    "imageUrl": "/hip_thrust.jpg"
+  },
+  {
+    "id": "2bf36b3f-ff1f-4d69-a090-188c6f61ac1c",
+    "name": "Hiperextensiones",
+    "description": "En banco romano. Enfocado en los erectores espinales (zona lumbar).",
+    "muscleGroup": "Espalda",
+    "equipment": "Peso Corporal",
+    "imageUrl": "/hiperextensiones.jpg"
+  },
+  {
+    "id": "913bc911-77f4-45b8-a420-7ce25a4fc53b",
+    "name": "Jalón al Pecho",
+    "description": "Tira de la barra hacia la clavícula retrayendo las escápulas. No te balancees excesivamente.",
+    "muscleGroup": "Espalda",
+    "equipment": "Polea",
+    "imageUrl": "/jalon_al_pecho.jpg"
+  },
+  {
+    "id": "fcc06580-42c6-4ce5-86a5-7dfbe7843c81",
+    "name": "Jalón con Triángulo",
+    "description": "Agarre estrecho y neutro. Mayor enfoque en el dorsal ancho inferior.",
+    "muscleGroup": "Espalda",
+    "equipment": "Polea",
+    "imageUrl": "/jalon_triangulo.jpg"
+  },
+  {
+    "id": "26b027aa-ab1a-483f-b533-62713ff0e85e",
+    "name": "Máquina de Escaleras",
+    "description": "Quemagrasas muy exigente para glúteos y piernas.",
+    "muscleGroup": "Cardio",
+    "equipment": "Máquina",
+    "imageUrl": "/maquina_escaleras.jpg"
+  },
+  {
+    "id": "fe945b8d-eb02-4936-98e9-faa33e76a79b",
+    "name": "Paseo del Granjero",
+    "description": "Agarra dos pesas pesadas y camina. Fortalece agarre, core y trapecios.",
+    "muscleGroup": "Core",
+    "equipment": "Mancuernas",
+    "imageUrl": "/paseo_granjero.jpg"
+  },
+  {
+    "id": "ce955e64-f4f8-4198-90b3-c2c5800070dd",
+    "name": "Patada de Tríceps",
+    "description": "Torso paralelo al suelo. Extiende el codo hacia atrás.",
+    "muscleGroup": "Brazo",
+    "equipment": "Mancuernas",
+    "imageUrl": "/patada_triceps.jpg"
+  },
+  {
+    "id": "ec13c03a-307e-4d30-80b6-029582bd3f2c",
+    "name": "Peck Deck (Contracción Pectoral)",
+    "description": "Máquina guiada para aislar el pectoral sin requerir estabilización.",
+    "muscleGroup": "Pecho",
+    "equipment": "Máquina",
+    "imageUrl": "/peck_deck.jpg"
+  },
+  {
+    "id": "476a7c1b-d99d-46ae-bb81-5e5d85bd9f56",
+    "name": "Peso Muerto Clásico",
+    "description": "Levanta el peso desde el suelo con espalda recta. Trabaja cadena posterior completa.",
+    "muscleGroup": "Espalda",
+    "equipment": "Barra",
+    "imageUrl": "/peso_muerto.jpg"
+  },
+  {
+    "id": "da820c68-093a-4db0-9972-c6253fadd7c1",
+    "name": "Peso Muerto Piernas Rígidas",
+    "description": "Mayor tensión isométrica. Las rodillas no se flexionan durante la bajada.",
+    "muscleGroup": "Pierna",
+    "equipment": "Barra",
+    "imageUrl": "/peso_muerto_piernas_rigidas.jpg"
+  },
+  {
+    "id": "cab64bb0-4509-4e3a-88f1-f7b77fd63f07",
+    "name": "Peso Muerto Rumano",
+    "description": "Piernas semiflexionadas. Echa la cadera hacia atrás hasta sentir el estiramiento en isquiosurales.",
+    "muscleGroup": "Pierna",
+    "equipment": "Barra",
+    "imageUrl": "/peso_muerto_rumano.jpg"
+  },
+  {
+    "id": "7a44b156-5db1-42f5-b767-632ef948f4f4",
+    "name": "Peso Muerto Sumo",
+    "description": "Postura abierta de piernas. Reduce la tensión lumbar comparado con el clásico.",
+    "muscleGroup": "Espalda",
+    "equipment": "Barra",
+    "imageUrl": "/peso_muerto_sumo.jpg"
+  },
+  {
+    "id": "74b4574d-d340-4343-9081-2fe63d9c4113",
+    "name": "Plancha Abdominal (Plank)",
+    "description": "Isométrico apoyado en antebrazos. Mantén el cuerpo en línea recta.",
+    "muscleGroup": "Core",
+    "equipment": "Peso Corporal",
+    "imageUrl": "/plancha.jpg"
+  },
+  {
+    "id": "c72a974d-692b-48cf-b031-5e888ebc3025",
+    "name": "Prensa de Piernas",
+    "description": "Ajusta los pies bajos y juntos para cuádriceps, o altos y separados para glúteos e isquios.",
+    "muscleGroup": "Pierna",
+    "equipment": "Máquina",
+    "imageUrl": "/prensa.jpg"
+  },
+  {
+    "id": "97fe9ff6-2047-4663-b7d7-37d32b8706b3",
+    "name": "Press Arnold",
+    "description": "Variante que incluye rotación de muñeca. Involucra las tres cabezas del deltoides.",
+    "muscleGroup": "Hombro",
+    "equipment": "Mancuernas",
+    "imageUrl": "/press_arnold.jpg"
+  },
+  {
+    "id": "d417ae58-4820-459c-ac75-95e061734c91",
+    "name": "Press Francés",
+    "description": "Tumbado, lleva la barra hacia la frente o detrás de la cabeza flexionando los codos.",
+    "muscleGroup": "Brazo",
+    "equipment": "Barra",
+    "imageUrl": "/press_frances_barra.jpg"
+  },
+  {
+    "id": "1d4db433-4c82-421e-913a-c0d4ff0c457c",
+    "name": "Press Inclinado con Mancuernas",
+    "description": "Ideal para hipertrofia del pecho superior. Controla la bajada para sentir el estiramiento.",
+    "muscleGroup": "Pecho",
+    "equipment": "Mancuernas",
+    "imageUrl": "/press_inclinado_mancuerna.jpg"
+  },
+  {
+    "id": "7e711e35-f1ae-4279-ab7f-8d8a9e75ee26",
+    "name": "Press Militar de Pie",
+    "description": "Empuje vertical por excelencia. Aprieta glúteos y core para no arquear la espalda.",
+    "muscleGroup": "Hombro",
+    "equipment": "Barra",
+    "imageUrl": "/press_militar.jpg"
+  },
+  {
+    "id": "28b7c8a8-a544-4fcc-835f-fc92b1b08bfe",
+    "name": "Press banca",
+    "description": "",
+    "muscleGroup": "Pecho",
+    "equipment": null,
+    "imageUrl": "/press_banca.jpg"
+  },
+  {
+    "id": "3765725f-a9e2-46f7-a512-fc3fddda15d7",
+    "name": "Press con Mancuernas",
+    "description": "Permite mayor rango de recorrido que la barra. Junta las mancuernas arriba sin que lleguen a chocar.",
+    "muscleGroup": "Pecho",
+    "equipment": "Mancuernas",
+    "imageUrl": "/press_mancuerna.jpg"
+  },
+  {
+    "id": "4d63a04b-9fa0-408b-92a5-7f0de23ef00d",
+    "name": "Press de Banca",
+    "description": "Ejercicio básico para el pectoral. Acuéstate en el banco, agarra la barra a una anchura ligeramente superior a los hombros y bájala hasta rozar el pecho medio.",
+    "muscleGroup": "Pecho",
+    "equipment": "Barra",
+    "imageUrl": "/press_banca.jpg"
+  },
+  {
+    "id": "9546ac8b-2a95-4420-b7dc-157700fdad49",
+    "name": "Press de Banca Agarre Cerrado",
+    "description": "Manos a la anchura de los hombros. Empuja priorizando la fuerza de los tríceps.",
+    "muscleGroup": "Brazo",
+    "equipment": "Barra",
+    "imageUrl": "/press_banca.jpg"
+  },
+  {
+    "id": "4ae2783a-7990-4fa0-b778-ce20acc3142e",
+    "name": "Press de Banca Declinado",
+    "description": "Enfocado en la porción inferior del pectoral. Banco declinado. Baja la barra hasta la parte baja del esternón.",
+    "muscleGroup": "Pecho",
+    "equipment": "Barra",
+    "imageUrl": "/press_banca.jpg"
+  },
+  {
+    "id": "6e58f1fe-eb72-4cf2-99b3-132da3854f56",
+    "name": "Press de Banca Inclinado",
+    "description": "Enfocado en el haz clavicular (pecho superior). Banco a 30-45 grados. Baja la barra hasta la parte alta del pecho.",
+    "muscleGroup": "Pecho",
+    "equipment": "Barra",
+    "imageUrl": "/press_banca.jpg"
+  },
+  {
+    "id": "476456c7-b28e-4ae7-9e11-b5a8fe7d92f7",
+    "name": "Press de Hombro Sentado",
+    "description": "Sentado con banco a 90 grados. Empuja las mancuernas por encima de la cabeza.",
+    "muscleGroup": "Hombro",
+    "equipment": "Mancuernas",
+    "imageUrl": "/press_hombro_sentado.jpg"
+  },
+  {
+    "id": "3a6254f8-a8e9-4a1e-b8ef-5375bf3c99a6",
+    "name": "Press de Pecho en Máquina",
+    "description": "Versión guiada del press. Ideal para llegar al fallo muscular con seguridad.",
+    "muscleGroup": "Pecho",
+    "equipment": "Máquina",
+    "imageUrl": "/press_pecho_maquina.jpg"
+  },
+  {
+    "id": "ee48667b-a07a-4786-a227-ae439b1fe8cb",
+    "name": "Pullover con Mancuerna",
+    "description": "Trabaja el pecho y la espalda (dorsal). Cruza el banco perpendicularmente.",
+    "muscleGroup": "Pecho",
+    "equipment": "Mancuernas",
+    "imageUrl": "/pullover_mancuerna.jpg"
+  },
+  {
+    "id": "9bf5db49-398b-4d3d-b4d4-a712d76207d9",
+    "name": "Pullover en Polea Alta",
+    "description": "Brazos semiflexionados. Lleva la barra recta desde arriba hasta tus muslos aislando el dorsal.",
+    "muscleGroup": "Espalda",
+    "equipment": "Polea",
+    "imageUrl": "/pullover_polea.jpg"
+  },
+  {
+    "id": "55ba7ca7-27df-4e2b-bb13-27c366537b0f",
+    "name": "Pájaros (Elevaciones Posteriores)",
+    "description": "Torso inclinado hacia adelante. Abre los brazos para aislar el deltoides posterior.",
+    "muscleGroup": "Hombro",
+    "equipment": "Mancuernas",
+    "imageUrl": "/pajaros_en_maquina.jpg"
+  },
+  {
+    "id": "1d972cd4-cdd6-4453-afbd-065b8b8ca6ba",
+    "name": "Pájaros en Máquina (Peck Deck Inverso)",
+    "description": "Siéntate al revés en la máquina de pecho y abre hacia atrás.",
+    "muscleGroup": "Hombro",
+    "equipment": "Máquina",
+    "imageUrl": "/pajaros_en_maquina.jpg"
+  },
+  {
+    "id": "c1da1539-b8a9-4991-b961-b57a99cfd3d4",
+    "name": "Remo Ergómetro",
+    "description": "Cardio exigente de cuerpo completo, empuje de piernas y tirón de espalda.",
+    "muscleGroup": "Cardio",
+    "equipment": "Máquina",
+    "imageUrl": "/remo_ergometro.jpg"
+  },
+  {
+    "id": "cb23b5bb-3fe9-4576-b0ec-ea4cb5349d4c",
+    "name": "Remo Gironda (Polea Baja)",
+    "description": "Sentado en el suelo, tira del triángulo hacia el estómago manteniendo la espalda neutra.",
+    "muscleGroup": "Espalda",
+    "equipment": "Polea",
+    "imageUrl": "/remo_gironda.jpg"
+  },
+  {
+    "id": "2e820299-8055-447c-9175-a1415b0e73fc",
+    "name": "Remo Pendlay",
+    "description": "Torso paralelo al suelo. La barra descansa en el suelo en cada repetición. Pura fuerza.",
+    "muscleGroup": "Espalda",
+    "equipment": "Barra",
+    "imageUrl": "/remo_pendlay.jpg"
+  },
+  {
+    "id": "c8b2c07d-b9b2-42d7-a851-b4a23f3f3c47",
+    "name": "Remo al Cuello (Upright Row)",
+    "description": "Agarre a la anchura de los hombros, tira de la barra hacia la barbilla levantando los codos.",
+    "muscleGroup": "Hombro",
+    "equipment": "Barra",
+    "imageUrl": "/remo_al_cuello.jpg"
+  },
+  {
+    "id": "9fd4b830-9b77-49b6-9c09-bbc6f49cb746",
+    "name": "Remo con Barra",
+    "description": "Inclina el torso a unos 45 grados. Lleva la barra hacia tu ombligo.",
+    "muscleGroup": "Espalda",
+    "equipment": "Barra",
+    "imageUrl": "/remo_barra.jpg"
+  },
+  {
+    "id": "a1fe424a-a373-433b-ab80-8d930117c5a6",
+    "name": "Remo con Mancuerna a 1 Mano",
+    "description": "Apoya una rodilla y mano en un banco. Tira de la mancuerna llevando el codo hacia la cadera.",
+    "muscleGroup": "Espalda",
+    "equipment": "Mancuernas",
+    "imageUrl": "/remo_mancuerna_1_mano.jpg"
+  },
+  {
+    "id": "1c30fda3-b02f-41b4-95a5-536edc73da41",
+    "name": "Remo en Máquina",
+    "description": "Remo soportado en el pecho, aísla la espalda al eliminar el trabajo del lumbar.",
+    "muscleGroup": "Espalda",
+    "equipment": "Máquina",
+    "imageUrl": "/remo_maquina.jpg"
+  },
+  {
+    "id": "4f6cd22d-6e33-4d1f-90df-b804e0c81426",
+    "name": "Remo en Punta (T-Bar)",
+    "description": "Usa una barra anclada en una esquina o máquina específica. Tira hacia el estómago.",
+    "muscleGroup": "Espalda",
+    "equipment": "Barra",
+    "imageUrl": "/remo_en_punta.jpg"
+  },
+  {
+    "id": "e6730ceb-2413-449c-b13a-9850677cd07f",
+    "name": "Rueda Abdominal",
+    "description": "Gran estiramiento del core. Rueda hacia adelante desde las rodillas y vuelve.",
+    "muscleGroup": "Core",
+    "equipment": "Peso Corporal",
+    "imageUrl": "/rueda_abdominal.jpg"
+  },
+  {
+    "id": "549d45fd-12a2-48c7-92fe-2efe1e322712",
+    "name": "Russian Twists",
+    "description": "Giro de torso sentado para oblicuos.",
+    "muscleGroup": "Core",
+    "equipment": "Peso Corporal",
+    "imageUrl": "/russian_twist.jpg"
+  },
+  {
+    "id": "5d662996-42d8-42da-9292-e8337cc533cb",
+    "name": "Salto a la Comba",
+    "description": "Trabajo de resistencia, agilidad y coordinación.",
+    "muscleGroup": "Cardio",
+    "equipment": "Peso Corporal",
+    "imageUrl": "/salto_a_comba.jpg"
+  },
+  {
+    "id": "4b7af089-7c0b-411a-ac8b-f6313053060a",
+    "name": "Sentadilla Búlgara",
+    "description": "Unilateral. Apoya el pie trasero en un banco y baja el peso de forma controlada.",
+    "muscleGroup": "Pierna",
+    "equipment": "Mancuernas",
+    "imageUrl": "/sentadilla_bulgara.jpg"
+  },
+  {
+    "id": "8a8ca034-62d7-4d34-bfb6-e400ef923778",
+    "name": "Sentadilla Frontal",
+    "description": "Barra apoyada en clavículas. Exige más verticalidad y enfoca más los cuádriceps.",
+    "muscleGroup": "Pierna",
+    "equipment": "Barra",
+    "imageUrl": "/sentadilla_frontal.jpg"
+  },
+  {
+    "id": "47cf0b7d-c1e3-4cce-9992-ffdeeadd5589",
+    "name": "Sentadilla Goblet",
+    "description": "Sostén una mancuerna o kettlebell pegada al pecho y haz sentadillas.",
+    "muscleGroup": "Pierna",
+    "equipment": "Mancuernas",
+    "imageUrl": "/sentadilla_goblet.jpg"
+  },
+  {
+    "id": "2b39539f-77c5-4297-8fb6-d2bba1404a6d",
+    "name": "Sentadilla Hack",
+    "description": "Sentadilla guiada. Ideal para enfatizar cuádriceps al permitir bajar muy profundo con seguridad.",
+    "muscleGroup": "Pierna",
+    "equipment": "Máquina",
+    "imageUrl": "/sentadilla_hack.jpg"
+  },
+  {
+    "id": "5904927e-5142-4e98-8090-efe1414ca665",
+    "name": "Sentadilla Libre",
+    "description": "El rey de los ejercicios. Barra en la espalda alta, desciende hasta romper el paralelo.",
+    "muscleGroup": "Pierna",
+    "equipment": "Barra",
+    "imageUrl": "/sentadilla_barra.jpg"
+  },
+  {
+    "id": "2cad83db-6daa-476f-b9b2-8bb3039a9c6f",
+    "name": "Sentadilla en Máquina Smith",
+    "description": "Sentadilla guiada con barra fija. Ajusta los pies ligeramente hacia adelante.",
+    "muscleGroup": "Pierna",
+    "equipment": "Máquina",
+    "imageUrl": "/sentadilla_smith.jpg"
+  },
+  {
+    "id": "df599bd6-80a7-44a8-b5a7-6b58354ced11",
+    "name": "Woodchopper",
+    "description": "Movimiento diagonal de leñador para trabajar oblicuos rotando el torso.",
+    "muscleGroup": "Core",
+    "equipment": "Polea",
+    "imageUrl": "/woodchopper.jpg"
+  },
+  {
+    "id": "bc20e549-cfe6-4771-8b12-72a46ce43050",
+    "name": "Zancadas Caminando",
+    "description": "Avanza en cada repetición. Muy demandante cardiovascularmente.",
+    "muscleGroup": "Pierna",
+    "equipment": "Mancuernas",
+    "imageUrl": "/zancadas_caminando.jpg"
+  },
+  {
+    "id": "0e08628e-5687-488b-a0bd-811799b70847",
+    "name": "Zancadas Estáticas (Lunges)",
+    "description": "Sube y baja en el sitio manteniendo el torso recto.",
+    "muscleGroup": "Pierna",
+    "equipment": "Mancuernas",
+    "imageUrl": "/zancadas_estaticas.jpg"
+  }
+]
