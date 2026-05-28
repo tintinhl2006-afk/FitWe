@@ -17,11 +17,13 @@ import {
   Menu,
   X,
   Tag,
+  QrCode,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const gymNavItems = [
   { title: "Dashboard", href: "/admin-gym", icon: LayoutDashboard },
+  { title: "Control de Acceso", href: "/admin-gym/acceso", icon: QrCode },
   { title: "Clientes", href: "/admin-gym/clientes", icon: Users },
   { title: "Tarifas", href: "/admin-gym/tarifas", icon: Tag },
   { title: "Clases", href: "/admin-gym/clases", icon: Calendar },

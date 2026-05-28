@@ -3,11 +3,12 @@
 import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useCustomAlert } from "@/components/providers/CustomAlertProvider";
-import { User, Activity, Calendar, Clock, Dumbbell, Loader2, Camera, X, Eye } from "lucide-react";
+import { User, Activity, Calendar, Clock, Dumbbell, Loader2, Camera, X, Eye, QrCode, RefreshCw } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { cn } from "@/lib/utils";
 import { usePreferences } from "@/context/PreferencesContext";
+import QRCode from "qrcode";
 
 interface SessionData {
   id: string;
@@ -52,10 +53,74 @@ export default function ProfilePage() {
   const [expandedWorkoutId, setExpandedWorkoutId] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Acceso QR States
+  const [isQrOpen, setIsQrOpen] = useState(false);
+  const [qrToken, setQrToken] = useState<string | null>(null);
+  const [isQrLoading, setIsQrLoading] = useState(false);
+  const [qrTimeLeft, setQrTimeLeft] = useState(300);
 
   useEffect(() => {
     fetchProfileData(selectedDate);
   }, [selectedDate]);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (isQrOpen && qrTimeLeft > 0) {
+      timer = setInterval(() => {
+        setQrTimeLeft((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [isQrOpen, qrTimeLeft]);
+
+  useEffect(() => {
+    if (isQrOpen) {
+      fetchQrToken();
+    } else {
+      setQrToken(null);
+    }
+  }, [isQrOpen]);
+
+  useEffect(() => {
+    if (qrToken && canvasRef.current) {
+      QRCode.toCanvas(
+        canvasRef.current,
+        qrToken,
+        {
+          width: 240,
+          margin: 1.5,
+          color: {
+            dark: "#0f172a", // slate-900
+            light: "#ffffff",
+          },
+        },
+        (error) => {
+          if (error) console.error("Error generating QR code:", error);
+        }
+      );
+    }
+  }, [qrToken]);
+
+  const fetchQrToken = async () => {
+    setIsQrLoading(true);
+    try {
+      const res = await fetch("/api/user/access-token");
+      if (res.ok) {
+        const json = await res.json();
+        setQrToken(json.token);
+        setQrTimeLeft(300);
+      } else {
+        showAlert("Error al generar el token de acceso.");
+      }
+    } catch (e) {
+      console.error(e);
+      showAlert("Error de conexión al servidor.");
+    } finally {
+      setIsQrLoading(false);
+    }
+  };
 
   const fetchProfileData = async (dateFilter?: string) => {
     try {
@@ -164,6 +229,14 @@ export default function ProfilePage() {
             </div>
             <h1 className="mt-4 text-3xl font-bold text-slate-900 dark:text-white">{data.user.name}</h1>
             <p className="text-slate-500 dark:text-slate-400 font-medium">{data.user.email}</p>
+            
+            <button
+              onClick={() => setIsQrOpen(true)}
+              className="mt-5 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-primary px-6 py-3 text-xs font-bold uppercase tracking-wider text-white shadow-md shadow-cyan-500/15 hover:shadow-lg hover:shadow-cyan-500/25 hover:-translate-y-0.5 active:scale-98 transition-all cursor-pointer"
+            >
+              <QrCode className="h-4 w-4" />
+              Mi Código QR de Acceso
+            </button>
           </div>
 
           {/* Stats Grid */}
@@ -389,6 +462,66 @@ export default function ProfilePage() {
                 {selectedWorkout.totalVolume} {weightUnit}
               </span>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Access QR Modal */}
+      {isQrOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4 animate-in fade-in duration-300">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[32px] w-full max-w-sm flex flex-col overflow-hidden shadow-2xl animate-in slide-in-from-bottom-8 duration-300 p-6 text-center">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-black text-slate-900 dark:text-white text-xl flex items-center gap-2">
+                <QrCode className="h-5 w-5 text-cyan-500" /> Acceso QR
+              </h3>
+              <button 
+                onClick={() => setIsQrOpen(false)}
+                className="h-8 w-8 flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-500 rounded-full transition-all"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-6">
+              Muestra este código QR en el lector del gimnasio para autorizar tu acceso.
+            </p>
+
+            <div className="flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 rounded-3xl p-5 border border-slate-100 dark:border-slate-900/60 relative">
+              {isQrLoading ? (
+                <div className="h-[240px] w-[240px] flex items-center justify-center">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              ) : qrTimeLeft <= 0 ? (
+                <div className="h-[240px] w-[240px] flex flex-col items-center justify-center text-center px-4">
+                  <p className="text-sm font-bold text-red-500 mb-2">Código Expirado</p>
+                  <p className="text-xs text-slate-400 mb-4">Por seguridad, el código QR expira a los 5 minutos.</p>
+                  <button
+                    onClick={fetchQrToken}
+                    className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-bold uppercase tracking-wider text-white shadow-md hover:opacity-90 transition-all cursor-pointer"
+                  >
+                    <RefreshCw className="h-3.5 w-3.5" /> Regenerar
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <canvas ref={canvasRef} className="rounded-2xl max-w-full bg-white p-2" />
+                  <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                    <Clock className="h-3.5 w-3.5 text-cyan-500" />
+                    <span>Expira en {Math.floor(qrTimeLeft / 60)}:{(qrTimeLeft % 60).toString().padStart(2, "0")}</span>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {qrTimeLeft > 0 && !isQrLoading && (
+              <button
+                onClick={fetchQrToken}
+                className="mt-6 inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 py-3.5 text-xs font-bold uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-800 transition-all cursor-pointer"
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+                Actualizar Código QR
+              </button>
+            )}
           </div>
         </div>
       )}
