@@ -1,14 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { Activity, Apple, Building2, Dumbbell, Loader2, ArrowRight, Flame, CalendarDays, Clock, TrendingUp, Zap, Trophy, ChevronRight, Calendar } from "lucide-react";
+import { Activity, Apple, Building2, Dumbbell, Loader2, ArrowRight, Flame, CalendarDays, Clock, TrendingUp, Zap, Trophy, ChevronRight, Calendar, QrCode, RefreshCw, X } from "lucide-react";
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { cn } from "@/lib/utils";
 import { SubscriptionBanner } from "@/components/shared/SubscriptionBanner";
 import { usePreferences } from "@/context/PreferencesContext";
+import QRCode from "qrcode";
 
 interface WeeklyChartEntry { day: string; minutos: number; count: number; }
 interface RecentSession { id: string; routineName: string; date: string; durationMinutes: number; volume: number; setsCount: number; }
@@ -33,6 +34,67 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [caloriesToday, setCaloriesToday] = useState(0);
   const [data, setData] = useState<DashboardData | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Acceso QR States
+  const [isQrOpen, setIsQrOpen] = useState(false);
+  const [qrToken, setQrToken] = useState<string | null>(null);
+  const [isQrLoading, setIsQrLoading] = useState(false);
+  const [qrTimeLeft, setQrTimeLeft] = useState(300);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (isQrOpen && qrTimeLeft > 0) {
+      timer = setInterval(() => {
+        setQrTimeLeft((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [isQrOpen, qrTimeLeft]);
+
+  useEffect(() => {
+    if (isQrOpen) {
+      fetchQrToken();
+    } else {
+      setQrToken(null);
+    }
+  }, [isQrOpen]);
+
+  useEffect(() => {
+    if (qrToken && canvasRef.current) {
+      QRCode.toCanvas(
+        canvasRef.current,
+        qrToken,
+        {
+          width: 240,
+          margin: 1.5,
+          color: {
+            dark: "#0f172a", // slate-900
+            light: "#ffffff",
+          },
+        },
+        (error) => {
+          if (error) console.error("Error generating QR code:", error);
+        }
+      );
+    }
+  }, [qrToken]);
+
+  const fetchQrToken = async () => {
+    setIsQrLoading(true);
+    try {
+      const res = await fetch("/api/user/access-token");
+      if (res.ok) {
+        const json = await res.json();
+        setQrToken(json.token);
+        setQrTimeLeft(300);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsQrLoading(false);
+    }
+  };
 
   const GOAL_CALORIES = 2500;
 
@@ -270,12 +332,30 @@ export default function DashboardPage() {
               {/* Quick Actions */}
               <div className="lg:col-span-2 flex flex-col gap-4">
                 <h2 className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Accesos Rápidos</h2>
-                <Link href="/nutricion" className="group flex items-center justify-between rounded-2xl bg-gradient-to-r from-primary to-cyan-600 p-5 text-white shadow-lg shadow-cyan-500/10 hover:shadow-cyan-500/25 transition-all active:scale-[0.98]">
+                
+                {/* QR Access Pass Primary Button */}
+                <button
+                  onClick={() => setIsQrOpen(true)}
+                  className="group flex items-center justify-between rounded-2xl bg-gradient-to-r from-cyan-500 to-primary p-5 text-white shadow-lg shadow-cyan-500/10 hover:shadow-cyan-500/25 transition-all active:scale-[0.98] w-full text-left cursor-pointer"
+                >
                   <div className="flex items-center gap-3">
-                    <div className="rounded-xl bg-white/15 p-2.5"><Apple className="h-5 w-5" /></div>
-                    <div><p className="font-bold text-sm">Registrar Comida</p><p className="text-[11px] text-white/60 font-medium">Diario nutricional</p></div>
+                    <div className="rounded-xl bg-white/15 p-2.5">
+                      <QrCode className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-sm">Pase de Acceso QR</p>
+                      <p className="text-[11px] text-white/60 font-medium">Entrar al gimnasio</p>
+                    </div>
                   </div>
                   <ArrowRight className="h-5 w-5 text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                </button>
+
+                <Link href="/nutricion" className="group flex items-center justify-between rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm hover:border-primary dark:hover:border-cyan-800 hover:shadow-soft transition-all active:scale-[0.98]">
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-xl bg-orange-50 dark:bg-orange-950/30 p-2.5 text-orange-500"><Apple className="h-5 w-5" /></div>
+                    <div><p className="font-bold text-sm text-slate-900 dark:text-white">Registrar Comida</p><p className="text-[11px] text-slate-400 font-medium">Diario nutricional</p></div>
+                  </div>
+                  <ArrowRight className="h-5 w-5 text-slate-300 dark:text-slate-600 group-hover:text-primary group-hover:translate-x-1 transition-all" />
                 </Link>
                 <Link href="/gimnasio" className="group flex items-center justify-between rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm hover:border-primary dark:hover:border-cyan-800 hover:shadow-soft transition-all active:scale-[0.98]">
                   <div className="flex items-center gap-3">
@@ -303,6 +383,66 @@ export default function DashboardPage() {
           </>
         )}
       </div>
+
+      {/* Access QR Modal */}
+      {isQrOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4 animate-in fade-in duration-300">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[32px] w-full max-w-sm flex flex-col overflow-hidden shadow-2xl animate-in slide-in-from-bottom-8 duration-300 p-6 text-center">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-black text-slate-900 dark:text-white text-xl flex items-center gap-2">
+                <QrCode className="h-5 w-5 text-cyan-500" /> Acceso QR
+              </h3>
+              <button 
+                onClick={() => setIsQrOpen(false)}
+                className="h-8 w-8 flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-500 rounded-full transition-all"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-6">
+              Muestra este código QR en el lector del gimnasio para autorizar tu acceso.
+            </p>
+
+            <div className="flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 rounded-3xl p-5 border border-slate-100 dark:border-slate-900/60 relative">
+              {isQrLoading ? (
+                <div className="h-[240px] w-[240px] flex items-center justify-center">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              ) : qrTimeLeft <= 0 ? (
+                <div className="h-[240px] w-[240px] flex flex-col items-center justify-center text-center px-4">
+                  <p className="text-sm font-bold text-red-500 mb-2">Código Expirado</p>
+                  <p className="text-xs text-slate-400 mb-4">Por seguridad, el código QR expira a los 5 minutos.</p>
+                  <button
+                    onClick={fetchQrToken}
+                    className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-bold uppercase tracking-wider text-white shadow-md hover:opacity-90 transition-all cursor-pointer"
+                  >
+                    <RefreshCw className="h-3.5 w-3.5" /> Regenerar
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <canvas ref={canvasRef} className="rounded-2xl max-w-full bg-white p-2" />
+                  <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                    <Clock className="h-3.5 w-3.5 text-cyan-500" />
+                    <span>Expira en {Math.floor(qrTimeLeft / 60)}:{(qrTimeLeft % 60).toString().padStart(2, "0")}</span>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {qrTimeLeft > 0 && !isQrLoading && (
+              <button
+                onClick={fetchQrToken}
+                className="mt-6 inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 py-3.5 text-xs font-bold uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-800 transition-all cursor-pointer"
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+                Actualizar Código QR
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }
