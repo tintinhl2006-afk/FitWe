@@ -39,7 +39,9 @@ interface ScanLogItem {
 }
 
 export default function AccessControlPage() {
-  const [manualInput, setManualInput] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<ValidationResult | null>(null);
   const [history, setHistory] = useState<ScanLogItem[]>([]);
@@ -150,11 +152,32 @@ export default function AccessControlPage() {
     }
   };
 
-  // Configurar e inicializar scanner HTML5 QR
+  // Cargar sugerencias de clientes por búsqueda de nombre
+  useEffect(() => {
+    if (searchQuery.trim().length < 2) {
+      setSuggestions([]);
+      return;
+    }
+
+    const delayDebounce = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/admin-gym/access/search?q=${encodeURIComponent(searchQuery)}`);
+        if (res.ok) {
+          setSuggestions(await res.json());
+        }
+      } catch (e) {
+        console.error("Error al buscar sugerencias de clientes:", e);
+      }
+    }, 250);
+
+    return () => clearTimeout(delayDebounce);
+  }, [searchQuery]);
+
+  // Configurar e inicializar scanner HTML5 QR con solicitud de permiso automático
   useEffect(() => {
     if (!cameraActive) {
       if (scannerRef.current) {
-        scannerRef.current.clear().catch((e: any) => console.error("Error al limpiar:", e));
+        scannerRef.current.stop().catch((e: any) => console.error("Error al limpiar:", e));
         scannerRef.current = null;
       }
       return;
@@ -166,31 +189,30 @@ export default function AccessControlPage() {
     import("html5-qrcode").then((module) => {
       if (!isScanning) return;
 
-      const Html5QrcodeScanner = module.Html5QrcodeScanner;
-      const scanner = new Html5QrcodeScanner(
-        "qr-reader-container",
+      const Html5Qrcode = module.Html5Qrcode;
+      const scanner = new Html5Qrcode("qr-reader-container");
+      
+      scanner.start(
+        { facingMode: "environment" },
         {
-          fps: 8,
+          fps: 10,
           qrbox: (width, height) => {
             const size = Math.min(width, height) * 0.7;
             return { width: size, height: size };
           },
-          aspectRatio: 1.0,
-          showTorchButtonIfSupported: true,
         },
-        /* verbose= */ false
-      );
-
-      scanner.render(
         (decodedText) => {
           // Evitar lecturas duplicadas mientras se procesa
           if (isLoading) return;
           processCheckIn({ token: decodedText });
         },
-        (error) => {
-          // Silenciar errores ordinarios de escaneo (no QR detectado en el frame)
+        (errorMessage) => {
+          // Silenciar errores ordinarios de escaneo
         }
-      );
+      ).catch((err) => {
+        console.error("No se pudo iniciar la cámara en vivo:", err);
+        setError("No se pudo iniciar la cámara. Por favor, asegúrese de otorgar permisos de cámara en su navegador.");
+      });
 
       scannerRef.current = scanner;
     }).catch((err) => {
@@ -201,18 +223,11 @@ export default function AccessControlPage() {
     return () => {
       isScanning = false;
       if (scannerRef.current) {
-        scannerRef.current.clear().catch((e: any) => console.error("Error en cleanup:", e));
+        scannerRef.current.stop().catch((e: any) => console.error("Error en cleanup:", e));
         scannerRef.current = null;
       }
     };
   }, [cameraActive]);
-
-  const handleManualSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!manualInput.trim() || isLoading) return;
-    processCheckIn({ manualInput: manualInput.trim() });
-    setManualInput("");
-  };
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto animate-in fade-in duration-300">
@@ -256,7 +271,7 @@ export default function AccessControlPage() {
             {cameraActive ? (
               <div 
                 id="qr-reader-container" 
-                className="overflow-hidden rounded-2xl bg-slate-950 border border-slate-100 dark:border-slate-900 shadow-inner"
+                className="overflow-hidden rounded-2xl bg-slate-950 border border-slate-100 dark:border-slate-900 shadow-inner aspect-square w-full"
               />
             ) : (
               <div className="aspect-square flex flex-col items-center justify-center bg-slate-950 rounded-2xl border border-slate-900 text-slate-600 p-8 text-center">
@@ -268,30 +283,64 @@ export default function AccessControlPage() {
           </div>
 
           {/* Búsqueda Manual */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm relative">
             <h2 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
-              <Search className="h-4 w-4 text-cyan-500" /> Búsqueda Fallback Manual
+              <Search className="h-4 w-4 text-cyan-500" /> Búsqueda Manual
             </h2>
 
-            <form onSubmit={handleManualSubmit} className="flex gap-2">
-              <div className="relative flex-1">
+            <div className="relative">
+              <div className="relative">
                 <input
                   type="text"
-                  placeholder="Email o UUID de cliente..."
-                  value={manualInput}
-                  onChange={(e) => setManualInput(e.target.value)}
+                  placeholder="Escriba el nombre completo del cliente..."
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setShowSuggestions(true);
+                  }}
+                  onFocus={() => setShowSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                   className="w-full rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 pl-4 pr-10 py-2.5 text-xs text-slate-900 dark:text-white outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                 />
-                <User className="absolute right-3.5 top-3 h-4 w-4 text-slate-400" />
+                <User className="absolute right-3.5 top-3.5 h-4 w-4 text-slate-400" />
               </div>
-              <button 
-                type="submit"
-                disabled={isLoading || !manualInput.trim()}
-                className="inline-flex items-center justify-center bg-slate-900 dark:bg-primary text-white text-xs font-bold uppercase tracking-wider px-5 py-2.5 rounded-3xl hover:opacity-90 disabled:opacity-50 transition-all cursor-pointer shadow-sm active:scale-95"
-              >
-                Buscar
-              </button>
-            </form>
+
+              {/* Autocomplete Dropdown List */}
+              {showSuggestions && searchQuery.trim().length >= 2 && (
+                <div className="absolute left-0 right-0 mt-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl z-30 max-h-60 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 animate-in fade-in duration-100">
+                  {suggestions.length === 0 ? (
+                    <div className="px-4 py-3 text-xs text-slate-400 dark:text-slate-500 italic">
+                      No se encontraron resultados
+                    </div>
+                  ) : (
+                    suggestions.map((client) => (
+                      <button
+                        key={client.id}
+                        type="button"
+                        onClick={() => {
+                          processCheckIn({ manualInput: client.id });
+                          setSearchQuery("");
+                          setShowSuggestions(false);
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
+                      >
+                        <div className="h-8 w-8 rounded-full bg-slate-200 dark:bg-slate-850 flex items-center justify-center overflow-hidden shrink-0">
+                          {client.image ? (
+                            <img src={client.image} alt="" className="h-full w-full object-cover" />
+                          ) : (
+                            <User className="h-4 w-4 text-slate-400" />
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{client.name}</p>
+                          <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate">{client.email}</p>
+                        </div>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
         </div>
