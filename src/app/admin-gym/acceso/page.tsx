@@ -197,12 +197,11 @@ export default function AccessControlPage() {
       scanner.start(
         { facingMode: "environment" },
         {
-          fps: 10,
-          qrbox: (width, height) => {
-            const size = Math.min(width, height) * 0.7;
-            return { width: size, height: size };
-          },
+          fps: 15, // Aumentar fotogramas por segundo para una detección hiperveloz
           aspectRatio: 1.0,
+          // Omitimos 'qrbox' para activar el escaneo de Pantalla Completa (Full Frame).
+          // Esto permite que el QR sea decodificado en cualquier parte del visor
+          // sin necesidad de encuadrarlo perfectamente, haciéndolo extremadamente flexible.
         },
         (decodedText) => {
           // Evitar lecturas duplicadas mientras se procesa
@@ -287,10 +286,28 @@ export default function AccessControlPage() {
             </div>
 
             {cameraActive ? (
-              <div 
-                id="qr-reader-container" 
-                className="overflow-hidden rounded-2xl bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-inner w-full aspect-square"
-              />
+              <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-inner">
+                {/* Lector QR central */}
+                <div id="qr-reader-container" className="w-full h-full" />
+                
+                {/* Máscara guía Sci-Fi en React (Visual y no restrictiva) */}
+                <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-10">
+                  {/* Sombreado periférico */}
+                  <div className="absolute inset-0 bg-slate-950/25" />
+                  
+                  {/* Cuadro de enfoque flotante */}
+                  <div className="relative w-3/4 h-3/4 max-w-[260px] max-h-[260px] border border-cyan-500/20 rounded-3xl flex items-center justify-center">
+                    {/* Esquinas cian brillantes */}
+                    <span className="absolute top-0 left-0 w-5 h-5 border-t-4 border-l-4 border-cyan-400 rounded-tl-xl -mt-[3px] -ml-[3px] drop-shadow-[0_0_4px_rgba(34,211,238,0.5)]" />
+                    <span className="absolute top-0 right-0 w-5 h-5 border-t-4 border-r-4 border-cyan-400 rounded-tr-xl -mt-[3px] -mr-[3px] drop-shadow-[0_0_4px_rgba(34,211,238,0.5)]" />
+                    <span className="absolute bottom-0 left-0 w-5 h-5 border-b-4 border-l-4 border-cyan-400 rounded-bl-xl -mb-[3px] -ml-[3px] drop-shadow-[0_0_4px_rgba(34,211,238,0.5)]" />
+                    <span className="absolute bottom-0 right-0 w-5 h-5 border-b-4 border-r-4 border-cyan-400 rounded-br-xl -mb-[3px] -mr-[3px] drop-shadow-[0_0_4px_rgba(34,211,238,0.5)]" />
+                    
+                    {/* Línea láser de escaneo animada */}
+                    <span className="absolute left-4 right-4 h-0.5 bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_8px_#22d3ee] animate-scan-laser" />
+                  </div>
+                </div>
+              </div>
             ) : (
               <div className="aspect-square flex flex-col items-center justify-center bg-slate-950 rounded-2xl border border-slate-900 text-slate-600 p-8 text-center">
                 <ShieldAlert className="h-10 w-10 text-slate-700 mb-3" />
@@ -547,7 +564,7 @@ export default function AccessControlPage() {
 
       </div>
 
-      {/* Overrides para evitar que html5-qrcode distorsione la cámara en navegadores */}
+      {/* Estilos globales y animación del láser de escaneo */}
       <style>{`
         #qr-reader-container video {
           border-radius: 16px !important;
@@ -556,7 +573,18 @@ export default function AccessControlPage() {
           height: 100% !important;
         }
         #qr-reader-container canvas {
-          border-radius: 16px !important;
+          display: none !important; /* Ocultar canvas internos por defecto de html5-qrcode */
+        }
+        @keyframes scan-laser-move {
+          0% { top: 12%; opacity: 0.2; }
+          15% { opacity: 0.9; }
+          50% { top: 88%; opacity: 0.9; }
+          85% { opacity: 0.9; }
+          100% { top: 12%; opacity: 0.2; }
+        }
+        .animate-scan-laser {
+          position: absolute;
+          animation: scan-laser-move 3.5s infinite ease-in-out;
         }
       `}</style>
 
