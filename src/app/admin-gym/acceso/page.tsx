@@ -200,6 +200,7 @@ export default function AccessControlPage() {
             const size = Math.min(width, height) * 0.7;
             return { width: size, height: size };
           },
+          aspectRatio: 1.0,
         },
         (decodedText) => {
           // Evitar lecturas duplicadas mientras se procesa
@@ -271,7 +272,7 @@ export default function AccessControlPage() {
             {cameraActive ? (
               <div 
                 id="qr-reader-container" 
-                className="overflow-hidden rounded-2xl bg-slate-950 border border-slate-100 dark:border-slate-900 shadow-inner aspect-square w-full"
+                className="overflow-hidden rounded-2xl bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-inner w-full aspect-square"
               />
             ) : (
               <div className="aspect-square flex flex-col items-center justify-center bg-slate-950 rounded-2xl border border-slate-900 text-slate-600 p-8 text-center">
@@ -528,6 +529,19 @@ export default function AccessControlPage() {
         </div>
 
       </div>
+
+      {/* Overrides para evitar que html5-qrcode distorsione la cámara en navegadores */}
+      <style>{`
+        #qr-reader-container video {
+          border-radius: 16px !important;
+          object-fit: cover !important;
+          width: 100% !important;
+          height: 100% !important;
+        }
+        #qr-reader-container canvas {
+          border-radius: 16px !important;
+        }
+      `}</style>
 
     </div>
   );
