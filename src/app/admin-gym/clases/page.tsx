@@ -109,10 +109,24 @@ export default function GymClassesPage() {
     }
   }, [session?.user?.serverNow]);
 
+  const now = session?.user?.serverNow ? new Date(session.user.serverNow) : new Date();
+  const todayStr = now.toISOString().split("T")[0];
+
   useEffect(() => {
-    if (activeTab === "calendar") fetchClasses();
-    else fetchTemplates();
-  }, [activeTab]);
+    if (todayStr && !selectedDate) {
+      setSelectedDate(todayStr);
+    }
+  }, [todayStr, selectedDate]);
+
+  useEffect(() => {
+    if (activeTab === "calendar") {
+      if (selectedDate) {
+        fetchClasses(selectedDate);
+      }
+    } else {
+      fetchTemplates();
+    }
+  }, [activeTab, selectedDate]);
 
   useEffect(() => {
     if (toast) {
@@ -121,10 +135,10 @@ export default function GymClassesPage() {
     }
   }, [toast]);
 
-  const fetchClasses = async () => {
+  const fetchClasses = async (date: string) => {
     setIsLoading(true);
     try {
-      const res = await fetch("/api/admin-gym/classes");
+      const res = await fetch(`/api/admin-gym/classes?date=${date}`);
       if (res.ok) setClasses(await res.json());
     } catch (e) { console.error(e); }
     finally { setIsLoading(false); }
@@ -175,7 +189,7 @@ export default function GymClassesPage() {
       setToast({ msg: "Evento especial creado correctamente", type: "ok" });
       setIsSingleFormOpen(false);
       setSingleClassFormData({ ...singleClassFormData, name: "", description: "" });
-      fetchClasses();
+      fetchClasses(selectedDate);
     } catch (err: any) { setError(err.message); }
     finally { setIsSubmitting(false); }
   };
@@ -196,7 +210,7 @@ export default function GymClassesPage() {
         const res = await fetch(`/api/admin-gym/classes?id=${id}`, { method: "DELETE" });
         if (res.ok) {
           setToast({ msg: "Clase cancelada correctamente", type: "ok" });
-          fetchClasses();
+          fetchClasses(selectedDate);
         }
       } catch (e) { console.error(e); }
       finally { setDeletingId(null); }
@@ -236,16 +250,9 @@ export default function GymClassesPage() {
   };
 
   // Group classes by date
-  const now = session?.user?.serverNow ? new Date(session.user.serverNow) : new Date();
   
-  // If a date is selected, we filter ALL classes on that date (even if past).
-  // If NO date is selected, we only show upcoming classes.
-  const filteredClasses = selectedDate
-    ? classes.filter((c) => {
-        const classDate = new Date(c.startTime).toISOString().split("T")[0];
-        return classDate === selectedDate;
-      })
-    : classes.filter(c => new Date(c.startTime) >= now);
+  // Classes are already filtered at the database level!
+  const filteredClasses = classes;
 
   const groupedUpcoming = filteredClasses.reduce<Record<string, GymClass[]>>((acc, c) => {
     const dateKey = new Date(c.startTime).toLocaleDateString("es-ES", {
@@ -329,14 +336,6 @@ export default function GymClassesPage() {
                 <h2 className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-2">
                   <CalendarDays className="h-4 w-4 text-cyan-500" /> Selecciona una fecha
                 </h2>
-                {selectedDate && (
-                  <button
-                    onClick={() => setSelectedDate("")}
-                    className="text-xs font-bold text-primary hover:text-cyan-600 dark:text-cyan-400 dark:hover:text-cyan-300 transition-colors flex items-center gap-1 cursor-pointer"
-                  >
-                    <X className="h-3.5 w-3.5" /> Ver todas
-                  </button>
-                )}
               </div>
               
               <div className="flex items-center gap-3">
@@ -363,7 +362,7 @@ export default function GymClassesPage() {
                     return (
                       <button
                         key={dateStr}
-                        onClick={() => setSelectedDate(isSelected ? "" : dateStr)}
+                        onClick={() => setSelectedDate(dateStr)}
                         className={cn(
                           "flex flex-col items-center justify-center min-w-[72px] py-3.5 rounded-2xl border transition-all duration-200 cursor-pointer",
                           isSelected

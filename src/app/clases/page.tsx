@@ -56,10 +56,19 @@ export default function ClasesPage() {
   const [selectedDate, setSelectedDate] = useState<string>("");
 
   const now = session?.user?.serverNow ? new Date(session.user.serverNow) : new Date();
+  const todayStr = now.toISOString().split("T")[0];
 
   useEffect(() => {
-    fetchClasses();
-  }, []);
+    if (todayStr && !selectedDate) {
+      setSelectedDate(todayStr);
+    }
+  }, [todayStr, selectedDate]);
+
+  useEffect(() => {
+    if (selectedDate) {
+      fetchClasses(selectedDate);
+    }
+  }, [selectedDate]);
 
   useEffect(() => {
     if (toast) {
@@ -68,9 +77,10 @@ export default function ClasesPage() {
     }
   }, [toast]);
 
-  const fetchClasses = async () => {
+  const fetchClasses = async (date: string) => {
+    setIsLoading(true);
     try {
-      const res = await fetch("/api/classes");
+      const res = await fetch(`/api/classes?date=${date}`);
       if (res.ok) {
         setClasses(await res.json());
       } else if (res.status === 400) {
@@ -94,7 +104,7 @@ export default function ClasesPage() {
       });
       if (res.ok) {
         setToast({ msg: "¡Reserva confirmada!", type: "ok" });
-        fetchClasses();
+        fetchClasses(selectedDate);
       } else {
         const data = await res.json();
         setToast({ msg: data.message || "Error al reservar", type: "err" });
@@ -113,7 +123,7 @@ export default function ClasesPage() {
       const res = await fetch(`/api/classes?bookingId=${bookingId}`, { method: "DELETE" });
       if (res.ok) {
         setToast({ msg: "Reserva cancelada", type: "ok" });
-        fetchClasses();
+        fetchClasses(selectedDate);
       }
     } catch {
       setToast({ msg: "Error de conexión", type: "err" });
@@ -122,13 +132,8 @@ export default function ClasesPage() {
     }
   };
 
-  // Filter classes by selectedDate if set
-  const filteredClasses = selectedDate
-    ? classes.filter((c) => {
-        const classDate = new Date(c.startTime).toISOString().split("T")[0];
-        return classDate === selectedDate;
-      })
-    : classes;
+  // Classes are already filtered at the database level!
+  const filteredClasses = classes;
 
   // Group by date
   const grouped = filteredClasses.reduce<Record<string, ClassItem[]>>((acc, c) => {
@@ -182,14 +187,6 @@ export default function ClasesPage() {
               <h2 className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-2">
                 <CalendarDays className="h-4 w-4 text-cyan-500" /> Selecciona una fecha
               </h2>
-              {selectedDate && (
-                <button
-                  onClick={() => setSelectedDate("")}
-                  className="text-xs font-bold text-primary hover:text-cyan-600 dark:text-cyan-400 dark:hover:text-cyan-300 transition-colors flex items-center gap-1 cursor-pointer"
-                >
-                  <X className="h-3.5 w-3.5" /> Ver todas
-                </button>
-              )}
             </div>
             
             <div className="flex items-center gap-3">
@@ -216,7 +213,7 @@ export default function ClasesPage() {
                   return (
                     <button
                       key={dateStr}
-                      onClick={() => setSelectedDate(isSelected ? "" : dateStr)}
+                      onClick={() => setSelectedDate(dateStr)}
                       className={cn(
                         "flex flex-col items-center justify-center min-w-[72px] py-3.5 rounded-2xl border transition-all duration-200 cursor-pointer",
                         isSelected
