@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import {
   Calendar,
@@ -32,8 +33,8 @@ interface ClassItem {
   isBooked: boolean;
 }
 
-function timeUntil(dateStr: string): string {
-  const diff = new Date(dateStr).getTime() - Date.now();
+function timeUntil(dateStr: string, now: Date): string {
+  const diff = new Date(dateStr).getTime() - now.getTime();
   if (diff <= 0) return "Ahora";
   const hours = Math.floor(diff / 3600000);
   const mins = Math.floor((diff % 3600000) / 60000);
@@ -45,6 +46,7 @@ function timeUntil(dateStr: string): string {
 }
 
 export default function ClasesPage() {
+  const { data: session } = useSession();
   const isActive = useIsSubscriptionActive();
   const [classes, setClasses] = useState<ClassItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -52,6 +54,8 @@ export default function ClasesPage() {
   const [toast, setToast] = useState<{ msg: string; type: "ok" | "err" } | null>(null);
   const [noGym, setNoGym] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>("");
+
+  const now = session?.user?.serverNow ? new Date(session.user.serverNow) : new Date();
 
   useEffect(() => {
     fetchClasses();
@@ -192,7 +196,7 @@ export default function ClasesPage() {
               {/* Rolling 14-day selector */}
               <div className="flex-1 flex overflow-x-auto gap-2.5 pb-1.5 scrollbar-none scroll-smooth">
                 {Array.from({ length: 14 }).map((_, i) => {
-                  const d = new Date();
+                  const d = new Date(now);
                   d.setDate(d.getDate() + i);
                   const dateStr = d.toISOString().split("T")[0];
                   
@@ -387,7 +391,7 @@ export default function ClasesPage() {
                             ) : !c.isOpen ? (
                               <div className="inline-flex items-center gap-2 rounded-full bg-slate-100 dark:bg-slate-800 px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-800">
                                 <Lock className="h-3.5 w-3.5" />
-                                Abre en {timeUntil(c.opensAt!)}
+                                Abre en {timeUntil(c.opensAt!, now)}
                               </div>
                             ) : c.isFull ? (
                               <span className="inline-flex items-center gap-2 rounded-full bg-red-50 dark:bg-red-950/30 px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/30">
