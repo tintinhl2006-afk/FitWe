@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getNow } from "@/lib/timeUtils";
+import { generateClassesFromTemplate } from "@/lib/classUtils";
 
 const BOOKING_WINDOW_MS = 48 * 60 * 60 * 1000; // 48 hours
 
@@ -25,6 +26,16 @@ export async function GET(req: Request) {
     }
 
     const now = await getNow();
+    
+    // Auto-generar clases basadas en plantillas para el gimnasio del usuario para los próximos 14 días.
+    // Esto garantiza consistencia local de forma automática sin depender exclusivamente de un cron externo.
+    const templates = await prisma.classTemplate.findMany({
+      where: { gymId: user.gymId },
+    });
+    for (const template of templates) {
+      await generateClassesFromTemplate(template, 14);
+    }
+
     const { searchParams } = new URL(req.url);
     const dateParam = searchParams.get("date"); // e.g. "2026-05-22"
 
