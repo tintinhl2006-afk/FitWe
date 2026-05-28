@@ -50,6 +50,8 @@ export default function AccessControlPage() {
 
   const scannerRef = useRef<any>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
+  const lastScannedTokenRef = useRef<string | null>(null);
+  const lastScanTimestampRef = useRef<number>(0);
 
   // Inicializar AudioContext de forma diferida tras interacción
   const playSound = (type: "success" | "failure") => {
@@ -205,6 +207,21 @@ export default function AccessControlPage() {
         (decodedText) => {
           // Evitar lecturas duplicadas mientras se procesa
           if (isLoading) return;
+
+          const now = Date.now();
+          // Si es el mismo código QR y ha pasado menos de 5 segundos, ignorarlo
+          // para evitar spam de llamadas de red y pitidos repetidos
+          if (
+            decodedText === lastScannedTokenRef.current &&
+            now - lastScanTimestampRef.current < 5000
+          ) {
+            return;
+          }
+
+          // Actualizar registros de prevención de doble escaneo
+          lastScannedTokenRef.current = decodedText;
+          lastScanTimestampRef.current = now;
+
           processCheckIn({ token: decodedText });
         },
         (errorMessage) => {
