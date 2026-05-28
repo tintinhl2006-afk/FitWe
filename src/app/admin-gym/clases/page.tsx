@@ -324,29 +324,91 @@ export default function GymClassesPage() {
         /* CALENDAR TAB */
         <div className="space-y-8 animate-in fade-in duration-300">
           {(classes.length > 0 || selectedDate) && (
-            <div className="flex flex-wrap items-center gap-4 bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 animate-in fade-in duration-300">
-              <div className="flex items-center gap-2">
-                <CalendarDays className="h-5 w-5 text-primary dark:text-cyan-400" />
-                <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                  Filtrar por fecha:
-                </span>
-              </div>
-              <div className="flex items-center gap-3">
-                <input
-                  type="date"
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                  className="rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-4 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-primary dark:focus:border-cyan-400 transition-all cursor-pointer"
-                />
+            <div className="space-y-3.5 bg-slate-50/50 dark:bg-slate-900/15 p-5 rounded-3xl border border-slate-200 dark:border-slate-800/80 animate-in fade-in duration-300">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                  <CalendarDays className="h-4 w-4 text-cyan-500" /> Selecciona una fecha
+                </h2>
                 {selectedDate && (
                   <button
                     onClick={() => setSelectedDate("")}
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 px-3 py-2 rounded-3xl bg-slate-200/50 dark:bg-slate-800 transition-colors"
+                    className="text-xs font-bold text-primary hover:text-cyan-600 dark:text-cyan-400 dark:hover:text-cyan-300 transition-colors flex items-center gap-1 cursor-pointer"
                   >
-                    <X className="h-3.5 w-3.5" />
-                    Ver todas
+                    <X className="h-3.5 w-3.5" /> Ver todas
                   </button>
                 )}
+              </div>
+              
+              <div className="flex items-center gap-3">
+                {/* Rolling 14-day selector */}
+                <div className="flex-1 flex overflow-x-auto gap-2.5 pb-1.5 scrollbar-none scroll-smooth">
+                  {Array.from({ length: 14 }).map((_, i) => {
+                    const d = new Date();
+                    d.setDate(d.getDate() + i);
+                    const dateStr = d.toISOString().split("T")[0];
+                    
+                    const dayName = d.toLocaleDateString("es-ES", { weekday: "short" }).replace(".", "");
+                    const dayNum = d.getDate();
+                    const monthName = d.toLocaleDateString("es-ES", { month: "short" }).replace(".", "");
+                    const capitalizedDay = dayName.charAt(0).toUpperCase() + dayName.slice(1);
+                    const capitalizedMonth = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+                    
+                    // Count classes for this date
+                    const classCount = classes.filter(c => {
+                      return new Date(c.startTime).toISOString().split("T")[0] === dateStr;
+                    }).length;
+                    
+                    const isSelected = selectedDate === dateStr;
+                    
+                    return (
+                      <button
+                        key={dateStr}
+                        onClick={() => setSelectedDate(isSelected ? "" : dateStr)}
+                        className={cn(
+                          "flex flex-col items-center justify-center min-w-[72px] py-3.5 rounded-2xl border transition-all duration-200 cursor-pointer",
+                          isSelected
+                            ? "bg-gradient-to-br from-cyan-500 to-primary text-white border-transparent shadow-md shadow-cyan-500/20 scale-102"
+                            : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-cyan-500/30 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                        )}
+                      >
+                        <span className={cn(
+                          "text-[9px] font-black uppercase tracking-wider",
+                          isSelected ? "text-cyan-100" : "text-slate-400 dark:text-slate-500"
+                        )}>
+                          {capitalizedDay}
+                        </span>
+                        <span className="text-xl font-black mt-1 leading-none">
+                          {dayNum}
+                        </span>
+                        <span className={cn(
+                          "text-[9px] font-bold mt-1",
+                          isSelected ? "text-cyan-200" : "text-slate-500 dark:text-slate-550"
+                        )}>
+                          {capitalizedMonth}
+                        </span>
+                        
+                        {classCount > 0 && (
+                          <span className={cn(
+                            "w-1.5 h-1.5 rounded-full mt-2",
+                            isSelected ? "bg-white" : "bg-primary dark:bg-cyan-400"
+                          )} />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+                
+                {/* Premium calendar date picker button */}
+                <div className="shrink-0 relative w-12 h-12 flex items-center justify-center rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-cyan-400 transition-all cursor-pointer shadow-sm">
+                  <CalendarDays className="h-5 w-5" />
+                  <input
+                    type="date"
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                    title="Seleccionar otra fecha"
+                  />
+                </div>
               </div>
             </div>
           )}
@@ -354,58 +416,83 @@ export default function GymClassesPage() {
           {Object.keys(groupedUpcoming).length > 0 ? (
             Object.entries(groupedUpcoming).map(([date, items]) => (
               <div key={date}>
-                <h2 className="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 capitalize">
+                <h2 className="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3.5 capitalize">
                   {date}
                 </h2>
-                <div className="space-y-3">
+                <div className="space-y-3.5">
                   {items.map((c) => {
                     const timeStart = new Date(c.startTime).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
                     const timeEnd = new Date(c.endTime).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
                     const isFull = c._count.bookings >= c.capacity;
+                    const isSpecial = !c.templateId;
 
                     return (
-                      <div key={c.id} className="flex items-center justify-between rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm gap-4 hover:border-primary/30 transition-colors cursor-pointer group" onClick={() => handleViewClassDetails(c)}>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3">
-                            <h3 className="font-bold text-slate-900 dark:text-white group-hover:text-primary dark:group-hover:text-cyan-400 transition-colors">{c.name}</h3>
-                            <span className={cn(
-                                "text-xs font-bold px-2.5 py-0.5 rounded-full",
-                                isFull ? "bg-red-100 dark:bg-red-950/30 text-red-700 dark:text-red-400" : "bg-cyan-100 dark:bg-cyan-950/30 text-primary dark:text-cyan-400"
-                            )}>
-                              {c._count.bookings}/{c.capacity}
-                            </span>
-                            {!c.templateId && (
-                              <span className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 px-2 py-0.5 rounded-full border border-amber-100 dark:border-amber-900/50">
-                                Especial
+                      <div
+                        key={c.id}
+                        onClick={() => handleViewClassDetails(c)}
+                        className="relative rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 pl-7 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 hover:border-cyan-500/30 dark:hover:border-cyan-400/20 group overflow-hidden cursor-pointer"
+                      >
+                        {/* Elegant Left Accent Bar */}
+                        <div className={cn(
+                          "absolute left-0 top-0 bottom-0 w-1.5 rounded-l-3xl",
+                          isFull
+                            ? "bg-red-400"
+                            : isSpecial
+                              ? "bg-gradient-to-b from-amber-400 to-orange-500"
+                              : "bg-gradient-to-b from-cyan-400 to-primary"
+                        )} />
+
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
+                          <div className="flex-1">
+                            <div className="flex flex-wrap items-center gap-3">
+                              <h3 className="font-black text-slate-955 dark:text-white text-lg tracking-tight group-hover:text-primary dark:group-hover:text-cyan-400 transition-colors">
+                                {c.name}
+                              </h3>
+                              <span className={cn(
+                                "text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider",
+                                isFull 
+                                  ? "bg-red-100 dark:bg-red-950/30 text-red-700 dark:text-red-400" 
+                                  : "bg-cyan-100 dark:bg-cyan-955/30 text-primary dark:text-cyan-400"
+                              )}>
+                                {c._count.bookings} / {c.capacity} plazas
                               </span>
-                            )}
-                            {c.templateId && (
-                              <span className="text-xs text-slate-400 dark:text-slate-600 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
-                                Recurrente
+                              {isSpecial ? (
+                                <span className="text-[10px] font-bold bg-amber-100 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 px-2.5 py-0.5 rounded-full uppercase tracking-wider border border-amber-200 dark:border-amber-900/30">
+                                  Especial
+                                </span>
+                              ) : (
+                                <span className="text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                                  Recurrente
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-2.5 text-xs text-slate-500 dark:text-slate-400 font-medium">
+                              <span className="inline-flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/50 px-2.5 py-1 rounded-lg border border-slate-100 dark:border-slate-800">
+                                <Clock className="h-3.5 w-3.5 text-cyan-500" />
+                                {timeStart} - {timeEnd}
                               </span>
-                            )}
+                              <span className="inline-flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/50 px-2.5 py-1 rounded-lg border border-slate-100 dark:border-slate-800">
+                                <UserIcon className="h-3.5 w-3.5 text-violet-500" />
+                                {c.instructor}
+                              </span>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-4 mt-1.5 text-sm text-slate-500 dark:text-slate-400">
-                            <span className="inline-flex items-center gap-1.5">
-                              <Clock className="h-3.5 w-3.5" />
-                              {timeStart} - {timeEnd}
-                            </span>
-                            <span className="inline-flex items-center gap-1.5">
-                              <UserIcon className="h-3.5 w-3.5" />
-                              {c.instructor}
-                            </span>
+
+                          <div className="shrink-0 self-start sm:self-auto" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              onClick={() => handleCancelClass(c.id)}
+                              disabled={deletingId === c.id}
+                              className="inline-flex items-center gap-2 rounded-full border border-red-200 dark:border-red-800/80 bg-red-50 dark:bg-red-950/30 px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 transition-all cursor-pointer disabled:opacity-50"
+                              title="Cancelar esta clase"
+                            >
+                              {deletingId === c.id ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <Trash2 className="h-3.5 w-3.5" />
+                              )}
+                              Eliminar
+                            </button>
                           </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handleCancelClass(c.id); }}
-                            disabled={deletingId === c.id}
-                            className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-red-600 bg-red-50 dark:bg-red-950/30 hover:bg-red-100 dark:hover:bg-red-900/50 rounded-2xl transition-colors border border-red-100 dark:border-red-900/50 disabled:opacity-50"
-                            title="Cancelar esta clase"
-                          >
-                            {deletingId === c.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                            <span className="hidden sm:inline">Eliminar</span>
-                          </button>
                         </div>
                       </div>
                     );

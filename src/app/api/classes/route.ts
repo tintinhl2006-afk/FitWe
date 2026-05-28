@@ -7,7 +7,7 @@ import { getNow } from "@/lib/timeUtils";
 const BOOKING_WINDOW_MS = 48 * 60 * 60 * 1000; // 48 hours
 
 // GET: List upcoming classes for the user's gym
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
@@ -25,11 +25,29 @@ export async function GET() {
     }
 
     const now = await getNow();
+    const { searchParams } = new URL(req.url);
+    const dateParam = searchParams.get("date"); // e.g. "2026-05-22"
+
+    let dateFilter = {};
+    if (dateParam) {
+      const startOfDay = new Date(`${dateParam}T00:00:00.000Z`);
+      const endOfDay = new Date(`${dateParam}T23:59:59.999Z`);
+      dateFilter = {
+        startTime: {
+          gte: startOfDay,
+          lte: endOfDay,
+        },
+      };
+    } else {
+      dateFilter = {
+        startTime: { gte: now }, // Only future classes
+      };
+    }
 
     const classes = await prisma.gymClass.findMany({
       where: {
         gymId: user.gymId,
-        startTime: { gte: now }, // Only future classes
+        ...dateFilter,
       },
       include: {
         _count: { select: { bookings: true } },
@@ -39,7 +57,7 @@ export async function GET() {
         },
       },
       orderBy: { startTime: "asc" },
-      take: 50,
+      ...(dateParam ? {} : { take: 50 }),
     });
 
     const result = classes.map((c) => {

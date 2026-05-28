@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getNow } from "@/lib/timeUtils";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions);
 
@@ -13,22 +13,40 @@ export async function GET() {
     }
 
     const now = await getNow();
+    const { searchParams } = new URL(req.url);
+    const dateParam = searchParams.get("date"); // e.g. "2026-05-22"
     
-    // We fetch classes from 1 month ago to 2 months into the future relative to mocked 'now'
-    // to ensure the calendar view has enough data.
-    const startDate = new Date(now);
-    startDate.setMonth(startDate.getMonth() - 1);
-    
-    const endDate = new Date(now);
-    endDate.setMonth(endDate.getMonth() + 2);
-
-    const classes = await prisma.gymClass.findMany({
-      where: { 
-        gymId: session.user.id,
+    let dateFilter = {};
+    if (dateParam) {
+      const startOfDay = new Date(`${dateParam}T00:00:00.000Z`);
+      const endOfDay = new Date(`${dateParam}T23:59:59.999Z`);
+      dateFilter = {
+        startTime: {
+          gte: startOfDay,
+          lte: endOfDay
+        }
+      };
+    } else {
+      // We fetch classes from 1 month ago to 2 months into the future relative to mocked 'now'
+      // to ensure the calendar view has enough data.
+      const startDate = new Date(now);
+      startDate.setMonth(startDate.getMonth() - 1);
+      
+      const endDate = new Date(now);
+      endDate.setMonth(endDate.getMonth() + 2);
+      
+      dateFilter = {
         startTime: {
           gte: startDate,
           lte: endDate
         }
+      };
+    }
+
+    const classes = await prisma.gymClass.findMany({
+      where: { 
+        gymId: session.user.id,
+        ...dateFilter
       },
       include: {
         _count: { select: { bookings: true } },
