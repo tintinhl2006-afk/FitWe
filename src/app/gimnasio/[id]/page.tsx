@@ -257,7 +257,7 @@ function ChartCard({ title, dataKey, data, unit }: { title: string, dataKey: str
             <Tooltip
               contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '12px', color: '#fff' }}
               itemStyle={{ color: '#818cf8' }}
-              formatter={(value: number) => [`${value} ${unit}`, title]}
+              formatter={(value: any) => [`${value} ${unit}`, title]}
             />
             <Line type="monotone" dataKey={dataKey} stroke="#6366f1" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: '#ffffff' }} activeDot={{ r: 6, strokeWidth: 0, fill: '#4f46e5' }} />
           </LineChart>

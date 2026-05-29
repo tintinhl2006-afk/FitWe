@@ -199,8 +199,8 @@ export default function AdminGymDashboard() {
                       fontSize: "13px",
                       padding: "10px 14px",
                     }}
-                    formatter={(value: number) => [`${value} sesiones`, "Entrenamientos"]}
-                    labelFormatter={(label: string) => `${label}`}
+                    formatter={(value: any) => [`${value} sesiones`, "Entrenamientos"]}
+                    labelFormatter={(label: any) => `${label}`}
                     cursor={{ fill: "rgba(99,102,241,0.08)" }}
                   />
                   <Bar dataKey="sessions" radius={[8, 8, 0, 0]} maxBarSize={40}>

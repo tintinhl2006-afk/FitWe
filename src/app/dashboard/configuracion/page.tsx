@@ -41,7 +41,6 @@ export default function UserSettingsPage() {
               name: session?.user?.name || "",
               email: session?.user?.email || "",
               role: session?.user?.role,
-              monthlyFee: session?.user?.monthlyFee,
             }}
           />
         </div>
