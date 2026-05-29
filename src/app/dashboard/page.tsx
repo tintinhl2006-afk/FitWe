@@ -231,7 +231,7 @@ export default function DashboardPage() {
                 </div>
                 <div className="h-44 w-full">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={data?.weeklyChart || []} margin={{ top: 5, right: 5, left: -10, bottom: 0 }}>
+                    <BarChart data={data?.weeklyChart || []} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
                       <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 700 }} />
                       <Tooltip
                         cursor={{ fill: 'rgba(148, 163, 184, 0.08)', radius: 8 } as any}
