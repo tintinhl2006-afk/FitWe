@@ -56,6 +56,24 @@ interface ClientDetail {
   subscriptionStatus: string;
   subscriptionEndDate: string | null;
   createdAt: string;
+  lastName: string | null;
+  documentType: string | null;
+  documentNumber: string | null;
+  documentLetter: string | null;
+  phone: string | null;
+  landline: string | null;
+  registrationDate: string;
+  address: string | null;
+  country: string | null;
+  province: string | null;
+  locality: string | null;
+  postalCode: string | null;
+  birthDate: string | null;
+  civilStatus: string | null;
+  gender: string | null;
+  isRegisteredCitizen: boolean;
+  referralSource: string | null;
+  gdprConsent: boolean;
   totalWorkouts: number;
   recentSessions: SessionData[];
   routines: RoutineData[];
@@ -319,6 +337,134 @@ export default function ClientDetailPage({
                 {client.routines.length} rutina{client.routines.length !== 1 && "s"}
               </span>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Ficha de Datos Personales ── */}
+      <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden animate-in fade-in duration-300">
+        <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2 bg-slate-50/50 dark:bg-slate-950/20">
+          <User className="h-4 w-4 text-primary" />
+          <h2 className="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+            Ficha de Datos Personales
+          </h2>
+        </div>
+        <div className="p-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 text-sm">
+          {/* Nombre y Apellidos */}
+          <div>
+            <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Nombre Completo</p>
+            <p className="mt-1 font-semibold text-slate-900 dark:text-white">
+              {client.name} {client.lastName || ""}
+            </p>
+          </div>
+
+          {/* Documento de Identidad */}
+          <div>
+            <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Documento de Identidad</p>
+            <p className="mt-1 font-semibold text-slate-900 dark:text-white">
+              {client.documentType || "DNI"}: {client.documentNumber || ""}{client.documentLetter || ""}
+              {!client.documentNumber && <span className="text-slate-400">Sin registrar</span>}
+            </p>
+          </div>
+
+          {/* Contacto (Móvil / Teléfono) */}
+          <div>
+            <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Contacto</p>
+            <p className="mt-1 font-semibold text-slate-900 dark:text-white">
+              {client.phone && <span>📱 {client.phone}</span>}
+              {client.landline && <span className="ml-2 text-xs text-slate-500">(📞 {client.landline})</span>}
+              {!client.phone && !client.landline && <span className="text-slate-400">Sin registrar</span>}
+            </p>
+          </div>
+
+          {/* Dirección */}
+          <div className="sm:col-span-2">
+            <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Dirección Física</p>
+            <p className="mt-1 font-semibold text-slate-900 dark:text-white">
+              {[
+                client.address,
+                client.locality,
+                client.province,
+                client.postalCode,
+                client.country
+              ].filter(Boolean).join(", ") || <span className="text-slate-400">Sin registrar</span>}
+            </p>
+          </div>
+
+          {/* Fecha de Nacimiento / Edad */}
+          <div>
+            <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Nacimiento (Edad)</p>
+            <p className="mt-1 font-semibold text-slate-900 dark:text-white">
+              {client.birthDate ? (
+                <>
+                  {new Date(client.birthDate).toLocaleDateString("es-ES", { day: "2-digit", month: "long", year: "numeric" })}
+                  <span className="ml-1.5 inline-flex items-center rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-0.5 text-xs font-bold text-slate-600 dark:text-slate-300">
+                    {(() => {
+                      const birth = new Date(client.birthDate);
+                      const today = new Date();
+                      let ageYears = today.getFullYear() - birth.getFullYear();
+                      const m = today.getMonth() - birth.getMonth();
+                      if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+                        ageYears--;
+                      }
+                      return ageYears >= 0 ? ageYears : 0;
+                    })()} años
+                  </span>
+                </>
+              ) : (
+                <span className="text-slate-400">Sin registrar</span>
+              )}
+            </p>
+          </div>
+
+          {/* Estado civil */}
+          <div>
+            <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Estado Civil</p>
+            <p className="mt-1 font-semibold text-slate-900 dark:text-white">
+              {client.civilStatus || <span className="text-slate-400">Sin seleccionar</span>}
+            </p>
+          </div>
+
+          {/* Sexo */}
+          <div>
+            <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Sexo</p>
+            <p className="mt-1 font-semibold text-slate-900 dark:text-white">
+              {client.gender || <span className="text-slate-400">Sin seleccionar</span>}
+            </p>
+          </div>
+
+          {/* Empadronado */}
+          <div>
+            <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Empadronado</p>
+            <p className="mt-1 font-semibold text-slate-900 dark:text-white">
+              {client.isRegisteredCitizen ? "Sí" : "No"}
+            </p>
+          </div>
+
+          {/* Canal de Difusión */}
+          <div>
+            <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Canal de Difusión</p>
+            <p className="mt-1 font-semibold text-slate-900 dark:text-white">
+              {client.referralSource || <span className="text-slate-400">Sin registrar</span>}
+            </p>
+          </div>
+
+          {/* Autorización RGPD */}
+          <div>
+            <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Consentimiento RGPD</p>
+            <p className="mt-1 font-semibold text-slate-900 dark:text-white flex items-center gap-1.5">
+              {client.gdprConsent ? (
+                <>
+                  <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                  <span className="text-emerald-600 dark:text-emerald-400 font-bold">Autorizado</span>
+                </>
+              ) : (
+                <>
+                  <span className="h-2 w-2 rounded-full bg-red-500" />
+                  <span className="text-red-600 dark:text-red-400 font-bold">No Autorizado</span>
+                </>
+              )}
+            </p>
           </div>
         </div>
       </div>

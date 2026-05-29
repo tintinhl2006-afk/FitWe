@@ -26,6 +26,24 @@ model User {
   location            String?
   measurementUnit     String             @default("cm")
   weightUnit          String             @default("kg")
+  documentType        String?
+  documentNumber      String?
+  documentLetter      String?
+  lastName            String?
+  phone               String?
+  landline            String?
+  registrationDate    DateTime           @default(now())
+  address             String?
+  country             String?            @default("España")
+  province            String?
+  locality            String?
+  postalCode          String?
+  birthDate           DateTime?
+  civilStatus         String?
+  gender              String?
+  isRegisteredCitizen Boolean            @default(false)
+  referralSource      String?
+  gdprConsent         Boolean            @default(true)
   gymId               String?            @db.Uuid
   subscriptionEndDate DateTime?
   subscriptionStatus  String             @default("ACTIVE")

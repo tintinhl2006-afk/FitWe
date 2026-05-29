@@ -75,7 +75,29 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { name, email, password } = body;
+    const {
+      name,
+      email,
+      password,
+      lastName,
+      documentType,
+      documentNumber,
+      documentLetter,
+      phone,
+      landline,
+      registrationDate,
+      address,
+      country,
+      province,
+      locality,
+      postalCode,
+      birthDate,
+      civilStatus,
+      gender,
+      isRegisteredCitizen,
+      referralSource,
+      gdprConsent,
+    } = body;
 
     if (!name || !email || !password) {
       return NextResponse.json(
@@ -114,6 +136,24 @@ export async function POST(req: Request) {
         password: hashedPassword,
         role: "USER",
         gymId: session.user.id,
+        lastName: lastName ? lastName.trim() : null,
+        documentType: documentType || "DNI",
+        documentNumber: documentNumber ? documentNumber.trim() : null,
+        documentLetter: documentLetter ? documentLetter.trim() : null,
+        phone: phone ? phone.trim() : null,
+        landline: landline ? landline.trim() : null,
+        registrationDate: registrationDate ? new Date(registrationDate) : undefined,
+        address: address ? address.trim() : null,
+        country: country || "España",
+        province: province ? province.trim() : null,
+        locality: locality ? locality.trim() : null,
+        postalCode: postalCode ? postalCode.trim() : null,
+        birthDate: birthDate ? new Date(birthDate) : null,
+        civilStatus: civilStatus ? civilStatus.trim() : null,
+        gender: gender ? gender.trim() : null,
+        isRegisteredCitizen: isRegisteredCitizen === true,
+        referralSource: referralSource ? referralSource.trim() : null,
+        gdprConsent: gdprConsent !== false,
       },
       select: {
         id: true,
