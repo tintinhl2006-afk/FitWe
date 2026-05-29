@@ -264,7 +264,7 @@ export default function DashboardPage() {
                           {attendanceStats.streak}
                         </span>
                         <span className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-1">
-                          Día{attendanceStats.streak !== 1 && "s"} de racha 🔥
+                          Semana{attendanceStats.streak !== 1 && "s"} de racha 🔥
                         </span>
                       </div>
                       
@@ -276,30 +276,6 @@ export default function DashboardPage() {
                         <div>
                           <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Hora Favorita</p>
                           <p className="text-sm font-bold text-indigo-600 dark:text-cyan-400 mt-0.5">{attendanceStats.favoriteHour}</p>
-                        </div>
-                      </div>
-
-                      {/* Lit-up Weekly attendance badges */}
-                      <div className="border-t border-slate-100 dark:border-slate-800/80 pt-3">
-                        <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Visitas esta semana</p>
-                        <div className="flex justify-between gap-1">
-                          {attendanceStats.weeklyData.map((item: any, idx: number) => {
-                            const isLit = item.visits > 0;
-                            return (
-                              <div
-                                key={idx}
-                                className={cn(
-                                  "w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-black border transition-all duration-300",
-                                  isLit
-                                    ? "bg-gradient-to-br from-cyan-400 to-primary text-white border-transparent shadow-sm shadow-cyan-500/20"
-                                    : "bg-slate-50 dark:bg-slate-800/40 text-slate-400 border-slate-200 dark:border-slate-850/80"
-                                )}
-                                title={`${item.day}: ${item.visits} visitas`}
-                              >
-                                {item.day.charAt(0)}
-                              </div>
-                            );
-                          })}
                         </div>
                       </div>
                     </div>

@@ -33,38 +33,45 @@ export async function GET(req: Request) {
       select: { createdAt: true }
     });
 
-    // Calculate Streak
+    // Calculate Weekly Streak (consecutive weeks with at least one check-in)
     let streak = 0;
     if (allSuccessfulLogs.length > 0) {
-      // Get unique dates (YYYY-MM-DD) in local time
-      const uniqueDates = Array.from(new Set(
-        allSuccessfulLogs.map(log => new Date(log.createdAt).toISOString().split("T")[0])
-      ));
+      const getStartOfWeek = (date: Date) => {
+        const d = new Date(date);
+        const day = d.getDay();
+        const diff = d.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is Sunday to Monday
+        const monday = new Date(d.setDate(diff));
+        return monday.toISOString().split("T")[0];
+      };
 
-      const todayStr = now.toISOString().split("T")[0];
-      const yesterday = new Date(now);
-      yesterday.setDate(yesterday.getDate() - 1);
-      const yesterdayStr = yesterday.toISOString().split("T")[0];
+      // Get unique start of week dates (Mondays) for all successful logs
+      const uniqueWeeks = Array.from(new Set(
+        allSuccessfulLogs.map(log => getStartOfWeek(new Date(log.createdAt)))
+      )).sort((a, b) => b.localeCompare(a)); // Sort descending (latest week first)
 
-      // Streak starts either today or yesterday
-      let expectedDate = new Date(now);
-      if (uniqueDates[0] === todayStr) {
+      const thisWeekStr = getStartOfWeek(now);
+      const lastWeekDate = new Date(now);
+      lastWeekDate.setDate(lastWeekDate.getDate() - 7);
+      const lastWeekStr = getStartOfWeek(lastWeekDate);
+
+      let expectedMonday = new Date(now);
+
+      if (uniqueWeeks[0] === thisWeekStr) {
         streak = 1;
-        expectedDate.setDate(expectedDate.getDate() - 1);
-      } else if (uniqueDates[0] === yesterdayStr) {
+        expectedMonday.setDate(expectedMonday.getDate() - 7);
+      } else if (uniqueWeeks[0] === lastWeekStr) {
         streak = 1;
-        expectedDate.setDate(expectedDate.getDate() - 2);
+        expectedMonday.setDate(expectedMonday.getDate() - 14);
       } else {
         streak = 0;
       }
 
       if (streak > 0) {
-        // Loop through subsequent unique dates to see if they are consecutive
-        for (let i = 1; i < uniqueDates.length; i++) {
-          const expectedStr = expectedDate.toISOString().split("T")[0];
-          if (uniqueDates[i] === expectedStr) {
+        for (let i = 1; i < uniqueWeeks.length; i++) {
+          const expectedStr = getStartOfWeek(expectedMonday);
+          if (uniqueWeeks[i] === expectedStr) {
             streak++;
-            expectedDate.setDate(expectedDate.getDate() - 1);
+            expectedMonday.setDate(expectedMonday.getDate() - 7);
           } else {
             break; // Streak broken
           }
