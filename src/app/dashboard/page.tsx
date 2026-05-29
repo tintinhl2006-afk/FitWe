@@ -57,9 +57,20 @@ export default function DashboardPage() {
   const [caloriesToday, setCaloriesToday] = useState(0);
   const [data, setData] = useState<DashboardData | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [chartWidth, setChartWidth] = useState(480);
 
   useEffect(() => {
     setMounted(true);
+    const handleResize = () => {
+      if (window.innerWidth < 640) {
+        setChartWidth(300);
+      } else {
+        setChartWidth(480);
+      }
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
   const [attendanceStats, setAttendanceStats] = useState<any>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -256,22 +267,26 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 </div>
-                <div className="h-44 w-full relative">
+                <div className="h-44 w-full flex justify-center items-center relative">
                   {mounted ? (
-                    <ResponsiveContainer width="99%" height="100%">
-                      <BarChart key="weekly-activity-chart" data={data?.weeklyChart || []} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
-                        <XAxis dataKey="day" axisLine={false} tickLine={false} tick={<CustomTick />} />
-                        <Tooltip
-                          content={<CustomTooltip />}
-                          cursor={{ fill: 'rgba(148, 163, 184, 0.08)', radius: 8 } as any}
-                        />
-                        <Bar dataKey="minutos" radius={[8, 8, 4, 4]} barSize={32}>
-                          {(data?.weeklyChart || []).map((entry, index) => (
-                            <Cell key={`c-${index}`} fill={entry.minutos > 0 ? '#0891b2' : 'rgba(148,163,184,0.1)'} />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
+                    <BarChart 
+                      key="weekly-activity-chart" 
+                      width={chartWidth} 
+                      height={176} 
+                      data={data?.weeklyChart || []} 
+                      margin={{ top: 5, right: 10, left: 10, bottom: 0 }}
+                    >
+                      <XAxis dataKey="day" axisLine={false} tickLine={false} tick={<CustomTick />} />
+                      <Tooltip
+                        content={<CustomTooltip />}
+                        cursor={{ fill: 'rgba(148, 163, 184, 0.08)', radius: 8 } as any}
+                      />
+                      <Bar dataKey="minutos" radius={[8, 8, 4, 4]} barSize={32}>
+                        {(data?.weeklyChart || []).map((entry, index) => (
+                          <Cell key={`c-${index}`} fill={entry.minutos > 0 ? '#0891b2' : 'rgba(148,163,184,0.1)'} />
+                        ))}
+                      </Bar>
+                    </BarChart>
                   ) : (
                     <div className="h-full w-full flex items-center justify-center">
                       <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
