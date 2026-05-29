@@ -57,20 +57,9 @@ export default function DashboardPage() {
   const [caloriesToday, setCaloriesToday] = useState(0);
   const [data, setData] = useState<DashboardData | null>(null);
   const [mounted, setMounted] = useState(false);
-  const [chartWidth, setChartWidth] = useState(480);
 
   useEffect(() => {
     setMounted(true);
-    const handleResize = () => {
-      if (window.innerWidth < 640) {
-        setChartWidth(300);
-      } else {
-        setChartWidth(480);
-      }
-    };
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
   }, []);
   const [attendanceStats, setAttendanceStats] = useState<any>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -251,7 +240,7 @@ export default function DashboardPage() {
             <div className="grid gap-6 lg:grid-cols-3">
 
               {/* Col 1: Weekly Chart */}
-              <div className="lg:col-span-2 order-2 lg:order-1 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm min-w-0">
+              <div className="lg:col-span-1 order-2 lg:order-1 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm min-w-0 hover:shadow-md transition-all duration-300">
                 <div className="flex items-center justify-between mb-6">
                   <div>
                     <h2 className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Actividad Semanal</h2>
@@ -267,26 +256,22 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 </div>
-                <div className="h-44 w-full flex justify-center items-center relative">
+                <div className="h-44 w-full relative">
                   {mounted ? (
-                    <BarChart 
-                      key="weekly-activity-chart" 
-                      width={chartWidth} 
-                      height={176} 
-                      data={data?.weeklyChart || []} 
-                      margin={{ top: 5, right: 10, left: 10, bottom: 0 }}
-                    >
-                      <XAxis dataKey="day" axisLine={false} tickLine={false} tick={<CustomTick />} />
-                      <Tooltip
-                        content={<CustomTooltip />}
-                        cursor={{ fill: 'rgba(148, 163, 184, 0.08)', radius: 8 } as any}
-                      />
-                      <Bar dataKey="minutos" radius={[8, 8, 4, 4]} barSize={32}>
-                        {(data?.weeklyChart || []).map((entry, index) => (
-                          <Cell key={`c-${index}`} fill={entry.minutos > 0 ? '#0891b2' : 'rgba(148,163,184,0.1)'} />
-                        ))}
-                      </Bar>
-                    </BarChart>
+                    <ResponsiveContainer width="99%" height="100%">
+                      <BarChart key="weekly-activity-chart" data={data?.weeklyChart || []} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
+                        <XAxis dataKey="day" axisLine={false} tickLine={false} tick={<CustomTick />} />
+                        <Tooltip
+                          content={<CustomTooltip />}
+                          cursor={{ fill: 'rgba(148, 163, 184, 0.08)', radius: 8 } as any}
+                        />
+                        <Bar dataKey="minutos" radius={[8, 8, 4, 4]} barSize={32}>
+                          {(data?.weeklyChart || []).map((entry, index) => (
+                            <Cell key={`c-${index}`} fill={entry.minutos > 0 ? '#0891b2' : 'rgba(148,163,184,0.1)'} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
                   ) : (
                     <div className="h-full w-full flex items-center justify-center">
                       <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
@@ -295,99 +280,96 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* Col 2: Right column stacked cards (Renders first on mobile for immediate QR access!) */}
-              <div className="flex flex-col gap-6 order-1 lg:order-2">
-                {/* Pase de Acceso QR Card */}
-                <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm relative overflow-hidden group hover:shadow-md transition-all duration-300">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-cyan-50 dark:bg-cyan-950/30 text-primary dark:text-cyan-400">
-                        <QrCode className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <h3 className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Pase de Acceso QR</h3>
-                        {qrToken && qrTimeLeft > 0 && !isQrLoading && (
-                          <div className="flex items-center gap-1.5 mt-0.5">
-                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                            <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider">Activo</span>
-                          </div>
-                        )}
-                      </div>
+              {/* Col 2: Pase de Acceso QR Card (Renders first on mobile for immediate QR access!) */}
+              <div className="lg:col-span-1 order-1 lg:order-2 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm relative overflow-hidden group hover:shadow-md transition-all duration-300">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-cyan-50 dark:bg-cyan-950/30 text-primary dark:text-cyan-400">
+                      <QrCode className="h-5 w-5" />
                     </div>
+                    <div>
+                      <h3 className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Pase de Acceso QR</h3>
+                      {qrToken && qrTimeLeft > 0 && !isQrLoading && (
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                          <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider">Activo</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
 
-                    {/* Quick Refresh Button */}
-                    {qrToken && qrTimeLeft > 0 && !isQrLoading && (
+                  {/* Quick Refresh Button */}
+                  {qrToken && qrTimeLeft > 0 && !isQrLoading && (
+                    <button
+                      onClick={fetchQrToken}
+                      title="Actualizar código"
+                      className="h-8 w-8 flex items-center justify-center rounded-xl border border-slate-100 dark:border-slate-800/80 text-slate-400 hover:text-primary hover:border-primary/20 dark:hover:text-cyan-400 transition-all cursor-pointer"
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950/40 rounded-2xl p-4 border border-slate-100 dark:border-slate-900/40 relative min-h-[200px]">
+                  {isQrLoading && (
+                    <div className="flex flex-col items-center gap-2 py-8">
+                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                      <span className="text-xs font-bold text-slate-400">Generando pase...</span>
+                    </div>
+                  )}
+                  
+                  {!isQrLoading && qrTimeLeft <= 0 && (
+                    <div className="flex flex-col items-center text-center p-2 py-4">
+                      <p className="text-sm font-bold text-red-500 mb-1">Código Expirado</p>
+                      <p className="text-[11px] text-slate-400 mb-3">Expira cada 5 min por seguridad.</p>
                       <button
                         onClick={fetchQrToken}
-                        title="Actualizar código"
-                        className="h-8 w-8 flex items-center justify-center rounded-xl border border-slate-100 dark:border-slate-800/80 text-slate-400 hover:text-primary hover:border-primary/20 dark:hover:text-cyan-400 transition-all cursor-pointer"
+                        className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-cyan-500 to-primary px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-white shadow-md hover:opacity-90 transition-all cursor-pointer"
                       >
-                        <RefreshCw className="h-4 w-4" />
+                        <RefreshCw className="h-3 w-3" /> Regenerar
                       </button>
-                    )}
-                  </div>
-
-                  <div className="flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950/40 rounded-2xl p-4 border border-slate-100 dark:border-slate-900/40 relative min-h-[200px]">
-                    {isQrLoading && (
-                      <div className="flex flex-col items-center gap-2 py-8">
-                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                        <span className="text-xs font-bold text-slate-400">Generando pase...</span>
-                      </div>
-                    )}
-                    
-                    {!isQrLoading && qrTimeLeft <= 0 && (
-                      <div className="flex flex-col items-center text-center p-2 py-4">
-                        <p className="text-sm font-bold text-red-500 mb-1">Código Expirado</p>
-                        <p className="text-[11px] text-slate-400 mb-3">Expira cada 5 min por seguridad.</p>
-                        <button
-                          onClick={fetchQrToken}
-                          className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-cyan-500 to-primary px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-white shadow-md hover:opacity-90 transition-all cursor-pointer"
-                        >
-                          <RefreshCw className="h-3 w-3" /> Regenerar
-                        </button>
-                      </div>
-                    )}
-
-                    <div 
-                      onClick={() => setIsZoomed(true)}
-                      className={cn("bg-white p-2.5 rounded-xl shadow-inner border border-slate-100 flex justify-center items-center cursor-pointer hover:ring-2 hover:ring-primary/20 transition-all relative group", (isQrLoading || qrTimeLeft <= 0) && "hidden")}
-                      title="Toca para ampliar"
-                    >
-                      <canvas ref={canvasRef} className="rounded-lg bg-white" />
-                      {/* Smooth hover zoom icon */}
-                      <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-xl flex items-center justify-center text-white">
-                        <Maximize2 className="h-5 w-5 text-white animate-pulse" />
-                      </div>
                     </div>
+                  )}
 
-                    {!isQrLoading && qrTimeLeft > 0 && (
-                      <div className="mt-3 flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400">
-                        <Clock className="h-3.5 w-3.5 text-cyan-500" />
-                        <span>Expira en {Math.floor(qrTimeLeft / 60)}:{(qrTimeLeft % 60).toString().padStart(2, "0")}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Nutrition Card */}
-                <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-orange-50 dark:bg-orange-950/30 text-orange-500">
-                      <Apple className="h-5 w-5" />
+                  <div 
+                    onClick={() => setIsZoomed(true)}
+                    className={cn("bg-white p-2.5 rounded-xl shadow-inner border border-slate-100 flex justify-center items-center cursor-pointer hover:ring-2 hover:ring-primary/20 transition-all relative group", (isQrLoading || qrTimeLeft <= 0) && "hidden")}
+                    title="Toca para ampliar"
+                  >
+                    <canvas ref={canvasRef} className="rounded-lg bg-white" />
+                    {/* Smooth hover zoom icon */}
+                    <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-xl flex items-center justify-center text-white">
+                      <Maximize2 className="h-5 w-5 text-white animate-pulse" />
                     </div>
-                    <h3 className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Nutrición Hoy</h3>
                   </div>
-                  <div className="flex items-end justify-between mb-3">
-                    <span className="text-3xl font-black text-slate-900 dark:text-white">
-                      {caloriesToday}<span className="text-sm font-bold text-slate-400 ml-1">kcal</span>
-                    </span>
-                    <span className="text-sm font-bold text-slate-400">/ {GOAL_CALORIES}</span>
-                  </div>
-                  <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
-                    <div className={cn("h-full rounded-full transition-all duration-1000", calPct > 100 ? "bg-red-500" : "bg-gradient-to-r from-orange-400 to-orange-500")} style={{ width: `${calPct}%` }} />
-                  </div>
-                  <p className="mt-2 text-xs font-semibold text-slate-400 text-right">{calPct}% del objetivo</p>
+
+                  {!isQrLoading && qrTimeLeft > 0 && (
+                    <div className="mt-3 flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400">
+                      <Clock className="h-3.5 w-3.5 text-cyan-500" />
+                      <span>Expira en {Math.floor(qrTimeLeft / 60)}:{(qrTimeLeft % 60).toString().padStart(2, "0")}</span>
+                    </div>
+                  )}
                 </div>
+              </div>
+
+              {/* Col 3: Nutrition Card */}
+              <div className="lg:col-span-1 order-3 lg:order-3 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm hover:shadow-md transition-all duration-300">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-orange-50 dark:bg-orange-950/30 text-orange-500">
+                    <Apple className="h-5 w-5" />
+                  </div>
+                  <h3 className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Nutrición Hoy</h3>
+                </div>
+                <div className="flex items-end justify-between mb-3">
+                  <span className="text-3xl font-black text-slate-900 dark:text-white">
+                    {caloriesToday}<span className="text-sm font-bold text-slate-400 ml-1">kcal</span>
+                  </span>
+                  <span className="text-sm font-bold text-slate-400">/ {GOAL_CALORIES}</span>
+                </div>
+                <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                  <div className={cn("h-full rounded-full transition-all duration-1000", calPct > 100 ? "bg-red-500" : "bg-gradient-to-r from-orange-400 to-orange-500")} style={{ width: `${calPct}%` }} />
+                </div>
+                <p className="mt-2 text-xs font-semibold text-slate-400 text-right">{calPct}% del objetivo</p>
               </div>
 
             </div>
