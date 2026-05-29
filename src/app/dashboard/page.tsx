@@ -48,6 +48,11 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [caloriesToday, setCaloriesToday] = useState(0);
   const [data, setData] = useState<DashboardData | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   const [attendanceStats, setAttendanceStats] = useState<any>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const zoomedCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -244,20 +249,26 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 <div className="h-44 w-full relative">
-                  <ResponsiveContainer width="99%" height="100%">
-                    <BarChart data={data?.weeklyChart || []} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
-                      <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 700 }} />
-                      <Tooltip
-                        content={<CustomTooltip />}
-                        cursor={{ fill: 'rgba(148, 163, 184, 0.08)', radius: 8 } as any}
-                      />
-                      <Bar dataKey="minutos" radius={[8, 8, 4, 4]} barSize={32}>
-                        {(data?.weeklyChart || []).map((entry, index) => (
-                          <Cell key={`c-${index}`} fill={entry.minutos > 0 ? '#0891b2' : 'rgba(148,163,184,0.1)'} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
+                  {mounted ? (
+                    <ResponsiveContainer width="99%" height="100%">
+                      <BarChart data={data?.weeklyChart || []} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
+                        <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ textAnchor: 'middle', fill: '#94a3b8', fontSize: 12, fontWeight: 700 }} />
+                        <Tooltip
+                          content={<CustomTooltip />}
+                          cursor={{ fill: 'rgba(148, 163, 184, 0.08)', radius: 8 } as any}
+                        />
+                        <Bar dataKey="minutos" radius={[8, 8, 4, 4]} barSize={32}>
+                          {(data?.weeklyChart || []).map((entry, index) => (
+                            <Cell key={`c-${index}`} fill={entry.minutos > 0 ? '#0891b2' : 'rgba(148,163,184,0.1)'} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center">
+                      <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+                    </div>
+                  )}
                 </div>
               </div>
 
