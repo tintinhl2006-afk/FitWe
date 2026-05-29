@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { Activity, Apple, Building2, Dumbbell, Loader2, ArrowRight, Flame, CalendarDays, Clock, TrendingUp, Zap, Trophy, ChevronRight, Calendar, QrCode, RefreshCw } from "lucide-react";
+import { Activity, Apple, Building2, Dumbbell, Loader2, ArrowRight, Flame, CalendarDays, Clock, TrendingUp, Zap, Trophy, ChevronRight, Calendar, QrCode, RefreshCw, X, Maximize2 } from "lucide-react";
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { cn } from "@/lib/utils";
 import { SubscriptionBanner } from "@/components/shared/SubscriptionBanner";
@@ -36,11 +36,13 @@ export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [attendanceStats, setAttendanceStats] = useState<any>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const zoomedCanvasRef = useRef<HTMLCanvasElement>(null);
 
   // Acceso QR States
   const [qrToken, setQrToken] = useState<string | null>(null);
   const [isQrLoading, setIsQrLoading] = useState(false);
   const [qrTimeLeft, setQrTimeLeft] = useState(300);
+  const [isZoomed, setIsZoomed] = useState(false);
 
   const fetchQrToken = async () => {
     setIsQrLoading(true);
@@ -87,6 +89,26 @@ export default function DashboardPage() {
       );
     }
   }, [qrToken]);
+
+  useEffect(() => {
+    if (qrToken && isZoomed && zoomedCanvasRef.current) {
+      QRCode.toCanvas(
+        zoomedCanvasRef.current,
+        qrToken,
+        {
+          width: 260,
+          margin: 1.5,
+          color: {
+            dark: "#0f172a",
+            light: "#ffffff",
+          },
+        },
+        (error) => {
+          if (error) console.error("Error generating zoomed QR code:", error);
+        }
+      );
+    }
+  }, [qrToken, isZoomed]);
 
   const GOAL_CALORIES = 2500;
 
@@ -280,8 +302,16 @@ export default function DashboardPage() {
                       </div>
                     )}
 
-                    <div className={cn("bg-white p-2.5 rounded-xl shadow-inner border border-slate-100 flex justify-center items-center", (isQrLoading || qrTimeLeft <= 0) && "hidden")}>
+                    <div 
+                      onClick={() => setIsZoomed(true)}
+                      className={cn("bg-white p-2.5 rounded-xl shadow-inner border border-slate-100 flex justify-center items-center cursor-pointer hover:ring-2 hover:ring-primary/20 transition-all relative group", (isQrLoading || qrTimeLeft <= 0) && "hidden")}
+                      title="Toca para ampliar"
+                    >
                       <canvas ref={canvasRef} className="rounded-lg bg-white" />
+                      {/* Smooth hover zoom icon */}
+                      <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-xl flex items-center justify-center text-white">
+                        <Maximize2 className="h-5 w-5 text-white animate-pulse" />
+                      </div>
                     </div>
 
                     {!isQrLoading && qrTimeLeft > 0 && (
@@ -417,6 +447,48 @@ export default function DashboardPage() {
         )}
       </div>
 
+
+      {/* Zoomed QR Access Pass Modal */}
+      {isZoomed && qrToken && (
+        <div 
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4 animate-in fade-in duration-200"
+          onClick={() => setIsZoomed(false)}
+        >
+          <div 
+            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[32px] w-full max-w-sm flex flex-col overflow-hidden shadow-2xl animate-in slide-in-from-bottom-8 duration-300 p-6 text-center"
+            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-black text-slate-900 dark:text-white text-xl flex items-center gap-2">
+                <QrCode className="h-5 w-5 text-cyan-500" /> Ampliar Pase QR
+              </h3>
+              <button 
+                onClick={() => setIsZoomed(false)}
+                className="h-8 w-8 flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-500 rounded-full transition-all cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-6">
+              Muestra este código QR ampliado en el lector del gimnasio para autorizar tu acceso.
+            </p>
+
+            <div className="flex flex-col items-center justify-center bg-white p-5 rounded-3xl border border-slate-100 shadow-md mx-auto">
+              <canvas ref={zoomedCanvasRef} className="rounded-2xl max-w-full bg-white" />
+            </div>
+
+            {!isQrLoading && qrTimeLeft > 0 ? (
+              <div className="mt-6 flex items-center justify-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                <Clock className="h-3.5 w-3.5 text-cyan-500" />
+                <span>Expira en {Math.floor(qrTimeLeft / 60)}:{(qrTimeLeft % 60).toString().padStart(2, "0")}</span>
+              </div>
+            ) : (
+              <p className="mt-6 text-xs text-red-500 font-bold">Código Expirado. Cierra para regenerar.</p>
+            )}
+          </div>
+        </div>
+      )}
 
     </DashboardLayout>
   );
