@@ -22,6 +22,8 @@ export async function POST(req: Request) {
 
     let targetUserId: string | null = null;
 
+    let verifiedToken: { userId: string; timestamp: number } | null = null;
+
     if (token) {
       const verified = verifyAccessCode(token);
       if (!verified) {
@@ -31,17 +33,7 @@ export async function POST(req: Request) {
           message: "Código QR inválido o alterado.",
         });
       }
-
-      // Check expiration to mitigate replay attacks
-      const now = Date.now();
-      if (now - verified.timestamp > TOKEN_EXPIRY_MS) {
-        return NextResponse.json({
-          status: "DENIED",
-          reason: "EXPIRED",
-          message: "El código QR ha expirado. Por favor, pida al cliente que lo regenere.",
-        });
-      }
-
+      verifiedToken = verified;
       targetUserId = verified.userId;
     } else if (manualInput) {
       const trimmedInput = manualInput.trim();
@@ -94,6 +86,15 @@ export async function POST(req: Request) {
 
     // Verify the client belongs to the logged-in gym
     if (client.gymId !== session.user.id) {
+      await prisma.accessLog.create({
+        data: {
+          userId: client.id,
+          gymId: session.user.id,
+          status: "DENIED",
+          reason: "WRONG_GYM",
+        },
+      });
+
       return NextResponse.json({
         status: "DENIED",
         reason: "WRONG_GYM",
@@ -101,11 +102,41 @@ export async function POST(req: Request) {
       });
     }
 
+    // Check QR expiration if token was used
+    if (verifiedToken) {
+      const nowMs = Date.now();
+      if (nowMs - verifiedToken.timestamp > TOKEN_EXPIRY_MS) {
+        await prisma.accessLog.create({
+          data: {
+            userId: client.id,
+            gymId: session.user.id,
+            status: "DENIED",
+            reason: "EXPIRED",
+          },
+        });
+
+        return NextResponse.json({
+          status: "DENIED",
+          reason: "EXPIRED",
+          message: "El código QR ha expirado. Por favor, pida al cliente que lo regenere.",
+        });
+      }
+    }
+
     // Check subscription status
     const serverNow = await getNow();
     const isExpired = client.subscriptionEndDate && client.subscriptionEndDate < serverNow;
 
     if (client.subscriptionStatus !== "ACTIVE" || isExpired) {
+      await prisma.accessLog.create({
+        data: {
+          userId: client.id,
+          gymId: session.user.id,
+          status: "DENIED",
+          reason: "INACTIVE_SUBSCRIPTION",
+        },
+      });
+
       return NextResponse.json({
         status: "DENIED",
         reason: "INACTIVE_SUBSCRIPTION",
@@ -121,7 +152,15 @@ export async function POST(req: Request) {
       });
     }
 
-    // Access granted!
+    // Access granted! Log successful entry
+    await prisma.accessLog.create({
+      data: {
+        userId: client.id,
+        gymId: session.user.id,
+        status: "GRANTED",
+      },
+    });
+
     return NextResponse.json({
       status: "GRANTED",
       message: "Acceso Permitido",

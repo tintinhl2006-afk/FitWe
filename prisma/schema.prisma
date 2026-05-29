@@ -45,6 +45,8 @@ model User {
   mealEntries         MealEntry[]
   plan                SubscriptionPlan?  @relation("UserPlan", fields: [planId], references: [id])
   gymPlans            SubscriptionPlan[] @relation("GymPlans")
+  accessLogs          AccessLog[]        @relation("UserAccessLogs")
+  gymAccessLogs       AccessLog[]        @relation("GymAccessLogs")
 }
 
 model SubscriptionPlan {
@@ -239,3 +241,16 @@ model MealEntry {
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   foodItem FoodItem @relation(fields: [foodItemId], references: [id], onDelete: Cascade)
 }
+
+model AccessLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  gymId     String   @db.Uuid
+  status    String   // "GRANTED" or "DENIED"
+  reason    String?  // e.g. "EXPIRED", "INACTIVE_SUBSCRIPTION", etc.
+  createdAt DateTime @default(now())
+
+  user User @relation("UserAccessLogs", fields: [userId], references: [id], onDelete: Cascade)
+  gym  User @relation("GymAccessLogs", fields: [gymId], references: [id], onDelete: Cascade)
+}
+

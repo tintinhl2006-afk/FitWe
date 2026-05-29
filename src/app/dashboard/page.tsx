@@ -34,6 +34,7 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [caloriesToday, setCaloriesToday] = useState(0);
   const [data, setData] = useState<DashboardData | null>(null);
+  const [attendanceStats, setAttendanceStats] = useState<any>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Acceso QR States
@@ -103,15 +104,17 @@ export default function DashboardPage() {
       try {
         const nowRef = session?.user?.serverNow ? new Date(session.user.serverNow) : new Date();
         const today = nowRef.toISOString().split("T")[0];
-        const [nutritionRes, statsRes] = await Promise.all([
+        const [nutritionRes, statsRes, attendanceRes] = await Promise.all([
           fetch(`/api/nutrition?date=${today}`),
           fetch("/api/dashboard"),
+          fetch("/api/user/stats/attendance")
         ]);
         if (nutritionRes.ok) {
           const nd = await nutritionRes.json();
           setCaloriesToday((nd.entries || []).reduce((a: number, f: FoodEntry) => a + f.calories, 0));
         }
         if (statsRes.ok) setData(await statsRes.json());
+        if (attendanceRes.ok) setAttendanceStats(await attendanceRes.json());
       } catch (e) { console.error(e); }
       finally { setIsLoading(false); }
     };
@@ -246,22 +249,63 @@ export default function DashboardPage() {
                   <p className="mt-2 text-xs font-semibold text-slate-400 text-right">{calPct}% del objetivo</p>
                 </div>
 
-                {/* Activity Card */}
-                <div className="flex-1 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm">
+                {/* Attendance & Consistency Card */}
+                <div className="flex-1 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm relative overflow-hidden group hover:shadow-md transition-all duration-300">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400">
-                      <CalendarDays className="h-5 w-5" />
+                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-50 dark:bg-indigo-950/30 text-indigo-500">
+                      <Flame className="h-5 w-5" />
                     </div>
-                    <h3 className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Último Entreno</h3>
+                    <h3 className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Tu Asistencia</h3>
                   </div>
-                  {data?.lastWorkoutDate ? (
-                    <p className="text-2xl font-black text-slate-900 dark:text-white">
-                      {new Date(data.lastWorkoutDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}
-                    </p>
+                  {attendanceStats ? (
+                    <div className="space-y-4">
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-3xl font-black text-slate-900 dark:text-white">
+                          {attendanceStats.streak}
+                        </span>
+                        <span className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-1">
+                          Día{attendanceStats.streak !== 1 && "s"} de racha 🔥
+                        </span>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4 border-t border-slate-100 dark:border-slate-800/80 pt-3">
+                        <div>
+                          <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Entradas QR</p>
+                          <p className="text-sm font-bold text-slate-900 dark:text-white mt-0.5">{attendanceStats.totalVisits} visitas</p>
+                        </div>
+                        <div>
+                          <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Hora Favorita</p>
+                          <p className="text-sm font-bold text-indigo-600 dark:text-cyan-400 mt-0.5">{attendanceStats.favoriteHour}</p>
+                        </div>
+                      </div>
+
+                      {/* Lit-up Weekly attendance badges */}
+                      <div className="border-t border-slate-100 dark:border-slate-800/80 pt-3">
+                        <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Visitas esta semana</p>
+                        <div className="flex justify-between gap-1">
+                          {attendanceStats.weeklyData.map((item: any, idx: number) => {
+                            const isLit = item.visits > 0;
+                            return (
+                              <div
+                                key={idx}
+                                className={cn(
+                                  "w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-black border transition-all duration-300",
+                                  isLit
+                                    ? "bg-gradient-to-br from-cyan-400 to-primary text-white border-transparent shadow-sm shadow-cyan-500/20"
+                                    : "bg-slate-50 dark:bg-slate-800/40 text-slate-400 border-slate-200 dark:border-slate-850/80"
+                                )}
+                                title={`${item.day}: ${item.visits} visitas`}
+                              >
+                                {item.day.charAt(0)}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
                   ) : (
-                    <p className="text-lg font-bold text-slate-400">Sin registros aún</p>
+                    <div className="py-10 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto text-slate-400" /></div>
                   )}
-                  <p className="mt-1 text-xs font-semibold text-slate-400">{data?.routinesCount || 0} rutina{(data?.routinesCount || 0) !== 1 && "s"} creada{(data?.routinesCount || 0) !== 1 && "s"}</p>
                 </div>
               </div>
             </div>
