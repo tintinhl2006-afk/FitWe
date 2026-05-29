@@ -184,14 +184,7 @@ export async function PATCH(
 
     const { clientId } = await params;
     const gymId = session.user.id;
-    const { newPassword } = await req.json();
-
-    if (!newPassword || newPassword.trim().length < 4) {
-      return NextResponse.json(
-        { message: "La contraseña debe tener al menos 4 caracteres" },
-        { status: 400 }
-      );
-    }
+    const body = await req.json();
 
     // Verify client belongs to this gym
     const client = await prisma.user.findFirst({
@@ -209,20 +202,111 @@ export async function PATCH(
       );
     }
 
-    // Hash the new password securely
-    const hashedPassword = await bcrypt.hash(newPassword, 12);
+    // 1. Password Update flow
+    if (body.newPassword !== undefined) {
+      const { newPassword } = body;
+      if (!newPassword || newPassword.trim().length < 4) {
+        return NextResponse.json(
+          { message: "La contraseña debe tener al menos 4 caracteres" },
+          { status: 400 }
+        );
+      }
+      const hashedPassword = await bcrypt.hash(newPassword, 12);
+      await prisma.user.update({
+        where: { id: clientId },
+        data: { password: hashedPassword },
+      });
+      return NextResponse.json({
+        message: "Contraseña cambiada con éxito",
+      });
+    }
 
-    // Update the password in database
+    // 2. Profile Update flow
+    const {
+      name,
+      email,
+      lastName,
+      documentType,
+      documentNumber,
+      documentLetter,
+      phone,
+      landline,
+      registrationDate,
+      address,
+      country,
+      province,
+      locality,
+      postalCode,
+      birthDate,
+      civilStatus,
+      gender,
+      isRegisteredCitizen,
+      referralSource,
+      gdprConsent,
+    } = body;
+
+    // Validate name
+    if (name !== undefined && !name.trim()) {
+      return NextResponse.json(
+        { message: "El nombre es obligatorio" },
+        { status: 400 }
+      );
+    }
+
+    // Validate email uniqueness
+    if (email !== undefined) {
+      if (!email.trim()) {
+        return NextResponse.json(
+          { message: "El email es obligatorio" },
+          { status: 400 }
+        );
+      }
+      const existing = await prisma.user.findFirst({
+        where: {
+          email: email.toLowerCase().trim(),
+          id: { not: clientId },
+        },
+      });
+      if (existing) {
+        return NextResponse.json(
+          { message: "Ese email ya está registrado por otro usuario" },
+          { status: 409 }
+        );
+      }
+    }
+
+    const updateData: any = {};
+    if (name !== undefined) updateData.name = name.trim();
+    if (email !== undefined) updateData.email = email.toLowerCase().trim();
+    if (lastName !== undefined) updateData.lastName = lastName ? lastName.trim() : null;
+    if (documentType !== undefined) updateData.documentType = documentType;
+    if (documentNumber !== undefined) updateData.documentNumber = documentNumber ? documentNumber.trim() : null;
+    if (documentLetter !== undefined) updateData.documentLetter = documentLetter ? documentLetter.trim() : null;
+    if (phone !== undefined) updateData.phone = phone ? phone.trim() : null;
+    if (landline !== undefined) updateData.landline = landline ? landline.trim() : null;
+    if (registrationDate !== undefined) updateData.registrationDate = registrationDate ? new Date(registrationDate) : undefined;
+    if (address !== undefined) updateData.address = address ? address.trim() : null;
+    if (country !== undefined) updateData.country = country;
+    if (province !== undefined) updateData.province = province ? province.trim() : null;
+    if (locality !== undefined) updateData.locality = locality ? locality.trim() : null;
+    if (postalCode !== undefined) updateData.postalCode = postalCode ? postalCode.trim() : null;
+    if (birthDate !== undefined) updateData.birthDate = birthDate ? new Date(birthDate) : null;
+    if (civilStatus !== undefined) updateData.civilStatus = civilStatus ? civilStatus.trim() : null;
+    if (gender !== undefined) updateData.gender = gender ? gender.trim() : null;
+    if (isRegisteredCitizen !== undefined) updateData.isRegisteredCitizen = isRegisteredCitizen === true;
+    if (referralSource !== undefined) updateData.referralSource = referralSource ? referralSource.trim() : null;
+    if (gdprConsent !== undefined) updateData.gdprConsent = gdprConsent === true;
+
     await prisma.user.update({
       where: { id: clientId },
-      data: { password: hashedPassword },
+      data: updateData,
     });
 
     return NextResponse.json({
-      message: "Contraseña cambiada con éxito",
+      message: "Ficha de cliente actualizada con éxito",
     });
   } catch (error) {
-    console.error("Error resetting client password:", error);
+    console.error("Error updating client:", error);
     return NextResponse.json(
       { error: "Error interno del servidor" },
       { status: 500 }

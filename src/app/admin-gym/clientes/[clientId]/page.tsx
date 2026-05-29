@@ -46,6 +46,15 @@ interface RoutineData {
   exerciseCount: number;
 }
 
+const provinces = [
+  "Sevilla", "Madrid", "Barcelona", "Valencia", "Alicante", "Málaga", "Murcia", "Cádiz", "Baleares", "Las Palmas", "Bizkaia", "A Coruña", "Zaragoza", "Pontevedra", "Asturias", "Tenerife", "Gipuzkoa", "Toledo", "Girona", "Navarra", "Córdoba", "Cantabria", "Castellón", "Valladolid", "Huelva", "Jaén", "Granada", "Tarragona", "Lleida", "Álava", "Badajoz", "Cáceres", "Burgos", "Salamanca", "Ourense", "Lugo", "La Rioja"
+];
+
+const days = Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, "0"));
+const months = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0"));
+const currentYear = new Date().getFullYear();
+const years = Array.from({ length: 110 }, (_, i) => String(currentYear - i));
+
 interface ClientDetail {
   id: string;
   name: string;
@@ -104,6 +113,54 @@ export default function ClientDetailPage({
   const [passwordSuccess, setPasswordSuccess] = useState("");
   const [isPasswordSubmitting, setIsPasswordSubmitting] = useState(false);
 
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editFormError, setEditFormError] = useState("");
+  const [isEditSubmitting, setIsEditSubmitting] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    name: "",
+    email: "",
+    lastName: "",
+    documentType: "DNI",
+    documentNumber: "",
+    documentLetter: "",
+    phone: "",
+    landline: "",
+    registrationDate: "",
+    address: "",
+    country: "España",
+    province: "",
+    locality: "",
+    postalCode: "",
+    birthDay: "",
+    birthMonth: "",
+    birthYear: "",
+    civilStatus: "",
+    gender: "",
+    isRegisteredCitizen: "",
+    referralSource: "",
+    gdprConsent: true,
+  });
+
+  const [editAge, setEditAge] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (editFormData.birthDay && editFormData.birthMonth && editFormData.birthYear) {
+      const day = parseInt(editFormData.birthDay);
+      const month = parseInt(editFormData.birthMonth) - 1;
+      const year = parseInt(editFormData.birthYear);
+      const birth = new Date(year, month, day);
+      const today = new Date();
+      let calculatedAge = today.getFullYear() - birth.getFullYear();
+      const m = today.getMonth() - birth.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+        calculatedAge--;
+      }
+      setEditAge(calculatedAge >= 0 ? calculatedAge : 0);
+    } else {
+      setEditAge(null);
+    }
+  }, [editFormData.birthDay, editFormData.birthMonth, editFormData.birthYear]);
+
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
     setPasswordError("");
@@ -134,6 +191,111 @@ export default function ClientDetailPage({
       setPasswordError("Error al conectar con el servidor");
     } finally {
       setIsPasswordSubmitting(false);
+    }
+  };
+
+  const openEditModal = () => {
+    if (!client) return;
+
+    let bDay = "";
+    let bMonth = "";
+    let bYear = "";
+    if (client.birthDate) {
+      const d = new Date(client.birthDate);
+      bDay = String(d.getDate()).padStart(2, "0");
+      bMonth = String(d.getMonth() + 1).padStart(2, "0");
+      bYear = String(d.getFullYear());
+    }
+
+    setEditFormData({
+      name: client.name || "",
+      email: client.email || "",
+      lastName: client.lastName || "",
+      documentType: client.documentType || "DNI",
+      documentNumber: client.documentNumber || "",
+      documentLetter: client.documentLetter || "",
+      phone: client.phone || "",
+      landline: client.landline || "",
+      registrationDate: client.registrationDate ? client.registrationDate.split("T")[0] : new Date().toISOString().split("T")[0],
+      address: client.address || "",
+      country: client.country || "España",
+      province: client.province || "",
+      locality: client.locality || "",
+      postalCode: client.postalCode || "",
+      birthDay: bDay,
+      birthMonth: bMonth,
+      birthYear: bYear,
+      civilStatus: client.civilStatus || "",
+      gender: client.gender || "",
+      isRegisteredCitizen: client.isRegisteredCitizen === true ? "true" : (client.isRegisteredCitizen === false ? "false" : ""),
+      referralSource: client.referralSource || "",
+      gdprConsent: client.gdprConsent !== false,
+    });
+    setEditFormError("");
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setEditFormError("");
+
+    if (!editFormData.name.trim()) {
+      setEditFormError("Es necesario introducir un valor para 'Nombre'");
+      return;
+    }
+
+    if (!editFormData.email.trim()) {
+      setEditFormError("Es necesario introducir un valor para 'Correo electrónico'");
+      return;
+    }
+
+    setIsEditSubmitting(true);
+
+    try {
+      const birthDateStr = editFormData.birthDay && editFormData.birthMonth && editFormData.birthYear
+        ? `${editFormData.birthYear}-${editFormData.birthMonth}-${editFormData.birthDay}`
+        : null;
+
+      const payload = {
+        name: editFormData.name,
+        email: editFormData.email,
+        lastName: editFormData.lastName || null,
+        documentType: editFormData.documentType,
+        documentNumber: editFormData.documentNumber || null,
+        documentLetter: editFormData.documentLetter || null,
+        phone: editFormData.phone || null,
+        landline: editFormData.landline || null,
+        registrationDate: editFormData.registrationDate,
+        address: editFormData.address || null,
+        country: editFormData.country,
+        province: editFormData.province || null,
+        locality: editFormData.locality || null,
+        postalCode: editFormData.postalCode || null,
+        birthDate: birthDateStr,
+        civilStatus: editFormData.civilStatus || null,
+        gender: editFormData.gender || null,
+        isRegisteredCitizen: editFormData.isRegisteredCitizen === "true",
+        referralSource: editFormData.referralSource || null,
+        gdprConsent: editFormData.gdprConsent,
+      };
+
+      const res = await fetch(`/api/admin-gym/clients/${clientId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        setIsEditModalOpen(false);
+        fetchClient();
+      } else {
+        const data = await res.json();
+        setEditFormError(data.message || "Error al actualizar la ficha");
+      }
+    } catch (error) {
+      setEditFormError("Error de conexión. Inténtalo de nuevo.");
+    } finally {
+      setIsEditSubmitting(false);
     }
   };
 
@@ -261,6 +423,13 @@ export default function ClientDetailPage({
           Volver a Clientes
         </Link>
         <div className="flex items-center gap-3">
+          <button
+            onClick={openEditModal}
+            className="inline-flex items-center gap-2 rounded-3xl bg-cyan-50 hover:bg-cyan-100 dark:bg-cyan-950/40 dark:hover:bg-cyan-900/60 text-primary dark:text-cyan-400 px-5 py-2.5 text-sm font-semibold border border-cyan-100 dark:border-cyan-900/50 transition-all active:scale-95"
+          >
+            <Edit className="h-4 w-4" />
+            Editar Ficha
+          </button>
           <button
             onClick={() => setIsPasswordModalOpen(true)}
             className="inline-flex items-center gap-2 rounded-3xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-5 py-2.5 text-sm font-semibold border border-slate-200 dark:border-slate-700 transition-all active:scale-95"
@@ -741,6 +910,407 @@ export default function ClientDetailPage({
         </div>
       )}
 
+      {/* ── Modal: Editar Ficha de Cliente ── */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4 animate-in fade-in duration-200 overflow-y-auto">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[28px] w-full max-w-5xl shadow-2xl animate-in slide-in-from-bottom-6 duration-300 overflow-hidden my-8">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-7 py-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20">
+              <div>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+                  Editar Ficha de Cliente
+                </h3>
+              </div>
+              <button
+                onClick={() => setIsEditModalOpen(false)}
+                className="h-9 w-9 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Step Banner */}
+            <div className="bg-[#1e6091] text-white font-semibold text-sm px-7 py-3 tracking-wide">
+              Paso 1. Datos del socio (Edición)
+            </div>
+
+            {/* Modal Body */}
+            <form onSubmit={handleEditSubmit} className="px-7 py-6 space-y-6">
+              {/* Error Message Box */}
+              {editFormError && (
+                <div className="flex items-center justify-between rounded-xl bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/40 px-5 py-3.5 text-sm font-semibold text-red-700 dark:text-red-400 animate-in fade-in duration-200">
+                  <div className="flex items-center gap-2">
+                    <span className="shrink-0 font-bold">¡Error!</span>
+                    <span>{editFormError}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setEditFormError("")}
+                    className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
+
+              {/* Form Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
+                
+                {/* Tipo de Documento */}
+                <div className="col-span-1 md:col-span-2">
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                    Tipo de documento
+                  </label>
+                  <select
+                    value={editFormData.documentType}
+                    onChange={(e) => setEditFormData({ ...editFormData, documentType: e.target.value })}
+                    className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-3 px-4 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-cyan-500"
+                  >
+                    <option value="DNI">DNI</option>
+                    <option value="NIE">NIE</option>
+                    <option value="Pasaporte">Pasaporte</option>
+                    <option value="Otro">Otro</option>
+                  </select>
+                </div>
+
+                {/* Documento */}
+                <div className="col-span-1 md:col-span-4">
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                    Documento
+                  </label>
+                  <div className="flex gap-2">
+                    <select
+                      className="w-1/4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-3 px-2 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-cyan-500"
+                    >
+                      <option value="-">-</option>
+                    </select>
+                    <input
+                      type="text"
+                      placeholder="Nº dni"
+                      value={editFormData.documentNumber}
+                      onChange={(e) => setEditFormData({ ...editFormData, documentNumber: e.target.value })}
+                      className="w-2/4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-3 px-4 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-cyan-500"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Letra"
+                      maxLength={1}
+                      value={editFormData.documentLetter}
+                      onChange={(e) => setEditFormData({ ...editFormData, documentLetter: e.target.value.toUpperCase() })}
+                      className="w-1/4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-3 px-2 text-center text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-cyan-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Nombre */}
+                <div className="col-span-1 md:col-span-3">
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                    Nombre
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editFormData.name}
+                    onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                    className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-3 px-4 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-cyan-500"
+                  />
+                </div>
+
+                {/* Apellidos */}
+                <div className="col-span-1 md:col-span-3">
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                    Apellidos
+                  </label>
+                  <input
+                    type="text"
+                    value={editFormData.lastName}
+                    onChange={(e) => setEditFormData({ ...editFormData, lastName: e.target.value })}
+                    className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-3 px-4 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-cyan-500"
+                  />
+                </div>
+
+                {/* Móvil */}
+                <div className="col-span-1 md:col-span-2">
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                    Móvil
+                  </label>
+                  <input
+                    type="text"
+                    value={editFormData.phone}
+                    onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
+                    className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-3 px-4 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-cyan-500"
+                  />
+                </div>
+
+                {/* Teléfono */}
+                <div className="col-span-1 md:col-span-2">
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                    Teléfono
+                  </label>
+                  <input
+                    type="text"
+                    value={editFormData.landline}
+                    onChange={(e) => setEditFormData({ ...editFormData, landline: e.target.value })}
+                    className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-3 px-4 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-cyan-500"
+                  />
+                </div>
+
+                {/* Email */}
+                <div className="col-span-1 md:col-span-4">
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={editFormData.email}
+                    onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
+                    className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-3 px-4 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-cyan-500"
+                  />
+                </div>
+
+                {/* Fecha de alta */}
+                <div className="col-span-1 md:col-span-4">
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                    Fecha de alta
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={editFormData.registrationDate}
+                    onChange={(e) => setEditFormData({ ...editFormData, registrationDate: e.target.value })}
+                    className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-3 px-4 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-cyan-500"
+                  />
+                </div>
+
+                {/* Dirección */}
+                <div className="col-span-1 md:col-span-4">
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                    Dirección
+                  </label>
+                  <input
+                    type="text"
+                    value={editFormData.address}
+                    onChange={(e) => setEditFormData({ ...editFormData, address: e.target.value })}
+                    className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-3 px-4 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-cyan-500"
+                  />
+                </div>
+
+                {/* País */}
+                <div className="col-span-1 md:col-span-2">
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                    País
+                  </label>
+                  <select
+                    value={editFormData.country}
+                    onChange={(e) => setEditFormData({ ...editFormData, country: e.target.value })}
+                    className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-3 px-4 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-cyan-500"
+                  >
+                    <option value="España">España</option>
+                    <option value="Otro">Otro</option>
+                  </select>
+                </div>
+
+                {/* Provincia */}
+                <div className="col-span-1 md:col-span-2">
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                    Provincia
+                  </label>
+                  <select
+                    value={editFormData.province}
+                    onChange={(e) => setEditFormData({ ...editFormData, province: e.target.value })}
+                    className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-3 px-4 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-cyan-500"
+                  >
+                    <option value="">Seleccionar...</option>
+                    {provinces.map((prov) => (
+                      <option key={prov} value={prov}>{prov}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Localidad */}
+                <div className="col-span-1 md:col-span-2">
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                    Localidad
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Localidad"
+                    value={editFormData.locality}
+                    onChange={(e) => setEditFormData({ ...editFormData, locality: e.target.value })}
+                    className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-3 px-4 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-cyan-500"
+                  />
+                </div>
+
+                {/* Código Postal */}
+                <div className="col-span-1 md:col-span-2">
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                    Código Postal
+                  </label>
+                  <input
+                    type="text"
+                    value={editFormData.postalCode}
+                    onChange={(e) => setEditFormData({ ...editFormData, postalCode: e.target.value })}
+                    className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-3 px-4 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-cyan-500"
+                  />
+                </div>
+
+                {/* Fecha de Nacimiento */}
+                <div className="col-span-1 md:col-span-4">
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                    Fecha de Nacimiento
+                  </label>
+                  <div className="flex gap-2">
+                    <select
+                      value={editFormData.birthDay}
+                      onChange={(e) => setEditFormData({ ...editFormData, birthDay: e.target.value })}
+                      className="w-1/4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-3 px-2 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-cyan-500"
+                    >
+                      <option value="">Día</option>
+                      {days.map((d) => (
+                        <option key={d} value={d}>{d}</option>
+                      ))}
+                    </select>
+
+                    <select
+                      value={editFormData.birthMonth}
+                      onChange={(e) => setEditFormData({ ...editFormData, birthMonth: e.target.value })}
+                      className="w-1/4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-3 px-2 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-cyan-500"
+                    >
+                      <option value="">Mes</option>
+                      {months.map((m) => (
+                        <option key={m} value={m}>{m}</option>
+                      ))}
+                    </select>
+
+                    <select
+                      value={editFormData.birthYear}
+                      onChange={(e) => setEditFormData({ ...editFormData, birthYear: e.target.value })}
+                      className="w-1/4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-3 px-2 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-cyan-500"
+                    >
+                      <option value="">Año</option>
+                      {years.map((y) => (
+                        <option key={y} value={y}>{y}</option>
+                      ))}
+                    </select>
+
+                    <div className="w-1/4 flex items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs font-bold px-1 whitespace-nowrap border border-transparent">
+                      {editAge !== null ? `${editAge} Años` : "— Años"}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Estado Civil */}
+                <div className="col-span-1 md:col-span-2">
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                    Estado civil
+                  </label>
+                  <select
+                    value={editFormData.civilStatus}
+                    onChange={(e) => setEditFormData({ ...editFormData, civilStatus: e.target.value })}
+                    className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-3 px-4 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-cyan-500"
+                  >
+                    <option value="">Sin seleccionar</option>
+                    <option value="Soltero/a">Soltero/a</option>
+                    <option value="Casado/a">Casado/a</option>
+                    <option value="Divorciado/a">Divorciado/a</option>
+                    <option value="Viudo/a">Viudo/a</option>
+                  </select>
+                </div>
+
+                {/* Sexo */}
+                <div className="col-span-1 md:col-span-2">
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                    Sexo
+                  </label>
+                  <select
+                    value={editFormData.gender}
+                    onChange={(e) => setEditFormData({ ...editFormData, gender: e.target.value })}
+                    className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-3 px-4 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-cyan-500"
+                  >
+                    <option value="">Sin seleccionar</option>
+                    <option value="Varón">Varón</option>
+                    <option value="Mujer">Mujer</option>
+                    <option value="Otro">Otro</option>
+                  </select>
+                </div>
+
+                {/* Empadronado */}
+                <div className="col-span-1 md:col-span-2">
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                    Empadronado
+                  </label>
+                  <select
+                    value={editFormData.isRegisteredCitizen}
+                    onChange={(e) => setEditFormData({ ...editFormData, isRegisteredCitizen: e.target.value })}
+                    className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-3 px-4 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-cyan-500"
+                  >
+                    <option value="">Sin seleccionar</option>
+                    <option value="true">Sí</option>
+                    <option value="false">No</option>
+                  </select>
+                </div>
+
+                {/* Difusión */}
+                <div className="col-span-1 md:col-span-2">
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                    Difusión
+                  </label>
+                  <select
+                    value={editFormData.referralSource}
+                    onChange={(e) => setEditFormData({ ...editFormData, referralSource: e.target.value })}
+                    className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-3 px-4 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-cyan-500"
+                  >
+                    <option value="">Sin seleccionar</option>
+                    <option value="Me lo ha dicho un amigo">Me lo ha dicho un amigo</option>
+                    <option value="Redes Sociales">Redes Sociales</option>
+                    <option value="Publicidad">Publicidad</option>
+                    <option value="Búsqueda en Internet">Búsqueda en Internet</option>
+                    <option value="Otro">Otro</option>
+                  </select>
+                </div>
+
+                {/* Autorización RGPD */}
+                <div className="col-span-1 md:col-span-12 flex items-center gap-3 pt-3">
+                  <input
+                    type="checkbox"
+                    id="editGdprConsent"
+                    checked={editFormData.gdprConsent}
+                    onChange={(e) => setEditFormData({ ...editFormData, gdprConsent: e.target.checked })}
+                    className="h-5 w-5 rounded border-slate-300 dark:border-slate-700 text-cyan-600 focus:ring-cyan-500 cursor-pointer"
+                  />
+                  <label htmlFor="editGdprConsent" className="text-xs font-semibold text-slate-500 dark:text-slate-400 cursor-pointer select-none">
+                    Autorización RGPD (Consentimiento inequívoco para el tratamiento de datos personales)
+                  </label>
+                </div>
+
+              </div>
+
+              {/* Actions Footer */}
+              <div className="flex justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  type="submit"
+                  disabled={isEditSubmitting}
+                  className="inline-flex items-center gap-2 rounded-3xl bg-[#1e40af] hover:bg-[#1d4ed8] text-white px-6 py-2.5 text-sm font-semibold shadow-sm disabled:opacity-70 transition-all active:scale-95"
+                >
+                  {isEditSubmitting ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    "Guardar Cambios"
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsEditModalOpen(false)}
+                  className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-5 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                >
+                  Cerrar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
       {/* ── Change Password Modal ── */}
       {isPasswordModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
