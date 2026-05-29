@@ -28,6 +28,20 @@ interface DashboardData {
 
 interface FoodEntry { calories: number; }
 
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl p-3 text-xs border-solid">
+        <p className="font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">{label}</p>
+        <p className="font-bold text-slate-800 dark:text-white">
+          Duración: <span className="text-primary dark:text-cyan-400">{payload[0].value} min</span>
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
+
 export default function DashboardPage() {
   const { data: session, status } = useSession();
   const { weightUnit } = usePreferences();
@@ -146,27 +160,27 @@ export default function DashboardPage() {
     <DashboardLayout>
       <div className="space-y-8">
         {/* Hero Header */}
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 p-8 border border-slate-700/30 dark:border-slate-800">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 p-8 border border-slate-200 dark:border-slate-800 shadow-sm transition-all duration-305">
           <div className="absolute top-0 right-0 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
           <div className="relative z-10">
             <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
               <div>
-                <p className="text-sm font-bold text-cyan-400 uppercase tracking-widest mb-1">Dashboard</p>
-                <h1 className="text-3xl sm:text-4xl font-black text-white">
-                  ¡Hola, <span className="bg-gradient-to-r from-cyan-400 to-primary bg-clip-text text-transparent">{session?.user?.name?.split(' ')[0] || "Deportista"}</span>!
+                <p className="text-sm font-bold text-cyan-500 dark:text-cyan-400 uppercase tracking-widest mb-1">Dashboard</p>
+                <h1 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white">
+                  ¡Hola, <span className="bg-gradient-to-r from-cyan-500 to-primary bg-clip-text text-transparent">{session?.user?.name?.split(' ')[0] || "Deportista"}</span>!
                 </h1>
-                <p className="mt-2 text-slate-400 font-medium">Aquí tienes tu resumen de hoy.</p>
+                <p className="mt-2 text-slate-500 dark:text-slate-400 font-medium">Aquí tienes tu resumen de hoy.</p>
               </div>
               <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 self-start sm:self-auto">
                 {session?.user?.gymName && (
-                  <div className="inline-flex items-center gap-2 rounded-full bg-white/5 backdrop-blur-md border border-white/10 px-4 py-2 text-xs font-bold text-cyan-300">
+                  <div className="inline-flex items-center gap-2 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 px-4 py-2 text-xs font-bold text-slate-700 dark:text-cyan-300">
                     <Building2 className="h-3.5 w-3.5" />
                     {session.user.gymName}
                   </div>
                 )}
                 {session?.user?.subscriptionEndDate && session.user.subscriptionStatus === "ACTIVE" && (
-                  <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/10 backdrop-blur-md border border-emerald-500/20 px-4 py-2 text-xs font-bold text-emerald-400">
+                  <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 px-4 py-2 text-xs font-bold text-emerald-700 dark:text-emerald-400">
                     <Clock className="h-3.5 w-3.5" />
                     Cuota activa hasta: {new Date(session.user.subscriptionEndDate).toLocaleDateString("es-ES", { day: "numeric", month: "short" })}
                   </div>
@@ -177,26 +191,26 @@ export default function DashboardPage() {
             {/* Mini Stats Row */}
             {data && (
               <div className="flex flex-wrap gap-3 mt-6">
-                <div className="flex items-center gap-2 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 px-4 py-2.5">
-                  <Flame className="h-4 w-4 text-orange-400" />
-                  <span className="text-sm font-bold text-white">
+                <div className="flex items-center gap-2 rounded-2xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 px-4 py-2.5">
+                  <Flame className="h-4 w-4 text-orange-500 dark:text-orange-400" />
+                  <span className="text-sm font-bold text-slate-900 dark:text-white">
                     {attendanceStats !== null ? attendanceStats.streak : data.streak}
                   </span>
-                  <span className="text-xs text-slate-400 font-medium">
+                  <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                     {attendanceStats !== null
                       ? `semana${attendanceStats.streak !== 1 ? "s" : ""} de racha`
                       : `día${data.streak !== 1 ? "s" : ""} de racha`}
                   </span>
                 </div>
-                <div className="flex items-center gap-2 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 px-4 py-2.5">
-                  <Trophy className="h-4 w-4 text-amber-400" />
-                  <span className="text-sm font-bold text-white">{data.totalSessions}</span>
-                  <span className="text-xs text-slate-400 font-medium">entrenos totales</span>
+                <div className="flex items-center gap-2 rounded-2xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 px-4 py-2.5">
+                  <Trophy className="h-4 w-4 text-amber-500 dark:text-amber-400" />
+                  <span className="text-sm font-bold text-slate-900 dark:text-white">{data.totalSessions}</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">entrenos totales</span>
                 </div>
-                <div className="flex items-center gap-2 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 px-4 py-2.5">
-                  <Zap className="h-4 w-4 text-cyan-400" />
-                  <span className="text-sm font-bold text-white">{data.weeklySessionsCount}</span>
-                  <span className="text-xs text-slate-400 font-medium">esta semana</span>
+                <div className="flex items-center gap-2 rounded-2xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 px-4 py-2.5">
+                  <Zap className="h-4 w-4 text-cyan-500 dark:text-cyan-400" />
+                  <span className="text-sm font-bold text-slate-900 dark:text-white">{data.weeklySessionsCount}</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">esta semana</span>
                 </div>
               </div>
             )}
@@ -213,7 +227,7 @@ export default function DashboardPage() {
             <div className="grid gap-6 lg:grid-cols-3">
 
               {/* Col 1: Weekly Chart */}
-              <div className="lg:col-span-2 order-2 lg:order-1 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm">
+              <div className="lg:col-span-2 order-2 lg:order-1 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm min-w-0">
                 <div className="flex items-center justify-between mb-6">
                   <div>
                     <h2 className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Actividad Semanal</h2>
@@ -229,15 +243,13 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 </div>
-                <div className="h-44 w-full">
-                  <ResponsiveContainer width="100%" height="100%">
+                <div className="h-44 w-full relative">
+                  <ResponsiveContainer width="99%" height="100%">
                     <BarChart data={data?.weeklyChart || []} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
                       <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 700 }} />
                       <Tooltip
+                        content={<CustomTooltip />}
                         cursor={{ fill: 'rgba(148, 163, 184, 0.08)', radius: 8 } as any}
-                        contentStyle={{ backgroundColor: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', color: '#fff', padding: '12px 16px' }}
-                        labelStyle={{ color: '#94a3b8', fontWeight: 700, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}
-                        formatter={(val: any) => [`${val} min`, 'Duración']}
                       />
                       <Bar dataKey="minutos" radius={[8, 8, 4, 4]} barSize={32}>
                         {(data?.weeklyChart || []).map((entry, index) => (
