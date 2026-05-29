@@ -42,6 +42,14 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
+const CustomTick = ({ x, y, payload }: any) => {
+  return (
+    <text x={x} y={y + 12} fill="#94a3b8" fontSize={12} fontWeight={700} textAnchor="middle">
+      {payload.value}
+    </text>
+  );
+};
+
 export default function DashboardPage() {
   const { data: session, status } = useSession();
   const { weightUnit } = usePreferences();
@@ -251,8 +259,8 @@ export default function DashboardPage() {
                 <div className="h-44 w-full relative">
                   {mounted ? (
                     <ResponsiveContainer width="99%" height="100%">
-                      <BarChart data={data?.weeklyChart || []} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
-                        <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ textAnchor: 'middle', fill: '#94a3b8', fontSize: 12, fontWeight: 700 }} />
+                      <BarChart key="weekly-activity-chart" data={data?.weeklyChart || []} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
+                        <XAxis dataKey="day" axisLine={false} tickLine={false} tick={<CustomTick />} />
                         <Tooltip
                           content={<CustomTooltip />}
                           cursor={{ fill: 'rgba(148, 163, 184, 0.08)', radius: 8 } as any}
