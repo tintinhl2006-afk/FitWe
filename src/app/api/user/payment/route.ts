@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import Stripe from "stripe";
+// @ts-ignore
+import { Redsys } from "node-redsys-api";
 
 export async function POST(req: Request) {
   try {
@@ -19,88 +22,21 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { cardNumber, cardHolder, expiryDate, cvv } = body;
+    const { planId, gateway } = body;
 
-    // ── Validación de formato de tarjeta ──
+    // Detectar y resolver el origen de forma segura (forzando localhost en desarrollo)
+    const rawOrigin = req.headers.get("origin") || "";
+    const isLocal =
+      process.env.NODE_ENV === "development" ||
+      rawOrigin.includes("localhost") ||
+      rawOrigin.includes("127.0.0.1") ||
+      rawOrigin.includes("192.168.");
+    const origin = isLocal ? "http://localhost:3000" : rawOrigin;
 
-    // Limpiar espacios del número de tarjeta
-    const cleanCardNumber = cardNumber?.replace(/\s/g, "") || "";
-
-    // Validar que sea un número de 13-19 dígitos
-    if (!/^\d{13,19}$/.test(cleanCardNumber)) {
-      return NextResponse.json(
-        { message: "Número de tarjeta inválido. Debe contener entre 13 y 19 dígitos." },
-        { status: 400 }
-      );
-    }
-
-    // Validación Luhn (checksum estándar de tarjetas)
-    let sum = 0;
-    let isAlternate = false;
-    for (let i = cleanCardNumber.length - 1; i >= 0; i--) {
-      let digit = parseInt(cleanCardNumber[i], 10);
-      if (isAlternate) {
-        digit *= 2;
-        if (digit > 9) digit -= 9;
-      }
-      sum += digit;
-      isAlternate = !isAlternate;
-    }
-    if (sum % 10 !== 0) {
-      return NextResponse.json(
-        { message: "Número de tarjeta inválido. No pasa la validación de seguridad." },
-        { status: 400 }
-      );
-    }
-
-    // Validar titular
-    if (!cardHolder || cardHolder.trim().length < 3) {
-      return NextResponse.json(
-        { message: "El nombre del titular es obligatorio (mínimo 3 caracteres)." },
-        { status: 400 }
-      );
-    }
-
-    // Validar fecha de expiración (MM/YY)
-    if (!/^\d{2}\/\d{2}$/.test(expiryDate)) {
-      return NextResponse.json(
-        { message: "Fecha de expiración inválida. Usa el formato MM/AA." },
-        { status: 400 }
-      );
-    }
-    const [month, year] = expiryDate.split("/").map(Number);
-    if (month < 1 || month > 12) {
-      return NextResponse.json(
-        { message: "Mes de expiración inválido." },
-        { status: 400 }
-      );
-    }
-    const fullYear = 2000 + year;
-    const now = new Date();
-    const expiryDateObj = new Date(fullYear, month); // First day of next month
-    if (expiryDateObj <= now) {
-      return NextResponse.json(
-        { message: "La tarjeta ha expirado." },
-        { status: 400 }
-      );
-    }
-
-    // Validar CVV (3-4 dígitos)
-    if (!/^\d{3,4}$/.test(cvv)) {
-      return NextResponse.json(
-        { message: "CVV inválido. Debe ser de 3 o 4 dígitos." },
-        { status: 400 }
-      );
-    }
-
-    // ── Simulación de pago exitoso ──
-
-    const { planId } = body;
-
-    // Obtener datos del usuario
+    // Obtener datos del usuario cliente
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { monthlyFee: true, gymId: true },
+      select: { gymId: true },
     });
 
     if (!user || !user.gymId) {
@@ -110,20 +46,55 @@ export async function POST(req: Request) {
       );
     }
 
-    let amount = user.monthlyFee;
+    // Obtener datos del gimnasio al que está vinculado el cliente
+    const gym = await prisma.user.findUnique({
+      where: { id: user.gymId },
+      select: {
+        name: true,
+        stripeSecretKey: true,
+        stripePublishableKey: true,
+        stripeAccountId: true,
+        stripeConnected: true,
+        redsysFuc: true,
+        redsysTerminal: true,
+        redsysClave: true,
+        redsysEnabled: true,
+      },
+    });
+
+    if (!gym) {
+      return NextResponse.json(
+        { message: "El gimnasio al que estás vinculado no existe." },
+        { status: 400 }
+      );
+    }
+
+    let amount = 49.99;
     let durationDays = 30;
     let planName = "Cuota mensual";
     let resolvedPlanId: string | null = null;
 
-    // Si se proporciona un planId, buscar el plan
-    if (planId) {
+    // Si no se proporciona un planId, cargar automáticamente la primera tarifa activa del gimnasio
+    let selectedPlanId = planId;
+    if (!selectedPlanId) {
+      const firstActivePlan = await prisma.subscriptionPlan.findFirst({
+        where: { gymId: user.gymId, isActive: true },
+        orderBy: { price: "asc" },
+      });
+      if (firstActivePlan) {
+        selectedPlanId = firstActivePlan.id;
+      }
+    }
+
+    // Si se tiene un planId resuelto, cargar sus propiedades
+    if (selectedPlanId) {
       const plan = await prisma.subscriptionPlan.findUnique({
-        where: { id: planId },
+        where: { id: selectedPlanId },
       });
 
       if (!plan || plan.gymId !== user.gymId || !plan.isActive) {
         return NextResponse.json(
-          { message: "Plan no válido o no disponible." },
+          { message: "Plan no válido o no disponible en este centro." },
           { status: 400 }
         );
       }
@@ -132,53 +103,185 @@ export async function POST(req: Request) {
       durationDays = plan.durationDays;
       planName = plan.name;
       resolvedPlanId = plan.id;
+    } else {
+      // Si el gimnasio no tiene tarifas dadas de alta, retornamos error aclaratorio
+      return NextResponse.json(
+        { message: "Este centro deportivo no dispone de ninguna tarifa activa para contratar." },
+        { status: 400 }
+      );
     }
 
-    // Calcular nueva fecha de fin de suscripción
-    const newEndDate = new Date();
-    newEndDate.setDate(newEndDate.getDate() + durationDays);
+    // ─── PASARELA SELECCIONADA: REDSYS (TPV Virtual) ───
+    if (gateway === "redsys") {
+      const isRedsysReal = 
+        !!gym.redsysEnabled && 
+        !!gym.redsysFuc && 
+        !!gym.redsysClave && 
+        gym.redsysClave.trim().toLowerCase() !== "mock";
 
-    // Transacción: registrar pago + actualizar suscripción + asignar plan
-    const [payment] = await prisma.$transaction([
-      prisma.paymentRecord.create({
-        data: {
-          userId: session.user.id,
-          amount,
-          description: `${planName} - Tarjeta ****${cleanCardNumber.slice(-4)}`,
-          date: new Date(),
-          planId: resolvedPlanId,
-        },
-      }),
-      prisma.user.update({
-        where: { id: session.user.id },
-        data: {
-          subscriptionStatus: "ACTIVE",
-          subscriptionEndDate: newEndDate,
-          ...(resolvedPlanId && { planId: resolvedPlanId }),
-        },
-      }),
-    ]);
+      if (isRedsysReal) {
+        try {
+          const order = `${Date.now().toString().slice(-10)}${Math.floor(10 + Math.random() * 90)}`;
+          
+          const redsysParams = {
+            Ds_Merchant_Amount: Math.round(amount * 100).toString(),
+            Ds_Merchant_Order: order,
+            Ds_Merchant_MerchantCode: gym.redsysFuc!.trim(),
+            Ds_Merchant_Currency: "978",
+            Ds_Merchant_Terminal: gym.redsysTerminal?.trim() || "001",
+            Ds_Merchant_TransactionType: "0",
+            Ds_Merchant_MerchantURL: `${origin}/api/user/payment/redsys-webhook`,
+            Ds_Merchant_UrlOK: `${origin}/dashboard/pago/success?mock_redsys=true&planId=${resolvedPlanId || ""}&order=${order}&amount=${amount}`,
+            Ds_Merchant_UrlKO: `${origin}/dashboard/pago`,
+            Ds_Merchant_MerchantData: JSON.stringify({
+              userId: session.user.id,
+              planId: resolvedPlanId || "",
+              gymId: user.gymId,
+            }),
+          };
 
-    return NextResponse.json(
-      {
-        message: "Pago procesado correctamente (simulado)",
-        payment: {
-          id: payment.id,
-          amount: payment.amount,
-          date: payment.date.toISOString(),
-          lastFourDigits: cleanCardNumber.slice(-4),
-        },
-        subscription: {
-          status: "ACTIVE",
-          endDate: newEndDate.toISOString(),
-        },
-      },
-      { status: 201 }
-    );
+          // @ts-ignore
+          const redsys = new Redsys();
+          const merchantParameters = redsys.createMerchantParameters(redsysParams);
+          const signature = redsys.createMerchantSignature(gym.redsysClave!.trim(), redsysParams);
+
+          const redsysUrl = "https://sis-t.redsys.es:25443/sis/realizarPago";
+
+          return NextResponse.json({
+            isRedsysForm: true,
+            url: redsysUrl,
+            params: {
+              Ds_SignatureVersion: "HMAC_SHA256_V1",
+              Ds_MerchantParameters: merchantParameters,
+              Ds_Signature: signature,
+            },
+          });
+        } catch (redsysError: any) {
+          console.error("Error al generar firma Redsys:", redsysError);
+          return NextResponse.json(
+            { message: `Error del TPV Virtual: ${redsysError.message || "Fallo criptográfico al firmar parámetros."}` },
+            { status: 400 }
+          );
+        }
+      } else {
+        const mockRedsysUrl = `/dashboard/pago/redsys-mock?amount=${amount}${resolvedPlanId ? `&planId=${resolvedPlanId}` : ""}`;
+        return NextResponse.json({ url: mockRedsysUrl });
+      }
+    }
+
+    // ─── PASARELA SELECCIONADA: STRIPE ───
+    
+    // A. Stripe Connect
+    if (gym.stripeConnected && gym.stripeAccountId) {
+      const platformSecretKey = process.env.STRIPE_SECRET_KEY;
+
+      if (platformSecretKey) {
+        try {
+          const stripe = new Stripe(platformSecretKey, {
+            apiVersion: "2023-10-16" as any,
+          });
+
+          const stripeSession = await stripe.checkout.sessions.create(
+            {
+              payment_method_types: ["card"],
+              line_items: [
+                {
+                  price_data: {
+                    currency: "eur",
+                    product_data: {
+                      name: planName,
+                      description: `Suscripción para el centro ${gym.name}`,
+                    },
+                    unit_amount: Math.round(amount * 100),
+                  },
+                  quantity: 1,
+                },
+              ],
+              mode: "payment",
+              success_url: `${origin}/dashboard/pago/success?session_id={CHECKOUT_SESSION_ID}&stripe_connect=true${resolvedPlanId ? `&planId=${resolvedPlanId}` : ""}`,
+              cancel_url: `${origin}/dashboard/pago`,
+              metadata: {
+                userId: session.user.id,
+                gymId: user.gymId,
+                planId: resolvedPlanId || "",
+                amount: amount.toString(),
+                durationDays: durationDays.toString(),
+                planName: planName,
+                stripeConnect: "true",
+              },
+            },
+            {
+              stripeAccount: gym.stripeAccountId,
+            }
+          );
+
+          return NextResponse.json({ url: stripeSession.url }, { status: 200 });
+        } catch (stripeError: any) {
+          console.error("Error al crear sesión en Stripe Connect:", stripeError);
+          return NextResponse.json(
+            { message: `Error de pasarela de pago: ${stripeError.message || "No se pudo conectar con Stripe Connect."}` },
+            { status: 400 }
+          );
+        }
+      } else {
+        const mockStripeUrl = `/dashboard/pago/stripe-mock?amount=${amount}&planName=${encodeURIComponent(planName)}${resolvedPlanId ? `&planId=${resolvedPlanId}` : ""}`;
+        return NextResponse.json({ url: mockStripeUrl }, { status: 200 });
+      }
+    }
+
+    // B. Claves Manuales
+    const stripeSecretKey = gym.stripeSecretKey?.trim();
+    if (stripeSecretKey) {
+      try {
+        const stripe = new Stripe(stripeSecretKey, {
+          apiVersion: "2023-10-16" as any,
+        });
+
+        const stripeSession = await stripe.checkout.sessions.create({
+          payment_method_types: ["card"],
+          line_items: [
+            {
+              price_data: {
+                currency: "eur",
+                product_data: {
+                  name: planName,
+                  description: `Suscripción para el centro ${gym.name}`,
+                },
+                unit_amount: Math.round(amount * 100),
+              },
+              quantity: 1,
+            },
+          ],
+          mode: "payment",
+          success_url: `${origin}/dashboard/pago/success?session_id={CHECKOUT_SESSION_ID}${resolvedPlanId ? `&planId=${resolvedPlanId}` : ""}`,
+          cancel_url: `${origin}/dashboard/pago`,
+          metadata: {
+            userId: session.user.id,
+            gymId: user.gymId,
+            planId: resolvedPlanId || "",
+            amount: amount.toString(),
+            durationDays: durationDays.toString(),
+            planName: planName,
+          },
+        });
+
+        return NextResponse.json({ url: stripeSession.url }, { status: 200 });
+      } catch (stripeError: any) {
+        console.error("Error al crear la sesión de Stripe manual:", stripeError);
+        return NextResponse.json(
+          { message: `Error de pasarela de pago: ${stripeError.message || "No se pudo conectar con Stripe."}` },
+          { status: 400 }
+        );
+      }
+    }
+
+    // C. Fallback simulado
+    const mockStripeUrl = `/dashboard/pago/stripe-mock?amount=${amount}&planName=${encodeURIComponent(planName)}${resolvedPlanId ? `&planId=${resolvedPlanId}` : ""}`;
+    return NextResponse.json({ url: mockStripeUrl }, { status: 200 });
   } catch (error) {
-    console.error("Error processing payment:", error);
+    console.error("Error processing payment POST:", error);
     return NextResponse.json(
-      { error: "Error interno del servidor" },
+      { error: "Error interno del servidor al iniciar el pago" },
       { status: 500 }
     );
   }

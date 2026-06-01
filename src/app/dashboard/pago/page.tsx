@@ -15,6 +15,7 @@ import {
   Shield,
   Clock,
   Tag,
+  Check,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -28,25 +29,17 @@ interface Plan {
 }
 
 export default function PaymentPage() {
-  const { data: session, update } = useSession();
+  const { data: session } = useSession();
   const router = useRouter();
 
   const [plans, setPlans] = useState<Plan[]>([]);
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [isLoadingPlans, setIsLoadingPlans] = useState(true);
-
-  const [cardNumber, setCardNumber] = useState("");
-  const [cardHolder, setCardHolder] = useState("");
-  const [expiryDate, setExpiryDate] = useState("");
-  const [cvv, setCvv] = useState("");
+  const [hasStripe, setHasStripe] = useState(false);
+  const [hasRedsys, setHasRedsys] = useState(false);
+  const [gateway, setGateway] = useState<"stripe" | "redsys">("stripe");
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState<{
-    lastFour: string;
-    amount: number;
-    endDate: string;
-    planName: string;
-  } | null>(null);
 
   const gymName = session?.user?.gymName || "Tu Gimnasio";
 
@@ -54,19 +47,38 @@ export default function PaymentPage() {
   useEffect(() => {
     const fetchPlans = async () => {
       try {
-        const res = await fetch("/api/user/plans");
+        const res = await fetch(`/api/user/plans?t=${Date.now()}`, { cache: "no-store" });
         if (res.ok) {
           const data = await res.json();
           setPlans(data.plans);
+          
+          // Priorización: Si el gimnasio tiene TPV Redsys activo, ocultar Stripe y forzar Redsys
+          const redsysActive = !!data.hasRedsys;
+          const stripeActive = !!data.hasStripe && !redsysActive;
+
+          setHasRedsys(redsysActive);
+          setHasStripe(stripeActive);
+          
+          // Seleccionar pasarela activa
+          if (redsysActive) {
+            setGateway("redsys");
+          } else if (stripeActive) {
+            setGateway("stripe");
+          }
+
           // Auto-select current plan or first plan
           if (data.currentPlanId) {
             setSelectedPlanId(data.currentPlanId);
           } else if (data.plans.length > 0) {
             setSelectedPlanId(data.plans[0].id);
           }
+        } else {
+          const errorData = await res.json().catch(() => ({}));
+          setError(errorData.message || errorData.error || `Error al cargar tarifas (código ${res.status})`);
         }
-      } catch (e) {
+      } catch (e: any) {
         console.error("Error fetching plans:", e);
+        setError("Error de conexión al cargar las tarifas oficiales.");
       } finally {
         setIsLoadingPlans(false);
       }
@@ -75,7 +87,9 @@ export default function PaymentPage() {
   }, []);
 
   const selectedPlan = plans.find((p) => p.id === selectedPlanId);
-  const displayPrice = selectedPlan?.price ?? session?.user?.monthlyFee ?? 49.99;
+  const displayPrice = selectedPlan?.price ?? 0;
+  const displayPlanName = selectedPlan?.name ?? "Ninguno seleccionado";
+  const displayDuration = selectedPlan ? selectedPlan.durationDays : 0;
 
   const formatDuration = (days: number) => {
     if (days === 1) return "1 día";
@@ -89,32 +103,6 @@ export default function PaymentPage() {
     return `${days} días`;
   };
 
-  // Formatea el número de tarjeta con espacios cada 4 dígitos
-  const formatCardNumber = (value: string) => {
-    const digits = value.replace(/\D/g, "").slice(0, 16);
-    return digits.replace(/(\d{4})(?=\d)/g, "$1 ");
-  };
-
-  // Formatea la fecha de expiración como MM/YY
-  const formatExpiry = (value: string) => {
-    const digits = value.replace(/\D/g, "").slice(0, 4);
-    if (digits.length >= 3) {
-      return `${digits.slice(0, 2)}/${digits.slice(2)}`;
-    }
-    return digits;
-  };
-
-  // Detectar tipo de tarjeta por prefijo
-  const getCardType = (number: string): string => {
-    const clean = number.replace(/\s/g, "");
-    if (/^4/.test(clean)) return "Visa";
-    if (/^5[1-5]/.test(clean)) return "Mastercard";
-    if (/^3[47]/.test(clean)) return "Amex";
-    return "";
-  };
-
-  const cardType = getCardType(cardNumber);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -125,11 +113,8 @@ export default function PaymentPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          cardNumber,
-          cardHolder,
-          expiryDate,
-          cvv,
           planId: selectedPlanId,
+          gateway,
         }),
       });
 
@@ -139,98 +124,42 @@ export default function PaymentPage() {
         throw new Error(data.message || data.error || "Error al procesar el pago");
       }
 
-      setSuccess({
-        lastFour: data.payment.lastFourDigits,
-        amount: data.payment.amount,
-        endDate: data.subscription.endDate,
-        planName: selectedPlan?.name || "Cuota mensual",
-      });
+      // Si retorna un formulario para Redsys Real, lo enviamos mediante POST
+      if (data.isRedsysForm) {
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = data.url;
 
-      // Actualizar la sesión para reflejar la nueva suscripción
-      await update({
-        subscriptionStatus: "ACTIVE",
-        subscriptionEndDate: data.subscription.endDate,
-      });
+        Object.keys(data.params).forEach((key) => {
+          const input = document.createElement("input");
+          input.type = "hidden";
+          input.name = key;
+          input.value = data.params[key];
+          form.appendChild(input);
+        });
+
+        document.body.appendChild(form);
+        form.submit();
+        return;
+      }
+
+      // Redirigir a la Checkout Session de Stripe o a las simulaciones locales
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error("No se recibió la URL de redirección segura del servidor.");
+      }
     } catch (err: any) {
       setError(err.message);
-    } finally {
       setIsProcessing(false);
     }
   };
 
-  // Pantalla de éxito
-  if (success) {
-    return (
-      <DashboardLayout>
-        <div className="mx-auto max-w-lg">
-          <div className="rounded-3xl border border-emerald-200 dark:border-emerald-900/50 bg-white dark:bg-slate-900 p-8 text-center shadow-sm">
-            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-950/30">
-              <CheckCircle2 className="h-10 w-10 text-emerald-500" />
-            </div>
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
-              ¡Pago Completado!
-            </h2>
-            <p className="text-slate-500 dark:text-slate-400 mb-6">
-              Tu suscripción ha sido renovada exitosamente.
-            </p>
-
-            <div className="rounded-2xl bg-slate-50 dark:bg-slate-800/50 p-5 mb-6 space-y-3 text-left">
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-500 dark:text-slate-400">Plan</span>
-                <span className="font-bold text-slate-900 dark:text-white">
-                  {success.planName}
-                </span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-500 dark:text-slate-400">Importe</span>
-                <span className="font-bold text-slate-900 dark:text-white">
-                  {success.amount.toFixed(2)} €
-                </span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-500 dark:text-slate-400">Tarjeta</span>
-                <span className="font-mono text-slate-900 dark:text-white">
-                  •••• {success.lastFour}
-                </span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-500 dark:text-slate-400">Válido hasta</span>
-                <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                  {new Date(success.endDate).toLocaleDateString("es-ES", {
-                    day: "numeric",
-                    month: "long",
-                    year: "numeric",
-                  })}
-                </span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-500 dark:text-slate-400">Centro</span>
-                <span className="font-semibold text-slate-900 dark:text-white">
-                  {gymName}
-                </span>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-center gap-2 text-xs text-slate-400 mb-6">
-              <Shield className="h-3.5 w-3.5" />
-              Pago simulado
-            </div>
-
-            <button
-              onClick={() => router.push("/dashboard")}
-              className="w-full rounded-2xl bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-primary/90 transition-colors"
-            >
-              Volver
-            </button>
-          </div>
-        </div>
-      </DashboardLayout>
-    );
-  }
+  const showGatewaySelector = hasStripe && hasRedsys;
 
   return (
     <DashboardLayout>
-      <div className="mx-auto max-w-lg">
+      <div className="mx-auto max-w-3xl px-4 py-2">
         {/* Back link */}
         <Link
           href="/dashboard"
@@ -241,254 +170,269 @@ export default function PaymentPage() {
         </Link>
 
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-3xl bg-cyan-50 dark:bg-cyan-950/30 text-primary dark:text-cyan-400">
-              <CreditCard className="h-5 w-5" />
+        <div className="mb-8">
+          <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-3xl bg-cyan-50 dark:bg-cyan-950/30 text-primary dark:text-cyan-400 shadow-sm">
+              <CreditCard className="h-6 w-6" />
             </div>
-            Mi Cuota y Suscripción
+            Mi Suscripción y Cuotas
           </h1>
           <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-            Gestiona tu tarifa y pagos en{" "}
-            <span className="font-semibold text-slate-700 dark:text-slate-300">
+            Inscribe tu membresía directamente en tu centro deportivo{" "}
+            <span className="font-semibold text-slate-700 dark:text-slate-200">
               {gymName}
             </span>
           </p>
 
           {session?.user?.subscriptionEndDate && session.user.subscriptionStatus === "ACTIVE" ? (
-            <div className="mt-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/10 p-4 flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400 shrink-0">
-                <CheckCircle2 className="h-5 w-5" />
+            <div className="mt-5 rounded-2xl bg-emerald-500/5 border border-emerald-500/10 dark:border-emerald-500/20 p-4 flex items-center gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 shrink-0">
+                <CheckCircle2 className="h-6 w-6" />
               </div>
               <div>
-                <p className="text-xs font-bold text-emerald-400 uppercase tracking-wide">Suscripción Activa</p>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Tu pase es válido hasta el <span className="font-bold text-slate-200">{new Date(session.user.subscriptionEndDate).toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" })}</span>.
+                <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Suscripción Activa</p>
+                <p className="text-sm text-slate-600 dark:text-slate-355 mt-0.5">
+                  Tu pase de acceso es válido hasta el <span className="font-bold text-slate-900 dark:text-white">{new Date(session.user.subscriptionEndDate).toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" })}</span>.
                 </p>
               </div>
             </div>
           ) : (
-            <div className="mt-4 rounded-2xl bg-red-500/5 border border-red-500/10 p-4 flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-500/10 text-red-400 shrink-0">
-                <AlertCircle className="h-5 w-5" />
+            <div className="mt-5 rounded-2xl bg-rose-500/5 border border-rose-500/10 dark:border-rose-500/20 p-4 flex items-center gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-500/10 text-rose-500 dark:text-rose-450 shrink-0">
+                <AlertCircle className="h-6 w-6" />
               </div>
               <div>
-                <p className="text-xs font-bold text-red-400 uppercase tracking-wide">Suscripción Expirada</p>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Tu cuota ha vencido o está inactiva. Selecciona un plan a continuación para renovarla.
+                <p className="text-xs font-bold text-rose-600 dark:text-rose-450 uppercase tracking-wider">Suscripción Expirada</p>
+                <p className="text-sm text-slate-600 dark:text-slate-355 mt-0.5">
+                  Tu pase ha vencido. Selecciona un plan a continuación para renovar y activar tu código QR al instante.
                 </p>
               </div>
             </div>
           )}
         </div>
 
-        {/* Plan Selection */}
-        {isLoadingPlans ? (
-          <div className="flex h-24 items-center justify-center mb-6">
-            <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
-          </div>
-        ) : plans.length > 0 ? (
-          <div className="mb-6">
-            <h2 className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-2">
-              <Tag className="h-4 w-4" />
-              Elige tu tarifa
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+          {/* Plan Selection */}
+          <div className="md:col-span-7 space-y-6">
+            <h2 className="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-widest flex items-center gap-2">
+              <Tag className="h-4 w-4 text-primary" />
+              1. Selecciona tu tarifa
             </h2>
-            <div className="grid gap-3">
-              {plans.map((plan) => (
-                <button
-                  key={plan.id}
-                  type="button"
-                  onClick={() => setSelectedPlanId(plan.id)}
-                  className={cn(
-                    "flex items-center justify-between rounded-2xl border-2 p-4 text-left transition-all",
-                    selectedPlanId === plan.id
-                      ? "border-primary bg-cyan-50/50 dark:bg-cyan-950/20 shadow-sm"
-                      : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
-                  )}
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <h3
+            {isLoadingPlans ? (
+              <div className="flex h-36 items-center justify-center rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+                <div className="flex flex-col items-center gap-3">
+                  <Loader2 className="h-7 w-7 animate-spin text-primary" />
+                  <span className="text-xs text-slate-400">Cargando tarifas oficiales...</span>
+                </div>
+              </div>
+            ) : plans.length > 0 ? (
+              <div className="grid gap-3">
+                {plans.map((plan) => (
+                  <button
+                    key={plan.id}
+                    type="button"
+                    onClick={() => setSelectedPlanId(plan.id)}
+                    className={cn(
+                      "flex items-center justify-between rounded-2xl border-2 p-4 text-left transition-all duration-200 relative overflow-hidden",
+                      selectedPlanId === plan.id
+                        ? "border-primary bg-cyan-50/20 dark:bg-cyan-950/10 shadow-md ring-1 ring-primary/20"
+                        : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-slate-900"
+                    )}
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3
+                          className={cn(
+                            "font-bold text-base transition-colors",
+                            selectedPlanId === plan.id
+                              ? "text-primary dark:text-cyan-400"
+                              : "text-slate-900 dark:text-white"
+                          )}
+                        >
+                          {plan.name}
+                        </h3>
+                        <span className="flex items-center gap-1 text-xs font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
+                          <Clock className="h-3.5 w-3.5 text-slate-400" />
+                          {formatDuration(plan.durationDays)}
+                        </span>
+                      </div>
+                      {plan.description && (
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">
+                          {plan.description}
+                        </p>
+                      )}
+                    </div>
+                    <div className="text-right ml-4 shrink-0">
+                      <span
                         className={cn(
-                          "font-bold",
+                          "text-2xl font-black transition-colors",
                           selectedPlanId === plan.id
                             ? "text-primary dark:text-cyan-400"
                             : "text-slate-900 dark:text-white"
                         )}
                       >
-                        {plan.name}
-                      </h3>
-                      <span className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
-                        <Clock className="h-3 w-3" />
-                        {formatDuration(plan.durationDays)}
+                        {plan.price.toFixed(2)}
                       </span>
+                      <span className="text-sm text-slate-500 dark:text-slate-400 ml-1 font-semibold">€</span>
                     </div>
-                    {plan.description && (
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                        {plan.description}
-                      </p>
-                    )}
-                  </div>
-                  <div className="text-right ml-4">
-                    <span
-                      className={cn(
-                        "text-xl font-black",
-                        selectedPlanId === plan.id
-                          ? "text-primary dark:text-cyan-400"
-                          : "text-slate-900 dark:text-white"
-                      )}
-                    >
-                      {plan.price.toFixed(2)}
-                    </span>
-                    <span className="text-sm text-slate-500 ml-0.5">€</span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        ) : (
-          /* Fallback when gym has no plans */
-          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-gradient-to-br from-slate-900 to-slate-800 dark:from-slate-800 dark:to-slate-900 p-6 mb-6 text-white">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2 text-slate-400">
-                <Building2 className="h-4 w-4" />
-                <span className="text-sm">{gymName}</span>
+                  </button>
+                ))}
               </div>
-              <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold">
-                Mensual
-              </span>
-            </div>
-            <div className="text-4xl font-bold">
-              {displayPrice.toFixed(2)}{" "}
-              <span className="text-xl font-normal text-slate-400">€</span>
-            </div>
-            <p className="mt-1 text-sm text-slate-400">
-              Cuota del mes · 30 días de acceso
-            </p>
-          </div>
-        )}
-
-        {/* Payment form */}
-        <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm">
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {error && (
-              <div className="flex items-center gap-2 rounded-2xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 px-4 py-3 text-sm font-medium text-red-700 dark:text-red-400">
-                <AlertCircle className="h-4 w-4 shrink-0" />
-                {error}
+            ) : (
+              /* Mensaje cuando el gimnasio no tiene tarifas dadas de alta */
+              <div className="rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 p-8 text-center bg-white dark:bg-slate-900 shadow-sm animate-in fade-in duration-300">
+                <Building2 className="h-10 w-10 mx-auto text-slate-400 dark:text-slate-500 mb-3" />
+                <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider mb-2">
+                  No hay tarifas activas
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed max-w-sm mx-auto">
+                  Este centro deportivo ({gymName}) no ha publicado ninguna tarifa activa en su panel todavía. Ponte en contacto con la administración para que den de alta sus tarifas oficiales.
+                </p>
               </div>
             )}
+          </div>
 
-            {/* Card number */}
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                Número de tarjeta
-              </label>
-              <div className="relative">
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-                  <CreditCard className="h-4 w-4 text-slate-400" />
-                </div>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  autoComplete="cc-number"
-                  required
-                  value={cardNumber}
-                  onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
-                  className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-3 pl-10 pr-20 text-slate-900 dark:text-white text-sm font-mono tracking-wider focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none transition-all"
-                  placeholder="4242 4242 4242 4242"
-                />
-                {cardType && (
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg">
-                    {cardType}
-                  </span>
+          {/* Secure Checkout Section */}
+          <div className="md:col-span-5 space-y-6">
+            <h2 className="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-widest flex items-center gap-2">
+              <Shield className="h-4 w-4 text-primary" />
+              2. Pasarela de Pago
+            </h2>
+
+            <div className="rounded-2xl border border-slate-250 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-md transition-all duration-300">
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {error && (
+                  <div className="flex items-start gap-2.5 rounded-2xl bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/50 p-3.5 text-xs font-semibold text-rose-700 dark:text-rose-450 leading-normal">
+                    <AlertCircle className="h-4 w-4 shrink-0 text-rose-500" />
+                    <span>{error}</span>
+                  </div>
                 )}
-              </div>
-            </div>
 
-            {/* Card holder */}
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                Titular de la tarjeta
-              </label>
-              <input
-                type="text"
-                autoComplete="cc-name"
-                required
-                value={cardHolder}
-                onChange={(e) => setCardHolder(e.target.value.toUpperCase())}
-                className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-3 px-4 text-slate-900 dark:text-white text-sm uppercase tracking-wider focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none transition-all"
-                placeholder="NOMBRE APELLIDO"
-              />
-            </div>
-
-            {/* Expiry + CVV row */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                  Expiración
-                </label>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  autoComplete="cc-exp"
-                  required
-                  value={expiryDate}
-                  onChange={(e) => setExpiryDate(formatExpiry(e.target.value))}
-                  className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-3 px-4 text-slate-900 dark:text-white text-sm font-mono text-center tracking-widest focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none transition-all"
-                  placeholder="MM/AA"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                  CVV
-                </label>
-                <div className="relative">
-                  <input
-                    type="password"
-                    inputMode="numeric"
-                    autoComplete="cc-csc"
-                    required
-                    maxLength={4}
-                    value={cvv}
-                    onChange={(e) =>
-                      setCvv(e.target.value.replace(/\D/g, "").slice(0, 4))
-                    }
-                    className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-3 px-4 text-slate-900 dark:text-white text-sm font-mono text-center tracking-widest focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none transition-all"
-                    placeholder="•••"
-                  />
-                  <Lock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                {/* Resumen del Pedido */}
+                <div className="rounded-xl bg-slate-50 dark:bg-slate-950 p-4 border border-slate-100 dark:border-slate-850 space-y-2.5 text-sm">
+                  <div className="flex justify-between text-slate-500 dark:text-slate-455">
+                    <span>Membresía:</span>
+                    <span className="font-semibold text-slate-800 dark:text-slate-200">
+                      {displayPlanName}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-slate-500 dark:text-slate-455">
+                    <span>Duración:</span>
+                    <span className="font-semibold text-slate-800 dark:text-slate-200">
+                      {formatDuration(displayDuration)}
+                    </span>
+                  </div>
+                  <div className="h-px bg-slate-200 dark:bg-slate-800 my-1" />
+                  <div className="flex justify-between items-baseline">
+                    <span className="font-bold text-slate-900 dark:text-white">Total a pagar:</span>
+                    <div>
+                      <span className="text-2xl font-black text-slate-900 dark:text-white">
+                        {displayPrice.toFixed(2)}
+                      </span>
+                      <span className="text-sm font-bold text-slate-500 dark:text-slate-400 ml-0.5">€</span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
 
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={isProcessing}
-              className={cn(
-                "flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-3.5 text-sm font-semibold text-white shadow-soft shadow-cyan-500/20 hover:shadow-cyan-500/30 hover:scale-[1.01] active:scale-[0.99] transition-all",
-                isProcessing && "opacity-70 cursor-not-allowed"
-              )}
-            >
-              {isProcessing ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Procesando...
-                </>
-              ) : (
-                <>
-                  <Lock className="h-4 w-4" />
-                  Pagar {displayPrice.toFixed(2)} €
-                </>
-              )}
-            </button>
+                {/* SELECTOR DE GATEWAYS (SI AMBOS ESTÁN DISPONIBLES) */}
+                {showGatewaySelector && (
+                  <div className="space-y-2">
+                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-450 uppercase tracking-wider mb-2">
+                      Elige el método de pago:
+                    </label>
+                    <div className="grid grid-cols-1 gap-2">
+                      {/* Gateway: Stripe */}
+                      <button
+                        type="button"
+                        onClick={() => setGateway("stripe")}
+                        className={cn(
+                          "flex items-center gap-3 p-3 rounded-xl border-2 text-left transition-all",
+                          gateway === "stripe"
+                            ? "border-primary bg-cyan-500/[0.03] dark:bg-cyan-400/[0.01]"
+                            : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-750"
+                        )}
+                      >
+                        <div className={cn("flex h-4 w-4 shrink-0 rounded-full border items-center justify-center", gateway === "stripe" ? "border-primary text-primary" : "border-slate-350")}>
+                          {gateway === "stripe" && <span className="h-2.5 w-2.5 rounded-full bg-primary" />}
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-slate-800 dark:text-slate-250">Tarjeta (Stripe Connect)</p>
+                          <p className="text-[10px] text-slate-400">Soporta Apple Pay, Google Pay y Visa/MC</p>
+                        </div>
+                      </button>
 
-            {/* Security notice */}
-            <div className="flex items-center justify-center gap-2 text-xs text-slate-400 dark:text-slate-500 pt-2">
-              <Shield className="h-3.5 w-3.5" />
-              Pago simulado · Validación de formato únicamente
+                      {/* Gateway: Redsys */}
+                      <button
+                        type="button"
+                        onClick={() => setGateway("redsys")}
+                        className={cn(
+                          "flex items-center gap-3 p-3 rounded-xl border-2 text-left transition-all",
+                          gateway === "redsys"
+                            ? "border-primary bg-cyan-500/[0.03] dark:bg-cyan-400/[0.01]"
+                            : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-750"
+                        )}
+                      >
+                        <div className={cn("flex h-4 w-4 shrink-0 rounded-full border items-center justify-center", gateway === "redsys" ? "border-primary text-primary" : "border-slate-350")}>
+                          {gateway === "redsys" && <span className="h-2.5 w-2.5 rounded-full bg-primary" />}
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-slate-800 dark:text-slate-250">TPV Virtual Bancario (Redsys)</p>
+                          <p className="text-[10px] text-slate-400">Pago directo en la pasarela oficial de tu banco</p>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Explicación de seguridad para el cliente */}
+                <div className="space-y-4">
+                  <div className="rounded-xl border border-emerald-500/10 dark:border-emerald-400/20 bg-emerald-500/[0.02] dark:bg-emerald-400/[0.01] p-4 text-xs space-y-2">
+                    <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-450 font-bold">
+                      <Check className="h-4 w-4" />
+                      <span>Pago 100% Seguro Encriptado</span>
+                    </div>
+                    <p className="text-slate-550 dark:text-slate-400 leading-relaxed">
+                      Serás redirigido de forma segura a la pasarela de pago bancaria oficial de **{gymName}** para completar tu transacción bajo el protocolo de cifrado seguro SSL.
+                    </p>
+                  </div>
+
+                  {/* Trust Badges */}
+                  <div className="grid grid-cols-2 gap-2 text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider">
+                    <div className="flex items-center gap-1.5 p-2 rounded-xl bg-slate-50 dark:bg-slate-950 justify-center">
+                      <Lock className="h-3.5 w-3.5 text-emerald-500" />
+                      <span>SSL Encriptado</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 p-2 rounded-xl bg-slate-50 dark:bg-slate-950 justify-center">
+                      <Shield className="h-3.5 w-3.5 text-cyan-500" />
+                      <span>PCI-DSS Compliant</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Button */}
+                <button
+                  type="submit"
+                  disabled={isProcessing}
+                  className={cn(
+                    "flex w-full items-center justify-center gap-2.5 rounded-2xl bg-primary py-4 px-6 text-sm font-bold text-white shadow-soft shadow-cyan-500/25 hover:shadow-cyan-500/35 hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 cursor-pointer",
+                    isProcessing && "opacity-75 cursor-not-allowed scale-100 shadow-none"
+                  )}
+                >
+                  {isProcessing ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin text-white" />
+                      Conectando...
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="h-4 w-4 text-white/90" />
+                      <span>Proceder al Pago Seguro</span>
+                    </>
+                  )}
+                </button>
+              </form>
             </div>
-          </form>
+          </div>
         </div>
       </div>
     </DashboardLayout>

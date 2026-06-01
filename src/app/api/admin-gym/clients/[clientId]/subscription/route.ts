@@ -43,20 +43,24 @@ export async function PATCH(
     const body = await req.json();
     const { status, addDays, exactEndDate, amount, description: customDesc } = body;
 
-    // Verify client belongs to this gym and fetch gym config
-    const [client, gymUser] = await Promise.all([
+    // Verificar que el cliente pertenezca a este gimnasio y obtener sus planes activos
+    const [client, gymPlans] = await Promise.all([
       prisma.user.findFirst({
         where: { id: clientId, gymId: session.user.id },
       }),
-      prisma.user.findUnique({
-        where: { id: session.user.id },
-        select: { monthlyFee: true },
+      prisma.subscriptionPlan.findMany({
+        where: { gymId: session.user.id, isActive: true },
+        orderBy: { price: "asc" },
+        take: 1,
       })
     ]);
 
-    if (!client || !gymUser) {
-      return NextResponse.json({ message: "Cliente o gimnasio no encontrado" }, { status: 404 });
+    if (!client) {
+      return NextResponse.json({ message: "Cliente no encontrado" }, { status: 404 });
     }
+
+    const firstPlan = gymPlans[0];
+    const defaultPrice = firstPlan ? firstPlan.price : 49.99;
 
     const now = await getNow();
     let finalStatus = status || client.subscriptionStatus;
@@ -73,12 +77,12 @@ export async function PATCH(
         : now;
       finalEndDate = new Date(baseDate.getTime() + addDays * 24 * 60 * 60 * 1000);
       
-      recordDescription = "Cuota mensual estándar";
-      recordAmount = gymUser.monthlyFee;
+      recordDescription = firstPlan ? `Cuota estándar: ${firstPlan.name}` : "Cuota estándar del centro";
+      recordAmount = amount || defaultPrice;
     } else if (status === "ACTIVE" && (!client.subscriptionEndDate || client.subscriptionEndDate < now)) {
       finalEndDate = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
       recordDescription = "Activación automática (30 días)";
-      recordAmount = gymUser.monthlyFee;
+      recordAmount = amount || defaultPrice;
     }
 
     const updatedUser = await prisma.$transaction(async (tx) => {

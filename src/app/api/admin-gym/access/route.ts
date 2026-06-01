@@ -102,10 +102,15 @@ export async function POST(req: Request) {
       });
     }
 
-    // Check QR expiration if token was used
+    // Check QR expiration if token was used (allowing a 30-second clock drift buffer)
     if (verifiedToken) {
       const nowMs = Date.now();
-      if (nowMs - verifiedToken.timestamp > TOKEN_EXPIRY_MS) {
+      const DRIFT_BUFFER_MS = 30 * 1000; // 30 seconds clock drift grace buffer
+
+      const isFutureToken = verifiedToken.timestamp - nowMs > DRIFT_BUFFER_MS;
+      const isExpiredToken = nowMs - verifiedToken.timestamp > (TOKEN_EXPIRY_MS + DRIFT_BUFFER_MS);
+
+      if (isFutureToken || isExpiredToken) {
         await prisma.accessLog.create({
           data: {
             userId: client.id,
@@ -115,10 +120,14 @@ export async function POST(req: Request) {
           },
         });
 
+        const debugMsg = isFutureToken
+          ? "Código QR no válido temporalmente (desajuste de hora en el dispositivo). Asegúrese de tener la hora automática activada."
+          : "El código QR ha expirado. Por favor, pida al cliente que lo regenere.";
+
         return NextResponse.json({
           status: "DENIED",
           reason: "EXPIRED",
-          message: "El código QR ha expirado. Por favor, pida al cliente que lo regenere.",
+          message: debugMsg,
         });
       }
     }

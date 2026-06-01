@@ -655,15 +655,18 @@ export default function ClientDetailPage({
             <div className="flex items-center gap-4">
               <button
                 disabled={isUpdating}
-                onClick={() => handleSubscriptionUpdate(client.subscriptionStatus === "ACTIVE" ? "INACTIVE" : "ACTIVE")}
+                onClick={() => {
+                  const hasActiveAccess = client.subscriptionStatus === "ACTIVE" && !isExpired;
+                  handleSubscriptionUpdate(hasActiveAccess ? "INACTIVE" : "ACTIVE");
+                }}
                 className={cn(
                   "px-6 py-3 rounded-3xl text-sm font-bold transition-all shadow-sm active:scale-95",
-                  client.subscriptionStatus === "ACTIVE"
+                  (client.subscriptionStatus === "ACTIVE" && !isExpired)
                     ? "bg-red-600 text-white hover:bg-red-700 shadow-red-200 dark:shadow-none"
                     : "bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-200 dark:shadow-none"
                 )}
               >
-                {client.subscriptionStatus === "ACTIVE" ? "Desactivar Acceso" : "Activar Acceso (+30 días)"}
+                {(client.subscriptionStatus === "ACTIVE" && !isExpired) ? "Desactivar Acceso" : "Activar Acceso (+30 días)"}
               </button>
               <div className="text-sm">
                 <p className="font-bold dark:text-white flex items-center gap-2">

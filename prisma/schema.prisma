@@ -44,6 +44,14 @@ model User {
   isRegisteredCitizen Boolean            @default(false)
   referralSource      String?
   gdprConsent         Boolean            @default(true)
+  stripeSecretKey     String?
+  stripePublishableKey String?
+  stripeAccountId     String?
+  stripeConnected     Boolean            @default(false)
+  redsysFuc           String?
+  redsysTerminal      String?            @default("001")
+  redsysClave         String?
+  redsysEnabled       Boolean            @default(false)
   gymId               String?            @db.Uuid
   subscriptionEndDate DateTime?
   subscriptionStatus  String             @default("ACTIVE")

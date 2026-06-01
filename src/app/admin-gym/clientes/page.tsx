@@ -353,14 +353,26 @@ export default function ClientesPage() {
 
                 {/* Status Badge */}
                 <div className="col-span-2 flex items-center justify-center">
-                  <span className={cn(
-                    "px-2.5 py-0.5 rounded-full text-xs font-bold border",
-                    client.subscriptionStatus === "ACTIVE" 
-                      ? "bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800/50"
-                      : "bg-red-50 text-red-700 border-red-100 dark:bg-red-950/30 dark:text-red-400 dark:border-red-800/50"
-                  )}>
-                    {client.subscriptionStatus === "ACTIVE" ? "Activo" : "Inactivo"}
-                  </span>
+                  {(() => {
+                    const isExpired = client.subscriptionEndDate 
+                      ? new Date(client.subscriptionEndDate) < new Date() 
+                      : false;
+                    const isActive = client.subscriptionStatus === "ACTIVE" && !isExpired;
+                    return (
+                      <span className={cn(
+                        "px-2.5 py-0.5 rounded-full text-xs font-bold border",
+                        isActive 
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800/50"
+                          : "bg-red-50 text-red-700 border-red-100 dark:bg-red-950/30 dark:text-red-400 dark:border-red-800/50"
+                      )}>
+                        {client.subscriptionStatus !== "ACTIVE" 
+                          ? "Inactivo" 
+                          : isExpired 
+                            ? "Expirado" 
+                            : "Activo"}
+                      </span>
+                    );
+                  })()}
                 </div>
 
                 {/* Plan Info */}

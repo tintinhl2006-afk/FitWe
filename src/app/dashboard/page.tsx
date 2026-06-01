@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { Activity, Apple, Building2, Dumbbell, Loader2, ArrowRight, Flame, CalendarDays, Clock, TrendingUp, Zap, Trophy, ChevronRight, Calendar, QrCode, RefreshCw, X, Maximize2 } from "lucide-react";
+import { Activity, Apple, Building2, Dumbbell, Loader2, ArrowRight, Flame, CalendarDays, Clock, TrendingUp, Zap, Trophy, ChevronRight, Calendar, QrCode, RefreshCw, X, Maximize2, Lock } from "lucide-react";
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { cn } from "@/lib/utils";
 import { SubscriptionBanner } from "@/components/shared/SubscriptionBanner";
@@ -51,12 +51,24 @@ const CustomTick = ({ x, y, payload }: any) => {
 };
 
 export default function DashboardPage() {
-  const { data: session, status } = useSession();
+  const { data: session, status, update } = useSession();
   const { weightUnit } = usePreferences();
   const [isLoading, setIsLoading] = useState(true);
   const [caloriesToday, setCaloriesToday] = useState(0);
   const [data, setData] = useState<DashboardData | null>(null);
   const [mounted, setMounted] = useState(false);
+
+  // Estados locales sincronizados en tiempo real de la base de datos
+  const [liveStatus, setLiveStatus] = useState<string | null>(null);
+  const [liveEndDate, setLiveEndDate] = useState<string | null>(null);
+  const [serverNow, setServerNow] = useState<string | null>(null);
+
+  const finalStatus = liveStatus || session?.user?.subscriptionStatus || "INACTIVE";
+  const finalEndDate = liveEndDate !== null ? liveEndDate : session?.user?.subscriptionEndDate;
+  const nowRef = serverNow ? new Date(serverNow) : new Date();
+
+  const isSubscriptionExpired = finalEndDate ? new Date(finalEndDate) < nowRef : false;
+  const isSubscriptionInactive = finalStatus !== "ACTIVE" || isSubscriptionExpired;
 
   useEffect(() => {
     setMounted(true);
@@ -71,7 +83,19 @@ export default function DashboardPage() {
   const [qrTimeLeft, setQrTimeLeft] = useState(300);
   const [isZoomed, setIsZoomed] = useState(false);
 
-  const fetchQrToken = async () => {
+  const fetchQrToken = async (currentStatus?: string, currentEndDate?: string | null, currentServerNow?: string) => {
+    // Validar cuota antes de generar
+    const sNow = currentServerNow ? new Date(currentServerNow) : (serverNow ? new Date(serverNow) : new Date());
+    const sEndDate = currentEndDate !== undefined ? currentEndDate : (liveEndDate !== null ? liveEndDate : session?.user?.subscriptionEndDate);
+    const sStatus = currentStatus !== undefined ? currentStatus : (liveStatus || session?.user?.subscriptionStatus || "INACTIVE");
+    const isExpiredVal = sEndDate ? new Date(sEndDate) < sNow : false;
+    const isInactiveVal = sStatus !== "ACTIVE" || isExpiredVal;
+
+    if (isInactiveVal) {
+      setQrToken(null);
+      return;
+    }
+
     setIsQrLoading(true);
     try {
       const res = await fetch("/api/user/access-token");
@@ -79,9 +103,12 @@ export default function DashboardPage() {
         const json = await res.json();
         setQrToken(json.token);
         setQrTimeLeft(300);
+      } else {
+        setQrToken(null);
       }
     } catch (e) {
       console.error(e);
+      setQrToken(null);
     } finally {
       setIsQrLoading(false);
     }
@@ -142,24 +169,82 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchAll = async () => {
       try {
-        const nowRef = session?.user?.serverNow ? new Date(session.user.serverNow) : new Date();
-        const today = nowRef.toISOString().split("T")[0];
-        const [nutritionRes, statsRes, attendanceRes] = await Promise.all([
-          fetch(`/api/nutrition?date=${today}`),
-          fetch("/api/dashboard"),
-          fetch("/api/user/stats/attendance")
-        ]);
-        if (nutritionRes.ok) {
-          const nd = await nutritionRes.json();
-          setCaloriesToday((nd.entries || []).reduce((a: number, f: FoodEntry) => a + f.calories, 0));
+        // 1. Sincronizar cuota en tiempo real de la base de datos
+        let currentStatus = session?.user?.subscriptionStatus || "INACTIVE";
+        let currentEndDate = session?.user?.subscriptionEndDate || null;
+        let currentServerNow = session?.user?.serverNow || new Date().toISOString();
+
+        try {
+          const subRes = await fetch("/api/user/subscription-status");
+          if (subRes.ok) {
+            const subData = await subRes.json();
+            setLiveStatus(subData.subscriptionStatus);
+            setLiveEndDate(subData.subscriptionEndDate);
+            setServerNow(subData.serverNow);
+
+            currentStatus = subData.subscriptionStatus;
+            currentEndDate = subData.subscriptionEndDate;
+            currentServerNow = subData.serverNow;
+
+            // Si el estado en DB difiere del de la sesión NextAuth, sincronizar en background
+            if (
+              subData.subscriptionStatus !== session?.user?.subscriptionStatus ||
+              subData.subscriptionEndDate !== session?.user?.subscriptionEndDate
+            ) {
+              console.log("[Dashboard] Sincronizando sesión NextAuth con la Base de Datos...");
+              await update({
+                subscriptionStatus: subData.subscriptionStatus,
+                subscriptionEndDate: subData.subscriptionEndDate,
+              });
+            }
+          }
+        } catch (subErr) {
+          console.warn("[Dashboard] Error al sincronizar cuota en tiempo real (usando datos de sesión local):", subErr);
         }
-        if (statsRes.ok) setData(await statsRes.json());
-        if (attendanceRes.ok) setAttendanceStats(await attendanceRes.json());
+
+        const nowRef = new Date(currentServerNow);
+        const today = nowRef.toISOString().split("T")[0];
+
+        // Consultas de datos de entrenamiento y nutrición tolerantes a fallos individuales de red
+        try {
+          const nutritionRes = await fetch(`/api/nutrition?date=${today}`);
+          if (nutritionRes.ok) {
+            const nd = await nutritionRes.json();
+            setCaloriesToday((nd.entries || []).reduce((a: number, f: FoodEntry) => a + f.calories, 0));
+          }
+        } catch (err) {
+          console.warn("[Dashboard] Error al sincronizar datos de nutrición:", err);
+        }
+
+        try {
+          const statsRes = await fetch("/api/dashboard");
+          if (statsRes.ok) {
+            setData(await statsRes.json());
+          }
+        } catch (err) {
+          console.warn("[Dashboard] Error al sincronizar datos de actividad física:", err);
+        }
+
+        try {
+          const attendanceRes = await fetch("/api/user/stats/attendance");
+          if (attendanceRes.ok) {
+            setAttendanceStats(await attendanceRes.json());
+          }
+        } catch (err) {
+          console.warn("[Dashboard] Error al sincronizar racha de asistencia:", err);
+        }
         
-        // Auto-fetch QR Access Code Token on mount
-        await fetchQrToken();
-      } catch (e) { console.error(e); }
-      finally { setIsLoading(false); }
+        // Auto-fetch QR Access Code Token con los estados de cuota actualizados en caliente (siempre se intenta generar)
+        try {
+          await fetchQrToken(currentStatus, currentEndDate, currentServerNow);
+        } catch (qrErr) {
+          console.error("[Dashboard] Error al generar token QR de acceso:", qrErr);
+        }
+      } catch (e) {
+        console.error("[Dashboard] Error crítico de inicialización:", e);
+      } finally {
+        setIsLoading(false);
+      }
     };
     if (session?.user) fetchAll();
     else if (status === "unauthenticated") setIsLoading(false);
@@ -192,10 +277,15 @@ export default function DashboardPage() {
                     {session.user.gymName}
                   </div>
                 )}
-                {session?.user?.subscriptionEndDate && session.user.subscriptionStatus === "ACTIVE" && (
+                {finalEndDate && finalStatus === "ACTIVE" && !isSubscriptionExpired ? (
                   <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 px-4 py-2 text-xs font-bold text-emerald-700 dark:text-emerald-400">
                     <Clock className="h-3.5 w-3.5" />
-                    Cuota activa hasta: {new Date(session.user.subscriptionEndDate).toLocaleDateString("es-ES", { day: "numeric", month: "short" })}
+                    Cuota activa hasta: {new Date(finalEndDate).toLocaleDateString("es-ES", { day: "numeric", month: "short" })}
+                  </div>
+                ) : (
+                  <div className="inline-flex items-center gap-2 rounded-full bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 px-4 py-2 text-xs font-bold text-rose-700 dark:text-rose-400 animate-pulse">
+                    <Clock className="h-3.5 w-3.5 text-rose-500" />
+                    Cuota inactiva / expirada
                   </div>
                 )}
               </div>
@@ -289,19 +379,24 @@ export default function DashboardPage() {
                     </div>
                     <div>
                       <h3 className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Pase de Acceso QR</h3>
-                      {qrToken && qrTimeLeft > 0 && !isQrLoading && (
+                      {!isSubscriptionInactive && qrToken && qrTimeLeft > 0 && !isQrLoading ? (
                         <div className="flex items-center gap-1.5 mt-0.5">
                           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                           <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider">Activo</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+                          <span className="text-[10px] font-bold text-red-500 uppercase tracking-wider">Restringido</span>
                         </div>
                       )}
                     </div>
                   </div>
 
                   {/* Quick Refresh Button */}
-                  {qrToken && qrTimeLeft > 0 && !isQrLoading && (
+                  {!isSubscriptionInactive && qrToken && qrTimeLeft > 0 && !isQrLoading && (
                     <button
-                      onClick={fetchQrToken}
+                      onClick={() => fetchQrToken()}
                       title="Actualizar código"
                       className="h-8 w-8 flex items-center justify-center rounded-xl border border-slate-100 dark:border-slate-800/80 text-slate-400 hover:text-primary hover:border-primary/20 dark:hover:text-cyan-400 transition-all cursor-pointer"
                     >
@@ -311,43 +406,59 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950/40 rounded-2xl p-4 border border-slate-100 dark:border-slate-900/40 relative min-h-[200px]">
-                  {isQrLoading && (
+                  {isSubscriptionInactive ? (
+                    <div className="flex flex-col items-center text-center p-4 py-6 animate-in fade-in duration-300">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-50 dark:bg-rose-950/30 text-rose-500 mb-3 border border-rose-100 dark:border-rose-900/30 shrink-0">
+                        <Lock className="h-5 w-5" />
+                      </div>
+                      <h4 className="text-sm font-bold text-slate-900 dark:text-white">Acceso Restringido</h4>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-455 mt-1 max-w-[190px] leading-normal font-medium">
+                        Tu cuota ha expirado o está inactiva en el centro. Renuévala para activar tu código QR de acceso.
+                      </p>
+                      <Link
+                        href="/dashboard/pago"
+                        className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-primary px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-soft shadow-cyan-500/10 hover:shadow-cyan-500/25 active:scale-95 transition-all"
+                      >
+                        Pagar Cuota
+                      </Link>
+                    </div>
+                  ) : isQrLoading ? (
                     <div className="flex flex-col items-center gap-2 py-8">
                       <Loader2 className="h-8 w-8 animate-spin text-primary" />
                       <span className="text-xs font-bold text-slate-400">Generando pase...</span>
                     </div>
-                  )}
-                  
-                  {!isQrLoading && qrTimeLeft <= 0 && (
+                  ) : qrTimeLeft <= 0 ? (
                     <div className="flex flex-col items-center text-center p-2 py-4">
                       <p className="text-sm font-bold text-red-500 mb-1">Código Expirado</p>
                       <p className="text-[11px] text-slate-400 mb-3">Expira cada 5 min por seguridad.</p>
                       <button
-                        onClick={fetchQrToken}
+                        onClick={() => fetchQrToken()}
                         className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-cyan-500 to-primary px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-white shadow-md hover:opacity-90 transition-all cursor-pointer"
                       >
                         <RefreshCw className="h-3 w-3" /> Regenerar
                       </button>
                     </div>
-                  )}
+                  ) : (
+                    <>
+                      <div 
+                        onClick={() => setIsZoomed(true)}
+                        className="bg-white p-2.5 rounded-xl shadow-inner border border-slate-100 flex justify-center items-center cursor-pointer hover:ring-2 hover:ring-primary/20 transition-all relative group"
+                        title="Toca para ampliar"
+                      >
+                        <canvas ref={canvasRef} className="rounded-lg bg-white" />
+                        {/* Smooth hover zoom icon */}
+                        <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-xl flex items-center justify-center text-white">
+                          <Maximize2 className="h-5 w-5 text-white animate-pulse" />
+                        </div>
+                      </div>
 
-                  <div 
-                    onClick={() => setIsZoomed(true)}
-                    className={cn("bg-white p-2.5 rounded-xl shadow-inner border border-slate-100 flex justify-center items-center cursor-pointer hover:ring-2 hover:ring-primary/20 transition-all relative group", (isQrLoading || qrTimeLeft <= 0) && "hidden")}
-                    title="Toca para ampliar"
-                  >
-                    <canvas ref={canvasRef} className="rounded-lg bg-white" />
-                    {/* Smooth hover zoom icon */}
-                    <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-xl flex items-center justify-center text-white">
-                      <Maximize2 className="h-5 w-5 text-white animate-pulse" />
-                    </div>
-                  </div>
-
-                  {!isQrLoading && qrTimeLeft > 0 && (
-                    <div className="mt-3 flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400">
-                      <Clock className="h-3.5 w-3.5 text-cyan-500" />
-                      <span>Expira en {Math.floor(qrTimeLeft / 60)}:{(qrTimeLeft % 60).toString().padStart(2, "0")}</span>
-                    </div>
+                      {qrTimeLeft > 0 && (
+                        <div className="mt-3 flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400">
+                          <Clock className="h-3.5 w-3.5 text-cyan-500" />
+                          <span>Expira en {Math.floor(qrTimeLeft / 60)}:{(qrTimeLeft % 60).toString().padStart(2, "0")}</span>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
