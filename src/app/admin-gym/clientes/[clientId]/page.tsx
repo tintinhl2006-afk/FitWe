@@ -929,10 +929,7 @@ export default function ClientDetailPage({
               </button>
             </div>
 
-            {/* Step Banner */}
-            <div className="bg-[#1e6091] text-white font-semibold text-sm px-7 py-3 tracking-wide">
-              Paso 1. Datos del socio (Edición)
-            </div>
+
 
             {/* Modal Body */}
             <form onSubmit={handleEditSubmit} className="px-7 py-6 space-y-6">
