@@ -17,7 +17,7 @@ export async function POST(
 
     const { id: routineId } = await params;
     const body = await req.json();
-    const { exerciseId, sets, reps, weight } = body;
+    const { exerciseId, sets, reps, weight, repsList } = body;
 
     if (!exerciseId || sets === undefined || reps === undefined || weight === undefined) {
       return NextResponse.json(
@@ -50,6 +50,7 @@ export async function POST(
         exerciseId,
         sets,
         reps,
+        repsList: repsList || null,
         weight,
         order: nextOrder,
       },

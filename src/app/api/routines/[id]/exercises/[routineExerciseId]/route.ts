@@ -15,7 +15,7 @@ export async function PATCH(
     }
 
     const { id: routineId, routineExerciseId } = await params;
-    const { exerciseId, sets } = await req.json();
+    const { exerciseId, sets, reps, repsList, weight } = await req.json();
 
     const routine = await verifyRoutineAccess(routineId, session.user.id, session.user.role);
 
@@ -26,6 +26,9 @@ export async function PATCH(
     const updateData: any = {};
     if (exerciseId !== undefined) updateData.exerciseId = exerciseId;
     if (sets !== undefined) updateData.sets = Number(sets);
+    if (reps !== undefined) updateData.reps = Number(reps);
+    if (repsList !== undefined) updateData.repsList = repsList;
+    if (weight !== undefined) updateData.weight = Number(weight);
 
     const updated = await prisma.routineExercise.update({
       where: { id: routineExerciseId },

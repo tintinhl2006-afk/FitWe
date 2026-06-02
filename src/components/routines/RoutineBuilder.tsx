@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import {
   Plus,
   Loader2,
@@ -34,6 +35,7 @@ interface RoutineExercise {
   exercise: Exercise;
   sets: number;
   reps: number;
+  repsList?: string | null;
   weight: number;
   order: number;
   exerciseId: string;
@@ -81,10 +83,27 @@ export function RoutineBuilder({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [availableExercises, setAvailableExercises] = useState<Exercise[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [filterMuscle, setFilterMuscle] = useState("");
+  const [filterEquipment, setFilterEquipment] = useState("");
   const [selectedExercise, setSelectedExercise] = useState("");
   const [step, setStep] = useState<"picker" | "config">("picker");
   const [sets, setSets] = useState(3);
+  const [repsPerSet, setRepsPerSet] = useState<number[]>([]);
   const [replacingExerciseId, setReplacingExerciseId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setRepsPerSet((prev) => {
+      const arr = [...prev];
+      if (arr.length < sets) {
+        while (arr.length < sets) {
+          arr.push(10);
+        }
+      } else if (arr.length > sets) {
+        arr.length = sets;
+      }
+      return arr;
+    });
+  }, [sets]);
 
   const getExerciseIcon = (equipment: string | null, muscleGroup: string) => {
     const lowerGroup = muscleGroup.toLowerCase();
@@ -168,10 +187,19 @@ export function RoutineBuilder({
         : `/api/routines/${routine.id}/exercises`;
       const method = replacingExerciseId ? "PATCH" : "POST";
 
+      const targetReps = repsPerSet[0] !== undefined ? repsPerSet[0] : 10;
+      const repsList = repsPerSet.join(",");
+
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ exerciseId: selectedExercise, sets: Number(sets), reps: 0, weight: 0 }),
+        body: JSON.stringify({
+          exerciseId: selectedExercise,
+          sets: Number(sets),
+          reps: targetReps,
+          repsList,
+          weight: 0
+        }),
       });
 
       if (res.ok) {
@@ -206,16 +234,39 @@ export function RoutineBuilder({
     const newSets = currentSets + delta;
     if (newSets < 1 || newSets > 10) return;
 
+    // Adjust repsList size to match new set count
+    const targetEx = routine.exercises.find((item) => item.id === routineExerciseId);
+    let updatedRepsList = "";
+    if (targetEx) {
+      const currentRepsArray = targetEx.repsList
+        ? targetEx.repsList.split(",").map((val) => parseInt(val.trim(), 10) || targetEx.reps)
+        : Array(currentSets).fill(targetEx.reps);
+
+      if (currentRepsArray.length < newSets) {
+        while (currentRepsArray.length < newSets) {
+          currentRepsArray.push(targetEx.reps || 10);
+        }
+      } else if (currentRepsArray.length > newSets) {
+        currentRepsArray.length = newSets;
+      }
+      updatedRepsList = currentRepsArray.join(",");
+    }
+
     setRoutine((prev) => {
       if (!prev) return prev;
-      return { ...prev, exercises: prev.exercises.map((re) => (re.id === routineExerciseId ? { ...re, sets: newSets } : re)) };
+      return {
+        ...prev,
+        exercises: prev.exercises.map((re) =>
+          re.id === routineExerciseId ? { ...re, sets: newSets, repsList: updatedRepsList } : re
+        ),
+      };
     });
 
     try {
       await fetch(`/api/routines/${routine.id}/exercises/${routineExerciseId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sets: newSets }),
+        body: JSON.stringify({ sets: newSets, repsList: updatedRepsList }),
       });
     } catch (e) {
       console.error("Error updating sets:", e);
@@ -320,6 +371,13 @@ export function RoutineBuilder({
     );
   }
 
+  const getRepsArray = (re: RoutineExercise) => {
+    if (re.repsList) {
+      return re.repsList.split(",").map((val) => parseInt(val.trim(), 10) || re.reps);
+    }
+    return Array(re.sets).fill(re.reps || 10);
+  };
+
   // ── RENDER: Phase 2 — Edit exercises ──
   if (!routine) return null;
 
@@ -364,20 +422,72 @@ export function RoutineBuilder({
                   <button onClick={() => handleMoveOrder(index, "up")} disabled={index === 0} className="p-1 text-slate-400 hover:text-primary disabled:opacity-30"><ArrowUp size={16} /></button>
                   <button onClick={() => handleMoveOrder(index, "down")} disabled={index === routine.exercises.length - 1} className="p-1 text-slate-400 hover:text-primary disabled:opacity-30"><ArrowDown size={16} /></button>
                 </div>
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-800">
-                  {getExerciseIcon(re.exercise.equipment, re.exercise.muscleGroup)}
+                <div className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800">
+                  {re.exercise.imageUrl ? (
+                    <Image src={re.exercise.imageUrl} alt={re.exercise.name} fill className="object-cover" />
+                  ) : (
+                    getExerciseIcon(re.exercise.equipment, re.exercise.muscleGroup)
+                  )}
                 </div>
                 <div className="flex-1">
                   <h3 className="font-bold text-slate-900 dark:text-white text-lg">{re.exercise.name}</h3>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                      {re.exercise.muscleGroup} {re.exercise.equipment && `• ${re.exercise.equipment}`}
-                    </span>
+                  <div className="flex flex-col gap-2 mt-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                        {re.exercise.muscleGroup} {re.exercise.equipment && `• ${re.exercise.equipment}`}
+                      </span>
+                      {re.exercise.muscleGroup.toLowerCase() !== "cardio" && (
+                        <div className="flex items-center gap-1 bg-cyan-50 dark:bg-cyan-950/30 text-primary dark:text-cyan-400 rounded-full px-1 py-0.5 border border-cyan-100 dark:border-cyan-900/50">
+                          <button onClick={() => handleUpdateSets(re.id, -1, re.sets)} disabled={re.sets <= 1} className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-cyan-200 dark:hover:bg-cyan-900/50 transition-colors">-</button>
+                          <span className="text-xs font-semibold w-12 text-center select-none">{re.sets} Series</span>
+                          <button onClick={() => handleUpdateSets(re.id, 1, re.sets)} disabled={re.sets >= 10} className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-cyan-200 dark:hover:bg-cyan-900/50 transition-colors">+</button>
+                        </div>
+                      )}
+                    </div>
+
                     {re.exercise.muscleGroup.toLowerCase() !== "cardio" && (
-                      <div className="flex items-center gap-1 bg-cyan-50 dark:bg-cyan-950/30 text-primary dark:text-cyan-400 rounded-full px-1 py-0.5 border border-cyan-100 dark:border-cyan-900/50">
-                        <button onClick={() => handleUpdateSets(re.id, -1, re.sets)} disabled={re.sets <= 1} className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-cyan-200 dark:hover:bg-cyan-900/50 transition-colors">-</button>
-                        <span className="text-xs font-semibold w-12 text-center select-none">{re.sets} Series</span>
-                        <button onClick={() => handleUpdateSets(re.id, 1, re.sets)} disabled={re.sets >= 10} className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-cyan-200 dark:hover:bg-cyan-900/50 transition-colors">+</button>
+                      <div className="flex items-center gap-1.5 mt-1 min-w-0">
+                        <span className="text-xs font-bold text-slate-500 dark:text-slate-400 shrink-0">Reps:</span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {getRepsArray(re).map((repVal, sIdx) => (
+                            <div key={sIdx} className="flex items-center bg-slate-50 dark:bg-slate-950 rounded-xl px-1.5 py-0.5 border border-slate-200 dark:border-slate-800/80">
+                              <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold mr-1">S{sIdx + 1}</span>
+                              <input
+                                type="number"
+                                min="1"
+                                max="99"
+                                value={repVal}
+                                onChange={async (e) => {
+                                  const newVal = parseInt(e.target.value, 10) || 0;
+                                  const currentArray = getRepsArray(re);
+                                  currentArray[sIdx] = newVal;
+                                  const newRepsList = currentArray.join(",");
+
+                                  setRoutine((prev) => {
+                                    if (!prev) return prev;
+                                    return {
+                                      ...prev,
+                                      exercises: prev.exercises.map((item) =>
+                                        item.id === re.id ? { ...item, repsList: newRepsList, reps: currentArray[0] || re.reps } : item
+                                      ),
+                                    };
+                                  });
+
+                                  try {
+                                    await fetch(`/api/routines/${routine.id}/exercises/${re.id}`, {
+                                      method: "PATCH",
+                                      headers: { "Content-Type": "application/json" },
+                                      body: JSON.stringify({ repsList: newRepsList, reps: currentArray[0] || re.reps }),
+                                    });
+                                  } catch (err) {
+                                    console.error("Error updating reps list:", err);
+                                  }
+                                }}
+                                className="w-8 text-center bg-transparent border-0 outline-none text-slate-850 dark:text-slate-200 font-bold text-xs p-0 focus:ring-0 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              />
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -428,16 +538,45 @@ export function RoutineBuilder({
 
             {step === "picker" ? (
               <div className="flex-1 flex flex-col min-h-0">
-                <div className="p-6 pb-2">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-                    <input
-                      type="text"
-                      placeholder="Buscar ejercicio..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-3xl py-3 pl-10 pr-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-cyan-500 outline-none"
-                    />
+                <div className="p-6 pb-2 space-y-3">
+                  <div className="flex flex-col md:flex-row gap-3">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                      <input
+                        type="text"
+                        placeholder="Buscar ejercicio..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-3xl py-3 pl-10 pr-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-cyan-500 outline-none"
+                      />
+                    </div>
+                    <div className="flex gap-2 shrink-0">
+                      <select
+                        value={filterMuscle}
+                        onChange={(e) => setFilterMuscle(e.target.value)}
+                        className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 py-3 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-cyan-500 outline-none text-sm"
+                      >
+                        <option value="">Grupo</option>
+                        <option value="Pecho">Pecho</option>
+                        <option value="Espalda">Espalda</option>
+                        <option value="Pierna">Pierna</option>
+                        <option value="Brazo">Brazo</option>
+                        <option value="Hombro">Hombro</option>
+                        <option value="Core">Core</option>
+                        <option value="Cardio">Cardio</option>
+                      </select>
+                      <select
+                        value={filterEquipment}
+                        onChange={(e) => setFilterEquipment(e.target.value)}
+                        className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 py-3 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-cyan-500 outline-none text-sm"
+                      >
+                        <option value="">Equipo</option>
+                        <option value="Barra">Barra</option>
+                        <option value="Mancuernas">Mancuernas</option>
+                        <option value="Máquina">Máquina</option>
+                        <option value="Peso Corporal">Peso Corporal</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
                 <div className="flex-1 overflow-y-auto p-6 pt-4">
@@ -446,7 +585,10 @@ export function RoutineBuilder({
                       .filter((ex) => {
                         const normalizeText = (str: string) =>
                           str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-                        return normalizeText(ex.name).includes(normalizeText(searchQuery));
+                        const matchesSearch = normalizeText(ex.name).includes(normalizeText(searchQuery));
+                        const matchesMuscle = filterMuscle ? ex.muscleGroup === filterMuscle : true;
+                        const matchesEquipment = filterEquipment ? ex.equipment === filterEquipment : true;
+                        return matchesSearch && matchesMuscle && matchesEquipment;
                       })
                       .map((ex) => (
                         <button
@@ -454,8 +596,12 @@ export function RoutineBuilder({
                           onClick={() => { setSelectedExercise(ex.id); setStep("config"); setSets(ex.muscleGroup.toLowerCase() === "cardio" ? 1 : 3); }}
                           className="flex items-center gap-4 rounded-3xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 p-3 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-primary transition-all text-left"
                         >
-                          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-900 border border-slate-700">
-                            {getExerciseIcon(ex.equipment, ex.muscleGroup)}
+                          <div className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800">
+                            {ex.imageUrl ? (
+                              <Image src={ex.imageUrl} alt={ex.name} fill className="object-cover" />
+                            ) : (
+                              getExerciseIcon(ex.equipment, ex.muscleGroup)
+                            )}
                           </div>
                           <div className="flex-1 overflow-hidden">
                             <h4 className="font-semibold text-slate-900 dark:text-white truncate">{ex.name}</h4>
@@ -474,8 +620,12 @@ export function RoutineBuilder({
                   return (
                     <form onSubmit={handleAddExercise} className="space-y-6">
                       <div className="flex items-center gap-4 mb-6 bg-slate-50 dark:bg-slate-950 p-4 rounded-3xl border border-slate-100 dark:border-slate-800">
-                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-slate-900 border border-slate-700">
-                          {getExerciseIcon(exObj.equipment, exObj.muscleGroup)}
+                        <div className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800">
+                          {exObj.imageUrl ? (
+                            <Image src={exObj.imageUrl} alt={exObj.name} fill className="object-cover" />
+                          ) : (
+                            getExerciseIcon(exObj.equipment, exObj.muscleGroup)
+                          )}
                         </div>
                         <div>
                           <h4 className="font-bold text-slate-900 dark:text-white text-lg">{exObj.name}</h4>
@@ -486,17 +636,46 @@ export function RoutineBuilder({
                         {exObj.muscleGroup.toLowerCase() === "cardio" ? (
                           <p className="text-slate-600 dark:text-slate-400">Cardio: 1 sesión</p>
                         ) : (
-                          <div>
-                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Series Objetivo</label>
-                            <input
-                              type="number"
-                              min="1"
-                              max="10"
-                              required
-                              value={sets}
-                              onChange={(e) => setSets(Number(e.target.value))}
-                              className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-3xl py-3 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-cyan-500 outline-none"
-                            />
+                          <div className="space-y-4">
+                            <div>
+                              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Series Objetivo</label>
+                              <input
+                                type="number"
+                                min="1"
+                                max="10"
+                                required
+                                value={sets}
+                                onChange={(e) => setSets(Number(e.target.value))}
+                                className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-3xl py-3 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-cyan-500 outline-none"
+                              />
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Repeticiones por Serie</label>
+                              <div className="flex flex-wrap gap-2 pt-1">
+                                {Array.from({ length: sets }).map((_, idx) => (
+                                  <div key={idx} className="flex flex-col items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-2.5 min-w-[70px]">
+                                    <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">Serie {idx + 1}</span>
+                                    <input
+                                      type="number"
+                                      min="1"
+                                      max="99"
+                                      required
+                                      value={repsPerSet[idx] !== undefined ? repsPerSet[idx] : 10}
+                                      onChange={(e) => {
+                                        const val = parseInt(e.target.value, 10) || 0;
+                                        setRepsPerSet((prev) => {
+                                          const next = [...prev];
+                                          next[idx] = val;
+                                          return next;
+                                        });
+                                      }}
+                                      className="w-12 text-center bg-slate-50 dark:bg-slate-950 border border-slate-250 dark:border-slate-750 rounded-xl py-1 px-0.5 text-slate-900 dark:text-white font-bold text-sm focus:ring-2 focus:ring-cyan-500 outline-none"
+                                    />
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
                           </div>
                         )}
                       </div>

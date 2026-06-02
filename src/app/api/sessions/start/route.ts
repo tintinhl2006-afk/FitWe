@@ -46,12 +46,23 @@ export async function POST(req: Request) {
     // Crear los sets iniciales basados en la rutina
     const workoutSetsData = [];
     for (const re of routine.exercises) {
+      // @ts-ignore
+      const repsListStr = re.repsList as string | null;
+      const repsArray = repsListStr
+        ? repsListStr.split(",").map((val) => parseInt(val.trim(), 10))
+        : [];
+
       for (let i = 0; i < re.sets; i++) {
+        const targetReps =
+          repsArray[i] !== undefined && !isNaN(repsArray[i])
+            ? repsArray[i]
+            : re.reps;
+
         workoutSetsData.push({
           sessionId: workoutSession.id,
           exerciseId: re.exerciseId,
           weight: re.weight, // peso objetivo
-          reps: re.reps, // reps objetivo
+          reps: targetReps, // reps objetivo por serie
           isCompleted: false,
         });
       }

@@ -172,6 +172,7 @@ model RoutineExercise {
   exerciseId String   @db.Uuid
   sets       Int
   reps       Int
+  repsList   String?
   weight     Float
   order      Int      @default(0)
   exercise   Exercise @relation(fields: [exerciseId], references: [id])
