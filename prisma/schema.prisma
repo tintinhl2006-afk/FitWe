@@ -185,6 +185,7 @@ model WorkoutSession {
   createdAt   DateTime     @default(now())
   endTime     DateTime?
   routineId   String?      @db.Uuid
+  className   String?
   startTime   DateTime     @default(now())
   routine     Routine?     @relation(fields: [routineId], references: [id])
   user        User         @relation(fields: [userId], references: [id])
@@ -233,6 +234,9 @@ model NutritionProfile {
   targetProtein  Int
   targetCarbs    Int
   targetFat      Int
+  dietType       String   @default("STANDARD")
+  allergens      String   @default("")
+  culinaryStyle  String   @default("CLASSIC")
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)

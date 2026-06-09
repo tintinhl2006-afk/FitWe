@@ -67,6 +67,7 @@ export async function GET(
             id: true,
             startTime: true,
             endTime: true,
+            className: true,
             routine: {
               select: { name: true },
             },
@@ -112,7 +113,7 @@ export async function GET(
       }
       return {
         id: s.id,
-        routineName: s.routine?.name || "Entrenamiento Libre",
+        routineName: s.className || s.routine?.name || "Entrenamiento Libre",
         date: s.startTime.toISOString(),
         durationMinutes,
       };

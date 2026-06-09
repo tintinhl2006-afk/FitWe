@@ -59,7 +59,7 @@ export async function GET(
         historyBySession[sessionId] = {
           sessionId,
           date: set.session.endTime || set.session.startTime, // Preferir endTime si se completó
-          routineName: set.session.routine?.name || "Entrenamiento Libre",
+          routineName: set.session.className || set.session.routine?.name || "Entrenamiento Libre",
           sets: [],
         };
       }

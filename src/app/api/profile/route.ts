@@ -147,7 +147,7 @@ export async function GET(request: Request) {
 
       return {
         id: s.id,
-        name: s.routine?.name || "Entrenamiento Libre",
+        name: s.className || s.routine?.name || "Entrenamiento Libre",
         date: s.startTime.toISOString(),
         durationMinutes,
         totalVolume,

@@ -90,6 +90,7 @@ export async function GET() {
         id: true,
         startTime: true,
         endTime: true,
+        className: true,
         user: { select: { id: true, name: true, image: true } },
         routine: { select: { name: true } },
       },
@@ -100,7 +101,7 @@ export async function GET() {
       clientId: s.user.id,
       clientName: s.user.name,
       clientImage: s.user.image,
-      routineName: s.routine?.name || "Entrenamiento Libre",
+      routineName: s.className || s.routine?.name || "Entrenamiento Libre",
       endTime: s.endTime!.toISOString(),
       durationMinutes: Math.round(
         (s.endTime!.getTime() - s.startTime.getTime()) / 60000

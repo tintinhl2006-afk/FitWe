@@ -437,9 +437,9 @@ export default function ClientesPage() {
       {/* ── Modal: Alta de Ficha ── */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4 animate-in fade-in duration-200 overflow-y-auto">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[28px] w-full max-w-5xl shadow-2xl animate-in slide-in-from-bottom-6 duration-300 overflow-hidden my-8">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[28px] w-full max-w-5xl shadow-2xl animate-in slide-in-from-bottom-6 duration-300 overflow-hidden my-8 max-h-[90vh] flex flex-col">
             {/* Modal Header */}
-            <div className="flex items-center justify-between px-7 py-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20">
+            <div className="flex items-center justify-between px-7 py-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 shrink-0">
               <div>
                 <h3 className="text-xl font-bold text-slate-900 dark:text-white">
                   Alta de Ficha
@@ -454,12 +454,13 @@ export default function ClientesPage() {
             </div>
 
             {/* Step Banner */}
-            <div className="bg-[#1e6091] text-white font-semibold text-sm px-7 py-3 tracking-wide">
+            <div className="bg-[#1e6091] text-white font-semibold text-sm px-7 py-3 tracking-wide shrink-0">
               Paso 1. Datos del socio
             </div>
 
             {/* Modal Body */}
-            <form onSubmit={handleCreateClient} className="px-7 py-6 space-y-6">
+            <form onSubmit={handleCreateClient} className="flex-1 flex flex-col min-h-0">
+              <div className="flex-1 overflow-y-auto px-7 py-6 space-y-6">
               {/* Error Message Box (Screenshot Style) */}
               {formError && (
                 <div className="flex items-center justify-between rounded-xl bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/40 px-5 py-3.5 text-sm font-semibold text-red-700 dark:text-red-400 animate-in fade-in duration-200">
@@ -832,8 +833,10 @@ export default function ClientesPage() {
 
               </div>
 
+              </div>
+              
               {/* Actions Footer */}
-              <div className="flex justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-800">
+              <div className="flex justify-end gap-3 px-7 py-5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 shrink-0">
                 <button
                   type="button"
                   disabled

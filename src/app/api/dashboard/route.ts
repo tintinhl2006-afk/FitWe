@@ -152,7 +152,7 @@ export async function GET() {
 
       return {
         id: s.id,
-        routineName: s.routine?.name || "Entrenamiento",
+        routineName: s.className || s.routine?.name || "Entrenamiento",
         date: s.startTime,
         durationMinutes,
         volume,

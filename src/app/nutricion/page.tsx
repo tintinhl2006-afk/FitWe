@@ -3,11 +3,12 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { Plus, Flame, Beef, Wheat, Droplet, Calendar as CalendarIcon, Loader2, Trash2, X, Search, Settings, Target as TargetIcon, Edit3, BarChart3, PieChart } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { Plus, Flame, Beef, Wheat, Droplet, Calendar as CalendarIcon, Loader2, Trash2, X, Search, Settings, Target as TargetIcon, Edit3, BarChart3, PieChart, Sparkles } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { useCustomAlert } from "@/components/providers/CustomAlertProvider";
+import AiDietPlanner from "@/components/nutrition/AiDietPlanner";
 
 interface FoodItem {
   id: string;
@@ -51,6 +52,19 @@ export default function NutricionPage() {
   const [activeTab, setActiveTab] = useState<"mis_alimentos" | "nuevo_alimento" | "editar_alimento">("mis_alimentos");
   const [editingFoodId, setEditingFoodId] = useState<string | null>(null);
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
+  const [isPlannerOpen, setIsPlannerOpen] = useState(false);
+  const searchParams = useSearchParams();
+  const generateParam = searchParams.get("generate");
+
+  useEffect(() => {
+    if (generateParam === "true") {
+      setIsPlannerOpen(true);
+      // Clean up the URL parameter to avoid infinite loops on reloads
+      const url = new URL(window.location.href);
+      url.searchParams.delete("generate");
+      window.history.replaceState({}, "", url.pathname);
+    }
+  }, [generateParam]);
   
   // Search & Foods
   const [foods, setFoods] = useState<FoodItem[]>([]);
@@ -335,6 +349,32 @@ export default function NutricionPage() {
               />
             </div>
           </div>
+        </div>
+
+        {/* Premium Diet Generator Action Card */}
+        <div className="relative overflow-hidden bg-gradient-to-r from-cyan-500/10 via-blue-500/5 to-transparent border border-cyan-500/25 dark:border-cyan-500/40 rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between gap-6 backdrop-blur-sm shadow-soft">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/5 dark:bg-cyan-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
+          <div className="flex items-center gap-4 relative z-10">
+            <div className="bg-gradient-to-tr from-cyan-500 to-blue-600 p-3.5 rounded-2xl text-white shadow-lg shadow-cyan-500/20 shrink-0">
+              <Sparkles className="w-6 h-6 animate-pulse" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                Generador de Dieta Inteligente
+                <span className="text-[10px] font-bold bg-cyan-100 dark:bg-cyan-900/50 text-cyan-700 dark:text-cyan-400 px-2 py-0.5 rounded-full">PROPIETARIO</span>
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xl leading-relaxed">
+                Genera al instante un plan completo de 4 comidas diarias ajustado a tu objetivo calórico de <strong className="text-slate-700 dark:text-slate-300">{profile?.targetCalories || 2000} kcal</strong>, teniendo en cuenta tu estilo gastronómico, exclusiones por alérgenos y tipo de dieta.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setIsPlannerOpen(true)}
+            className="w-full md:w-auto px-6 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold rounded-2xl shadow-lg shadow-cyan-500/15 transition-all flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] shrink-0 relative z-10"
+          >
+            <Sparkles className="w-4 h-4 text-cyan-200 fill-cyan-200" />
+            Generar Menú Diario
+          </button>
         </div>
 
         {/* Tarjetas de Macros Totales */}
@@ -861,6 +901,17 @@ export default function NutricionPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {isPlannerOpen && (
+        <AiDietPlanner 
+          onClose={() => setIsPlannerOpen(false)}
+          onSaved={() => {
+            setIsPlannerOpen(false);
+            if (selectedDate) fetchNutritionData(selectedDate);
+          }}
+          initialDate={selectedDate}
+        />
       )}
     </DashboardLayout>
   );

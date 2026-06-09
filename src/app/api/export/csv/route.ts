@@ -46,7 +46,7 @@ export async function GET() {
     workoutSessions.forEach(ws => {
       const startTimeStr = formatDate(ws.startTime);
       const endTimeStr = ws.endTime ? formatDate(ws.endTime) : '""';
-      const routineName = `"${ws.routine?.name || "Entrenamiento Libre"}"`;
+      const routineName = `"${ws.className || ws.routine?.name || "Entrenamiento Libre"}"`;
       const description = '""';
       
       const exerciseSetCounts: Record<string, number> = {};

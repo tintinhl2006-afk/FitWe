@@ -24,7 +24,10 @@ export async function POST(req: Request) {
       targetCalories,
       targetProtein,
       targetCarbs,
-      targetFat
+      targetFat,
+      dietType,
+      allergens,
+      culinaryStyle
     } = body;
 
     // Fetch user units to perform correct BMR conversion (Mifflin-St Jeor)
@@ -97,11 +100,17 @@ export async function POST(req: Request) {
       update: {
         ...(isManual && !gender ? {} : bioData), // Don't overwrite existing bio data with dummy values if manual mode without bio
         ...targets,
+        dietType: dietType || undefined,
+        allergens: allergens !== undefined ? allergens : undefined,
+        culinaryStyle: culinaryStyle || undefined,
       },
       create: {
         userId: session.user.id,
         ...bioData,
         ...targets,
+        dietType: dietType || "STANDARD",
+        allergens: allergens || "",
+        culinaryStyle: culinaryStyle || "CLASSIC",
       },
     });
 

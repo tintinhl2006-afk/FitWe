@@ -414,35 +414,35 @@ export default function ClientDetailPage({
   return (
     <div className="space-y-8 max-w-4xl">
       {/* Top Navigation */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <Link
           href="/admin-gym/clientes"
-          className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-cyan-400 transition-colors"
+          className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-cyan-400 transition-colors self-start"
         >
           <ArrowLeft className="h-4 w-4" />
           Volver a Clientes
         </Link>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
           <button
             onClick={openEditModal}
-            className="inline-flex items-center gap-2 rounded-3xl bg-cyan-50 hover:bg-cyan-100 dark:bg-cyan-950/40 dark:hover:bg-cyan-900/60 text-primary dark:text-cyan-400 px-5 py-2.5 text-sm font-semibold border border-cyan-100 dark:border-cyan-900/50 transition-all active:scale-95"
+            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-3xl bg-cyan-50 hover:bg-cyan-100 dark:bg-cyan-950/40 dark:hover:bg-cyan-900/60 text-primary dark:text-cyan-400 px-5 py-2.5 text-sm font-semibold border border-cyan-100 dark:border-cyan-900/50 transition-all active:scale-95"
           >
             <Edit className="h-4 w-4" />
             Editar Ficha
           </button>
           <button
             onClick={() => setIsPasswordModalOpen(true)}
-            className="inline-flex items-center gap-2 rounded-3xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-5 py-2.5 text-sm font-semibold border border-slate-200 dark:border-slate-700 transition-all active:scale-95"
+            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-3xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-5 py-2.5 text-sm font-semibold border border-slate-200 dark:border-slate-700 transition-all active:scale-95"
           >
             <Key className="h-4 w-4" />
             Cambiar Contraseña
           </button>
           <Link
-            href={`/admin-gym/clientes/${clientId}/rutina/nueva`}
-            className="inline-flex items-center gap-2 rounded-3xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary transition-colors active:scale-95"
+            href={`/admin-gym/clientes/${clientId}/rutinas`}
+            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-3xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary transition-colors active:scale-95"
           >
-            <Plus className="h-4 w-4" />
-            Asignar Nueva Rutina
+            <Dumbbell className="h-4 w-4" />
+            Gestionar Rutinas
           </Link>
         </div>
       </div>
@@ -652,7 +652,7 @@ export default function ClientDetailPage({
         <div className="p-6 space-y-8">
           {/* Status Row */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 w-full sm:w-auto">
               <button
                 disabled={isUpdating}
                 onClick={() => {
@@ -660,7 +660,7 @@ export default function ClientDetailPage({
                   handleSubscriptionUpdate(hasActiveAccess ? "INACTIVE" : "ACTIVE");
                 }}
                 className={cn(
-                  "px-6 py-3 rounded-3xl text-sm font-bold transition-all shadow-sm active:scale-95",
+                  "w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 rounded-3xl text-sm font-bold transition-all shadow-sm active:scale-95",
                   (client.subscriptionStatus === "ACTIVE" && !isExpired)
                     ? "bg-red-600 text-white hover:bg-red-700 shadow-red-200 dark:shadow-none"
                     : "bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-200 dark:shadow-none"
@@ -668,8 +668,8 @@ export default function ClientDetailPage({
               >
                 {(client.subscriptionStatus === "ACTIVE" && !isExpired) ? "Desactivar Acceso" : "Activar Acceso (+30 días)"}
               </button>
-              <div className="text-sm">
-                <p className="font-bold dark:text-white flex items-center gap-2">
+              <div className="text-sm text-center sm:text-left w-full sm:w-auto">
+                <p className="font-bold dark:text-white flex items-center justify-center sm:justify-start gap-2">
                   {client.subscriptionStatus === "ACTIVE" && !isExpired ? (
                     <span className="flex h-2 w-2 rounded-full bg-emerald-500" />
                   ) : (
@@ -677,7 +677,7 @@ export default function ClientDetailPage({
                   )}
                   {client.subscriptionStatus === "ACTIVE" ? (isExpired ? "Suscripción Expirada" : "Suscripción Activa") : "Acceso Desactivado"}
                 </p>
-                <p className="text-slate-500 text-xs">
+                <p className="text-slate-500 text-xs mt-1">
                   {client.subscriptionStatus === "ACTIVE" && !isExpired ? "El usuario puede acceder a todas las funciones." : "El usuario tiene el acceso restringido."}
                 </p>
               </div>
@@ -686,7 +686,7 @@ export default function ClientDetailPage({
             <button
               disabled={isUpdating}
               onClick={() => handleSubscriptionUpdate(undefined, 30)}
-              className="flex items-center gap-2 rounded-3xl bg-cyan-50 dark:bg-cyan-950/30 text-primary dark:text-cyan-400 px-6 py-3 text-sm font-bold hover:bg-cyan-100 dark:hover:bg-cyan-900/50 transition-colors border border-cyan-100 dark:border-cyan-900/50"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-3xl bg-cyan-50 dark:bg-cyan-950/40 text-primary dark:text-cyan-400 px-6 py-3 text-sm font-bold hover:bg-cyan-100 dark:hover:bg-cyan-900/50 transition-colors border border-cyan-100 dark:border-cyan-900/50"
             >
               Extender +30 Días
             </button>

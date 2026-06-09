@@ -146,18 +146,18 @@ export default function EntrenamientosPage() {
                 />
                 {error && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>}
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 w-full sm:w-auto">
                 <button
                   type="button"
                   onClick={() => setIsCreating(false)}
-                  className="rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                  className="flex-1 sm:flex-none rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50/50 dark:hover:bg-slate-800 transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting || !newRoutineName.trim()}
-                  className="inline-flex min-w-[100px] items-center justify-center rounded-2xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary disabled:opacity-70 transition-colors"
+                  className="flex-1 sm:flex-none inline-flex min-w-[100px] items-center justify-center rounded-2xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary disabled:opacity-70 transition-colors"
                 >
                   {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Guardar"}
                 </button>

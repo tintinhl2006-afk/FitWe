@@ -11,7 +11,7 @@ export default async function AdminGymLayout({
       <AdminGymSidebar />
 
       <div className="flex-1 flex flex-col min-h-0">
-        <main className="flex-1 overflow-y-auto p-4 pt-16 lg:p-6 lg:pt-6 xl:p-8 xl:pt-8">
+        <main className="flex-1 overflow-y-auto p-4 pb-32 pt-20 lg:pb-6 lg:p-6 lg:pt-6 xl:p-8 xl:pt-8">
           {children}
         </main>
       </div>

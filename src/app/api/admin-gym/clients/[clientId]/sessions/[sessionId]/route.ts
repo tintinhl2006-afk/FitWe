@@ -110,7 +110,7 @@ export async function GET(
       clientName: client.name,
       distanceUnit: client.distanceUnit || "km",
       weightUnit: client.weightUnit || "kg",
-      routineName: workoutSession.routine?.name || "Entrenamiento Libre",
+      routineName: workoutSession.className || workoutSession.routine?.name || "Entrenamiento Libre",
       startTime: workoutSession.startTime.toISOString(),
       endTime: workoutSession.endTime?.toISOString() || null,
       durationMinutes,

@@ -25,7 +25,11 @@ export async function GET(
           },
           orderBy: { id: "asc" }, // Mantiene el orden de creacion
         },
-        routine: true,
+        routine: {
+          include: {
+            exercises: true,
+          },
+        },
       },
     });
 

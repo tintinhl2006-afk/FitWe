@@ -31,7 +31,7 @@ interface WorkoutSession {
   startTime: string;
   endTime: string | null;
   workoutSets: WorkoutSet[];
-  routine?: { name: string };
+  routine?: { name: string; exercises?: { id: string; exerciseId: string; reps: number; repsList: string | null }[] };
   exerciseHistoryMap?: Record<string, { weight: number, reps: number }[]>;
   exerciseAllTimeRecordsMap?: Record<string, { maxWeight: number, max1RM: number, maxVolume: number }>;
 }
@@ -589,19 +589,36 @@ export default function LiveWorkoutPage({ params }: { params: Promise<{ sessionI
                 <div className="w-14 text-center"><Check className="h-4 w-4 mx-auto" /></div>
               </div>
 
-              {sets.map((set, setIndex) => (
-                <SetRow 
-                  key={set.id} 
-                  set={set} 
-                  index={setIndex} 
-                  historicalSet={session.exerciseHistoryMap?.[exercise.id]?.[setIndex]}
-                  allTimeRecords={session.exerciseAllTimeRecordsMap?.[exercise.id]}
-                  onUpdate={handleUpdateSet}
-                  onShowRecord={(recordData: any) => setActiveRecord(recordData)}
-                  weightUnit={weightUnit}
-                  distanceUnit={distanceUnit}
-                />
-              ))}
+              {sets.map((set, setIndex) => {
+                const routineEx = session.routine?.exercises?.find(
+                  (re: any) => re.exerciseId === exercise.id
+                );
+                let targetReps: number | null = null;
+                if (routineEx && routineEx.repsList) {
+                  const repsArray = routineEx.repsList
+                    .split(",")
+                    .map((val: string) => parseInt(val.trim(), 10));
+                  const parsed = repsArray[setIndex];
+                  if (parsed !== undefined && !isNaN(parsed)) {
+                    targetReps = parsed;
+                  }
+                }
+
+                return (
+                  <SetRow 
+                    key={set.id} 
+                    set={set} 
+                    index={setIndex} 
+                    targetReps={targetReps}
+                    historicalSet={session.exerciseHistoryMap?.[exercise.id]?.[setIndex]}
+                    allTimeRecords={session.exerciseAllTimeRecordsMap?.[exercise.id]}
+                    onUpdate={handleUpdateSet}
+                    onShowRecord={(recordData: any) => setActiveRecord(recordData)}
+                    weightUnit={weightUnit}
+                    distanceUnit={distanceUnit}
+                  />
+                );
+              })}
             </div>
           </div>
         ))}
@@ -688,7 +705,7 @@ export default function LiveWorkoutPage({ params }: { params: Promise<{ sessionI
   );
 }
 
-function SetRow({ set, index, historicalSet, allTimeRecords, onUpdate, onShowRecord, weightUnit, distanceUnit }: any) {
+function SetRow({ set, index, targetReps, historicalSet, allTimeRecords, onUpdate, onShowRecord, weightUnit, distanceUnit }: any) {
   const [reps, setReps] = useState(set.reps === 0 ? "" : set.reps.toString());
   const [weight, setWeight] = useState(set.weight === 0 ? "" : set.weight.toString());
   const isCardio = set.exercise.muscleGroup.toLowerCase() === 'cardio';
@@ -763,7 +780,7 @@ function SetRow({ set, index, historicalSet, allTimeRecords, onUpdate, onShowRec
             disabled={set.isCompleted}
             placeholder={placeholderWeight}
             className={cn(
-              "w-full text-center py-2.5 rounded-2xl border focus:ring-2 focus:ring-cyan-500 focus:outline-none transition-colors text-base font-semibold",
+              "w-full min-w-0 text-center py-2.5 rounded-2xl border focus:ring-2 focus:ring-cyan-500 focus:outline-none transition-colors text-base font-semibold",
               set.isCompleted 
                 ? "bg-transparent border-transparent text-emerald-700 dark:text-emerald-400" 
                 : "bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder:text-slate-300 dark:placeholder:text-slate-700"
@@ -771,7 +788,7 @@ function SetRow({ set, index, historicalSet, allTimeRecords, onUpdate, onShowRec
           />
         </div>
       )}
-      <div className="flex-1 px-1">
+      <div className="flex-1 px-1 flex items-center gap-1">
         <input
           type="number"
           min="0"
@@ -781,12 +798,17 @@ function SetRow({ set, index, historicalSet, allTimeRecords, onUpdate, onShowRec
           disabled={set.isCompleted}
           placeholder={placeholderReps}
           className={cn(
-            "w-full text-center py-2.5 rounded-2xl border focus:ring-2 focus:ring-cyan-500 focus:outline-none transition-colors text-base font-semibold",
+            "w-full min-w-0 text-center py-2.5 rounded-2xl border focus:ring-2 focus:ring-cyan-500 focus:outline-none transition-colors text-base font-semibold",
             set.isCompleted 
               ? "bg-transparent border-transparent text-emerald-700 dark:text-emerald-400" 
               : "bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder:text-slate-300 dark:placeholder:text-slate-700"
           )}
         />
+        {targetReps !== undefined && targetReps !== null && (
+          <span className="text-xs font-bold text-slate-400 dark:text-slate-500 select-none shrink-0" title="Repeticiones objetivo">
+            /{targetReps}
+          </span>
+        )}
       </div>
       <div className="flex items-center justify-end gap-1.5 shrink-0 pl-1 pr-2 min-w-[56px]">
         {isRecord && (

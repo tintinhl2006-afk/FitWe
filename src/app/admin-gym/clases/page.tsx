@@ -703,8 +703,8 @@ export default function GymClassesPage() {
                   <p className="text-slate-500">No hay reservas para esta clase todavía.</p>
                 </div>
               ) : (
-                <div className="rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-                  <table className="w-full text-left">
+                <div className="rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden overflow-x-auto">
+                  <table className="w-full text-left min-w-[500px]">
                     <thead className="bg-slate-50 dark:bg-slate-800/50 text-xs font-semibold text-slate-500 uppercase tracking-wider">
                       <tr>
                         <th className="px-4 py-3">Usuario</th>
