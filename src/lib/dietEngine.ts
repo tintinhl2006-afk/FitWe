@@ -684,6 +684,96 @@ export const STANDARD_FOODS: DietFood[] = [
     portionSize: 150,
     portionName: "media taza (150g)",
     meals: ["BREAKFAST", "SNACK"]
+  },
+  {
+    id: "std-brown-rice-dry",
+    name: "Arroz integral (en seco)",
+    brand: null,
+    calories: 362,
+    protein: 7.5,
+    carbs: 76.0,
+    fat: 2.5,
+    group: "CARB",
+    isVegan: true,
+    isVegetarian: true,
+    isKeto: false,
+    allergens: [],
+    styles: ["CLASSIC", "MEDITERRANEAN"],
+    portionSize: 50,
+    portionName: "ración en seco (50g)",
+    meals: ["LUNCH", "DINNER"]
+  },
+  {
+    id: "std-white-rice-dry",
+    name: "Arroz blanco (en seco)",
+    brand: null,
+    calories: 360,
+    protein: 7.0,
+    carbs: 80.0,
+    fat: 0.6,
+    group: "CARB",
+    isVegan: true,
+    isVegetarian: true,
+    isKeto: false,
+    allergens: [],
+    styles: ["CLASSIC", "QUICK"],
+    portionSize: 50,
+    portionName: "ración en seco (50g)",
+    meals: ["LUNCH", "DINNER"]
+  },
+  {
+    id: "std-whole-pasta-dry",
+    name: "Pasta integral (en seco)",
+    brand: null,
+    calories: 348,
+    protein: 13.0,
+    carbs: 65.0,
+    fat: 2.5,
+    group: "CARB",
+    isVegan: true,
+    isVegetarian: true,
+    isKeto: false,
+    allergens: ["GLUTEN"],
+    styles: ["MEDITERRANEAN"],
+    portionSize: 70,
+    portionName: "ración en seco (70g)",
+    meals: ["LUNCH", "DINNER"]
+  },
+  {
+    id: "std-lentils-dry",
+    name: "Lentejas (en seco)",
+    brand: null,
+    calories: 352,
+    protein: 25.0,
+    carbs: 53.0,
+    fat: 1.1,
+    group: "CARB",
+    isVegan: true,
+    isVegetarian: true,
+    isKeto: false,
+    allergens: [],
+    styles: ["MEDITERRANEAN"],
+    portionSize: 60,
+    portionName: "ración en seco (60g)",
+    meals: ["LUNCH", "DINNER"]
+  },
+  {
+    id: "std-quinoa-dry",
+    name: "Quinoa (en seco)",
+    brand: null,
+    calories: 368,
+    protein: 14.0,
+    carbs: 64.0,
+    fat: 6.0,
+    group: "CARB",
+    isVegan: true,
+    isVegetarian: true,
+    isKeto: false,
+    allergens: [],
+    styles: ["MEDITERRANEAN"],
+    portionSize: 50,
+    portionName: "ración en seco (50g)",
+    meals: ["LUNCH", "DINNER"]
   }
 ];
 
@@ -916,6 +1006,15 @@ export function getPortionEquivalent(food: DietFood, grams: number): string {
       return `aprox. ${Math.round(grams)}g de calabacín`;
     case "std-cottage-cheese":
       return `aprox. ${Math.round((grams / 150) * 10) / 10} taza de queso cottage`;
+    case "std-brown-rice-dry":
+    case "std-white-rice-dry":
+      return `aprox. ${Math.round((grams / 50) * 10) / 10} ración en seco (${grams}g)`;
+    case "std-whole-pasta-dry":
+      return `aprox. ${Math.round((grams / 70) * 10) / 10} ración en seco (${grams}g)`;
+    case "std-lentils-dry":
+      return `aprox. ${Math.round((grams / 60) * 10) / 10} ración en seco (${grams}g)`;
+    case "std-quinoa-dry":
+      return `aprox. ${Math.round((grams / 50) * 10) / 10} ración en seco (${grams}g)`;
     default:
       return `${grams}g`;
   }
