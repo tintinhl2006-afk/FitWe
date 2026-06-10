@@ -21,7 +21,8 @@ import {
   Settings,
   Wand2,
   ArrowLeft,
-  ArrowRight
+  ArrowRight,
+  Plus
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getPortionEquivalent, DietFood, MealPlan, SolvedItem, STANDARD_FOODS } from "@/lib/dietEngine";
@@ -67,6 +68,66 @@ export default function AiDietPlanner({ onClose, onSaved, initialDate }: AiDietP
     itemIndex: number;
     oldItem: SolvedItem;
   } | null>(null);
+
+  // Custom Food Swap States
+  const [showCustomFoodForm, setShowCustomFoodForm] = useState(false);
+  const [customFoodName, setCustomFoodName] = useState("");
+  const [customFoodCalories, setCustomFoodCalories] = useState("");
+  const [customFoodProtein, setCustomFoodProtein] = useState("");
+  const [customFoodCarbs, setCustomFoodCarbs] = useState("");
+  const [customFoodFat, setCustomFoodFat] = useState("");
+
+  useEffect(() => {
+    if (!swappingItem) {
+      setShowCustomFoodForm(false);
+      setCustomFoodName("");
+      setCustomFoodCalories("");
+      setCustomFoodProtein("");
+      setCustomFoodCarbs("");
+      setCustomFoodFat("");
+    }
+  }, [swappingItem]);
+
+  const handleCreateCustomFood = () => {
+    if (!swappingItem) return;
+    if (!customFoodName.trim()) {
+      alert("Por favor, introduce el nombre del alimento.");
+      return;
+    }
+
+    const name = customFoodName.trim();
+    const cals = Number(customFoodCalories) || 0;
+    const pro = Number(customFoodProtein) || 0;
+    const carbs = Number(customFoodCarbs) || 0;
+    const fat = Number(customFoodFat) || 0;
+
+    if (cals < 0 || pro < 0 || carbs < 0 || fat < 0) {
+      alert("Los macros y calorías no pueden ser valores negativos.");
+      return;
+    }
+
+    const newCustomFood: DietFood = {
+      id: `custom-${Date.now()}`,
+      name,
+      brand: "Personalizado",
+      calories: cals,
+      protein: pro,
+      carbs: carbs,
+      fat: fat,
+      group: swappingItem.oldItem.food.group,
+      isVegan: true,
+      isVegetarian: true,
+      isKeto: swappingItem.oldItem.food.group !== "CARB",
+      allergens: [],
+      styles: ["CLASSIC", "MEDITERRANEAN", "QUICK"],
+      portionSize: swappingItem.oldItem.food.portionSize,
+      portionName: swappingItem.oldItem.food.portionName,
+      meals: ["BREAKFAST", "LUNCH", "DINNER", "SNACK"],
+    };
+
+    setAvailableFoods((prev) => [newCustomFood, ...prev]);
+    handleSwap(newCustomFood);
+  };
 
   // Checked items in grocery list
   const [checkedGrocery, setCheckedGrocery] = useState<Record<string, boolean>>({});
@@ -1042,77 +1103,171 @@ export default function AiDietPlanner({ onClose, onSaved, initialDate }: AiDietP
               </p>
             </div>
 
-            {/* List of equivalent foods */}
-            <div className="flex-1 overflow-y-auto space-y-2 pr-1">
-              {(() => {
-                const currentMealType = mealPlan[swappingItem.mealIndex].mealType;
-                let alts = availableFoods.filter(
-                  food => 
-                    food.group === swappingItem.oldItem.food.group && 
-                    food.id !== swappingItem.oldItem.food.id &&
-                    food.meals && 
-                    food.meals.includes(currentMealType as any)
-                );
-                
-                // Fallback to group only if no meal-specific alternatives are found
-                if (alts.length === 0) {
-                  alts = availableFoods.filter(
-                    food => 
-                      food.group === swappingItem.oldItem.food.group && 
-                      food.id !== swappingItem.oldItem.food.id
-                  );
-                }
+            {showCustomFoodForm ? (
+              <div className="flex-1 overflow-y-auto space-y-4 pr-1 animate-in fade-in duration-200">
+                <div className="bg-slate-50 dark:bg-slate-950/40 p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400 flex items-start gap-2 leading-relaxed">
+                  <AlertCircle className="w-4 h-4 text-cyan-500 shrink-0 mt-0.5" />
+                  <span>El nuevo alimento se creará automáticamente como fuente de <strong>{swappingItem.oldItem.food.group === "CARB" ? "Carbohidratos" : swappingItem.oldItem.food.group === "PROTEIN" ? "Proteínas" : "Grasas"}</strong> para garantizar la conversión correcta.</span>
+                </div>
 
-                return alts.map(altFood => {
-                  const oldItem = swappingItem.oldItem;
-                  const group = oldItem.food.group;
-                  let ratio = 1;
-                  
-                  if (group === "CARB" && altFood.carbs > 0 && oldItem.food.carbs > 0) {
-                    ratio = oldItem.food.carbs / altFood.carbs;
-                  } else if (group === "PROTEIN" && altFood.protein > 0 && oldItem.food.protein > 0) {
-                    ratio = oldItem.food.protein / altFood.protein;
-                  } else if (group === "FAT" && altFood.fat > 0 && oldItem.food.fat > 0) {
-                    ratio = oldItem.food.fat / altFood.fat;
-                  } else {
-                    ratio = oldItem.food.calories / altFood.calories;
-                  }
-
-                  const altQty = Math.max(10, Math.round(oldItem.quantityGrams * ratio));
-                  const altPortionText = getPortionEquivalent(altFood, altQty);
-
-                  return (
-                    <div 
-                      key={altFood.id}
-                      onClick={() => handleSwap(altFood)}
-                      className="p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-cyan-500 dark:hover:border-cyan-500 bg-slate-50/50 dark:bg-slate-950/30 hover:bg-white dark:hover:bg-slate-900 cursor-pointer transition-all flex justify-between items-center group"
-                    >
-                      <div className="space-y-1">
-                        <div className="font-bold text-slate-800 dark:text-slate-100 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 text-sm">
-                          {altFood.name}
-                        </div>
-                        <div className="text-[11px] text-slate-500 dark:text-slate-400 flex gap-2">
-                          <span className="font-bold text-slate-700 dark:text-slate-300">{altQty}g</span>
-                          <span>({altPortionText})</span>
-                        </div>
-                      </div>
-
-                      <div className="text-right">
-                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Porción Equivalente</div>
-                        <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
-                          P: {altFood.protein}g | C: {altFood.carbs}g | G: {altFood.fat}g
-                        </div>
-                      </div>
-                    </div>
-                  );
-                });
-              })()}
-                {availableFoods.filter(food => food.group === swappingItem.oldItem.food.group && food.id !== swappingItem.oldItem.food.id).length === 0 && (
-                  <div className="p-8 text-center text-slate-500 dark:text-slate-400 text-xs">
-                    No se encontraron alimentos equivalentes aptos para tus exclusiones y tipo de dieta.
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Nombre del Alimento</label>
+                    <input 
+                      type="text"
+                      placeholder="Ej. Arroz Basmati Jazmín"
+                      value={customFoodName}
+                      onChange={(e) => setCustomFoodName(e.target.value)}
+                      className="w-full text-xs px-3.5 py-2.5 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white rounded-xl focus:ring-1 focus:ring-cyan-500 outline-none"
+                    />
                   </div>
-                )}
-            </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Calorías (por 100g)</label>
+                      <input 
+                        type="number"
+                        placeholder="Ej. 130"
+                        value={customFoodCalories}
+                        onChange={(e) => setCustomFoodCalories(e.target.value)}
+                        className="w-full text-xs px-3.5 py-2.5 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white rounded-xl focus:ring-1 focus:ring-cyan-500 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Proteínas (por 100g)</label>
+                      <input 
+                        type="number"
+                        placeholder="Ej. 2.7"
+                        value={customFoodProtein}
+                        onChange={(e) => setCustomFoodProtein(e.target.value)}
+                        className="w-full text-xs px-3.5 py-2.5 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white rounded-xl focus:ring-1 focus:ring-cyan-500 outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Carbohidratos (por 100g)</label>
+                      <input 
+                        type="number"
+                        placeholder="Ej. 28"
+                        value={customFoodCarbs}
+                        onChange={(e) => setCustomFoodCarbs(e.target.value)}
+                        className="w-full text-xs px-3.5 py-2.5 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white rounded-xl focus:ring-1 focus:ring-cyan-500 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Grasas (por 100g)</label>
+                      <input 
+                        type="number"
+                        placeholder="Ej. 0.3"
+                        value={customFoodFat}
+                        onChange={(e) => setCustomFoodFat(e.target.value)}
+                        className="w-full text-xs px-3.5 py-2.5 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white rounded-xl focus:ring-1 focus:ring-cyan-500 outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-2 flex gap-2">
+                  <button 
+                    onClick={() => setShowCustomFoodForm(false)}
+                    className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-650 dark:text-slate-355 hover:bg-slate-50 dark:hover:bg-slate-955 transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                  <button 
+                    onClick={handleCreateCustomFood}
+                    className="flex-[2] py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white text-xs font-bold transition-all shadow-md shadow-cyan-500/10"
+                  >
+                    Crear e Intercambiar
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="py-2 flex justify-between items-center border-b border-slate-100 dark:border-slate-800/60 mb-2 shrink-0">
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Alternativas equivalentes</span>
+                  <button
+                    onClick={() => setShowCustomFoodForm(true)}
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300 hover:underline"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Crear alternativa propia
+                  </button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+                  {(() => {
+                    const currentMealType = mealPlan[swappingItem.mealIndex].mealType;
+                    let alts = availableFoods.filter(
+                      food => 
+                        food.group === swappingItem.oldItem.food.group && 
+                        food.id !== swappingItem.oldItem.food.id &&
+                        food.meals && 
+                        food.meals.includes(currentMealType as any)
+                    );
+                    
+                    if (alts.length === 0) {
+                      alts = availableFoods.filter(
+                        food => 
+                          food.group === swappingItem.oldItem.food.group && 
+                          food.id !== swappingItem.oldItem.food.id
+                      );
+                    }
+
+                    return alts.map(altFood => {
+                      const oldItem = swappingItem.oldItem;
+                      const group = oldItem.food.group;
+                      let ratio = 1;
+                      
+                      if (group === "CARB" && altFood.carbs > 0 && oldItem.food.carbs > 0) {
+                        ratio = oldItem.food.carbs / altFood.carbs;
+                      } else if (group === "PROTEIN" && altFood.protein > 0 && oldItem.food.protein > 0) {
+                        ratio = oldItem.food.protein / altFood.protein;
+                      } else if (group === "FAT" && altFood.fat > 0 && oldItem.food.fat > 0) {
+                        ratio = oldItem.food.fat / altFood.fat;
+                      } else {
+                        ratio = oldItem.food.calories / altFood.calories;
+                      }
+
+                      const altQty = Math.max(10, Math.round(oldItem.quantityGrams * ratio));
+                      const altPortionText = getPortionEquivalent(altFood, altQty);
+
+                      return (
+                        <div 
+                          key={altFood.id}
+                          onClick={() => handleSwap(altFood)}
+                          className="p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-cyan-500 dark:hover:border-cyan-500 bg-slate-50/50 dark:bg-slate-950/30 hover:bg-white dark:hover:bg-slate-900 cursor-pointer transition-all flex justify-between items-center group"
+                        >
+                          <div className="space-y-1">
+                            <div className="font-bold text-slate-800 dark:text-slate-100 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 text-sm">
+                              {altFood.name}
+                            </div>
+                            <div className="text-[11px] text-slate-500 dark:text-slate-400 flex gap-2">
+                              <span className="font-bold text-slate-700 dark:text-slate-300">{altQty}g</span>
+                              <span>({altPortionText})</span>
+                            </div>
+                          </div>
+
+                          <div className="text-right">
+                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Porción Equivalente</div>
+                            <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
+                              P: {altFood.protein}g | C: {altFood.carbs}g | G: {altFood.fat}g
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()}
+                  {availableFoods.filter(food => food.group === swappingItem.oldItem.food.group && food.id !== swappingItem.oldItem.food.id).length === 0 && (
+                    <div className="p-8 text-center text-slate-500 dark:text-slate-400 text-xs">
+                      No se encontraron alimentos equivalentes aptos para tus exclusiones y tipo de dieta.
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
             
             <div className="pt-4 mt-2 border-t border-slate-100 dark:border-slate-800">
               <button 
