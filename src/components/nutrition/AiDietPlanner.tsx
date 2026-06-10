@@ -433,22 +433,22 @@ export default function AiDietPlanner({ onClose, onSaved, initialDate }: AiDietP
             {/* Step Content */}
             <div className="flex-1 max-w-2xl w-full mx-auto bg-slate-50/50 dark:bg-slate-950/20 border border-slate-200/50 dark:border-slate-800/40 rounded-3xl p-6 md:p-8 shadow-soft">
               
-              {/* STEP 1: Confirm Budget & Macros */}
+              {/* STEP 1: Confirm Calories Goal & Macros */}
               {setupStep === 1 && (
                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
                   <div className="text-center space-y-1">
                     <h3 className="text-lg font-bold text-slate-950 dark:text-white flex items-center justify-center gap-2">
-                      <Sliders className="w-5 h-5 text-cyan-500" /> Presupuesto y Macros Configurados
+                      <Sliders className="w-5 h-5 text-cyan-500" /> Objetivo Calórico y Macros Configurados
                     </h3>
                     <p className="text-xs text-slate-500 dark:text-slate-400">
-                      Confirma que tu presupuesto calórico y distribución de macros son correctos para tu plan.
+                      Confirma que tu objetivo calórico y distribución de macros son correctos para tu plan.
                     </p>
                   </div>
 
                   <div className="space-y-5">
-                    {/* Calories Card */}
+                    {/* Calories Goal Card */}
                     <div className="bg-gradient-to-br from-cyan-500/5 to-blue-500/5 border border-cyan-500/10 dark:border-cyan-500/20 rounded-3xl p-6 text-center space-y-2">
-                      <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Presupuesto Diario</span>
+                      <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Objetivo Calórico Diario</span>
                       <div className="text-3xl font-black text-slate-900 dark:text-white flex items-center justify-center gap-1.5">
                         <Flame className="w-6 h-6 text-amber-500 fill-amber-500 animate-pulse" />
                         {customCalories} <span className="text-lg font-normal text-slate-500">kcal</span>
@@ -497,7 +497,7 @@ export default function AiDietPlanner({ onClose, onSaved, initialDate }: AiDietP
                         className="inline-flex items-center gap-2 text-xs text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300 font-bold hover:underline"
                       >
                         <Wand2 className="w-4 h-4 text-cyan-500" />
-                        ¿Quieres cambiar tus macros o calorías? Ajustar objetivos
+                        ¿Quieres cambiar tus macros o calorías? Ajusta tus objetivos
                       </button>
                     </div>
 

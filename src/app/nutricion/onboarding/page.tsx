@@ -204,7 +204,7 @@ export default function NutritionOnboardingPage() {
             {/* Macro Summary Cards */}
             <div className="bg-slate-50/50 dark:bg-slate-950/40 border border-slate-200/50 dark:border-slate-800/50 rounded-2xl p-5 space-y-4">
               <div className="flex justify-between items-center pb-3 border-b border-slate-200 dark:border-slate-800">
-                <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">Presupuesto Diario</span>
+                <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">Objetivo Calórico</span>
                 <span className="text-2xl font-black text-slate-900 dark:text-white flex items-center gap-1">
                   <Flame className="w-5 h-5 text-amber-500 fill-amber-500" />
                   {savedProfile?.targetCalories} kcal
