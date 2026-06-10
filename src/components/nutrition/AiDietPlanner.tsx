@@ -453,42 +453,53 @@ export default function AiDietPlanner({ onClose, onSaved, initialDate }: AiDietP
           <div className="flex-1 overflow-y-auto p-6 space-y-6 flex flex-col">
             
             {/* Beautiful Progressive Step Indicator */}
-            <div className="mb-6 flex justify-between items-center max-w-md w-full mx-auto px-4">
-              {[
-                { step: 1, label: "Macros", icon: Sliders },
-                { step: 2, label: "Restricciones", icon: ChefHat },
-                { step: 3, label: "Gustos", icon: Sparkles }
-              ].map((item, idx) => {
-                const IconComponent = item.icon;
-                return (
-                  <div key={item.step} className="flex-1 flex items-center">
-                    <div className="flex flex-col items-center flex-1 relative">
+            <div className="relative mb-6 max-w-md w-full mx-auto px-4">
+              {/* Background Line */}
+              <div className="absolute top-5 left-10 right-10 h-0.5 bg-slate-200 dark:bg-slate-800 -translate-y-1/2 z-0" />
+              
+              {/* Foreground progress Line */}
+              <div className="absolute top-5 left-10 right-10 h-0.5 -translate-y-1/2 z-0 overflow-hidden">
+                <div 
+                  className="h-full bg-emerald-500 transition-all duration-300" 
+                  style={{ 
+                    width: setupStep === 1 ? "0%" : setupStep === 2 ? "50%" : "100%" 
+                  }} 
+                />
+              </div>
+              
+              {/* Circles */}
+              <div className="relative flex justify-between items-center z-10">
+                {[
+                  { step: 1, label: "Macros", icon: Sliders },
+                  { step: 2, label: "Restricciones", icon: ChefHat },
+                  { step: 3, label: "Gustos", icon: Sparkles }
+                ].map((item) => {
+                  const IconComponent = item.icon;
+                  const isActive = setupStep === item.step;
+                  const isCompleted = setupStep > item.step;
+                  
+                  return (
+                    <div key={item.step} className="flex flex-col items-center">
                       <div className={cn(
-                        "w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold transition-all border-2",
-                        setupStep === item.step
+                        "w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 border-2",
+                        isActive
                           ? "bg-cyan-500 border-cyan-500 text-white shadow-lg shadow-cyan-500/25 scale-110"
-                          : setupStep > item.step
+                          : isCompleted
                             ? "bg-emerald-500 border-emerald-500 text-white"
                             : "bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-400"
                       )}>
-                        {setupStep > item.step ? <Check className="w-5 h-5 stroke-[3]" /> : <IconComponent className="w-4 h-4" />}
+                        {isCompleted ? <Check className="w-5 h-5 stroke-[3]" /> : <IconComponent className="w-4 h-4" />}
                       </div>
                       <span className={cn(
                         "text-[10px] font-bold mt-2 whitespace-nowrap",
-                        setupStep === item.step ? "text-cyan-600 dark:text-cyan-400" : "text-slate-400"
+                        isActive ? "text-cyan-600 dark:text-cyan-400" : "text-slate-400"
                       )}>
                         {item.label}
                       </span>
                     </div>
-                    {idx < 2 && (
-                      <div className={cn(
-                        "h-0.5 w-full -mt-6 mx-1.5 rounded-full",
-                        setupStep > item.step ? "bg-emerald-500" : "bg-slate-200 dark:bg-slate-800"
-                      )} />
-                    )}
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
 
             {/* Step Content */}
@@ -721,7 +732,7 @@ export default function AiDietPlanner({ onClose, onSaved, initialDate }: AiDietP
                                 className={cn(
                                   "px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all",
                                   !isPrioritized && !isExcluded 
-                                    ? "bg-white dark:bg-slate-850 text-slate-655 dark:text-slate-300 shadow-sm" 
+                                    ? "bg-slate-600 text-white dark:bg-slate-700 shadow-sm" 
                                     : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
                                 )}
                               >
