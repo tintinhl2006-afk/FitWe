@@ -163,6 +163,8 @@ export default function AiDietPlanner({ onClose, onSaved, initialDate }: AiDietP
             setCustomDietType(profileData.dietType || "STANDARD");
             setCustomAllergens(profileData.allergens ? profileData.allergens.split(",").filter(Boolean) : []);
             setCustomCulinaryStyle(profileData.culinaryStyle || "CLASSIC");
+            setExcludedFoods(profileData.excludedFoods ? profileData.excludedFoods.split(",").filter(Boolean) : []);
+            setPrioritizedFoods(profileData.prioritizedFoods ? profileData.prioritizedFoods.split(",").filter(Boolean) : []);
           }
         }
       } catch (e) {
@@ -183,6 +185,128 @@ export default function AiDietPlanner({ onClose, onSaved, initialDate }: AiDietP
 
   const totalPct = customProteinPct + customCarbsPct + customFatPct;
 
+  const updateFoodPreferencesOnProfile = async (excluded: string[], prioritized: string[]) => {
+    try {
+      if (!profile) return;
+      await fetch("/api/user/nutrition-profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...profile,
+          excludedFoods: excluded.join(","),
+          prioritizedFoods: prioritized.join(","),
+          dietType: customDietType,
+          allergens: customAllergens.join(","),
+          culinaryStyle: customCulinaryStyle,
+        }),
+      });
+    } catch (e) {
+      console.error("Error updating food preferences:", e);
+    }
+  };
+
+  const handleTogglePrioritize = (foodId: string) => {
+    const isCurrentlyPrioritized = prioritizedFoods.includes(foodId);
+    let updatedPrioritized: string[];
+    if (isCurrentlyPrioritized) {
+      updatedPrioritized = prioritizedFoods.filter(id => id !== foodId);
+    } else {
+      updatedPrioritized = [...prioritizedFoods.filter(id => id !== foodId), foodId];
+    }
+    setPrioritizedFoods(updatedPrioritized);
+    
+    const updatedExcludes = excludedFoods.filter(id => id !== foodId);
+    setExcludedFoods(updatedExcludes);
+
+    updateFoodPreferencesOnProfile(updatedExcludes, updatedPrioritized);
+  };
+
+  const handleExcludeAndSwap = async (mealIndex: number, itemIndex: number, foodId: string) => {
+    const updatedExcludes = [...excludedFoods.filter(id => id !== foodId), foodId];
+    setExcludedFoods(updatedExcludes);
+    
+    const updatedPrioritized = prioritizedFoods.filter(id => id !== foodId);
+    setPrioritizedFoods(updatedPrioritized);
+
+    updateFoodPreferencesOnProfile(updatedExcludes, updatedPrioritized);
+
+    const oldItem = mealPlan[mealIndex].items[itemIndex];
+    const currentMealType = mealPlan[mealIndex].mealType;
+
+    let alternatives = availableFoods.filter(
+      food =>
+        food.group === oldItem.food.group &&
+        food.id !== oldItem.food.id &&
+        !updatedExcludes.includes(food.id) &&
+        food.meals &&
+        food.meals.includes(currentMealType as any)
+    );
+
+    if (alternatives.length === 0) {
+      alternatives = availableFoods.filter(
+        food =>
+          food.group === oldItem.food.group &&
+          food.id !== oldItem.food.id &&
+          !updatedExcludes.includes(food.id)
+      );
+    }
+
+    if (alternatives.length === 0) {
+      alert("No se encontró ningún alimento alternativo apto para reemplazar este ingrediente.");
+      return;
+    }
+
+    const prioritizedAlt = alternatives.find(food => updatedPrioritized.includes(food.id));
+    const newFood = prioritizedAlt || alternatives[0];
+
+    const group = oldItem.food.group;
+    let ratio = 1;
+    
+    if (group === "CARB" && newFood.carbs > 0 && oldItem.food.carbs > 0) {
+      ratio = oldItem.food.carbs / newFood.carbs;
+    } else if (group === "PROTEIN" && newFood.protein > 0 && oldItem.food.protein > 0) {
+      ratio = oldItem.food.protein / newFood.protein;
+    } else if (group === "FAT" && newFood.fat > 0 && oldItem.food.fat > 0) {
+      ratio = oldItem.food.fat / newFood.fat;
+    } else {
+      ratio = oldItem.food.calories / newFood.calories;
+    }
+    
+    const newQty = Math.max(10, Math.round(oldItem.quantityGrams * ratio));
+    
+    const newSolvedItem: SolvedItem = {
+      food: newFood,
+      quantityGrams: newQty,
+      calories: Math.round((newFood.calories * newQty) / 100),
+      protein: Math.round(((newFood.protein * newQty) / 100) * 10) / 10,
+      carbs: Math.round(((newFood.carbs * newQty) / 100) * 10) / 10,
+      fat: Math.round(((newFood.fat * newQty) / 100) * 10) / 10,
+      equivalentText: getPortionEquivalent(newFood, newQty),
+    };
+
+    const updatedPlan = [...mealPlan];
+    updatedPlan[mealIndex].items[itemIndex] = newSolvedItem;
+
+    let mealCals = 0;
+    let mealPro = 0;
+    let mealCarbs = 0;
+    let mealFat = 0;
+
+    updatedPlan[mealIndex].items.forEach(item => {
+      mealCals += item.calories;
+      mealPro += item.protein;
+      mealCarbs += item.carbs;
+      mealFat += item.fat;
+    });
+
+    updatedPlan[mealIndex].calories = Math.round(mealCals);
+    updatedPlan[mealIndex].protein = Math.round(mealPro * 10) / 10;
+    updatedPlan[mealIndex].carbs = Math.round(mealCarbs * 10) / 10;
+    updatedPlan[mealIndex].fat = Math.round(mealFat * 10) / 10;
+
+    setMealPlan(updatedPlan);
+  };
+
   // Generate Diet with Custom Query overrides
   const handleGenerateDiet = async () => {
     if (totalPct !== 100) {
@@ -193,6 +317,8 @@ export default function AiDietPlanner({ onClose, onSaved, initialDate }: AiDietP
     setIsLoading(true);
     setError(null);
     try {
+      updateFoodPreferencesOnProfile(excludedFoods, prioritizedFoods);
+
       const qParams = new URLSearchParams({
         calories: customCalories.toString(),
         protein: liveMacros.protein.toString(),
@@ -512,7 +638,7 @@ export default function AiDietPlanner({ onClose, onSaved, initialDate }: AiDietP
                 <div 
                   className="h-full bg-emerald-500 transition-all duration-300" 
                   style={{ 
-                    width: setupStep === 1 ? "0%" : setupStep === 2 ? "50%" : "100%" 
+                    width: setupStep === 1 ? "0%" : "100%" 
                   }} 
                 />
               </div>
@@ -520,9 +646,8 @@ export default function AiDietPlanner({ onClose, onSaved, initialDate }: AiDietP
               {/* Circles */}
               <div className="relative flex justify-between items-center z-10">
                 {[
-                  { step: 1, label: "Macros", icon: Sliders },
-                  { step: 2, label: "Restricciones", icon: ChefHat },
-                  { step: 3, label: "Gustos", icon: Sparkles }
+                  { step: 1, label: "Confirmar Macros", icon: Sliders },
+                  { step: 2, label: "Restricciones y Estilo", icon: ChefHat }
                 ].map((item) => {
                   const IconComponent = item.icon;
                   const isActive = setupStep === item.step;
@@ -732,83 +857,6 @@ export default function AiDietPlanner({ onClose, onSaved, initialDate }: AiDietP
                   </div>
                 </div>
               )}
-
-              {/* STEP 3: Likes & Dislikes catalog checklist */}
-              {setupStep === 3 && (
-                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300 flex flex-col max-h-[500px]">
-                  <div className="text-center space-y-1">
-                    <h3 className="text-lg font-bold text-slate-950 dark:text-white flex items-center justify-center gap-2">
-                      <Sparkles className="w-5 h-5 text-amber-500" /> Preferencias y Gustos de Alimentos
-                    </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Marca lo que te encanta para priorizarlo y lo que no te gusta para excluirlo.</p>
-                  </div>
-
-                  <div className="flex-1 overflow-y-auto pr-1.5 divide-y divide-slate-100 dark:divide-slate-800/60 max-h-[320px] custom-scrollbar">
-                    {STANDARD_FOODS
-                      .filter(food => {
-                        if (customDietType === "VEGAN" && !food.isVegan) return false;
-                        if (customDietType === "VEGETARIAN" && !food.isVegetarian) return false;
-                        if (customDietType === "KETO" && !food.isKeto && food.group === "CARB") return false;
-                        return !food.allergens.some(a => customAllergens.includes(a));
-                      })
-                      .map(food => {
-                        const isPrioritized = prioritizedFoods.includes(food.id);
-                        const isExcluded = excludedFoods.includes(food.id);
-                        
-                        return (
-                          <div key={food.id} className="py-2.5 flex items-center justify-between gap-3 text-sm">
-                            <div>
-                              <p className="font-bold text-slate-800 dark:text-slate-200">{food.name}</p>
-                              <p className="text-[11px] text-slate-455 dark:text-slate-400">{food.group} • {food.calories} kcal/100g</p>
-                            </div>
-                            
-                            <div className="flex p-0.5 bg-slate-100 dark:bg-slate-900 rounded-xl">
-                              <button
-                                type="button"
-                                onClick={() => setFoodPreference(food.id, "like")}
-                                className={cn(
-                                  "p-1.5 rounded-lg text-xs font-bold transition-all",
-                                  isPrioritized 
-                                    ? "bg-emerald-500 text-white shadow-sm" 
-                                    : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                                )}
-                                title="Priorizar"
-                              >
-                                <ThumbsUp className="w-4 h-4" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setFoodPreference(food.id, "neutral")}
-                                className={cn(
-                                  "px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all",
-                                  !isPrioritized && !isExcluded 
-                                    ? "bg-slate-600 text-white dark:bg-slate-700 shadow-sm" 
-                                    : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                                )}
-                              >
-                                Neutral
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setFoodPreference(food.id, "dislike")}
-                                className={cn(
-                                  "p-1.5 rounded-lg text-xs font-bold transition-all",
-                                  isExcluded 
-                                    ? "bg-red-500 text-white shadow-sm" 
-                                    : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                                )}
-                                title="Excluir"
-                              >
-                                <ThumbsDown className="w-4 h-4" />
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })}
-                  </div>
-                </div>
-              )}
-
             </div>
 
             {/* Bottom Wizard Footer Navigation */}
@@ -830,14 +878,14 @@ export default function AiDietPlanner({ onClose, onSaved, initialDate }: AiDietP
                 </button>
               )}
 
-              {setupStep < 3 ? (
+              {setupStep < 2 ? (
                 <button
                   onClick={() => {
                     if (setupStep === 1 && totalPct !== 100) {
                       alert(`Los macros deben sumar exactamente 100% (actualmente ${totalPct}%)`);
                       return;
                     }
-                    setSetupStep(s => Math.min(3, s + 1));
+                    setSetupStep(s => Math.min(2, s + 1));
                   }}
                   disabled={setupStep === 1 && totalPct !== 100}
                   className="px-6 py-3 bg-slate-900 text-white font-bold rounded-2xl text-xs hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200 flex items-center gap-1.5"
@@ -1017,18 +1065,43 @@ export default function AiDietPlanner({ onClose, onSaved, initialDate }: AiDietP
                                   <span className="text-sky-500/80">G: {item.fat}g</span>
                                 </div>
 
-                                {/* Swap trigger */}
-                                <button
-                                  onClick={() => setSwappingItem({
-                                    mealIndex: mIdx,
-                                    itemIndex: iIdx,
-                                    oldItem: item,
-                                  })}
-                                  className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-cyan-500/40 text-slate-500 hover:text-cyan-600 dark:hover:text-cyan-400 bg-white dark:bg-slate-900 shadow-soft transition-all flex items-center gap-1.5 text-xs font-bold opacity-90 group-hover/item:opacity-100 group-hover/item:scale-105"
-                                >
-                                  <RefreshCw className="w-3.5 h-3.5 animate-hover-spin" />
-                                  Cambiar
-                                </button>
+                                <div className="flex items-center gap-2">
+                                  {/* Thumbs Up Button */}
+                                  <button
+                                    onClick={() => handleTogglePrioritize(item.food.id)}
+                                    className={cn(
+                                      "p-2 rounded-xl border transition-all flex items-center justify-center shadow-soft hover:scale-105",
+                                      prioritizedFoods.includes(item.food.id)
+                                        ? "bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-500/20"
+                                        : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-400 hover:text-emerald-500 dark:hover:text-emerald-450"
+                                    )}
+                                    title={prioritizedFoods.includes(item.food.id) ? "Quitar prioridad" : "Me gusta / Priorizar"}
+                                  >
+                                    <ThumbsUp className="w-3.5 h-3.5" />
+                                  </button>
+
+                                  {/* Thumbs Down Button */}
+                                  <button
+                                    onClick={() => handleExcludeAndSwap(mIdx, iIdx, item.food.id)}
+                                    className="p-2 rounded-xl border bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-400 hover:text-rose-500 dark:hover:text-rose-450 hover:border-rose-250 transition-all flex items-center justify-center shadow-soft hover:scale-105"
+                                    title="No me gusta / Excluir y Cambiar"
+                                  >
+                                    <ThumbsDown className="w-3.5 h-3.5" />
+                                  </button>
+
+                                  {/* Swap trigger */}
+                                  <button
+                                    onClick={() => setSwappingItem({
+                                      mealIndex: mIdx,
+                                      itemIndex: iIdx,
+                                      oldItem: item,
+                                    })}
+                                    className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-cyan-500/40 text-slate-500 hover:text-cyan-600 dark:hover:text-cyan-400 bg-white dark:bg-slate-900 shadow-soft transition-all flex items-center gap-1.5 text-xs font-bold"
+                                  >
+                                    <RefreshCw className="w-3.5 h-3.5 animate-hover-spin" />
+                                    Cambiar
+                                  </button>
+                                </div>
                               </div>
                             </div>
                           ))}
@@ -1140,13 +1213,13 @@ export default function AiDietPlanner({ onClose, onSaved, initialDate }: AiDietP
                 <>
                   <button
                     onClick={() => {
-                      setSetupStep(1);
+                      setSetupStep(2);
                       setShowSetup(true);
                     }}
-                    className="w-full sm:w-auto px-4 py-2 border border-slate-200 dark:border-slate-800 text-slate-750 dark:text-slate-350 hover:bg-slate-100 dark:hover:bg-slate-850 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5"
+                    className="w-full sm:w-auto px-4 py-2 border border-slate-200 dark:border-slate-800 text-slate-750 dark:text-slate-355 hover:bg-slate-100 dark:hover:bg-slate-850 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5"
                   >
                     <Settings className="w-3.5 h-3.5" />
-                    Ajustar Gustos / Volver
+                    Ajustar Restricciones / Volver
                   </button>
                   <div className="flex gap-2 w-full sm:w-auto justify-end">
                     <button

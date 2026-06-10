@@ -27,7 +27,9 @@ export async function POST(req: Request) {
       targetFat,
       dietType,
       allergens,
-      culinaryStyle
+      culinaryStyle,
+      excludedFoods,
+      prioritizedFoods
     } = body;
 
     // Fetch user units to perform correct BMR conversion (Mifflin-St Jeor)
@@ -103,6 +105,8 @@ export async function POST(req: Request) {
         dietType: dietType || undefined,
         allergens: allergens !== undefined ? allergens : undefined,
         culinaryStyle: culinaryStyle || undefined,
+        excludedFoods: excludedFoods !== undefined ? excludedFoods : undefined,
+        prioritizedFoods: prioritizedFoods !== undefined ? prioritizedFoods : undefined,
       },
       create: {
         userId: session.user.id,
@@ -111,6 +115,8 @@ export async function POST(req: Request) {
         dietType: dietType || "STANDARD",
         allergens: allergens || "",
         culinaryStyle: culinaryStyle || "CLASSIC",
+        excludedFoods: excludedFoods || "",
+        prioritizedFoods: prioritizedFoods || "",
       },
     });
 
