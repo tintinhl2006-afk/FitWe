@@ -1115,7 +1115,6 @@ export default function AiDietPlanner({ onClose, onSaved, initialDate }: AiDietP
                     <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Nombre del Alimento</label>
                     <input 
                       type="text"
-                      placeholder="Ej. Arroz Basmati Jazmín"
                       value={customFoodName}
                       onChange={(e) => setCustomFoodName(e.target.value)}
                       className="w-full text-xs px-3.5 py-2.5 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white rounded-xl focus:ring-1 focus:ring-cyan-500 outline-none"
@@ -1127,7 +1126,6 @@ export default function AiDietPlanner({ onClose, onSaved, initialDate }: AiDietP
                       <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Calorías (por 100g)</label>
                       <input 
                         type="number"
-                        placeholder="Ej. 130"
                         value={customFoodCalories}
                         onChange={(e) => setCustomFoodCalories(e.target.value)}
                         className="w-full text-xs px-3.5 py-2.5 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white rounded-xl focus:ring-1 focus:ring-cyan-500 outline-none"
@@ -1137,7 +1135,6 @@ export default function AiDietPlanner({ onClose, onSaved, initialDate }: AiDietP
                       <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Proteínas (por 100g)</label>
                       <input 
                         type="number"
-                        placeholder="Ej. 2.7"
                         value={customFoodProtein}
                         onChange={(e) => setCustomFoodProtein(e.target.value)}
                         className="w-full text-xs px-3.5 py-2.5 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white rounded-xl focus:ring-1 focus:ring-cyan-500 outline-none"
@@ -1150,7 +1147,6 @@ export default function AiDietPlanner({ onClose, onSaved, initialDate }: AiDietP
                       <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Carbohidratos (por 100g)</label>
                       <input 
                         type="number"
-                        placeholder="Ej. 28"
                         value={customFoodCarbs}
                         onChange={(e) => setCustomFoodCarbs(e.target.value)}
                         className="w-full text-xs px-3.5 py-2.5 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white rounded-xl focus:ring-1 focus:ring-cyan-500 outline-none"
@@ -1160,7 +1156,6 @@ export default function AiDietPlanner({ onClose, onSaved, initialDate }: AiDietP
                       <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Grasas (por 100g)</label>
                       <input 
                         type="number"
-                        placeholder="Ej. 0.3"
                         value={customFoodFat}
                         onChange={(e) => setCustomFoodFat(e.target.value)}
                         className="w-full text-xs px-3.5 py-2.5 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white rounded-xl focus:ring-1 focus:ring-cyan-500 outline-none"

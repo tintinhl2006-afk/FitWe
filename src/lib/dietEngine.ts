@@ -921,100 +921,129 @@ export function solveMealGrams(
 }
 
 // 3. Culinary Portion Descriptors (Portion Equivalents)
+export function formatHumanFraction(value: number, nounSingle: string, nounPlural: string, gender: "m" | "f"): string {
+  const rounded = Math.round(value * 2) / 2;
+  let text = "";
+  
+  if (rounded <= 0.5) {
+    text = gender === "m" ? `medio ${nounSingle}` : `media ${nounSingle}`;
+  } else if (rounded === 1) {
+    text = gender === "m" ? `un ${nounSingle}` : `una ${nounSingle}`;
+  } else if (rounded === 1.5) {
+    text = gender === "m" ? `un ${nounSingle} y medio` : `una ${nounSingle} y media`;
+  } else {
+    const wholePart = Math.floor(rounded);
+    const hasHalf = rounded % 1 !== 0;
+    
+    let numberWord = "";
+    switch (wholePart) {
+      case 2: numberWord = "dos"; break;
+      case 3: numberWord = "tres"; break;
+      case 4: numberWord = "cuatro"; break;
+      case 5: numberWord = "cinco"; break;
+      default: numberWord = wholePart.toString();
+    }
+    
+    if (hasHalf) {
+      text = gender === "m" ? `${numberWord} ${nounPlural} y medio` : `${numberWord} ${nounPlural} y media`;
+    } else {
+      text = `${numberWord} ${nounPlural}`;
+    }
+  }
+
+  // Capitalize first letter
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
 export function getPortionEquivalent(food: DietFood, grams: number): string {
   if (grams <= 0) return "0g";
 
   switch (food.id) {
     case "std-oats":
-      if (grams < 30) return "aprox. 3 cucharadas soperas";
-      if (grams <= 60) return "aprox. 1 taza mediana";
-      return `aprox. ${Math.round((grams / 50) * 10) / 10} tazas`;
+      if (grams < 30) return "3 cucharadas soperas";
+      if (grams <= 60) return "1 taza mediana";
+      return formatHumanFraction(grams / 50, "taza de avena en copos", "tazas de avena en copos", "f");
     case "std-chicken":
-      if (grams <= 100) return "aprox. 1 filete pequeño";
-      if (grams <= 180) return "aprox. 1 pechuga mediana";
-      return `aprox. ${Math.round((grams / 150) * 10) / 10} pechugas medianas`;
+      return formatHumanFraction(grams / 150, "pechuga mediana", "pechugas medianas", "f");
     case "std-brown-rice":
     case "std-white-rice":
-      return `aprox. ${Math.round(grams / 150)} taza cocida (${grams}g)`;
+      return formatHumanFraction(grams / 150, "taza de arroz cocido", "tazas de arroz cocido", "f");
     case "std-whole-egg":
-      return `${Math.round(grams / 60)} huevo entero(s)`;
+      return formatHumanFraction(grams / 60, "huevo entero", "huevos enteros", "m");
     case "std-egg-white":
-      return `aprox. ${Math.round(grams / 33)} claras de huevo`;
+      return formatHumanFraction(grams / 33, "clara de huevo", "claras de huevo", "f");
     case "std-salmon":
-      return `aprox. ${Math.round((grams / 150) * 10) / 10} filete de salmón`;
+      return formatHumanFraction(grams / 150, "filete de salmón", "filetes de salmón", "m");
     case "std-tuna":
-      return `aprox. ${Math.round((grams / 80) * 10) / 10} lata(s) de atún`;
+      return formatHumanFraction(grams / 80, "lata de atún", "latas de atún", "f");
     case "std-tofu":
-      return `aprox. ${Math.round(grams)}g de tofu`;
+      return `${grams}g de tofu`;
     case "std-whole-wheat-bread":
-      const slices = Math.round(grams / 35);
-      return `${slices || 1} rebanada(s) de pan`;
+      return formatHumanFraction(grams / 35, "rebanada de pan de centeno", "rebanadas de pan de centeno", "f");
     case "std-potato":
-      return `aprox. ${Math.round((grams / 200) * 10) / 10} patata mediana`;
+      return formatHumanFraction(grams / 200, "patata mediana", "patatas medianas", "f");
     case "std-avocado":
-      return `aprox. ${Math.round((grams / 200) * 2)} mitad de aguacate`;
+      return formatHumanFraction(grams / 200, "aguacate", "aguacates", "m");
     case "std-olive-oil":
       if (grams < 8) return "1 cucharadita de café";
       if (grams <= 15) return "1 cucharada sopera";
-      return `aprox. ${Math.round(grams / 10)} cucharadas soperas`;
+      return formatHumanFraction(grams / 10, "cucharada sopera de aceite de oliva", "cucharadas soperas de aceite de oliva", "f");
     case "std-walnuts":
-      return `aprox. ${Math.round(grams / 3)} nueces (${grams}g)`;
+      return formatHumanFraction(grams / 3, "nuez", "nueces", "f");
     case "std-peanut-butter":
       if (grams < 12) return "1 cucharadita pequeña";
-      return `aprox. ${Math.round(grams / 15)} cucharada colmada`;
+      return formatHumanFraction(grams / 15, "cucharada colmada de crema de cacahuete", "cucharadas colmadas de crema de cacahuete", "f");
     case "std-skim-milk":
     case "std-almond-milk":
-      return `aprox. ${Math.round(grams / 200)} vaso (${grams}ml)`;
+      return formatHumanFraction(grams / 200, "vaso de leche", "vasos de leche", "m");
     case "std-greek-yogurt":
-      return `aprox. ${Math.round((grams / 125) * 10) / 10} vaso de yogur`;
+      return formatHumanFraction(grams / 125, "vaso de yogur griego", "vasos de yogur griego", "m");
     case "std-whipped-cheese":
-      return `aprox. ${Math.round((grams / 250) * 10) / 10} tarrina mediana`;
+      return formatHumanFraction(grams / 250, "tarrina de queso fresco batido", "tarrinas de queso fresco batido", "f");
     case "std-banana":
-      return `aprox. ${Math.round((grams / 100) * 10) / 10} plátano(s)`;
+      return formatHumanFraction(grams / 100, "plátano", "plátanos", "m");
     case "std-apple":
-      return `aprox. ${Math.round((grams / 150) * 10) / 10} manzana(s)`;
+      return formatHumanFraction(grams / 150, "manzana", "manzanas", "f");
     case "std-broccoli":
-      return `aprox. ${Math.round(grams)}g de brócoli`;
+      return `${grams}g de brócoli`;
     case "std-spinach":
-      return `aprox. ${Math.round(grams / 50)} tazas de hojas de espinaca`;
+      return formatHumanFraction(grams / 50, "taza de hojas de espinaca", "tazas de hojas de espinaca", "f");
     case "std-whey-protein":
     case "std-vegan-protein":
-      return `${Math.round(grams / 30) || 1} cazo de proteína (scoop)`;
+      return formatHumanFraction(grams / 30, "cazo de proteína", "cazos de proteína", "m");
     case "std-whole-pasta":
-      return `aprox. ${Math.round((grams / 150) * 10) / 10} plato hondo (cocido)`;
+      return formatHumanFraction(grams / 150, "plato hondo de pasta cocida", "platos hondos de pasta cocida", "m");
     case "std-turkey-breast":
-      if (grams <= 100) return "aprox. 1 filete pequeño";
-      if (grams <= 180) return "aprox. 1 filete mediano";
-      return `aprox. ${Math.round((grams / 150) * 10) / 10} filetes de pavo`;
+      return formatHumanFraction(grams / 150, "filete de pavo", "filetes de pavo", "m");
     case "std-lean-beef":
-      return `aprox. ${Math.round(grams)}g de ternera magra`;
+      return `${grams}g de ternera magra`;
     case "std-hake":
-      return `aprox. ${Math.round(grams)}g de lomo de merluza`;
+      return `${grams}g de lomo de merluza`;
     case "std-sweet-potato":
-      return `aprox. ${Math.round((grams / 150) * 10) / 10} boniato mediano`;
+      return formatHumanFraction(grams / 150, "boniato mediano", "boniatos medianos", "m");
     case "std-quinoa":
-      return `aprox. ${Math.round((grams / 150) * 10) / 10} taza de quinoa cocida`;
+      return formatHumanFraction(grams / 150, "taza de quinoa cocida", "tazas de quinoa cocida", "f");
     case "std-lentils":
-      return `aprox. ${Math.round((grams / 150) * 10) / 10} plato de lentejas cocidas`;
+      return formatHumanFraction(grams / 150, "plato de lentejas cocidas", "platos de lentejas cocidas", "m");
     case "std-almonds":
-      return `aprox. ${Math.round(grams / 1.3)} almendras (${grams}g)`;
+      return formatHumanFraction(grams / 1.3, "almendra", "almendras", "f");
     case "std-strawberries":
-      return `aprox. ${Math.round(grams / 8)} fresas grandes (${grams}g)`;
+      return formatHumanFraction(grams / 8, "fresa grande", "fresas grandes", "f");
     case "std-blueberries":
-      return `aprox. ${Math.round(grams)}g de arándanos`;
+      return `${grams}g de arándanos`;
     case "std-zucchini":
-      return `aprox. ${Math.round(grams)}g de calabacín`;
+      return `${grams}g de calabacín`;
     case "std-cottage-cheese":
-      return `aprox. ${Math.round((grams / 150) * 10) / 10} taza de queso cottage`;
+      return formatHumanFraction(grams / 150, "taza de queso cottage", "tazas de queso cottage", "f");
     case "std-brown-rice-dry":
     case "std-white-rice-dry":
-      return `aprox. ${Math.round((grams / 50) * 10) / 10} ración en seco (${grams}g)`;
+      return formatHumanFraction(grams / 50, "ración de arroz en seco", "raciones de arroz en seco", "f");
     case "std-whole-pasta-dry":
-      return `aprox. ${Math.round((grams / 70) * 10) / 10} ración en seco (${grams}g)`;
+      return formatHumanFraction(grams / 70, "ración de pasta en seco", "raciones de pasta en seco", "f");
     case "std-lentils-dry":
-      return `aprox. ${Math.round((grams / 60) * 10) / 10} ración en seco (${grams}g)`;
+      return formatHumanFraction(grams / 60, "ración de lentejas en seco", "raciones de lentejas en seco", "f");
     case "std-quinoa-dry":
-      return `aprox. ${Math.round((grams / 50) * 10) / 10} ración en seco (${grams}g)`;
+      return formatHumanFraction(grams / 50, "ración de quinoa en seco", "raciones de quinoa en seco", "f");
     default:
       return `${grams}g`;
   }
