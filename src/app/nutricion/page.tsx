@@ -370,8 +370,7 @@ export default function NutricionPage() {
             </div>
             <div className="space-y-1">
               <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                Generador de Dieta Inteligente
-                <span className="text-[10px] font-bold bg-cyan-100 dark:bg-cyan-900/50 text-cyan-700 dark:text-cyan-400 px-2 py-0.5 rounded-full">PROPIETARIO</span>
+                Genera tu dieta automáticamente
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xl leading-relaxed">
                 Genera al instante un plan completo de 4 comidas diarias ajustado a tu objetivo calórico de <strong className="text-slate-700 dark:text-slate-300">{profile?.targetCalories || 2000} kcal</strong>, teniendo en cuenta tu estilo gastronómico, exclusiones por alérgenos y tipo de dieta.
