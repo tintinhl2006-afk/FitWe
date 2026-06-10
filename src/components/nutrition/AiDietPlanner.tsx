@@ -433,81 +433,62 @@ export default function AiDietPlanner({ onClose, onSaved, initialDate }: AiDietP
             {/* Step Content */}
             <div className="flex-1 max-w-2xl w-full mx-auto bg-slate-50/50 dark:bg-slate-950/20 border border-slate-200/50 dark:border-slate-800/40 rounded-3xl p-6 md:p-8 shadow-soft">
               
-              {/* STEP 1: Budget & Macros */}
+              {/* STEP 1: Confirm Budget & Macros */}
               {setupStep === 1 && (
                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
                   <div className="text-center space-y-1">
                     <h3 className="text-lg font-bold text-slate-950 dark:text-white flex items-center justify-center gap-2">
-                      <Sliders className="w-5 h-5 text-cyan-500" /> Presupuesto y Reparto de Macros
+                      <Sliders className="w-5 h-5 text-cyan-500" /> Presupuesto y Macros Configurados
                     </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Establece tus calorías objetivo y define el peso de cada nutriente.</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Confirma que tu presupuesto calórico y distribución de macros son correctos para tu plan.
+                    </p>
                   </div>
 
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">Calorías Diarias (kcal)</label>
-                      <input 
-                        type="number" 
-                        min="500" max="10000" step="50"
-                        value={customCalories}
-                        onChange={(e) => setCustomCalories(Number(e.target.value))}
-                        className="w-full text-center text-xl font-bold px-4 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-cyan-500/20 outline-none"
-                      />
+                  <div className="space-y-5">
+                    {/* Calories Card */}
+                    <div className="bg-gradient-to-br from-cyan-500/5 to-blue-500/5 border border-cyan-500/10 dark:border-cyan-500/20 rounded-3xl p-6 text-center space-y-2">
+                      <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Presupuesto Diario</span>
+                      <div className="text-3xl font-black text-slate-900 dark:text-white flex items-center justify-center gap-1.5">
+                        <Flame className="w-6 h-6 text-amber-500 fill-amber-500 animate-pulse" />
+                        {customCalories} <span className="text-lg font-normal text-slate-500">kcal</span>
+                      </div>
                     </div>
 
-                    <div className="space-y-4 pt-2 border-t border-slate-100 dark:border-slate-800/60">
-                      <div className="flex justify-between items-center text-xs font-bold">
-                        <span className="text-slate-500">Distribución de Macronutrientes</span>
-                        <span className={cn("px-2 py-0.5 rounded text-xs font-bold", totalPct === 100 ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20" : "bg-red-100 text-red-700 dark:bg-red-500/20")}>
-                          Suma: {totalPct}%
-                        </span>
-                      </div>
-
+                    {/* Macros Grid */}
+                    <div className="grid grid-cols-3 gap-3.5">
                       {/* Protein */}
-                      <div className="space-y-1 bg-white dark:bg-slate-900/60 p-3.5 border border-slate-200/50 dark:border-slate-800/50 rounded-2xl">
-                        <div className="flex justify-between text-xs font-semibold">
-                          <span className="text-rose-500">Proteínas ({customProteinPct}%)</span>
-                          <span className="text-slate-500 font-bold">{liveMacros.protein}g</span>
-                        </div>
-                        <input 
-                          type="range" min="0" max="100" step="5"
-                          value={customProteinPct}
-                          onChange={(e) => setCustomProteinPct(Number(e.target.value))}
-                          className="w-full accent-rose-500 mt-2"
-                        />
+                      <div className="p-4 bg-rose-50/50 dark:bg-rose-950/10 border border-rose-100 dark:border-rose-950/30 rounded-2xl text-center space-y-1">
+                        <p className="text-[10px] font-bold text-rose-500 dark:text-rose-400 uppercase tracking-wider">Proteínas</p>
+                        <p className="text-xl font-black text-rose-950 dark:text-rose-300">{liveMacros.protein}g</p>
+                        <p className="text-[10px] font-medium text-slate-500">{customProteinPct}%</p>
                       </div>
 
                       {/* Carbs */}
-                      <div className="space-y-1 bg-white dark:bg-slate-900/60 p-3.5 border border-slate-200/50 dark:border-slate-800/50 rounded-2xl">
-                        <div className="flex justify-between text-xs font-semibold">
-                          <span className="text-amber-500">Carbohidratos ({customCarbsPct}%)</span>
-                          <span className="text-slate-500 font-bold">{liveMacros.carbs}g</span>
-                        </div>
-                        <input 
-                          type="range" min="0" max="100" step="5"
-                          value={customCarbsPct}
-                          onChange={(e) => setCustomCarbsPct(Number(e.target.value))}
-                          className="w-full accent-amber-500 mt-2"
-                        />
+                      <div className="p-4 bg-amber-50/50 dark:bg-amber-950/10 border border-amber-100 dark:border-amber-950/30 rounded-2xl text-center space-y-1">
+                        <p className="text-[10px] font-bold text-amber-500 dark:text-amber-400 uppercase tracking-wider">Carbohidratos</p>
+                        <p className="text-xl font-black text-amber-950 dark:text-amber-300">{liveMacros.carbs}g</p>
+                        <p className="text-[10px] font-medium text-slate-500">{customCarbsPct}%</p>
                       </div>
 
                       {/* Fat */}
-                      <div className="space-y-1 bg-white dark:bg-slate-900/60 p-3.5 border border-slate-200/50 dark:border-slate-800/50 rounded-2xl">
-                        <div className="flex justify-between text-xs font-semibold">
-                          <span className="text-sky-500">Grasas ({customFatPct}%)</span>
-                          <span className="text-slate-500 font-bold">{liveMacros.fat}g</span>
-                        </div>
-                        <input 
-                          type="range" min="0" max="100" step="5"
-                          value={customFatPct}
-                          onChange={(e) => setCustomFatPct(Number(e.target.value))}
-                          className="w-full accent-sky-500 mt-2"
-                        />
+                      <div className="p-4 bg-sky-50/50 dark:bg-sky-950/10 border border-sky-100 dark:border-sky-950/30 rounded-2xl text-center space-y-1">
+                        <p className="text-[10px] font-bold text-sky-500 dark:text-sky-400 uppercase tracking-wider">Grasas</p>
+                        <p className="text-xl font-black text-sky-950 dark:text-sky-300">{liveMacros.fat}g</p>
+                        <p className="text-[10px] font-medium text-slate-500">{customFatPct}%</p>
                       </div>
                     </div>
 
-                    {/* Dynamic onboarding button */}
-                    <div className="text-center pt-4 border-t border-slate-100 dark:border-slate-800/60">
+                    {/* Helper text */}
+                    <div className="bg-slate-50 dark:bg-slate-900/40 border border-slate-200/50 dark:border-slate-800/40 rounded-2xl p-4 text-xs text-slate-500 dark:text-slate-400 flex items-start gap-2.5 leading-relaxed">
+                      <AlertCircle className="w-4 h-4 text-cyan-500 shrink-0 mt-0.5" />
+                      <p>
+                        Estos objetivos se usarán para estimar las porciones de alimentos de tu menú diario. Puedes reajustarlos en cualquier momento.
+                      </p>
+                    </div>
+
+                    {/* Button to edit objectives */}
+                    <div className="text-center pt-2">
                       <button 
                         onClick={() => {
                           onClose();
@@ -515,8 +496,8 @@ export default function AiDietPlanner({ onClose, onSaved, initialDate }: AiDietP
                         }}
                         className="inline-flex items-center gap-2 text-xs text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300 font-bold hover:underline"
                       >
-                        <Wand2 className="w-4 h-4 animate-pulse text-cyan-500" />
-                        ¿No sabes qué macros ponerte? Calcular objetivos automáticamente
+                        <Wand2 className="w-4 h-4 text-cyan-500" />
+                        ¿Quieres cambiar tus macros o calorías? Ajustar objetivos
                       </button>
                     </div>
 
