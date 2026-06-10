@@ -73,6 +73,7 @@ model User {
   gymPlans            SubscriptionPlan[] @relation("GymPlans")
   accessLogs          AccessLog[]        @relation("UserAccessLogs")
   gymAccessLogs       AccessLog[]        @relation("GymAccessLogs")
+  savedDiets          SavedDiet[]
 }
 
 model SubscriptionPlan {
@@ -283,5 +284,29 @@ model AccessLog {
 
   user User @relation("UserAccessLogs", fields: [userId], references: [id], onDelete: Cascade)
   gym  User @relation("GymAccessLogs", fields: [gymId], references: [id], onDelete: Cascade)
+}
+
+model SavedDiet {
+  id        String          @id @default(uuid()) @db.Uuid
+  userId    String          @db.Uuid
+  name      String
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     SavedDietItem[]
+}
+
+model SavedDietItem {
+  id            String    @id @default(uuid()) @db.Uuid
+  savedDietId   String    @db.Uuid
+  foodName      String
+  brand         String?
+  calories      Float     // per 100g
+  protein       Float     // per 100g
+  carbs         Float     // per 100g
+  fat           Float     // per 100g
+  quantityGrams Float
+  mealType      String    // BREAKFAST, LUNCH, DINNER, SNACK
+  savedDiet     SavedDiet @relation(fields: [savedDietId], references: [id], onDelete: Cascade)
 }
 

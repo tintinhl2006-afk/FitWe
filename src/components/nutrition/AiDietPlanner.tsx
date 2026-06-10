@@ -22,7 +22,8 @@ import {
   Wand2,
   ArrowLeft,
   ArrowRight,
-  Plus
+  Plus,
+  Save
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getPortionEquivalent, DietFood, MealPlan, SolvedItem, STANDARD_FOODS } from "@/lib/dietEngine";
@@ -76,6 +77,10 @@ export default function AiDietPlanner({ onClose, onSaved, initialDate }: AiDietP
   const [customFoodProtein, setCustomFoodProtein] = useState("");
   const [customFoodCarbs, setCustomFoodCarbs] = useState("");
   const [customFoodFat, setCustomFoodFat] = useState("");
+
+  // Template States
+  const [isSavingTemplate, setIsSavingTemplate] = useState(false);
+  const [templateName, setTemplateName] = useState("");
 
   useEffect(() => {
     if (!swappingItem) {
@@ -308,6 +313,51 @@ export default function AiDietPlanner({ onClose, onSaved, initialDate }: AiDietP
       onSaved();
     } catch (e: any) {
       setError(e.message || "Error al registrar la dieta.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Save diet as a named template
+  const handleSaveAsTemplate = async () => {
+    if (!templateName.trim()) {
+      alert("Por favor, introduce un nombre para la plantilla.");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const allItems = mealPlan.flatMap((meal) => 
+        meal.items.map((item) => ({
+          foodName: item.food.name,
+          brand: item.food.brand,
+          calories: item.food.calories,
+          protein: item.food.protein,
+          carbs: item.food.carbs,
+          fat: item.food.fat,
+          quantityGrams: item.quantityGrams,
+          mealType: meal.mealType,
+        }))
+      );
+
+      const res = await fetch("/api/user/nutrition/saved-diets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: templateName.trim(),
+          items: allItems,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("No se pudo guardar la plantilla.");
+      }
+
+      setIsSavingTemplate(false);
+      setTemplateName("");
+      alert("¡Plantilla de dieta guardada con éxito!");
+    } catch (e: any) {
+      setError(e.message || "Error al guardar la plantilla.");
     } finally {
       setIsLoading(false);
     }
@@ -1060,31 +1110,62 @@ export default function AiDietPlanner({ onClose, onSaved, initialDate }: AiDietP
 
             {/* Footer Actions */}
             <div className="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-              <button
-                onClick={() => {
-                  setSetupStep(1);
-                  setShowSetup(true);
-                }}
-                className="w-full sm:w-auto px-4 py-2 border border-slate-200 dark:border-slate-800 text-slate-750 dark:text-slate-350 hover:bg-slate-100 dark:hover:bg-slate-850 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5"
-              >
-                <Settings className="w-3.5 h-3.5" />
-                Ajustar Gustos / Volver
-              </button>
-              <div className="flex gap-2">
-                <button
-                  onClick={onClose}
-                  className="flex-1 sm:flex-initial px-5 py-3 rounded-2xl text-[11px] font-semibold border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleSavePlan}
-                  className="flex-1 sm:flex-initial px-6 py-3 rounded-2xl text-[11px] font-bold text-white bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 shadow-md shadow-cyan-500/10 flex items-center justify-center gap-1.5"
-                >
-                  <Check className="w-4 h-4" />
-                  Registrar Dieta en el Diario
-                </button>
-              </div>
+              {isSavingTemplate ? (
+                <div className="flex-1 flex flex-col sm:flex-row items-center gap-3 w-full">
+                  <input
+                    type="text"
+                    placeholder="Nombre de la plantilla (ej. Dieta de Lunes)"
+                    value={templateName}
+                    onChange={(e) => setTemplateName(e.target.value)}
+                    className="flex-1 px-4 py-2 border border-slate-200 dark:border-slate-800 rounded-xl text-xs bg-white dark:bg-slate-900 text-slate-900 dark:text-white outline-none focus:ring-1 focus:ring-cyan-500"
+                    autoFocus
+                  />
+                  <div className="flex gap-2 w-full sm:w-auto">
+                    <button
+                      onClick={() => setIsSavingTemplate(false)}
+                      className="flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-semibold border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={handleSaveAsTemplate}
+                      className="flex-1 sm:flex-initial px-5 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 shadow-md shadow-emerald-500/10 flex items-center justify-center gap-1.5"
+                    >
+                      <Save className="w-3.5 h-3.5" />
+                      Guardar Plantilla
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <button
+                    onClick={() => {
+                      setSetupStep(1);
+                      setShowSetup(true);
+                    }}
+                    className="w-full sm:w-auto px-4 py-2 border border-slate-200 dark:border-slate-800 text-slate-750 dark:text-slate-350 hover:bg-slate-100 dark:hover:bg-slate-850 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5"
+                  >
+                    <Settings className="w-3.5 h-3.5" />
+                    Ajustar Gustos / Volver
+                  </button>
+                  <div className="flex gap-2 w-full sm:w-auto justify-end">
+                    <button
+                      onClick={() => setIsSavingTemplate(true)}
+                      className="flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-semibold border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center gap-1.5"
+                    >
+                      <Save className="w-3.5 h-3.5 text-slate-550" />
+                      Guardar como Plantilla
+                    </button>
+                    <button
+                      onClick={handleSavePlan}
+                      className="flex-1 sm:flex-initial px-5 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 shadow-md shadow-cyan-500/10 flex items-center justify-center gap-1.5"
+                    >
+                      <Check className="w-4 h-4" />
+                      Registrar en el Diario
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </>
         )}

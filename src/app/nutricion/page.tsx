@@ -3,12 +3,13 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { Plus, Flame, Beef, Wheat, Droplet, Calendar as CalendarIcon, Loader2, Trash2, X, Search, Settings, Target as TargetIcon, Edit3, BarChart3, PieChart, Sparkles } from "lucide-react";
+import { Plus, Flame, Beef, Wheat, Droplet, Calendar as CalendarIcon, Loader2, Trash2, X, Search, Settings, Target as TargetIcon, Edit3, BarChart3, PieChart, Sparkles, Folder } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { useCustomAlert } from "@/components/providers/CustomAlertProvider";
 import AiDietPlanner from "@/components/nutrition/AiDietPlanner";
+import SavedDietsModal from "@/components/nutrition/SavedDietsModal";
 
 interface FoodItem {
   id: string;
@@ -53,6 +54,7 @@ export default function NutricionPage() {
   const [editingFoodId, setEditingFoodId] = useState<string | null>(null);
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
   const [isPlannerOpen, setIsPlannerOpen] = useState(false);
+  const [isSavedDietsOpen, setIsSavedDietsOpen] = useState(false);
   const searchParams = useSearchParams();
   const generateParam = searchParams.get("generate");
 
@@ -339,6 +341,14 @@ export default function NutricionPage() {
               <TargetIcon className="w-5 h-5" />
               Establecer Objetivos
             </button>
+            <button
+              onClick={() => setIsSavedDietsOpen(true)}
+              className="flex flex-1 items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-slate-950 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white font-semibold transition-all border border-slate-200 dark:border-slate-700 shadow-sm"
+              title="Ver mis dietas guardadas y plantillas"
+            >
+              <Folder className="w-5 h-5 text-slate-400" />
+              Mis Dietas
+            </button>
             <div className="relative w-full sm:w-auto">
               <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500 dark:text-slate-400" />
               <input
@@ -368,13 +378,22 @@ export default function NutricionPage() {
               </p>
             </div>
           </div>
-          <button
-            onClick={() => setIsPlannerOpen(true)}
-            className="w-full md:w-auto px-6 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold rounded-2xl shadow-lg shadow-cyan-500/15 transition-all flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] shrink-0 relative z-10"
-          >
-            <Sparkles className="w-4 h-4 text-cyan-200 fill-cyan-200" />
-            Generar Menú Diario
-          </button>
+          <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto relative z-10 shrink-0">
+            <button
+              onClick={() => setIsSavedDietsOpen(true)}
+              className="px-5 py-3.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2"
+            >
+              <Folder className="w-4 h-4 text-slate-500" />
+              Mis Dietas Guardadas
+            </button>
+            <button
+              onClick={() => setIsPlannerOpen(true)}
+              className="px-6 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold rounded-2xl shadow-lg shadow-cyan-500/15 transition-all flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <Sparkles className="w-4 h-4 text-cyan-200 fill-cyan-200" />
+              Generar Menú Diario
+            </button>
+          </div>
         </div>
 
         {/* Tarjetas de Macros Totales */}
@@ -911,6 +930,18 @@ export default function NutricionPage() {
             if (selectedDate) fetchNutritionData(selectedDate);
           }}
           initialDate={selectedDate}
+        />
+      )}
+
+      {isSavedDietsOpen && (
+        <SavedDietsModal
+          isOpen={isSavedDietsOpen}
+          onClose={() => setIsSavedDietsOpen(false)}
+          currentDate={selectedDate}
+          onApplied={() => {
+            if (selectedDate) fetchNutritionData(selectedDate);
+          }}
+          currentMeals={meals}
         />
       )}
     </DashboardLayout>
