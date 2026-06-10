@@ -486,6 +486,204 @@ export const STANDARD_FOODS: DietFood[] = [
     portionSize: 200,
     portionName: "vaso grande (200ml)",
     meals: ["BREAKFAST", "SNACK"]
+  },
+  {
+    id: "std-turkey-breast",
+    name: "Pechuga de pavo",
+    brand: null,
+    calories: 111,
+    protein: 24.0,
+    carbs: 0.0,
+    fat: 1.5,
+    group: "PROTEIN",
+    isVegan: false,
+    isVegetarian: false,
+    isKeto: true,
+    allergens: [],
+    styles: ["CLASSIC", "MEDITERRANEAN", "QUICK"],
+    portionSize: 150,
+    portionName: "filete mediano (150g)",
+    meals: ["LUNCH", "DINNER"]
+  },
+  {
+    id: "std-lean-beef",
+    name: "Ternera magra",
+    brand: null,
+    calories: 137,
+    protein: 22.0,
+    carbs: 0.0,
+    fat: 5.4,
+    group: "PROTEIN",
+    isVegan: false,
+    isVegetarian: false,
+    isKeto: true,
+    allergens: [],
+    styles: ["CLASSIC", "MEDITERRANEAN"],
+    portionSize: 150,
+    portionName: "filete de ternera (150g)",
+    meals: ["LUNCH", "DINNER"]
+  },
+  {
+    id: "std-hake",
+    name: "Lomo de merluza",
+    brand: null,
+    calories: 89,
+    protein: 18.0,
+    carbs: 0.0,
+    fat: 1.8,
+    group: "PROTEIN",
+    isVegan: false,
+    isVegetarian: false,
+    isKeto: true,
+    allergens: ["FISH"],
+    styles: ["MEDITERRANEAN", "QUICK"],
+    portionSize: 180,
+    portionName: "lomo de merluza (180g)",
+    meals: ["LUNCH", "DINNER"]
+  },
+  {
+    id: "std-sweet-potato",
+    name: "Boniato asado",
+    brand: null,
+    calories: 86,
+    protein: 1.6,
+    carbs: 20.0,
+    fat: 0.1,
+    group: "CARB",
+    isVegan: true,
+    isVegetarian: true,
+    isKeto: false,
+    allergens: [],
+    styles: ["CLASSIC", "MEDITERRANEAN"],
+    portionSize: 150,
+    portionName: "boniato mediano (150g)",
+    meals: ["LUNCH", "DINNER"]
+  },
+  {
+    id: "std-quinoa",
+    name: "Quinoa cocida",
+    brand: null,
+    calories: 120,
+    protein: 4.4,
+    carbs: 21.3,
+    fat: 1.9,
+    group: "CARB",
+    isVegan: true,
+    isVegetarian: true,
+    isKeto: false,
+    allergens: [],
+    styles: ["MEDITERRANEAN"],
+    portionSize: 150,
+    portionName: "taza de quinoa (150g)",
+    meals: ["LUNCH", "DINNER"]
+  },
+  {
+    id: "std-lentils",
+    name: "Lentejas cocidas",
+    brand: null,
+    calories: 116,
+    protein: 9.0,
+    carbs: 20.0,
+    fat: 0.4,
+    group: "CARB",
+    isVegan: true,
+    isVegetarian: true,
+    isKeto: false,
+    allergens: [],
+    styles: ["MEDITERRANEAN"],
+    portionSize: 150,
+    portionName: "plato pequeño (150g)",
+    meals: ["LUNCH", "DINNER"]
+  },
+  {
+    id: "std-almonds",
+    name: "Almendras crudas",
+    brand: null,
+    calories: 579,
+    protein: 21.0,
+    carbs: 22.0,
+    fat: 49.0,
+    group: "FAT",
+    isVegan: true,
+    isVegetarian: true,
+    isKeto: true,
+    allergens: ["NUTS"],
+    styles: ["CLASSIC", "MEDITERRANEAN", "QUICK"],
+    portionSize: 20,
+    portionName: "puñado de 15 almendras (20g)",
+    meals: ["BREAKFAST", "SNACK"]
+  },
+  {
+    id: "std-strawberries",
+    name: "Fresas frescas",
+    brand: null,
+    calories: 32,
+    protein: 0.7,
+    carbs: 7.7,
+    fat: 0.3,
+    group: "FRUIT",
+    isVegan: true,
+    isVegetarian: true,
+    isKeto: true,
+    allergens: [],
+    styles: ["MEDITERRANEAN", "QUICK"],
+    portionSize: 150,
+    portionName: "taza de fresas (150g)",
+    meals: ["BREAKFAST", "SNACK"]
+  },
+  {
+    id: "std-blueberries",
+    name: "Arándanos frescos",
+    brand: null,
+    calories: 57,
+    protein: 0.7,
+    carbs: 14.0,
+    fat: 0.3,
+    group: "FRUIT",
+    isVegan: true,
+    isVegetarian: true,
+    isKeto: false,
+    allergens: [],
+    styles: ["CLASSIC", "MEDITERRANEAN"],
+    portionSize: 100,
+    portionName: "taza de arándanos (100g)",
+    meals: ["BREAKFAST", "SNACK"]
+  },
+  {
+    id: "std-zucchini",
+    name: "Calabacín a la plancha",
+    brand: null,
+    calories: 17,
+    protein: 1.2,
+    carbs: 3.1,
+    fat: 0.3,
+    group: "VEG",
+    isVegan: true,
+    isVegetarian: true,
+    isKeto: true,
+    allergens: [],
+    styles: ["MEDITERRANEAN", "QUICK"],
+    portionSize: 150,
+    portionName: "calabacín mediano (150g)",
+    meals: ["LUNCH", "DINNER"]
+  },
+  {
+    id: "std-cottage-cheese",
+    name: "Queso cottage light",
+    brand: null,
+    calories: 72,
+    protein: 11.0,
+    carbs: 2.7,
+    fat: 1.8,
+    group: "DAIRY",
+    isVegan: false,
+    isVegetarian: true,
+    isKeto: true,
+    allergens: ["LACTOSE"],
+    styles: ["CLASSIC", "MEDITERRANEAN", "QUICK"],
+    portionSize: 150,
+    portionName: "media taza (150g)",
+    meals: ["BREAKFAST", "SNACK"]
   }
 ];
 
@@ -694,6 +892,30 @@ export function getPortionEquivalent(food: DietFood, grams: number): string {
       return `${Math.round(grams / 30) || 1} cazo de proteína (scoop)`;
     case "std-whole-pasta":
       return `aprox. ${Math.round((grams / 150) * 10) / 10} plato hondo (cocido)`;
+    case "std-turkey-breast":
+      if (grams <= 100) return "aprox. 1 filete pequeño";
+      if (grams <= 180) return "aprox. 1 filete mediano";
+      return `aprox. ${Math.round((grams / 150) * 10) / 10} filetes de pavo`;
+    case "std-lean-beef":
+      return `aprox. ${Math.round(grams)}g de ternera magra`;
+    case "std-hake":
+      return `aprox. ${Math.round(grams)}g de lomo de merluza`;
+    case "std-sweet-potato":
+      return `aprox. ${Math.round((grams / 150) * 10) / 10} boniato mediano`;
+    case "std-quinoa":
+      return `aprox. ${Math.round((grams / 150) * 10) / 10} taza de quinoa cocida`;
+    case "std-lentils":
+      return `aprox. ${Math.round((grams / 150) * 10) / 10} plato de lentejas cocidas`;
+    case "std-almonds":
+      return `aprox. ${Math.round(grams / 1.3)} almendras (${grams}g)`;
+    case "std-strawberries":
+      return `aprox. ${Math.round(grams / 8)} fresas grandes (${grams}g)`;
+    case "std-blueberries":
+      return `aprox. ${Math.round(grams)}g de arándanos`;
+    case "std-zucchini":
+      return `aprox. ${Math.round(grams)}g de calabacín`;
+    case "std-cottage-cheese":
+      return `aprox. ${Math.round((grams / 150) * 10) / 10} taza de queso cottage`;
     default:
       return `${grams}g`;
   }
@@ -704,7 +926,8 @@ export function getMealTemplate(
   mealType: string,
   style: string,
   availableFoods: DietFood[],
-  prioritizedFoodIds: string[] = []
+  prioritizedFoodIds: string[] = [],
+  usedFoodIds: string[] = []
 ): {
   carb?: DietFood;
   protein?: DietFood;
@@ -720,18 +943,23 @@ export function getMealTemplate(
     if (list.length === 0) {
       list = availableFoods.filter((f) => f.group === group);
     }
+
+    // Try to exclude already used foods to avoid repetition
+    const freshList = list.filter((f) => !usedFoodIds.includes(f.id));
+    if (freshList.length > 0) {
+      list = freshList;
+    }
     
     // 1. Prioritize foods liked by the user (if any are in this group)
     const preferredList = list.filter((f) => prioritizedFoodIds.includes(f.id));
     
-    // 2. Otherwise prioritize style if possible
+    // 2. Otherwise prioritize style if possible (with 75% weight, leaving 25% weight to choose any other valid food in the list for variety)
     const styleList = list.filter((f) => f.styles.includes(style));
     
-    // Select from preferred, then style, then general list
     let finalSelection = list;
     if (preferredList.length > 0) {
       finalSelection = preferredList;
-    } else if (styleList.length > 0) {
+    } else if (styleList.length > 0 && Math.random() < 0.75) {
       finalSelection = styleList;
     }
     
@@ -816,13 +1044,21 @@ export function generateDietPlan(
     { type: "SNACK", label: "Snacks", pct: 0.15 },
   ];
 
+  const usedFoodIds: string[] = [];
+
   return mealAllocations.map((alloc) => {
     const mealCals = Math.round(targetCalories * alloc.pct);
     const mealPro = Math.round(targetProtein * alloc.pct);
     const mealCarbs = Math.round(targetCarbs * alloc.pct);
     const mealFat = Math.round(targetFat * alloc.pct);
 
-    const template = getMealTemplate(alloc.type, culinaryStyle, filteredFoods, prioritizedFoodIds);
+    const template = getMealTemplate(alloc.type, culinaryStyle, filteredFoods, prioritizedFoodIds, usedFoodIds);
+    
+    // Add chosen foods to used list
+    Object.values(template).forEach((food) => {
+      if (food) usedFoodIds.push(food.id);
+    });
+
     const solvedItems = solveMealGrams(mealCals, mealPro, mealCarbs, mealFat, template);
 
     // Sum actual macros solved
