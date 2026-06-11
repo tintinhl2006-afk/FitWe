@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { Plus, Loader2, Dumbbell, Calendar, Trash2, MoreHorizontal } from "lucide-react";
+import { Plus, Loader2, Dumbbell, Calendar, Trash2, MoreHorizontal, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { SubscriptionBanner, useIsSubscriptionActive } from "@/components/shared/SubscriptionBanner";
 import { useCustomAlert } from "@/components/providers/CustomAlertProvider";
+import AiWorkoutPlanner from "@/components/workout/AiWorkoutPlanner";
 
 interface Routine {
   id: string;
@@ -29,6 +30,7 @@ export default function EntrenamientosPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [showAiPlanner, setShowAiPlanner] = useState(false);
 
   const fetchRoutines = async () => {
     if (!isActive) {
@@ -118,14 +120,24 @@ export default function EntrenamientosPage() {
               Gestiona tus planes de entrenamiento personales.
             </p>
           </div>
-          <button
-            onClick={() => setIsCreating(!isCreating)}
-            disabled={!isActive}
-            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-900 dark:bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 dark:hover:bg-primary transition-colors disabled:opacity-50"
-          >
-            <Plus className="h-4 w-4" />
-            Nueva Rutina
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowAiPlanner(true)}
+              disabled={!isActive}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-cyan-500/10 hover:opacity-90 transition-all disabled:opacity-50"
+            >
+              <Sparkles className="h-4 w-4 text-cyan-200 fill-cyan-200" />
+              Generar Rutinas
+            </button>
+            <button
+              onClick={() => setIsCreating(!isCreating)}
+              disabled={!isActive}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-900 dark:bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 dark:hover:bg-primary transition-colors disabled:opacity-50"
+            >
+              <Plus className="h-4 w-4" />
+              Nueva Rutina
+            </button>
+          </div>
         </div>
 
         <SubscriptionBanner />
@@ -225,6 +237,15 @@ export default function EntrenamientosPage() {
               Crea tu primera rutina de entrenamiento haciendo clic en el botón de arriba para comenzar a registrar tu progreso.
             </p>
           </div>
+        )}
+        {showAiPlanner && (
+          <AiWorkoutPlanner
+            onClose={() => setShowAiPlanner(false)}
+            onSaved={async () => {
+              setShowAiPlanner(false);
+              await fetchRoutines();
+            }}
+          />
         )}
       </div>
     </DashboardLayout>
