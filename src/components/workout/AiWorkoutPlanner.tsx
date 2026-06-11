@@ -13,7 +13,9 @@ import {
   Activity,
   HeartPulse,
   ArrowLeft,
-  ArrowRight
+  ArrowRight,
+  Download,
+  Clipboard
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -34,6 +36,9 @@ export default function AiWorkoutPlanner({ onClose, onSaved }: AiWorkoutPlannerP
   const [customSplit, setCustomSplit] = useState<"auto" | "torso_pierna" | "ppl" | "full_body">("auto");
   const [customPriorities, setCustomPriorities] = useState<string[]>([]);
   const [customLesiones, setCustomLesiones] = useState<string[]>([]);
+
+  const [generatedPlan, setGeneratedPlan] = useState<any[] | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const handleGenerate = async () => {
     setIsLoading(true);
@@ -56,12 +61,138 @@ export default function AiWorkoutPlanner({ onClose, onSaved }: AiWorkoutPlannerP
         throw new Error("No se pudo generar el plan de entrenamiento.");
       }
       
-      onSaved();
+      const data = await res.json();
+      setGeneratedPlan(data.plan);
+      setSetupStep(3);
     } catch (e: any) {
       setError(e.message || "Ocurrió un error al generar las rutinas");
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleDownload = () => {
+    if (!generatedPlan) return;
+
+    const goalMap = {
+      hipertrofia: "Ganancia de Masa Muscular (Hipertrofia)",
+      fuerza: "Ganancia de Fuerza Máxima",
+      recomposicion: "Recomposición Corporal (Pérdida de grasa y ganancia muscular)",
+      perdida_grasa: "Pérdida de Grasa / Definición Muscular",
+      rendimiento: "Rendimiento y Acondicionamiento Físico General"
+    };
+
+    const levelMap = {
+      principiante: "Principiante (menos de 1 año)",
+      intermedio: "Intermedio (1 - 3 años)",
+      avanzado: "Avanzado (3 - 6 años)",
+      muy_avanzado: "Muy avanzado (más de 6 años)"
+    };
+
+    const splitMap = {
+      full_body: "Cuerpo Completo (Full Body)",
+      torso_pierna: "Torso / Pierna (Upper / Lower)",
+      ppl: "Empuje / Tirón / Pierna (Push / Pull / Legs)",
+      auto: "Selección Automática del Motor"
+    };
+
+    const goalLabel = goalMap[customGoal] || customGoal;
+    const levelLabel = levelMap[customLevel] || customLevel;
+    const splitLabel = splitMap[customSplit === "auto" ? (customDays <= 2 ? "full_body" : customDays === 3 ? "ppl" : "torso_pierna") : customSplit] || customSplit;
+    const prioritiesText = customPriorities.length > 0 ? customPriorities.join(", ") : "Ninguno en particular";
+    const lesionesText = customLesiones.length > 0 && !customLesiones.includes("ninguna") 
+      ? customLesiones.join(", ") 
+      : "Ninguna molestia declarada";
+
+    let rutinasMarkdown = "";
+    generatedPlan.forEach((routine) => {
+      rutinasMarkdown += `### 📅 ${routine.name.toUpperCase()}\n`;
+      rutinasMarkdown += `| Ejercicio | Series | Repeticiones | RIR | Tempo | Descanso | Justificación |\n`;
+      rutinasMarkdown += `| :--- | :---: | :---: | :---: | :---: | :---: | :--- |\n`;
+      
+      routine.exercises.forEach((ex: any) => {
+        rutinasMarkdown += `| **${ex.name}** | ${ex.sets} | ${ex.reps} | RIR ${ex.rir} | ${ex.tempo} | ${ex.descanso} | ${ex.justificacion} |\n`;
+      });
+      rutinasMarkdown += `\n`;
+    });
+
+    const markdownText = `# 🏋️‍♂️ PLAN DE ENTRENAMIENTO PERSONALIZADO — FITWE
+*Este plan ha sido diseñado algorítmicamente adaptado a tu nivel, objetivos y salud articular.*
+
+---
+
+## 📊 RESUMEN DEL PERFIL DE ENTRENAMIENTO
+* **Objetivo principal**: ${goalLabel}
+* **Frecuencia semanal**: ${customDays} días de entrenamiento a la semana
+* **Nivel de experiencia**: ${levelLabel}
+* **Estructura de rutina**: ${splitLabel}
+* **Enfoque en puntos débiles**: ${prioritiesText}
+* **Articulaciones protegidas (Evasión de lesiones)**: ${lesionesText}
+
+---
+
+## 🛠️ DESCRIPCIÓN DEL PLAN Y METODOLOGÍA
+Este programa utiliza una división **${splitLabel}** diseñada para optimizar la frecuencia de estímulo por grupo muscular y garantizar una recuperación completa entre sesiones.
+
+### Puntos clave del programa:
+1. **Doble Progresión**: Tu objetivo es progresar en repeticiones dentro del rango objetivo antes de subir de peso. Por ejemplo, si tu objetivo es 8-12 repeticiones, cuando logres completar todas tus series a 12 repeticiones con buena técnica, sube la carga para la siguiente sesión y vuelve a buscar el rango inferior.
+2. **Autorregulación (RIR - Repeticiones en Recámara)**: La intensidad se mide en RIR. Un RIR 1 significa que debes terminar la serie sintiendo que prograsivamente podrías haber realizado exactamente una repetición más antes de fallar. Mantén una técnica perfecta.
+3. **Control del Descanso**: Los tiempos de descanso especificados son orientativos pero fundamentales para asegurar la recuperación de los sistemas de fosfágenos (ATP-PC) y optimizar el rendimiento de la serie posterior.
+4. **Protección Articular Activa**: Debido a las limitaciones indicadas (${lesionesText}), se han excluido los ejercicios axiales de alto impacto y de sobrecarga articular directa, sustituyéndolos por variantes estables en polea, máquina o peso corporal que permiten un estímulo muscular idéntico con menor estrés articular.
+
+---
+
+## 📋 RUTINAS Y SESIONES DE ENTRENAMIENTO
+
+${rutinasMarkdown}
+
+---
+
+## 🏃‍♂️ PAUTAS DE CALENTAMIENTO Y MOVILIDAD
+*Antes de comenzar cada sesión, dedica de 5 a 10 minutos a preparar tu cuerpo:*
+1. **Activación Cardiovascular**: 5 minutos de cardio suave (cinta, elíptica o bicicleta) para elevar la temperatura corporal.
+2. **Movilidad Articular**: Movimientos dinámicos y rotaciones de hombros, cadera, rodillas y muñecas.
+3. **Series de Aproximación**: En el primer ejercicio compuesto de cada grupo muscular, realiza 2-3 series con peso ascendente y bajas repeticiones antes de empezar tus series efectivas de trabajo.
+
+---
+
+## 💡 RECOMENDACIONES GENERALES Y SEGURIDAD
+* **Hidratación**: Bebe agua antes, durante y después de la sesión.
+* **Control técnico**: Prioriza la calidad del movimiento frente a la carga externa. Cada repetición debe controlarse tanto en la fase concéntrica (subida) como en la fase excéntrica (bajada lenta de 3 segundos).
+* **Consistencia**: El factor más determinante para ver resultados es la constancia y el cumplimiento semanal del plan.
+
+*Plan generado con el motor inteligente de FitWe.*
+`;
+
+    const blob = new Blob([markdownText], { type: "text/markdown;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `Plan_Entrenamiento_FitWe_${customGoal}.md`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleCopyClipboard = () => {
+    if (!generatedPlan) return;
+    
+    let text = `FITWE - PLAN DE ENTRENAMIENTO PERSONALIZADO\n\n`;
+    text += `Objetivo: ${customGoal}\n`;
+    text += `Días semanales: ${customDays}\n`;
+    text += `Nivel: ${customLevel}\n\n`;
+    
+    generatedPlan.forEach((routine) => {
+      text += `RUTINA: ${routine.name}\n`;
+      routine.exercises.forEach((ex: any) => {
+        text += `- ${ex.name}: ${ex.sets} series x ${ex.reps} repeticiones (RIR ${ex.rir}, descanso: ${ex.descanso})\n`;
+      });
+      text += `\n`;
+    });
+    
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const handleTogglePriority = (group: string) => {
@@ -138,21 +269,21 @@ export default function AiWorkoutPlanner({ onClose, onSaved }: AiWorkoutPlannerP
         {/* Setup Wizard View */}
         {!isLoading && !error && (
           <div className="flex-1 overflow-y-auto p-6 space-y-6 flex flex-col">
-            
-            {/* Stepper indicator */}
+                     {/* Stepper indicator */}
             <div className="relative mb-4 max-w-sm w-full mx-auto px-4">
               <div className="absolute top-5 left-10 right-10 h-0.5 bg-slate-200 dark:bg-slate-800 -translate-y-1/2 z-0" />
               <div className="absolute top-5 left-10 right-10 h-0.5 -translate-y-1/2 z-0 overflow-hidden">
                 <div 
                   className="h-full bg-emerald-500 transition-all duration-300" 
-                  style={{ width: setupStep === 1 ? "0%" : "100%" }} 
+                  style={{ width: setupStep === 1 ? "0%" : setupStep === 2 ? "50%" : "100%" }} 
                 />
               </div>
               
               <div className="relative flex justify-between items-center z-10">
                 {[
                   { step: 1, label: "Bases", icon: Sliders },
-                  { step: 2, label: "Detalles", icon: Dumbbell }
+                  { step: 2, label: "Detalles", icon: Dumbbell },
+                  { step: 3, label: "Resumen", icon: Sparkles }
                 ].map((item) => {
                   const Icon = item.icon;
                   const isActive = setupStep === item.step;
@@ -180,10 +311,8 @@ export default function AiWorkoutPlanner({ onClose, onSaved }: AiWorkoutPlannerP
                   );
                 })}
               </div>
-            </div>
-
-            {/* Step Content */}
-            <div className="flex-1 bg-slate-50/50 dark:bg-slate-950/20 border border-slate-200/50 dark:border-slate-800/40 rounded-3xl p-6 shadow-soft">
+            </div>            {/* Step Content */}
+            <div className="flex-1 bg-slate-50/50 dark:bg-slate-950/20 border border-slate-200/50 dark:border-slate-800/40 rounded-3xl p-6 shadow-soft flex flex-col min-h-0">
               
               {/* STEP 1: Basic Preferences */}
               {setupStep === 1 && (
@@ -237,7 +366,7 @@ export default function AiWorkoutPlanner({ onClose, onSaved }: AiWorkoutPlannerP
                           )}
                         >
                           <span className="font-bold text-slate-900 dark:text-white">{g.label}</span>
-                          <span className="text-[10px] text-slate-500 dark:text-slate-450">{g.desc}</span>
+                          <span className="text-[10px] text-slate-500 dark:text-slate-455">{g.desc}</span>
                         </button>
                       ))}
                     </div>
@@ -267,7 +396,7 @@ export default function AiWorkoutPlanner({ onClose, onSaved }: AiWorkoutPlannerP
                           )}
                         >
                           <span className="font-bold text-slate-900 dark:text-white">{lvl.label}</span>
-                          <span className="text-[10px] text-slate-500 dark:text-slate-450">{lvl.desc}</span>
+                          <span className="text-[10px] text-slate-500 dark:text-slate-455">{lvl.desc}</span>
                         </button>
                       ))}
                     </div>
@@ -379,42 +508,125 @@ export default function AiWorkoutPlanner({ onClose, onSaved }: AiWorkoutPlannerP
                 </div>
               )}
 
+              {/* STEP 3: Summary & Detailed explanation */}
+              {setupStep === 3 && generatedPlan && (
+                <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300 flex flex-col flex-1 min-h-0">
+                  <div className="flex flex-col items-center justify-center text-center p-4 bg-emerald-500/10 dark:bg-emerald-500/5 border border-emerald-500/20 rounded-2xl gap-2">
+                    <div className="bg-emerald-500 text-white p-2 rounded-full">
+                      <Check className="w-4 h-4 stroke-[3]" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-emerald-600 dark:text-emerald-400 text-sm">¡Plan de entrenamiento generado con éxito!</h4>
+                      <p className="text-[11px] text-slate-550 dark:text-slate-400 mt-0.5 font-semibold">Se han creado {generatedPlan.length} rutinas de entrenamiento adaptadas a tu perfil.</p>
+                    </div>
+                  </div>
+
+                  {/* Actions Row */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 shrink-0">
+                    <button
+                      onClick={handleDownload}
+                      className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 text-white px-4 py-3 text-xs font-bold hover:opacity-95 shadow-sm transition-all cursor-pointer"
+                    >
+                      <Download className="w-4 h-4" />
+                      Descargar Guía Detallada (.md)
+                    </button>
+                    <button
+                      onClick={handleCopyClipboard}
+                      className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 px-4 py-3 text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all cursor-pointer"
+                    >
+                      {copied ? (
+                        <>
+                          <Check className="w-4 h-4 text-emerald-500" />
+                          ¡Copiado!
+                        </>
+                      ) : (
+                        <>
+                          <Clipboard className="w-4 h-4" />
+                          Copiar Resumen de Rutina
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Plan Summary List */}
+                  <div className="space-y-3 overflow-y-auto pr-1 flex-1 max-h-[300px] scrollbar-thin">
+                    <h5 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Resumen de las Rutinas:</h5>
+                    {generatedPlan.map((routine, rIdx) => (
+                      <div key={rIdx} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm">
+                        <h6 className="font-extrabold text-slate-900 dark:text-white text-sm border-b border-slate-100 dark:border-slate-800/80 pb-2 mb-2 flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-cyan-500 inline-block animate-pulse" />
+                          {routine.name}
+                        </h6>
+                        <div className="space-y-3 divide-y divide-slate-100 dark:divide-slate-800/60">
+                          {routine.exercises.map((ex: any, eIdx: number) => (
+                            <div key={eIdx} className={cn("text-xs flex flex-col gap-1", eIdx > 0 && "pt-3")}>
+                              <div className="flex justify-between items-start gap-2">
+                                <span className="font-bold text-slate-800 dark:text-slate-200">{ex.name}</span>
+                                <span className="text-[10px] font-mono font-bold bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-650 dark:text-slate-400 shrink-0">
+                                  {ex.sets}x{ex.reps} (RIR {ex.rir})
+                                </span>
+                              </div>
+                              <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed italic">
+                                {ex.justificacion}
+                              </p>
+                              <div className="flex gap-3 text-[9px] text-slate-450 dark:text-slate-500 font-semibold mt-0.5">
+                                <span>Tempo: {ex.tempo}</span>
+                                <span>·</span>
+                                <span>Descanso: {ex.descanso}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Bottom Footer Navigation */}
-            <div className="pt-6 border-t border-slate-100 dark:border-slate-800 flex justify-between gap-3 mt-auto">
+            <div className="pt-6 border-t border-slate-100 dark:border-slate-800 flex justify-between gap-3 mt-auto shrink-0">
               {setupStep === 1 ? (
                 <button 
                   onClick={onClose} 
-                  className="px-5 py-3 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-semibold rounded-2xl text-xs hover:bg-slate-50 transition-all"
+                  className="px-5 py-3 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-semibold rounded-2xl text-xs hover:bg-slate-50 transition-all cursor-pointer"
                 >
                   Cancelar
                 </button>
-              ) : (
+              ) : setupStep === 2 ? (
                 <button
                   onClick={() => setSetupStep(1)}
-                  className="px-5 py-3 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-semibold rounded-2xl text-xs hover:bg-slate-50 transition-all flex items-center gap-1.5"
+                  className="px-5 py-3 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-semibold rounded-2xl text-xs hover:bg-slate-50 transition-all flex items-center gap-1.5 cursor-pointer"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   Atrás
                 </button>
+              ) : (
+                <div />
               )}
 
               {setupStep === 1 ? (
                 <button
                   onClick={() => setSetupStep(2)}
-                  className="px-6 py-3 bg-slate-900 text-white font-bold rounded-2xl text-xs hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200 flex items-center gap-1.5"
+                  className="px-6 py-3 bg-slate-900 text-white font-bold rounded-2xl text-xs hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200 flex items-center gap-1.5 cursor-pointer"
                 >
                   Siguiente
                   <ArrowRight className="w-4 h-4" />
                 </button>
-              ) : (
+              ) : setupStep === 2 ? (
                 <button
                   onClick={handleGenerate}
-                  className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-extrabold rounded-2xl text-xs shadow-md shadow-cyan-500/10 flex items-center gap-1.5"
+                  className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-extrabold rounded-2xl text-xs shadow-md shadow-cyan-500/10 flex items-center gap-1.5 cursor-pointer"
                 >
                   <Sparkles className="w-4 h-4 text-cyan-200 fill-cyan-200" />
                   Generar Rutinas
+                </button>
+              ) : (
+                <button
+                  onClick={onSaved}
+                  className="px-6 py-3 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-extrabold rounded-2xl text-xs shadow-md hover:opacity-95 cursor-pointer"
+                >
+                  Entendido, ver mis rutinas
                 </button>
               )}
             </div>

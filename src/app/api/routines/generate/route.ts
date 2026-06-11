@@ -85,7 +85,7 @@ export async function POST(req: Request) {
       return routines;
     });
 
-    return NextResponse.json({ success: true, count: createdRoutines.length });
+    return NextResponse.json({ success: true, count: createdRoutines.length, plan });
   } catch (error) {
     console.error("Error generating workout routines:", error);
     return NextResponse.json({ error: "Error al generar tus rutinas de entrenamiento" }, { status: 500 });
