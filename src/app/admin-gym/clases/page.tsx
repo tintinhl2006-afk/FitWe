@@ -444,14 +444,14 @@ export default function GymClassesPage() {
                         <div className="flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
                           <div className="flex-1">
                             <div className="flex flex-wrap items-center gap-3">
-                              <h3 className="font-black text-slate-955 dark:text-white text-lg tracking-tight group-hover:text-primary dark:group-hover:text-cyan-400 transition-colors">
+                              <h3 className="font-black text-slate-900 dark:text-white text-lg tracking-tight group-hover:text-primary dark:group-hover:text-cyan-400 transition-colors">
                                 {c.name}
                               </h3>
                               <span className={cn(
                                 "text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider",
                                 isFull 
                                   ? "bg-red-100 dark:bg-red-950/30 text-red-700 dark:text-red-400" 
-                                  : "bg-cyan-100 dark:bg-cyan-955/30 text-primary dark:text-cyan-400"
+                                  : "bg-cyan-100 dark:bg-cyan-950/30 text-primary dark:text-cyan-400"
                               )}>
                                 {c._count.bookings} / {c.capacity} plazas
                               </span>

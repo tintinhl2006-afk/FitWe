@@ -298,7 +298,7 @@ export default function RoutineDetailPage({ params }: { params: Promise<{ id: st
           <div className="flex items-center gap-4">
             <Link
               href="/entrenamientos"
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-650 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all duration-200"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all duration-200"
             >
               <ArrowLeft className="h-5 w-5" />
             </Link>
@@ -357,7 +357,7 @@ export default function RoutineDetailPage({ params }: { params: Promise<{ id: st
                               type="button"
                               onClick={() => handleUpdateSets(re.id, -1, re.sets)}
                               disabled={re.sets <= 1}
-                              className="w-5 h-5 flex items-center justify-center rounded-full text-slate-505 dark:text-slate-400 hover:bg-slate-150 dark:hover:bg-slate-855 disabled:opacity-20 transition-all font-bold"
+                              className="w-5 h-5 flex items-center justify-center rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-20 transition-all font-bold"
                             >
                               -
                             </button>
@@ -368,7 +368,7 @@ export default function RoutineDetailPage({ params }: { params: Promise<{ id: st
                               type="button"
                               onClick={() => handleUpdateSets(re.id, 1, re.sets)}
                               disabled={re.sets >= 9}
-                              className="w-5 h-5 flex items-center justify-center rounded-full text-slate-505 dark:text-slate-400 hover:bg-slate-155 dark:hover:bg-slate-855 disabled:opacity-20 transition-all font-bold"
+                              className="w-5 h-5 flex items-center justify-center rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 disabled:opacity-20 transition-all font-bold"
                             >
                               +
                             </button>
@@ -379,7 +379,7 @@ export default function RoutineDetailPage({ params }: { params: Promise<{ id: st
                       {re.exercise.muscleGroup.toLowerCase() !== "cardio" && (
                         <div className="flex flex-col gap-2 mt-1">
                           <div className="flex items-center justify-between w-full max-w-sm mt-1">
-                            <span className="text-xs font-semibold text-slate-550 dark:text-slate-400 select-none">
+                            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 select-none">
                               Definir repeticiones objetivo por serie
                             </span>
                             <button
@@ -432,8 +432,8 @@ export default function RoutineDetailPage({ params }: { params: Promise<{ id: st
                               <span className="text-xs font-bold text-slate-500 dark:text-slate-400 shrink-0">Objetivos:</span>
                               <div className="flex flex-wrap gap-1.5">
                                 {getRepsArray(re).map((repVal, sIdx) => (
-                                  <div key={sIdx} className="flex items-center bg-slate-50 dark:bg-slate-955 rounded-lg px-2 py-0.5 border border-slate-200/60 dark:border-slate-800 focus-within:border-primary/50 transition-colors">
-                                    <span className="text-[9px] text-slate-400 dark:text-slate-555 font-black mr-1.5 uppercase font-mono">S{sIdx + 1}</span>
+                                  <div key={sIdx} className="flex items-center bg-slate-50 dark:bg-slate-950 rounded-lg px-2 py-0.5 border border-slate-200/60 dark:border-slate-800 focus-within:border-primary/50 transition-colors">
+                                    <span className="text-[9px] text-slate-400 dark:text-slate-500 font-black mr-1.5 uppercase font-mono">S{sIdx + 1}</span>
                                     <input
                                       type="number"
                                       min="1"
@@ -477,21 +477,21 @@ export default function RoutineDetailPage({ params }: { params: Promise<{ id: st
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 w-full sm:w-auto justify-end border-t sm:border-t-0 border-slate-105 dark:border-slate-800 pt-3 sm:pt-0">
+                <div className="flex items-center gap-2 w-full sm:w-auto justify-end border-t sm:border-t-0 border-slate-100 dark:border-slate-800 pt-3 sm:pt-0">
                   <div className="hidden sm:flex flex-col gap-0 mr-2">
                     <button onClick={() => handleMoveOrder(index, "up")} disabled={index === 0} className="p-1 text-slate-400 hover:text-primary disabled:opacity-20 transition-colors"><ArrowUp size={16} /></button>
                     <button onClick={() => handleMoveOrder(index, "down")} disabled={index === routine.exercises.length - 1} className="p-1 text-slate-400 hover:text-primary disabled:opacity-20 transition-colors"><ArrowDown size={16} /></button>
                   </div>
                   <button
                     onClick={() => { setReplacingExerciseId(re.id); setStep("picker"); setIsModalOpen(true); }}
-                    className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3.5 py-2 text-sm font-semibold text-slate-655 dark:text-slate-350 bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors border border-slate-200 dark:border-slate-700"
+                    className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3.5 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors border border-slate-200 dark:border-slate-700"
                   >
                     <RefreshCcw size={15} className="text-primary" />
                     <span>Cambiar</span>
                   </button>
                   <button
                     onClick={() => handleDeleteExercise(re.id)}
-                    className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3.5 py-2 text-sm font-semibold text-red-655 bg-red-50 dark:bg-red-955/20 hover:bg-red-100 dark:hover:bg-red-955/40 rounded-xl transition-colors border border-red-100 dark:border-red-900/40"
+                    className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3.5 py-2 text-sm font-semibold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-955/20 hover:bg-red-100 dark:hover:bg-red-955/40 rounded-xl transition-colors border border-red-100 dark:border-red-900/40"
                   >
                     <Trash2 size={15} />
                     <span>Quitar</span>
@@ -502,9 +502,9 @@ export default function RoutineDetailPage({ params }: { params: Promise<{ id: st
           </div>
         ) : (
           <div className="flex h-64 flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 px-6 text-center">
-            <Dumbbell className="h-12 w-12 text-slate-350 dark:text-slate-750 mb-4" />
+            <Dumbbell className="h-12 w-12 text-slate-300 dark:text-slate-700 mb-4" />
             <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Rutina vacía</h3>
-            <p className="mt-2 max-w-sm text-sm text-slate-550">Añade ejercicios para empezar.</p>
+            <p className="mt-2 max-w-sm text-sm text-slate-500">Añade ejercicios para empezar.</p>
           </div>
         )}
 
@@ -525,20 +525,20 @@ export default function RoutineDetailPage({ params }: { params: Promise<{ id: st
                 <div className="flex-1 flex flex-col min-h-0">
                   <div className="p-6 pb-3 space-y-4">
                     <div className="relative">
-                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-455" />
+                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                       <input
                         type="text"
                         placeholder="Buscar ejercicio..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full bg-slate-55 dark:bg-slate-955 border border-slate-200/80 dark:border-slate-850 rounded-2xl py-3 pl-12 pr-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none font-medium transition-all"
+                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 rounded-2xl py-3 pl-12 pr-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none font-medium transition-all"
                       />
                     </div>
 
                     <div className="space-y-3">
                       {/* Grupo de Músculo Pills */}
                       <div className="flex flex-col gap-1.5">
-                        <span className="text-xs font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider">Grupo Muscular</span>
+                        <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Grupo Muscular</span>
                         <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
                           {["", "Pecho", "Espalda", "Pierna", "Brazo", "Hombro", "Core", "Cardio"].map((muscle) => (
                             <button
@@ -549,7 +549,7 @@ export default function RoutineDetailPage({ params }: { params: Promise<{ id: st
                                 "px-4 py-1.5 text-xs font-semibold rounded-full border transition-all duration-200 whitespace-nowrap",
                                 filterMuscle === muscle
                                   ? "bg-primary border-primary text-white"
-                                  : "bg-slate-50 dark:bg-slate-955 border-slate-200 dark:border-slate-800 text-slate-650 dark:text-slate-400 hover:border-slate-355 dark:hover:border-slate-700"
+                                  : "bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700"
                               )}
                             >
                               {muscle || "Todos"}
@@ -560,7 +560,7 @@ export default function RoutineDetailPage({ params }: { params: Promise<{ id: st
 
                       {/* Equipamiento Pills */}
                       <div className="flex flex-col gap-1.5">
-                        <span className="text-xs font-bold text-slate-455 dark:text-slate-550 uppercase tracking-wider">Equipamiento</span>
+                        <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Equipamiento</span>
                         <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
                           {["", "Barra", "Mancuernas", "Máquina", "Peso Corporal"].map((eq) => (
                             <button
@@ -571,7 +571,7 @@ export default function RoutineDetailPage({ params }: { params: Promise<{ id: st
                                 "px-4 py-1.5 text-xs font-semibold rounded-full border transition-all duration-200 whitespace-nowrap",
                                 filterEquipment === eq
                                   ? "bg-primary border-primary text-white"
-                                  : "bg-slate-50 dark:bg-slate-955 border-slate-200 dark:border-slate-800 text-slate-655 dark:text-slate-400 hover:border-slate-355 dark:hover:border-slate-700"
+                                  : "bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700"
                               )}
                             >
                               {eq || "Todos"}
@@ -581,7 +581,7 @@ export default function RoutineDetailPage({ params }: { params: Promise<{ id: st
                       </div>
                     </div>
                   </div>
-                  <div className="flex-1 overflow-y-auto p-6 pt-2 border-t dark:border-slate-800 bg-slate-50/50 dark:bg-slate-955/20">
+                  <div className="flex-1 overflow-y-auto p-6 pt-2 border-t dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20">
                     <div className="grid gap-3 sm:grid-cols-2">
                       {availableExercises
                         .filter((ex) => {
@@ -601,7 +601,7 @@ export default function RoutineDetailPage({ params }: { params: Promise<{ id: st
                               setSets(ex.muscleGroup.toLowerCase() === "cardio" ? 1 : 3);
                               setHasTargetReps(true);
                             }}
-                            className="group flex items-center gap-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 hover:bg-slate-50 dark:hover:bg-slate-855 hover:border-primary transition-colors text-left shadow-sm"
+                            className="group flex items-center gap-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-primary transition-colors text-left shadow-sm"
                           >
                             <div className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800">
                               {ex.imageUrl ? (
@@ -611,8 +611,8 @@ export default function RoutineDetailPage({ params }: { params: Promise<{ id: st
                               )}
                             </div>
                             <div className="flex-1 overflow-hidden">
-                              <h4 className="font-bold text-slate-855 dark:text-white truncate group-hover:text-primary transition-colors">{ex.name}</h4>
-                              <p className="text-xs text-slate-505 font-semibold truncate mt-0.5">{ex.muscleGroup} {ex.equipment && `• ${ex.equipment}`}</p>
+                              <h4 className="font-bold text-slate-800 dark:text-white truncate group-hover:text-primary transition-colors">{ex.name}</h4>
+                              <p className="text-xs text-slate-500 font-semibold truncate mt-0.5">{ex.muscleGroup} {ex.equipment && `• ${ex.equipment}`}</p>
                             </div>
                           </button>
                         ))}
@@ -627,7 +627,7 @@ export default function RoutineDetailPage({ params }: { params: Promise<{ id: st
                     return (
                       <form onSubmit={handleAddExercise} className="space-y-6 max-w-xl mx-auto font-sans">
                         <div className="flex items-center gap-4 bg-slate-50 dark:bg-slate-955 p-4.5 rounded-2xl border border-slate-200 dark:border-slate-800">
-                          <div className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-100 dark:border-slate-800 bg-slate-55 dark:bg-slate-800">
+                          <div className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800">
                             {exObj.imageUrl ? (
                               <Image src={exObj.imageUrl} alt={exObj.name} fill className="object-cover" />
                             ) : (
@@ -640,9 +640,9 @@ export default function RoutineDetailPage({ params }: { params: Promise<{ id: st
                           </div>
                         </div>
 
-                        <div className="bg-slate-50/50 dark:bg-slate-955/20 rounded-2xl p-5 border border-slate-200/70 dark:border-slate-800/80 space-y-5">
+                        <div className="bg-slate-50/50 dark:bg-slate-950/20 rounded-2xl p-5 border border-slate-200/70 dark:border-slate-800/80 space-y-5">
                           {exObj.muscleGroup.toLowerCase() === "cardio" ? (
-                            <p className="text-sm font-semibold text-slate-655 dark:text-slate-350">Cardio: 1 sesión de entrenamiento</p>
+                            <p className="text-sm font-semibold text-slate-655 dark:text-slate-355">Cardio: 1 sesión de entrenamiento</p>
                           ) : (
                             <div className="space-y-5">
                               <div className="flex items-center justify-between select-none p-1">
@@ -673,7 +673,7 @@ export default function RoutineDetailPage({ params }: { params: Promise<{ id: st
                                     type="button"
                                     disabled={sets <= 1}
                                     onClick={() => setSets((s) => Math.max(1, s - 1))}
-                                    className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 dark:bg-slate-950 text-slate-650 hover:bg-slate-100 disabled:opacity-20 disabled:cursor-not-allowed transition-colors font-bold"
+                                    className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 dark:bg-slate-950 text-slate-600 hover:bg-slate-100 disabled:opacity-20 disabled:cursor-not-allowed transition-colors font-bold"
                                   >
                                     -
                                   </button>
@@ -684,7 +684,7 @@ export default function RoutineDetailPage({ params }: { params: Promise<{ id: st
                                     type="button"
                                     disabled={sets >= 9}
                                     onClick={() => setSets((s) => Math.min(9, s + 1))}
-                                    className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 dark:bg-slate-950 text-slate-655 hover:bg-slate-100 disabled:opacity-20 disabled:cursor-not-allowed transition-colors font-bold"
+                                    className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 dark:bg-slate-950 text-slate-600 hover:bg-slate-100 disabled:opacity-20 disabled:cursor-not-allowed transition-colors font-bold"
                                   >
                                     +
                                   </button>
@@ -697,7 +697,7 @@ export default function RoutineDetailPage({ params }: { params: Promise<{ id: st
                                   <div className="flex flex-wrap gap-2 pt-1.5">
                                     {Array.from({ length: sets }).map((_, idx) => (
                                       <div key={idx} className="flex flex-col items-center gap-1 bg-white/60 dark:bg-slate-900/60 border border-slate-200/65 dark:border-slate-800/85 rounded-xl p-2 shadow-sm min-w-[72px]">
-                                        <span className="text-[9px] font-bold text-slate-400 dark:text-slate-550 uppercase tracking-wider">Serie {idx + 1}</span>
+                                        <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Serie {idx + 1}</span>
                                         <input
                                           type="number"
                                           min="1"
@@ -726,7 +726,7 @@ export default function RoutineDetailPage({ params }: { params: Promise<{ id: st
                           <button
                             type="button"
                             onClick={() => setStep("picker")}
-                            className="flex-1 sm:flex-none rounded-full px-6 py-2.5 text-sm font-bold text-slate-650 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                            className="flex-1 sm:flex-none rounded-full px-6 py-2.5 text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                           >
                             Volver
                           </button>

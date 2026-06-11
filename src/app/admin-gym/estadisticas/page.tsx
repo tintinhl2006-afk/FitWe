@@ -76,9 +76,9 @@ export default function GymStatsPage() {
   // Map backend reasons to user friendly descriptions and color tags
   const reasonLabels: Record<string, { label: string; color: string }> = {
     INACTIVE_SUBSCRIPTION: { label: "Cuota Inactiva / Vencida", color: "bg-red-100 dark:bg-red-950/40 text-red-700 dark:text-red-400" },
-    EXPIRED: { label: "Código QR Caducado", color: "bg-amber-100 dark:bg-amber-955/40 text-amber-700 dark:text-amber-400" },
-    WRONG_GYM: { label: "Cliente de Otro Centro", color: "bg-purple-100 dark:bg-purple-955/40 text-purple-700 dark:text-purple-400" },
-    INVALID_SIGNATURE: { label: "Firma QR Inválida/Alterada", color: "bg-rose-100 dark:bg-rose-955/40 text-rose-700 dark:text-rose-400" },
+    EXPIRED: { label: "Código QR Caducado", color: "bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400" },
+    WRONG_GYM: { label: "Cliente de Otro Centro", color: "bg-purple-100 dark:bg-purple-950/40 text-purple-700 dark:text-purple-400" },
+    INVALID_SIGNATURE: { label: "Firma QR Inválida/Alterada", color: "bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400" },
     USER_NOT_FOUND: { label: "Usuario No Registrado", color: "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-400" }
   };
 

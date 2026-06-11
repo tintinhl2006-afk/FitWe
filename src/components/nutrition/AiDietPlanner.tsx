@@ -1332,7 +1332,7 @@ export default function AiDietPlanner({ onClose, onSaved, initialDate }: AiDietP
                 <div className="pt-2 flex gap-2">
                   <button 
                     onClick={() => setShowCustomFoodForm(false)}
-                    className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-650 dark:text-slate-355 hover:bg-slate-50 dark:hover:bg-slate-955 transition-colors"
+                    className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors"
                   >
                     Cancelar
                   </button>
