@@ -436,10 +436,10 @@ export default function SavedDietsModal({
 
         {/* View: Edit or Create */}
         {!isLoading && (view === "edit" || view === "create_from_current") && (
-          <div className="flex-1 overflow-y-auto p-6 flex flex-col space-y-6 max-h-[65vh]">
+          <div className="flex-1 overflow-hidden p-6 flex flex-col space-y-6 max-h-[65vh] min-h-0">
             
             {/* Back to list button */}
-            <div>
+            <div className="shrink-0">
               <button
                 onClick={() => setView("list")}
                 className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900 dark:hover:text-white font-bold transition-colors"
@@ -448,6 +448,9 @@ export default function SavedDietsModal({
                 Volver a la lista de plantillas
               </button>
             </div>
+
+            {/* Scrollable Form Content */}
+            <div className="flex-1 overflow-y-auto space-y-6 pr-1 min-h-0">
 
             {/* Diet Name Input */}
             <div>
@@ -622,8 +625,10 @@ export default function SavedDietsModal({
               })}
             </div>
 
+            </div>
+
             {/* Bottom Form Actions */}
-            <div className="pt-6 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3 mt-auto">
+            <div className="pt-6 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3 mt-auto shrink-0">
               <button
                 onClick={() => setView("list")}
                 className="px-5 py-3 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-semibold rounded-2xl text-xs hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"

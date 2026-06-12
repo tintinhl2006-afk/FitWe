@@ -418,9 +418,9 @@ export default function AiWorkoutPlanner({ onClose, onSaved }: AiWorkoutPlannerP
 
         {/* Setup Wizard View */}
         {!isLoading && !error && (
-          <div className="flex-1 overflow-y-auto p-6 space-y-6 flex flex-col">
-                     {/* Stepper indicator */}
-            <div className="relative mb-4 max-w-sm w-full mx-auto px-4">
+          <div className="flex-1 overflow-hidden p-6 flex flex-col min-h-0 space-y-6">
+            {/* Stepper indicator */}
+            <div className="relative mb-4 max-w-sm w-full mx-auto px-4 shrink-0">
               <div className="absolute top-5 left-10 right-10 h-0.5 bg-slate-200 dark:bg-slate-800 -translate-y-1/2 z-0" />
               <div className="absolute top-5 left-10 right-10 h-0.5 -translate-y-1/2 z-0 overflow-hidden">
                 <div 
@@ -444,7 +444,7 @@ export default function AiWorkoutPlanner({ onClose, onSaved }: AiWorkoutPlannerP
                       <div className={cn(
                         "w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 border-2",
                         isActive
-                          ? "bg-cyan-500 border-cyan-500 text-white shadow-lg shadow-cyan-500/25 scale-110"
+                           ? "bg-cyan-500 border-cyan-500 text-white shadow-lg shadow-cyan-500/25 scale-110"
                           : isCompleted
                             ? "bg-emerald-500 border-emerald-500 text-white"
                             : "bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-400"
@@ -461,8 +461,10 @@ export default function AiWorkoutPlanner({ onClose, onSaved }: AiWorkoutPlannerP
                   );
                 })}
               </div>
-            </div>            {/* Step Content */}
-            <div className="flex-1 bg-slate-50/50 dark:bg-slate-950/20 border border-slate-200/50 dark:border-slate-800/40 rounded-3xl p-6 shadow-soft flex flex-col min-h-0">
+            </div>
+
+            {/* Step Content */}
+            <div className="flex-1 bg-slate-50/50 dark:bg-slate-950/20 border border-slate-200/50 dark:border-slate-800/40 rounded-3xl p-6 shadow-soft flex flex-col min-h-0 overflow-y-auto pr-1">
               
               {/* STEP 1: Basic Preferences */}
               {setupStep === 1 && (

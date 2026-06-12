@@ -626,10 +626,10 @@ export default function AiDietPlanner({ onClose, onSaved, initialDate }: AiDietP
 
         {/* Setup Wizard Progression View */}
         {!isLoading && !error && showSetup && (
-          <div className="flex-1 overflow-y-auto p-6 space-y-6 flex flex-col">
+          <div className="flex-1 overflow-hidden p-6 flex flex-col min-h-0 space-y-6">
             
             {/* Beautiful Progressive Step Indicator */}
-            <div className="relative mb-6 max-w-md w-full mx-auto px-4">
+            <div className="relative mb-6 max-w-md w-full mx-auto px-4 shrink-0">
               {/* Background Line */}
               <div className="absolute top-5 left-10 right-10 h-0.5 bg-slate-200 dark:bg-slate-800 -translate-y-1/2 z-0" />
               
@@ -678,7 +678,7 @@ export default function AiDietPlanner({ onClose, onSaved, initialDate }: AiDietP
             </div>
 
             {/* Step Content */}
-            <div className="flex-1 max-w-2xl w-full mx-auto bg-slate-50/50 dark:bg-slate-950/20 border border-slate-200/50 dark:border-slate-800/40 rounded-3xl p-6 md:p-8 shadow-soft">
+            <div className="flex-1 max-w-2xl w-full mx-auto bg-slate-50/50 dark:bg-slate-950/20 border border-slate-200/50 dark:border-slate-800/40 rounded-3xl p-6 md:p-8 shadow-soft overflow-y-auto flex flex-col min-h-0 pr-1">
               
               {/* STEP 1: Confirm Calories Goal & Macros */}
               {setupStep === 1 && (
@@ -860,7 +860,7 @@ export default function AiDietPlanner({ onClose, onSaved, initialDate }: AiDietP
             </div>
 
             {/* Bottom Wizard Footer Navigation */}
-            <div className="pt-6 border-t border-slate-100 dark:border-slate-800 flex justify-between gap-3 mt-auto">
+            <div className="pt-6 border-t border-slate-100 dark:border-slate-800 flex justify-between gap-3 mt-auto shrink-0">
               {setupStep === 1 ? (
                 <button 
                   onClick={onClose} 
