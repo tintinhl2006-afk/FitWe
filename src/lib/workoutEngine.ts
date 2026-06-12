@@ -203,8 +203,8 @@ export function generateWorkoutPlan(
 
   // 4. Generate routines based on Split & Days count
   if (selectedSplit === "full_body") {
-    // Maximum 3 routines
-    const routinesToGen = Math.min(pref.days, 3);
+    // Generate routines up to target days count
+    const routinesToGen = pref.days;
     for (let day = 1; day <= routinesToGen; day++) {
       const routineExercises: GeneratedExercise[] = [];
       const ex1 = pickExercise("Pierna", true, [], usedExerciseIds);
@@ -252,8 +252,8 @@ export function generateWorkoutPlan(
       });
     }
   } else if (selectedSplit === "torso_pierna") {
-    // Generate Torso & Pierna alternately up to target days count (max 4)
-    const routinesToGen = Math.min(pref.days, 4);
+    // Generate Torso & Pierna alternately up to target days count
+    const routinesToGen = pref.days;
     for (let day = 1; day <= routinesToGen; day++) {
       const isTorso = day % 2 === 1;
       const routineExercises: GeneratedExercise[] = [];
@@ -329,13 +329,14 @@ export function generateWorkoutPlan(
     }
   } else if (selectedSplit === "ppl") {
     // Generate Empuje, Tirón, Piernas sequentially
-    const routinesToGen = Math.min(pref.days, 3);
+    const routinesToGen = pref.days;
     const pplNames = ["Empuje (Pecho/Hombro/Tríceps)", "Tirón (Espalda/Bíceps)", "Pierna y Core"];
 
     for (let day = 0; day < routinesToGen; day++) {
       const routineExercises: GeneratedExercise[] = [];
+      const dayType = day % 3;
 
-      if (day === 0) {
+      if (dayType === 0) {
         // EMPUJE
         const exPecho1 = pickExercise("Pecho", true, [], usedExerciseIds);
         if (exPecho1) {
@@ -362,7 +363,7 @@ export function generateWorkoutPlan(
           usedExerciseIds.add(exArm.id);
           routineExercises.push(createExerciseEntry(exArm, 3, "10-12", 12, rir, "1.5 min"));
         }
-      } else if (day === 1) {
+      } else if (dayType === 1) {
         // TIRÓN
         const exEspalda1 = pickExercise("Espalda", true, [], usedExerciseIds);
         if (exEspalda1) {
@@ -413,8 +414,9 @@ export function generateWorkoutPlan(
         }
       }
 
+      const cycle = Math.floor(day / 3) + 1;
       generatedRoutines.push({
-        name: pplNames[day],
+        name: `${pplNames[dayType]}${routinesToGen > 3 ? ` — Sesión ${cycle}` : ""}`,
         exercises: routineExercises
       });
     }

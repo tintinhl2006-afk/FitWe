@@ -259,6 +259,9 @@ export default function AiWorkoutPlanner({ onClose, onSaved }: AiWorkoutPlannerP
               margin-bottom: 10px;
             }
             @media print {
+              .no-print {
+                display: none !important;
+              }
               body {
                 margin: 20px;
               }
@@ -274,6 +277,15 @@ export default function AiWorkoutPlanner({ onClose, onSaved }: AiWorkoutPlannerP
           </style>
         </head>
         <body>
+          <div class="no-print" style="background: #ecfeff; border: 1px solid #a5f3fc; padding: 16px; border-radius: 12px; margin-bottom: 25px; font-family: 'Inter', sans-serif; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);">
+            <p style="margin: 0; color: #0891b2; font-weight: 800; font-size: 14px; display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 0.5px;">
+              <span>💡</span> ¿Cómo guardar este plan en PDF?
+            </p>
+            <p style="margin: 6px 0 0 0; color: #164e63; font-size: 13px; line-height: 1.5;">
+              En la ventana de impresión que se acaba de abrir de forma automática, selecciona <strong>"Guardar como PDF"</strong> en el campo de <strong>"Destino"</strong> (o "Destination"). De esta forma se descargará el archivo PDF vectorial directamente en tu carpeta de descargas.
+            </p>
+          </div>
+
           <div class="header">
             <h1>FitWe</h1>
             <p>Plan de Entrenamiento Personalizado Inteligente</p>
@@ -688,7 +700,7 @@ export default function AiWorkoutPlanner({ onClose, onSaved }: AiWorkoutPlannerP
                       className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 text-white px-4 py-3 text-xs font-bold hover:opacity-95 shadow-sm transition-all cursor-pointer"
                     >
                       <Download className="w-4 h-4" />
-                      Descargar Guía (PDF)
+                      Imprimir / Guardar en PDF
                     </button>
                     <button
                       onClick={handleCopyClipboard}
