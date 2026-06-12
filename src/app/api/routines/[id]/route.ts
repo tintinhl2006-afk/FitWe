@@ -163,3 +163,52 @@ export async function DELETE(
     );
   }
 }
+
+export async function PATCH(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ message: "No autorizado" }, { status: 401 });
+    }
+
+    const { id } = await params;
+
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(id)) {
+      return NextResponse.json({ message: "ID inválido" }, { status: 400 });
+    }
+
+    const body = await req.json();
+    const { name } = body;
+    if (!name || typeof name !== "string" || name.trim() === "") {
+      return NextResponse.json({ message: "Nombre no válido" }, { status: 400 });
+    }
+
+    // Verificar acceso (usuario dueño O gimnasio del cliente)
+    const routine = await verifyRoutineAccess(id, session.user.id, session.user.role);
+
+    if (!routine) {
+      return NextResponse.json(
+        { message: "Rutina no encontrada o no autorizada" },
+        { status: 404 }
+      );
+    }
+
+    const updatedRoutine = await prisma.routine.update({
+      where: { id },
+      data: { name: name.trim() },
+    });
+
+    return NextResponse.json({ success: true, routine: updatedRoutine });
+  } catch (error) {
+    console.error("Error updating routine:", error);
+    return NextResponse.json(
+      { error: "Error interno del servidor" },
+      { status: 500 }
+    );
+  }
+}

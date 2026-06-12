@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import { 
   Loader2, 
   X, 
@@ -19,6 +20,282 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+function sanitizeText(str: string): string {
+  if (!str) return "";
+  return str
+    .replace(/—/g, "-")
+    .replace(/–/g, "-")
+    .replace(/[‘’]/g, "'")
+    .replace(/[“”]/g, '"');
+}
+
+function wrapText(text: string, maxWidth: number, font: any, fontSize: number): string[] {
+  const words = text.split(' ');
+  const lines: string[] = [];
+  let currentLine = '';
+
+  for (const word of words) {
+    const testLine = currentLine ? `${currentLine} ${word}` : word;
+    const width = font.widthOfTextAtSize(testLine, fontSize);
+    if (width > maxWidth) {
+      if (currentLine) {
+        lines.push(currentLine);
+      }
+      currentLine = word;
+    } else {
+      currentLine = testLine;
+    }
+  }
+  if (currentLine) {
+    lines.push(currentLine);
+  }
+  return lines;
+}
+
+class PDFWriter {
+  private pdfDoc: any;
+  private page: any;
+  private fontRegular: any;
+  private fontBold: any;
+  private currentY: number = 0;
+  private margin: number = 40;
+  private width: number = 595.27;
+  private height: number = 841.89;
+
+  constructor(pdfDoc: any, fontRegular: any, fontBold: any) {
+    this.pdfDoc = pdfDoc;
+    this.fontRegular = fontRegular;
+    this.fontBold = fontBold;
+    this.addNewPage();
+  }
+
+  private addNewPage() {
+    this.page = this.pdfDoc.addPage([this.width, this.height]);
+    this.currentY = this.height - this.margin;
+    this.drawFooter();
+  }
+
+  private drawFooter() {
+    const pageNum = this.pdfDoc.getPageCount();
+    const footerText = `Pagina ${pageNum} | FitWe - Plan de Entrenamiento Inteligente`;
+    this.page.drawText(footerText, {
+      x: this.margin,
+      y: 20,
+      size: 8,
+      font: this.fontRegular,
+      color: rgb(0.39, 0.45, 0.55),
+    });
+  }
+
+  ensureSpace(neededHeight: number) {
+    if (this.currentY - neededHeight < this.margin + 10) {
+      this.addNewPage();
+    }
+  }
+
+  getYPosition() {
+    return this.currentY;
+  }
+
+  getPage() {
+    return this.page;
+  }
+
+  subtractY(amount: number) {
+    this.currentY -= amount;
+  }
+
+  drawHeading(text: string, level: 1 | 2 | 3) {
+    const cleanText = sanitizeText(text);
+    const sizes = { 1: 18, 2: 13, 3: 10 };
+    const size = sizes[level];
+    const spacing = level === 1 ? 20 : level === 2 ? 15 : 10;
+    
+    if (this.currentY < this.height - this.margin - 10) {
+      this.currentY -= 12;
+    }
+    
+    this.ensureSpace(size + spacing);
+
+    if (level === 1) {
+      this.page.drawRectangle({
+        x: this.margin,
+        y: this.currentY - size - 10,
+        width: this.width - 2 * this.margin,
+        height: size + 16,
+        color: rgb(0.93, 0.98, 1.0),
+      });
+      this.page.drawText(cleanText.toUpperCase(), {
+        x: this.margin + 10,
+        y: this.currentY - size - 2,
+        size,
+        font: this.fontBold,
+        color: rgb(0.03, 0.45, 0.54),
+      });
+      this.currentY -= (size + 24);
+    } else if (level === 2) {
+      this.page.drawLine({
+        start: { x: this.margin, y: this.currentY },
+        end: { x: this.margin, y: this.currentY - size - 4 },
+        thickness: 3,
+        color: rgb(0.03, 0.45, 0.54),
+      });
+      this.page.drawText(cleanText, {
+        x: this.margin + 8,
+        y: this.currentY - size,
+        size,
+        font: this.fontBold,
+        color: rgb(0.06, 0.09, 0.16),
+      });
+      this.currentY -= (size + 12);
+    } else {
+      this.page.drawText(cleanText, {
+        x: this.margin,
+        y: this.currentY - size,
+        size,
+        font: this.fontBold,
+        color: rgb(0.06, 0.09, 0.16),
+      });
+      this.currentY -= (size + 8);
+    }
+  }
+
+  drawHorizontalLine(color?: any, thickness = 1) {
+    this.ensureSpace(10);
+    this.page.drawLine({
+      start: { x: this.margin, y: this.currentY },
+      end: { x: this.width - this.margin, y: this.currentY },
+      thickness,
+      color: color || rgb(0.88, 0.91, 0.94),
+    });
+    this.currentY -= 10;
+  }
+
+  drawSpacing(height: number) {
+    this.currentY -= height;
+  }
+
+  drawTable(
+    headers: string[],
+    columnWidths: number[],
+    rows: any[][]
+  ) {
+    const headerHeight = 25;
+    this.ensureSpace(headerHeight + 35);
+
+    const drawHeaders = (y: number) => {
+      this.page.drawRectangle({
+        x: this.margin,
+        y: y - headerHeight,
+        width: this.width - 2 * this.margin,
+        height: headerHeight,
+        color: rgb(0.94, 0.96, 0.98),
+      });
+
+      let currentX = this.margin;
+      for (let i = 0; i < headers.length; i++) {
+        this.page.drawText(sanitizeText(headers[i]), {
+          x: currentX + 6,
+          y: y - 16,
+          size: 9,
+          font: this.fontBold,
+          color: rgb(0.28, 0.33, 0.41),
+        });
+        currentX += columnWidths[i];
+      }
+
+      this.page.drawLine({
+        start: { x: this.margin, y: y - headerHeight },
+        end: { x: this.width - this.margin, y: y - headerHeight },
+        thickness: 1,
+        color: rgb(0.88, 0.91, 0.94),
+      });
+    };
+
+    drawHeaders(this.currentY);
+    this.currentY -= headerHeight;
+
+    for (const row of rows) {
+      const exerciseCell = row[0];
+      const cleanName = sanitizeText(exerciseCell.name);
+      const cleanJust = exerciseCell.justificacion ? sanitizeText(exerciseCell.justificacion) : "";
+      
+      const nameLines = wrapText(cleanName, columnWidths[0] - 12, this.fontBold, 10);
+      const justLines = cleanJust 
+        ? wrapText(cleanJust, columnWidths[0] - 12, this.fontRegular, 8)
+        : [];
+      
+      const cellHeight = (nameLines.length * 12) + (justLines.length * 10) + (justLines.length > 0 ? 6 : 0) + 12;
+      const rowHeight = Math.max(cellHeight, 35);
+
+      if (this.currentY - rowHeight < this.margin + 10) {
+        this.addNewPage();
+        drawHeaders(this.currentY);
+        this.currentY -= headerHeight;
+      }
+
+      let currentX = this.margin;
+      const yStart = this.currentY;
+
+      let textY = yStart - 12;
+      for (const nameLine of nameLines) {
+        this.page.drawText(nameLine, {
+          x: currentX + 6,
+          y: textY,
+          size: 10,
+          font: this.fontBold,
+          color: rgb(0.06, 0.09, 0.16),
+        });
+        textY -= 12;
+      }
+      if (justLines.length > 0) {
+        textY -= 2;
+        for (const justLine of justLines) {
+          this.page.drawText(justLine, {
+            x: currentX + 6,
+            y: textY,
+            size: 8,
+            font: this.fontRegular,
+            color: rgb(0.39, 0.45, 0.55),
+          });
+          textY -= 10;
+        }
+      }
+
+      currentX += columnWidths[0];
+
+      for (let i = 1; i < row.length; i++) {
+        const val = sanitizeText(String(row[i]));
+        this.page.drawText(val, {
+          x: currentX + 6,
+          y: yStart - 16,
+          size: 9,
+          font: this.fontRegular,
+          color: rgb(0.18, 0.24, 0.35),
+        });
+        currentX += columnWidths[i];
+      }
+
+      this.page.drawLine({
+        start: { x: this.margin, y: yStart - rowHeight },
+        end: { x: this.width - this.margin, y: yStart - rowHeight },
+        thickness: 1,
+        color: rgb(0.94, 0.96, 0.98),
+      });
+
+      this.currentY -= rowHeight;
+    }
+
+    this.page.drawLine({
+      start: { x: this.margin, y: this.currentY },
+      end: { x: this.width - this.margin, y: this.currentY },
+      thickness: 1.5,
+      color: rgb(0.88, 0.91, 0.94),
+    });
+    this.currentY -= 15;
+  }
+}
+
 interface AiWorkoutPlannerProps {
   onClose: () => void;
   onSaved: () => void;
@@ -27,7 +304,9 @@ interface AiWorkoutPlannerProps {
 export default function AiWorkoutPlanner({ onClose, onSaved }: AiWorkoutPlannerProps) {
   const [setupStep, setSetupStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [exercisesCatalog, setExercisesCatalog] = useState<any[]>([]);
   
   // Setup Form Preferences
   const [customDays, setCustomDays] = useState(3);
@@ -36,6 +315,74 @@ export default function AiWorkoutPlanner({ onClose, onSaved }: AiWorkoutPlannerP
   const [customSplit, setCustomSplit] = useState<"auto" | "torso_pierna" | "ppl" | "full_body">("auto");
   const [customPriorities, setCustomPriorities] = useState<string[]>([]);
   const [customLesiones, setCustomLesiones] = useState<string[]>([]);
+  const [customRepeats, setCustomRepeats] = useState<string[]>([]);
+
+  // Load exercises catalog on mount
+  useEffect(() => {
+    async function loadCatalog() {
+      try {
+        const res = await fetch("/api/exercises");
+        if (res.ok) {
+          const data = await res.json();
+          setExercisesCatalog(data);
+        }
+      } catch (err) {
+        console.error("Error loading exercises catalog:", err);
+      }
+    }
+    loadCatalog();
+  }, []);
+
+  const getResolvedSplit = (days: number, split: string): "full_body" | "torso_pierna" | "ppl" => {
+    if (split === "auto") {
+      if (days <= 2) return "full_body";
+      if (days === 3) return "ppl";
+      return "torso_pierna";
+    }
+    return split as "full_body" | "torso_pierna" | "ppl";
+  };
+
+  const getRepeatsNeeded = (days: number, split: string): { count: number; options: string[] } => {
+    const resolvedSplit = getResolvedSplit(days, split);
+    if (resolvedSplit === "ppl") {
+      if (days === 4) return { count: 1, options: ["empuje", "tiron", "pierna"] };
+      if (days === 5) return { count: 2, options: ["empuje", "tiron", "pierna"] };
+    }
+    if (resolvedSplit === "torso_pierna") {
+      if (days === 3) return { count: 1, options: ["torso", "pierna"] };
+      if (days === 5) return { count: 1, options: ["torso", "pierna"] };
+    }
+    return { count: 0, options: [] };
+  };
+
+  const handleToggleRepeat = (option: string, max: number) => {
+    if (max === 1) {
+      setCustomRepeats([option]);
+    } else {
+      setCustomRepeats((prev) => {
+        if (prev.includes(option)) {
+          return prev.filter((o) => o !== option);
+        }
+        if (prev.length < max) {
+          return [...prev, option];
+        }
+        return [prev[1], option];
+      });
+    }
+  };
+
+  useEffect(() => {
+    const needed = getRepeatsNeeded(customDays, customSplit);
+    if (needed.count === 0) {
+      setCustomRepeats([]);
+    } else {
+      if (needed.count === 1) {
+        setCustomRepeats([needed.options[0]]);
+      } else if (needed.count === 2) {
+        setCustomRepeats([needed.options[0], needed.options[1]]);
+      }
+    }
+  }, [customDays, customSplit]);
 
   const [generatedPlan, setGeneratedPlan] = useState<any[] | null>(null);
   const [copied, setCopied] = useState(false);
@@ -54,6 +401,7 @@ export default function AiWorkoutPlanner({ onClose, onSaved }: AiWorkoutPlannerP
           priorities: customPriorities,
           lesiones: customLesiones,
           goal: customGoal,
+          repeats: customRepeats,
         }),
       });
       
@@ -71,269 +419,337 @@ export default function AiWorkoutPlanner({ onClose, onSaved }: AiWorkoutPlannerP
     }
   };
 
-  const handlePrintPDF = () => {
+  // Editor Actions
+  const handleUpdateSets = (routineIdx: number, exerciseIdx: number, increment: number) => {
+    if (!generatedPlan) return;
+    const nextPlan = [...generatedPlan];
+    const routine = { ...nextPlan[routineIdx] };
+    const exercises = [...routine.exercises];
+    const ex = { ...exercises[exerciseIdx] };
+    
+    const nextSets = Math.max(1, ex.sets + increment);
+    ex.sets = nextSets;
+    ex.repsList = Array(nextSets).fill(ex.reps).join(",");
+    
+    exercises[exerciseIdx] = ex;
+    routine.exercises = exercises;
+    nextPlan[routineIdx] = routine;
+    setGeneratedPlan(nextPlan);
+  };
+
+  const handleUpdateReps = (routineIdx: number, exerciseIdx: number, increment: number) => {
+    if (!generatedPlan) return;
+    const nextPlan = [...generatedPlan];
+    const routine = { ...nextPlan[routineIdx] };
+    const exercises = [...routine.exercises];
+    const ex = { ...exercises[exerciseIdx] };
+    
+    const nextReps = Math.max(1, ex.reps + increment);
+    ex.reps = nextReps;
+    ex.repsList = Array(ex.sets).fill(nextReps).join(",");
+    
+    exercises[exerciseIdx] = ex;
+    routine.exercises = exercises;
+    nextPlan[routineIdx] = routine;
+    setGeneratedPlan(nextPlan);
+  };
+
+  const handleDeleteExercise = (routineIdx: number, exerciseIdx: number) => {
+    if (!generatedPlan) return;
+    const nextPlan = [...generatedPlan];
+    const routine = { ...nextPlan[routineIdx] };
+    const exercises = routine.exercises.filter((_: any, idx: number) => idx !== exerciseIdx);
+    
+    routine.exercises = exercises;
+    nextPlan[routineIdx] = routine;
+    setGeneratedPlan(nextPlan);
+  };
+
+  const handleSwapExercise = (routineIdx: number, exerciseIdx: number, newExerciseId: string) => {
+    if (!generatedPlan) return;
+    const newExDetails = exercisesCatalog.find(e => e.id === newExerciseId);
+    if (!newExDetails) return;
+
+    const nextPlan = [...generatedPlan];
+    const routine = { ...nextPlan[routineIdx] };
+    const exercises = [...routine.exercises];
+    const ex = { ...exercises[exerciseIdx] };
+    
+    ex.exerciseId = newExDetails.id;
+    ex.name = newExDetails.name;
+    ex.justificacion = `Ejercicio óptimo para el desarrollo de ${newExDetails.muscleGroup.toLowerCase()}.`;
+    
+    exercises[exerciseIdx] = ex;
+    routine.exercises = exercises;
+    nextPlan[routineIdx] = routine;
+    setGeneratedPlan(nextPlan);
+  };
+
+  const handleSavePlan = async () => {
+    if (!generatedPlan) return;
+    setIsSaving(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/routines/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          savePlan: generatedPlan
+        }),
+      });
+      
+      if (!res.ok) {
+        throw new Error("No se pudo guardar el plan de entrenamiento.");
+      }
+      
+      onSaved();
+    } catch (e: any) {
+      setError(e.message || "Ocurrió un error al guardar las rutinas");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handlePrintPDF = async () => {
     if (!generatedPlan) return;
 
-    const goalMap = {
-      hipertrofia: "Ganancia de Masa Muscular (Hipertrofia)",
-      fuerza: "Ganancia de Fuerza Máxima",
-      recomposicion: "Recomposición Corporal (Pérdida de grasa y ganancia muscular)",
-      perdida_grasa: "Pérdida de Grasa / Definición Muscular",
-      rendimiento: "Rendimiento y Acondicionamiento Físico General"
-    };
+    try {
+      const goalMap = {
+        hipertrofia: "Ganancia de Masa Muscular (Hipertrofia)",
+        fuerza: "Ganancia de Fuerza Máxima",
+        recomposicion: "Recomposición Corporal (Pérdida de grasa y ganancia muscular)",
+        perdida_grasa: "Pérdida de Grasa / Definición Muscular",
+        rendimiento: "Rendimiento y Acondicionamiento Físico General"
+      };
 
-    const levelMap = {
-      principiante: "Principiante (menos de 1 año)",
-      intermedio: "Intermedio (1 - 3 años)",
-      avanzado: "Avanzado (3 - 6 años)",
-      muy_avanzado: "Muy avanzado (más de 6 años)"
-    };
+      const levelMap = {
+        principiante: "Principiante (menos de 1 año)",
+        intermedio: "Intermedio (1 - 3 años)",
+        avanzado: "Avanzado (3 - 6 años)",
+        muy_avanzado: "Muy avanzado (más de 6 años)"
+      };
 
-    const splitMap = {
-      full_body: "Cuerpo Completo (Full Body)",
-      torso_pierna: "Torso / Pierna (Upper / Lower)",
-      ppl: "Empuje / Tirón / Pierna (Push / Pull / Legs)",
-      auto: "Selección Automática del Motor"
-    };
+      const splitMap = {
+        full_body: "Cuerpo Completo (Full Body)",
+        torso_pierna: "Torso / Pierna (Upper / Lower)",
+        ppl: "Empuje / Tirón / Pierna (Push / Pull / Legs)",
+        auto: "Selección Automática del Motor"
+      };
 
-    const goalLabel = goalMap[customGoal] || customGoal;
-    const levelLabel = levelMap[customLevel] || customLevel;
-    const splitLabel = splitMap[customSplit === "auto" ? (customDays <= 2 ? "full_body" : customDays === 3 ? "ppl" : "torso_pierna") : customSplit] || customSplit;
-    const prioritiesText = customPriorities.length > 0 ? customPriorities.join(", ") : "Ninguno en particular";
-    const lesionesText = customLesiones.length > 0 && !customLesiones.includes("ninguna") 
-      ? customLesiones.join(", ") 
-      : "Ninguna molestia declarada";
+      const lesionesMap = {
+        hombro: "Hombro",
+        lumbar: "Zona Lumbar",
+        rodilla: "Rodilla",
+        codo_muneca: "Codo / Muñeca",
+        cadera: "Cadera",
+        ninguna: "Ninguna"
+      };
 
-    let rutinasHtml = "";
-    generatedPlan.forEach((routine) => {
-      rutinasHtml += `
-        <div class="routine-section">
-          <h3>📅 ${routine.name.toUpperCase()}</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>Ejercicio</th>
-                <th>Series</th>
-                <th>Repeticiones</th>
-                <th>Intensidad</th>
-                <th>Tempo</th>
-                <th>Descanso</th>
-              </tr>
-            </thead>
-            <tbody>
-      `;
-      routine.exercises.forEach((ex: any) => {
-        rutinasHtml += `
-          <tr>
-            <td>
-              <div class="exercise-name">${ex.name}</div>
-              <div class="exercise-justification">${ex.justificacion}</div>
-            </td>
-            <td>${ex.sets}</td>
-            <td>${ex.reps}</td>
-            <td>RIR ${ex.rir}</td>
-            <td>${ex.tempo}</td>
-            <td>${ex.descanso}</td>
-          </tr>
-        `;
+      const goalLabel = goalMap[customGoal] || customGoal;
+      const levelLabel = levelMap[customLevel] || customLevel;
+      const splitLabel = splitMap[customSplit === "auto" ? (customDays <= 2 ? "full_body" : customDays === 3 ? "ppl" : "torso_pierna") : customSplit] || customSplit;
+      const prioritiesText = customPriorities.length > 0 ? customPriorities.join(", ") : "Ninguno en particular";
+      const lesionesText = customLesiones.length > 0 && !customLesiones.includes("ninguna") 
+        ? customLesiones.map(l => lesionesMap[l as keyof typeof lesionesMap] || l).join(", ") 
+        : "Ninguna molestia declarada";
+
+      const rirVal = customGoal === "fuerza" ? 2 : customLevel === "principiante" ? 2 : 1;
+
+      // 1. Create PDF Document
+      const pdfDoc = await PDFDocument.create();
+      const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+      // 2. Instantiate helper layout drawer
+      const writer = new PDFWriter(pdfDoc, fontRegular, fontBold);
+
+      // 3. Draw Header
+      writer.drawSpacing(10);
+      writer.getPage().drawText("FitWe", {
+        x: 40,
+        y: writer.getYPosition() - 24,
+        size: 28,
+        font: fontBold,
+        color: rgb(0.03, 0.45, 0.54), // cyan-600
       });
-      rutinasHtml += `
-            </tbody>
-          </table>
-        </div>
-      `;
-    });
+      writer.getPage().drawText("Plan de Entrenamiento Personalizado Inteligente", {
+        x: 40,
+        y: writer.getYPosition() - 42,
+        size: 11,
+        font: fontRegular,
+        color: rgb(0.39, 0.45, 0.55),
+      });
+      writer.subtractY(52);
+      writer.drawHorizontalLine(rgb(0.03, 0.45, 0.54), 2);
+      writer.drawSpacing(15);
 
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) return;
+      // 4. Perfil del Plan
+      writer.drawHeading("Perfil del Plan", 2);
+      const startY = writer.getYPosition();
+      writer.ensureSpace(70);
+      writer.getPage().drawRectangle({
+        x: 40,
+        y: startY - 65,
+        width: 515.27,
+        height: 65,
+        color: rgb(0.97, 0.98, 0.99),
+        borderColor: rgb(0.91, 0.93, 0.95),
+        borderWidth: 1,
+      });
 
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Plan de Entrenamiento - FitWe</title>
-          <style>
-            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
-            body {
-              font-family: 'Inter', sans-serif;
-              color: #1e293b;
-              margin: 40px;
-              line-height: 1.6;
-              font-size: 14px;
-            }
-            .header {
-              text-align: center;
-              border-bottom: 2px solid #06b6d4;
-              padding-bottom: 20px;
-              margin-bottom: 30px;
-            }
-            .header h1 {
-              margin: 0;
-              font-size: 28px;
-              font-weight: 800;
-              color: #0f172a;
-              text-transform: uppercase;
-              letter-spacing: 1px;
-            }
-            .header p {
-              margin: 5px 0 0 0;
-              color: #64748b;
-              font-size: 14px;
-            }
-            .section {
-              margin-bottom: 30px;
-              background: #f8fafc;
-              padding: 20px;
-              border-radius: 12px;
-              border: 1px solid #e2e8f0;
-            }
-            .section h2 {
-              margin-top: 0;
-              font-size: 16px;
-              font-weight: 800;
-              color: #0f172a;
-              text-transform: uppercase;
-              border-bottom: 1px solid #cbd5e1;
-              padding-bottom: 8px;
-              margin-bottom: 15px;
-            }
-            .profile-grid {
-              display: grid;
-              grid-template-cols: 1fr 1fr;
-              gap: 15px;
-            }
-            .profile-item {
-              font-size: 13px;
-            }
-            .profile-item strong {
-              color: #0f172a;
-            }
-            .routine-section {
-              margin-bottom: 40px;
-              page-break-inside: avoid;
-            }
-            .routine-section h3 {
-              font-size: 18px;
-              font-weight: 800;
-              color: #0f172a;
-              margin-bottom: 15px;
-              display: flex;
-              align-items: center;
-            }
-            table {
-              width: 100%;
-              border-collapse: collapse;
-              margin-bottom: 20px;
-            }
-            th, td {
-              padding: 12px;
-              text-align: left;
-              border-bottom: 1px solid #e2e8f0;
-            }
-            th {
-              background: #f1f5f9;
-              color: #475569;
-              font-weight: 600;
-              font-size: 12px;
-              text-transform: uppercase;
-              letter-spacing: 0.5px;
-            }
-            td {
-              vertical-align: top;
-            }
-            .exercise-name {
-              font-weight: 600;
-              color: #0f172a;
-            }
-            .exercise-justification {
-              font-size: 11px;
-              color: #64748b;
-              margin-top: 4px;
-              line-height: 1.4;
-            }
-            .guidelines-list {
-              padding-left: 20px;
-              margin: 0;
-            }
-            .guidelines-list li {
-              margin-bottom: 10px;
-            }
-            @media print {
-              .no-print {
-                display: none !important;
-              }
-              body {
-                margin: 20px;
-              }
-              .section {
-                background: transparent;
-                border: none;
-                padding: 0;
-              }
-              .routine-section {
-                page-break-inside: avoid;
-              }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="no-print" style="background: #ecfeff; border: 1px solid #a5f3fc; padding: 16px; border-radius: 12px; margin-bottom: 25px; font-family: 'Inter', sans-serif; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);">
-            <p style="margin: 0; color: #0891b2; font-weight: 800; font-size: 14px; display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 0.5px;">
-              <span>💡</span> ¿Cómo guardar este plan en PDF?
-            </p>
-            <p style="margin: 6px 0 0 0; color: #164e63; font-size: 13px; line-height: 1.5;">
-              En la ventana de impresión que se acaba de abrir de forma automática, selecciona <strong>"Guardar como PDF"</strong> en el campo de <strong>"Destino"</strong> (o "Destination"). De esta forma se descargará el archivo PDF vectorial directamente en tu carpeta de descargas.
-            </p>
-          </div>
+      const col1X = 50;
+      const col2X = 300;
 
-          <div class="header">
-            <h1>FitWe</h1>
-            <p>Plan de Entrenamiento Personalizado Inteligente</p>
-          </div>
+      writer.getPage().drawText(`Objetivo: ${goalLabel}`, { x: col1X, y: startY - 18, size: 9, font: fontBold, color: rgb(0.06, 0.09, 0.16) });
+      writer.getPage().drawText(`Nivel: ${levelLabel}`, { x: col2X, y: startY - 18, size: 9, font: fontBold, color: rgb(0.06, 0.09, 0.16) });
 
-          <div class="section">
-            <h2>Perfil del Plan</h2>
-            <div class="profile-grid">
-              <div class="profile-item"><strong>Objetivo:</strong> ${goalLabel}</div>
-              <div class="profile-item"><strong>Nivel:</strong> ${levelLabel}</div>
-              <div class="profile-item"><strong>Frecuencia:</strong> ${customDays} días a la semana</div>
-              <div class="profile-item"><strong>Rutina:</strong> ${splitLabel}</div>
-              <div class="profile-item"><strong>Puntos a priorizar:</strong> ${prioritiesText}</div>
-              <div class="profile-item"><strong>Lesiones/Molestias:</strong> ${lesionesText}</div>
-            </div>
-          </div>
+      writer.getPage().drawText(`Frecuencia: ${customDays} días a la semana`, { x: col1X, y: startY - 34, size: 9, font: fontBold, color: rgb(0.06, 0.09, 0.16) });
+      writer.getPage().drawText(`Rutina: ${splitLabel}`, { x: col2X, y: startY - 34, size: 9, font: fontBold, color: rgb(0.06, 0.09, 0.16) });
 
-          <div class="section">
-            <h2>Metodología y Pautas Clave</h2>
-            <ul class="guidelines-list">
-              <li><strong>Doble Progresión:</strong> Progresa en repeticiones antes de subir de peso. Cuando completes todas las series con la repetición máxima recomendada y excelente técnica, incrementa la carga en la siguiente sesión.</li>
-              <li><strong>Repeticiones en Recámara (RIR):</strong> Mantén la intensidad indicada en cada serie (generalmente RIR 1 o 2). Termina cada serie sintiendo que te quedaban únicamente esas repeticiones antes de llegar al fallo técnico.</li>
-              <li><strong>Tiempos de Descanso:</strong> Respeta los descansos para garantizar la recuperación completa del sistema nervioso y de los depósitos de energía celular.</li>
-              <li><strong>Seguridad Articular:</strong> Se han evitado los ejercicios lesivos para las zonas que indicaste (${lesionesText}), sustituyéndolos por variantes estables que minimizan el estrés mecánico sobre las articulaciones.</li>
-            </ul>
-          </div>
+      writer.getPage().drawText(`Puntos a priorizar: ${prioritiesText}`, { x: col1X, y: startY - 50, size: 9, font: fontBold, color: rgb(0.06, 0.09, 0.16) });
+      writer.getPage().drawText(`Lesiones/Molestias: ${lesionesText}`, { x: col2X, y: startY - 50, size: 9, font: fontBold, color: rgb(0.06, 0.09, 0.16) });
 
-          <h2>Sesiones de Entrenamiento</h2>
-          ${rutinasHtml}
+      writer.subtractY(75);
 
-          <div class="section" style="page-break-inside: avoid; margin-top: 40px;">
-            <h2>Calentamiento y Seguridad</h2>
-            <ul class="guidelines-list">
-              <li>Dedica 5-10 minutos de movilidad articular y activación aeróbica ligera antes de iniciar la rutina.</li>
-              <li>Realiza 2-3 series de aproximación antes de tus series efectivas con pesos más ligeros.</li>
-              <li>Controla la velocidad del movimiento: 3 segundos en la bajada (fase excéntrica) y 1 segundo en la subida (concéntrica).</li>
-            </ul>
-          </div>
-        </body>
-      </html>
-    `);
+      // Determine level focus tip
+      let levelFocusTip = "";
+      if (customLevel === "principiante") {
+        levelFocusTip = "Enfoque en la técnica y aprendizaje del movimiento. Mantén un RIR 2 estable en todos tus ejercicios. Prioriza la estabilidad articular sobre el peso.";
+      } else if (customLevel === "intermedio") {
+        levelFocusTip = "Progresión moderada y consistencia. Trabaja a RIR 1-2 en tus series principales, manteniendo un buen control del tempo excéntrico.";
+      } else {
+        levelFocusTip = "Sobrecarga progresiva rigurosa. Exígete con RIR 1-0 en las series efectivas finales, registrando tus cargas para asegurar mejoras semanales.";
+      }
 
-    printWindow.document.close();
-    printWindow.focus();
-    
-    setTimeout(() => {
-      printWindow.print();
-    }, 250);
+      // Determine goal physiological tip
+      let goalPhysiologicalTip = "";
+      if (customGoal === "hipertrofia") {
+        goalPhysiologicalTip = "Estímulo mecánico y tensión bajo tensión. Busca acumular series efectivas cerca del fallo técnico para maximizar el reclutamiento de fibras musculares.";
+      } else if (customGoal === "fuerza") {
+        goalPhysiologicalTip = "Eficiencia del sistema nervioso. Mantén descansos largos (3-5 min) en ejercicios multiarticulares pesados para maximizar la producción de fuerza por serie.";
+      } else if (customGoal === "perdida_grasa") {
+        goalPhysiologicalTip = "Preservación de masa magra. Mantén la intensidad alta a pesar del déficit calórico para indicarle a tu cuerpo que debe conservar el tejido muscular.";
+      } else {
+        goalPhysiologicalTip = "Adaptación metabólica y neuromuscular. Controla los tiempos de recuperación y prioriza la calidad técnica para optimizar la transferencia funcional.";
+      }
+
+      // 5. Metodología
+      writer.drawHeading("Metodología y Pautas Clave", 2);
+      const guidelines = [
+        { title: "Doble Progresión: ", text: "Progresa en repeticiones antes de subir de peso. Cuando completes todas las series con la repetición máxima recomendada y excelente técnica, incrementa la carga en la siguiente sesión." },
+        { title: "Repeticiones en Recámara (RIR): ", text: `Mantén la intensidad indicada en cada serie (generalmente RIR ${rirVal}). Termina cada serie sintiendo que te quedaban únicamente esas repeticiones antes de llegar al fallo técnico.` },
+        { title: "Enfoque por Nivel: ", text: levelFocusTip },
+        { title: "Estímulo Fisiológico: ", text: goalPhysiologicalTip },
+        { title: "Seguridad Articular: ", text: `Se han evitado ejercicios potencialmente lesivos para las zonas que indicaste (${lesionesText}), sustituyéndolos por variantes estables que minimizan el estrés mecánico sobre las articulaciones.` },
+      ];
+
+      for (const gd of guidelines) {
+        writer.ensureSpace(25);
+        const bulletX = 45;
+        writer.getPage().drawCircle({ x: bulletX + 2, y: writer.getYPosition() - 6, size: 4, color: rgb(0.03, 0.45, 0.54) });
+
+        const firstLineTextLines = wrapText(gd.text, 495 - fontBold.widthOfTextAtSize(gd.title, 9), fontRegular, 9);
+        if (firstLineTextLines.length > 0) {
+          writer.getPage().drawText(gd.title, {
+            x: bulletX + 12,
+            y: writer.getYPosition() - 9,
+            size: 9,
+            font: fontBold,
+            color: rgb(0.06, 0.09, 0.16),
+          });
+          writer.getPage().drawText(firstLineTextLines[0], {
+            x: bulletX + 12 + fontBold.widthOfTextAtSize(gd.title, 9),
+            y: writer.getYPosition() - 9,
+            size: 9,
+            font: fontRegular,
+            color: rgb(0.18, 0.24, 0.35),
+          });
+          writer.subtractY(13);
+
+          const otherLines = gd.text.slice(firstLineTextLines[0].length).trim();
+          if (otherLines) {
+            const restWrapped = wrapText(otherLines, 495, fontRegular, 9);
+            for (const rl of restWrapped) {
+              writer.ensureSpace(12);
+              writer.getPage().drawText(rl, {
+                x: bulletX + 12,
+                y: writer.getYPosition() - 9,
+                size: 9,
+                font: fontRegular,
+                color: rgb(0.18, 0.24, 0.35),
+              });
+              writer.subtractY(13);
+            }
+          }
+        } else {
+          writer.subtractY(13);
+        }
+        writer.subtractY(5);
+      }
+      writer.subtractY(10);
+
+      // 6. Sesiones de entrenamiento
+      writer.drawHeading("Sesiones de Entrenamiento", 1);
+
+      for (const routine of generatedPlan) {
+        writer.drawHeading(routine.name, 2);
+
+        const headers = ["Ejercicio", "Series", "Repeticiones", "Intensidad", "Tempo", "Descanso"];
+        const columnWidths = [200, 40, 65, 65, 65, 80];
+
+        const rows = routine.exercises.map((ex: any) => [
+          { name: ex.name, justificacion: ex.justificacion },
+          ex.sets,
+          ex.reps,
+          `RIR ${ex.rir}`,
+          ex.tempo,
+          ex.descanso
+        ]);
+
+        writer.drawTable(headers, columnWidths, rows);
+      }
+
+      // 7. Calentamiento y Seguridad
+      writer.drawHeading("Calentamiento y Seguridad", 2);
+      const safetyPautas = [
+        "Dedica 5-10 minutos de movilidad articular y activación aeróbica ligera antes de iniciar la rutina.",
+        "Realiza 2-3 series de aproximación antes de tus series efectivas con pesos más ligeros.",
+        "Controla la velocidad del movimiento: 3 segundos en la bajada (fase excéntrica) y 1 segundo en la subida (concéntrica).",
+        "Si sientes dolor agudo en alguna articulación, detén el ejercicio de inmediato y consulta a un especialista."
+      ];
+
+      for (const pauta of safetyPautas) {
+        writer.ensureSpace(20);
+        writer.getPage().drawCircle({ x: 47, y: writer.getYPosition() - 6, size: 4, color: rgb(0.9, 0.3, 0.3) });
+
+        const lines = wrapText(pauta, 495, fontRegular, 9);
+        for (const line of lines) {
+          writer.ensureSpace(12);
+          writer.getPage().drawText(line, {
+            x: 57,
+            y: writer.getYPosition() - 9,
+            size: 9,
+            font: fontRegular,
+            color: rgb(0.18, 0.24, 0.35),
+          });
+          writer.subtractY(13);
+        }
+        writer.subtractY(3);
+      }
+
+      // 8. Save and Download
+      const pdfBytes = await pdfDoc.save();
+      const blob = new Blob([pdfBytes as any], { type: "application/pdf" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `Plan_de_Entrenamiento_FitWe_${customGoal}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error("Error generating PDF:", err);
+      alert("Error al generar el archivo PDF.");
+    }
   };
 
   const handleCopyClipboard = () => {
@@ -467,7 +883,7 @@ export default function AiWorkoutPlanner({ onClose, onSaved }: AiWorkoutPlannerP
                       <span className={cn(
                         "text-[10px] font-bold mt-2",
                         isActive ? "text-cyan-600 dark:text-cyan-400" : "text-slate-400"
-                      )}>
+                       )}>
                         {item.label}
                       </span>
                     </div>
@@ -531,7 +947,7 @@ export default function AiWorkoutPlanner({ onClose, onSaved }: AiWorkoutPlannerP
                           )}
                         >
                           <span className="font-bold text-slate-900 dark:text-white">{g.label}</span>
-                          <span className="text-[10px] text-slate-500 dark:text-slate-455">{g.desc}</span>
+                          <span className="text-[10px] text-slate-550 dark:text-slate-455">{g.desc}</span>
                         </button>
                       ))}
                     </div>
@@ -568,7 +984,7 @@ export default function AiWorkoutPlanner({ onClose, onSaved }: AiWorkoutPlannerP
                           )}
                         >
                           <span className="font-bold text-slate-900 dark:text-white">{lvl.label}</span>
-                          <span className="text-[10px] text-slate-500 dark:text-slate-455">{lvl.desc}</span>
+                          <span className="text-[10px] text-slate-550 dark:text-slate-455">{lvl.desc}</span>
                         </button>
                       ))}
                     </div>
@@ -598,11 +1014,49 @@ export default function AiWorkoutPlanner({ onClose, onSaved }: AiWorkoutPlannerP
                           )}
                         >
                           <span className="font-bold text-slate-900 dark:text-white">{spl.label}</span>
-                          <span className="text-[10px] text-slate-500 dark:text-slate-455">{spl.desc}</span>
+                          <span className="text-[10px] text-slate-550 dark:text-slate-455">{spl.desc}</span>
                         </button>
                       ))}
                     </div>
                   </div>
+
+                  {/* Split Repeats Choice */}
+                  {(() => {
+                    const needed = getRepeatsNeeded(customDays, customSplit);
+                    if (needed.count === 0) return null;
+                    return (
+                      <div className="mt-4 p-4 bg-cyan-50/50 dark:bg-cyan-950/20 border border-cyan-150 dark:border-cyan-800/40 rounded-2xl animate-in fade-in duration-300">
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-350 uppercase tracking-wider mb-2">
+                          Elige qué sesión(es) quieres repetir ({needed.count} {needed.count === 1 ? "día" : "días"}):
+                        </label>
+                        <div className="flex gap-2">
+                          {needed.options.map((option) => {
+                            const isSelected = customRepeats.includes(option);
+                            return (
+                              <button
+                                key={option}
+                                type="button"
+                                onClick={() => handleToggleRepeat(option, needed.count)}
+                                className={cn(
+                                  "px-4 py-2.5 rounded-2xl text-xs font-bold border transition-all flex-1 cursor-pointer",
+                                  isSelected
+                                    ? "bg-cyan-500 border-cyan-500 text-white shadow-md shadow-cyan-500/15"
+                                    : "bg-white text-slate-600 border-slate-200 dark:bg-slate-900 dark:border-slate-800 hover:bg-slate-50 dark:text-slate-300"
+                                )}
+                              >
+                                {option === "empuje" ? "Empuje" : option === "tiron" ? "Tirón" : option === "pierna" ? "Pierna" : option === "torso" ? "Torso" : option}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        {needed.count === 2 && (
+                          <p className="mt-2 text-[10px] text-slate-550 dark:text-slate-400 font-semibold">
+                            Has seleccionado {customRepeats.length} de {needed.count} a repetir.
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })()}
 
                 </div>
               )}
@@ -628,7 +1082,7 @@ export default function AiWorkoutPlanner({ onClose, onSaved }: AiWorkoutPlannerP
                               "px-3.5 py-1.5 rounded-full text-xs font-bold border transition-all",
                               isSelected 
                                 ? "bg-cyan-500 text-white border-cyan-500 shadow-sm" 
-                                : "bg-white text-slate-650 border-slate-200 dark:bg-slate-900 dark:border-slate-800 hover:bg-slate-50"
+                                : "bg-white text-slate-655 border-slate-200 dark:bg-slate-900 dark:border-slate-800 hover:bg-slate-50"
                             )}
                           >
                             {g}
@@ -662,7 +1116,7 @@ export default function AiWorkoutPlanner({ onClose, onSaved }: AiWorkoutPlannerP
                               "px-3.5 py-1.5 rounded-full text-xs font-bold border transition-all",
                               isSelected 
                                 ? "bg-red-500 text-white border-red-500 shadow-sm" 
-                                : "bg-white text-slate-650 border-slate-200 dark:bg-slate-900 dark:border-slate-800 hover:bg-slate-50"
+                                : "bg-white text-slate-655 border-slate-200 dark:bg-slate-900 dark:border-slate-800 hover:bg-slate-50"
                             )}
                           >
                             {l.label}
@@ -721,33 +1175,123 @@ export default function AiWorkoutPlanner({ onClose, onSaved }: AiWorkoutPlannerP
                   </div>
 
                   {/* Plan Summary List */}
-                  <div className="space-y-3 overflow-y-auto pr-1 flex-1 max-h-[300px] scrollbar-thin">
-                    <h5 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Resumen de las Rutinas:</h5>
+                  <div className="space-y-3 overflow-y-auto pr-1 flex-1 max-h-[350px] scrollbar-thin">
+                    <h5 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Resumen de las Rutinas (puedes personalizar los ejercicios):</h5>
                     {generatedPlan.map((routine, rIdx) => (
                       <div key={rIdx} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm">
-                        <h6 className="font-extrabold text-slate-900 dark:text-white text-sm border-b border-slate-100 dark:border-slate-800/80 pb-2 mb-2 flex items-center gap-2">
-                          <span className="w-2 h-2 rounded-full bg-cyan-500 inline-block animate-pulse" />
-                          {routine.name}
-                        </h6>
+                        {/* Routine Name Inline Rename */}
+                        <div className="border-b border-slate-100 dark:border-slate-800/80 pb-2 mb-2 flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 flex-1">
+                            <span className="w-2 h-2 rounded-full bg-cyan-500 inline-block animate-pulse shrink-0" />
+                            <input
+                              type="text"
+                              value={routine.name}
+                              onChange={(e) => {
+                                const nextPlan = [...generatedPlan];
+                                nextPlan[rIdx].name = e.target.value;
+                                setGeneratedPlan(nextPlan);
+                              }}
+                              className="font-extrabold text-slate-900 dark:text-white text-sm bg-transparent border-b border-transparent hover:border-slate-200 focus:border-cyan-500 focus:outline-none py-0.5 px-1 rounded flex-1"
+                            />
+                          </div>
+                        </div>
                         <div className="space-y-3 divide-y divide-slate-100 dark:divide-slate-800/60">
-                          {routine.exercises.map((ex: any, eIdx: number) => (
-                            <div key={eIdx} className={cn("text-xs flex flex-col gap-1", eIdx > 0 && "pt-3")}>
-                              <div className="flex justify-between items-start gap-2">
-                                <span className="font-bold text-slate-800 dark:text-slate-200">{ex.name}</span>
-                                <span className="text-[10px] font-mono font-bold bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-650 dark:text-slate-400 shrink-0">
-                                  {ex.sets}x{ex.reps} (RIR {ex.rir})
-                                </span>
+                          {routine.exercises.map((ex: any, eIdx: number) => {
+                            // Find candidates of the same muscle group
+                            const candidates = exercisesCatalog.filter(
+                              (c) => c.muscleGroup.toLowerCase() === ex.muscleGroup.toLowerCase()
+                            );
+
+                            return (
+                              <div key={eIdx} className={cn("text-xs flex flex-col gap-1.5", eIdx > 0 && "pt-3")}>
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                  {/* Exercise Swap Select */}
+                                  <div className="flex-1 min-w-[200px]">
+                                    <select
+                                      value={ex.exerciseId}
+                                      onChange={(e) => handleSwapExercise(rIdx, eIdx, e.target.value)}
+                                      className="font-bold text-slate-800 dark:text-slate-200 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg py-1 px-2 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500 w-full"
+                                    >
+                                      <option value={ex.exerciseId}>{ex.name}</option>
+                                      {candidates
+                                        .filter((c) => c.id !== ex.exerciseId)
+                                        .map((c) => (
+                                          <option key={c.id} value={c.id}>
+                                            {c.name}
+                                          </option>
+                                        ))}
+                                    </select>
+                                  </div>
+
+                                  {/* Controls: Sets, Reps, Delete */}
+                                  <div className="flex items-center gap-3 shrink-0 self-end sm:self-auto">
+                                    {/* Sets Control */}
+                                    <div className="flex items-center gap-1.5 bg-slate-100/80 dark:bg-slate-800/80 rounded-lg p-0.5">
+                                      <button
+                                        type="button"
+                                        onClick={() => handleUpdateSets(rIdx, eIdx, -1)}
+                                        className="w-5 h-5 flex items-center justify-center rounded bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-700/50 text-[10px] font-bold hover:bg-slate-50 text-slate-600 dark:text-slate-400"
+                                      >
+                                        -
+                                      </button>
+                                      <span className="text-[10px] font-bold px-1 text-slate-700 dark:text-slate-300">
+                                        {ex.sets} Ser
+                                      </span>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleUpdateSets(rIdx, eIdx, 1)}
+                                        className="w-5 h-5 flex items-center justify-center rounded bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-700/50 text-[10px] font-bold hover:bg-slate-50 text-slate-600 dark:text-slate-400"
+                                      >
+                                        +
+                                      </button>
+                                    </div>
+
+                                    {/* Reps Control */}
+                                    <div className="flex items-center gap-1.5 bg-slate-100/80 dark:bg-slate-800/80 rounded-lg p-0.5">
+                                      <button
+                                        type="button"
+                                        onClick={() => handleUpdateReps(rIdx, eIdx, -1)}
+                                        className="w-5 h-5 flex items-center justify-center rounded bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-700/50 text-[10px] font-bold hover:bg-slate-50 text-slate-600 dark:text-slate-400"
+                                      >
+                                        -
+                                      </button>
+                                      <span className="text-[10px] font-bold px-1 text-slate-700 dark:text-slate-300">
+                                        {ex.reps} Rep
+                                      </span>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleUpdateReps(rIdx, eIdx, 1)}
+                                        className="w-5 h-5 flex items-center justify-center rounded bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-700/50 text-[10px] font-bold hover:bg-slate-50 text-slate-600 dark:text-slate-400"
+                                      >
+                                        +
+                                      </button>
+                                    </div>
+
+                                    {/* Delete Button */}
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDeleteExercise(rIdx, eIdx)}
+                                      className="p-1 rounded hover:bg-red-50 dark:hover:bg-red-950/30 text-slate-400 hover:text-red-500 transition-colors"
+                                      title="Eliminar ejercicio"
+                                    >
+                                      <X className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                </div>
+
+                                <p className="text-[10px] text-slate-550 dark:text-slate-400 leading-relaxed italic">
+                                  {ex.justificacion}
+                                </p>
+                                <div className="flex gap-3 text-[9px] text-slate-450 dark:text-slate-500 font-semibold mt-0.5">
+                                  <span>Tempo: {ex.tempo}</span>
+                                  <span>·</span>
+                                  <span>Descanso: {ex.descanso}</span>
+                                  <span>·</span>
+                                  <span>Intensidad: RIR {ex.rir}</span>
+                                </div>
                               </div>
-                              <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed italic">
-                                {ex.justificacion}
-                              </p>
-                              <div className="flex gap-3 text-[9px] text-slate-450 dark:text-slate-500 font-semibold mt-0.5">
-                                <span>Tempo: {ex.tempo}</span>
-                                <span>·</span>
-                                <span>Descanso: {ex.descanso}</span>
-                              </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       </div>
                     ))}
@@ -780,7 +1324,11 @@ export default function AiWorkoutPlanner({ onClose, onSaved }: AiWorkoutPlannerP
               {(setupStep === 1 || setupStep === 2) ? (
                 <button
                   onClick={() => setSetupStep((s) => s + 1)}
-                  className="px-6 py-3 bg-slate-900 text-white font-bold rounded-2xl text-xs hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200 flex items-center gap-1.5 cursor-pointer"
+                  disabled={setupStep === 2 && getRepeatsNeeded(customDays, customSplit).count !== customRepeats.length}
+                  className={cn(
+                    "px-6 py-3 bg-slate-900 text-white font-bold rounded-2xl text-xs hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200 flex items-center gap-1.5 cursor-pointer",
+                    setupStep === 2 && getRepeatsNeeded(customDays, customSplit).count !== customRepeats.length && "opacity-50 cursor-not-allowed"
+                  )}
                 >
                   Siguiente
                   <ArrowRight className="w-4 h-4" />
@@ -795,10 +1343,12 @@ export default function AiWorkoutPlanner({ onClose, onSaved }: AiWorkoutPlannerP
                 </button>
               ) : (
                 <button
-                  onClick={onSaved}
-                  className="px-6 py-3 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-extrabold rounded-2xl text-xs shadow-md hover:opacity-95 cursor-pointer"
+                  onClick={handleSavePlan}
+                  disabled={isSaving}
+                  className="px-6 py-3 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-extrabold rounded-2xl text-xs shadow-md hover:opacity-95 cursor-pointer flex items-center gap-1.5"
                 >
-                  Entendido, ver mis rutinas
+                  {isSaving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  Confirmar y Guardar Rutinas
                 </button>
               )}
             </div>

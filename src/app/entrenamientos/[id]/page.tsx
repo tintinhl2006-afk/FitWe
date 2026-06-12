@@ -19,11 +19,292 @@ import {
   ArrowUp,
   ArrowDown,
   RefreshCcw,
+  Edit2,
+  Check,
+  Download,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { useCustomAlert } from "@/components/providers/CustomAlertProvider";
+import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
+
+function sanitizeText(str: string): string {
+  if (!str) return "";
+  return str
+    .replace(/—/g, "-")
+    .replace(/–/g, "-")
+    .replace(/[‘’]/g, "'")
+    .replace(/[“”]/g, '"');
+}
+
+function wrapText(text: string, maxWidth: number, font: any, fontSize: number): string[] {
+  const words = text.split(' ');
+  const lines: string[] = [];
+  let currentLine = '';
+
+  for (const word of words) {
+    const testLine = currentLine ? `${currentLine} ${word}` : word;
+    const width = font.widthOfTextAtSize(testLine, fontSize);
+    if (width > maxWidth) {
+      if (currentLine) {
+        lines.push(currentLine);
+      }
+      currentLine = word;
+    } else {
+      currentLine = testLine;
+    }
+  }
+  if (currentLine) {
+    lines.push(currentLine);
+  }
+  return lines;
+}
+
+class PDFWriter {
+  private pdfDoc: any;
+  private page: any;
+  private fontRegular: any;
+  private fontBold: any;
+  private currentY: number = 0;
+  private margin: number = 40;
+  private width: number = 595.27;
+  private height: number = 841.89;
+
+  constructor(pdfDoc: any, fontRegular: any, fontBold: any) {
+    this.pdfDoc = pdfDoc;
+    this.fontRegular = fontRegular;
+    this.fontBold = fontBold;
+    this.addNewPage();
+  }
+
+  private addNewPage() {
+    this.page = this.pdfDoc.addPage([this.width, this.height]);
+    this.currentY = this.height - this.margin;
+    this.drawFooter();
+  }
+
+  private drawFooter() {
+    const pageNum = this.pdfDoc.getPageCount();
+    const footerText = `Pagina ${pageNum} | FitWe - Plan de Entrenamiento Inteligente`;
+    this.page.drawText(footerText, {
+      x: this.margin,
+      y: 20,
+      size: 8,
+      font: this.fontRegular,
+      color: rgb(0.39, 0.45, 0.55),
+    });
+  }
+
+  ensureSpace(neededHeight: number) {
+    if (this.currentY - neededHeight < this.margin + 10) {
+      this.addNewPage();
+    }
+  }
+
+  getYPosition() {
+    return this.currentY;
+  }
+
+  getPage() {
+    return this.page;
+  }
+
+  subtractY(amount: number) {
+    this.currentY -= amount;
+  }
+
+  drawHeading(text: string, level: 1 | 2 | 3) {
+    const cleanText = sanitizeText(text);
+    const sizes = { 1: 18, 2: 13, 3: 10 };
+    const size = sizes[level];
+    const spacing = level === 1 ? 20 : level === 2 ? 15 : 10;
+    
+    if (this.currentY < this.height - this.margin - 10) {
+      this.currentY -= 12;
+    }
+    
+    this.ensureSpace(size + spacing);
+
+    if (level === 1) {
+      this.page.drawRectangle({
+        x: this.margin,
+        y: this.currentY - size - 10,
+        width: this.width - 2 * this.margin,
+        height: size + 16,
+        color: rgb(0.93, 0.98, 1.0),
+      });
+      this.page.drawText(cleanText.toUpperCase(), {
+        x: this.margin + 10,
+        y: this.currentY - size - 2,
+        size,
+        font: this.fontBold,
+        color: rgb(0.03, 0.45, 0.54),
+      });
+      this.currentY -= (size + 24);
+    } else if (level === 2) {
+      this.page.drawLine({
+        start: { x: this.margin, y: this.currentY },
+        end: { x: this.margin, y: this.currentY - size - 4 },
+        thickness: 3,
+        color: rgb(0.03, 0.45, 0.54),
+      });
+      this.page.drawText(cleanText, {
+        x: this.margin + 8,
+        y: this.currentY - size,
+        size,
+        font: this.fontBold,
+        color: rgb(0.06, 0.09, 0.16),
+      });
+      this.currentY -= (size + 12);
+    } else {
+      this.page.drawText(cleanText, {
+        x: this.margin,
+        y: this.currentY - size,
+        size,
+        font: this.fontBold,
+        color: rgb(0.06, 0.09, 0.16),
+      });
+      this.currentY -= (size + 8);
+    }
+  }
+
+  drawHorizontalLine(color?: any, thickness = 1) {
+    this.ensureSpace(10);
+    this.page.drawLine({
+      start: { x: this.margin, y: this.currentY },
+      end: { x: this.width - this.margin, y: this.currentY },
+      thickness,
+      color: color || rgb(0.88, 0.91, 0.94),
+    });
+    this.currentY -= 10;
+  }
+
+  drawSpacing(height: number) {
+    this.currentY -= height;
+  }
+
+  drawTable(
+    headers: string[],
+    columnWidths: number[],
+    rows: any[][]
+  ) {
+    const headerHeight = 25;
+    this.ensureSpace(headerHeight + 35);
+
+    const drawHeaders = (y: number) => {
+      this.page.drawRectangle({
+        x: this.margin,
+        y: y - headerHeight,
+        width: this.width - 2 * this.margin,
+        height: headerHeight,
+        color: rgb(0.94, 0.96, 0.98),
+      });
+
+      let currentX = this.margin;
+      for (let i = 0; i < headers.length; i++) {
+        this.page.drawText(sanitizeText(headers[i]), {
+          x: currentX + 6,
+          y: y - 16,
+          size: 9,
+          font: this.fontBold,
+          color: rgb(0.28, 0.33, 0.41),
+        });
+        currentX += columnWidths[i];
+      }
+
+      this.page.drawLine({
+        start: { x: this.margin, y: y - headerHeight },
+        end: { x: this.width - this.margin, y: y - headerHeight },
+        thickness: 1,
+        color: rgb(0.88, 0.91, 0.94),
+      });
+    };
+
+    drawHeaders(this.currentY);
+    this.currentY -= headerHeight;
+
+    for (const row of rows) {
+      const exerciseCell = row[0];
+      const cleanName = sanitizeText(exerciseCell.name);
+      const cleanJust = exerciseCell.justificacion ? sanitizeText(exerciseCell.justificacion) : "";
+      
+      const nameLines = wrapText(cleanName, columnWidths[0] - 12, this.fontBold, 10);
+      const justLines = cleanJust 
+        ? wrapText(cleanJust, columnWidths[0] - 12, this.fontRegular, 8)
+        : [];
+      
+      const cellHeight = (nameLines.length * 12) + (justLines.length * 10) + (justLines.length > 0 ? 6 : 0) + 12;
+      const rowHeight = Math.max(cellHeight, 35);
+
+      if (this.currentY - rowHeight < this.margin + 10) {
+        this.addNewPage();
+        drawHeaders(this.currentY);
+        this.currentY -= headerHeight;
+      }
+
+      let currentX = this.margin;
+      const yStart = this.currentY;
+
+      let textY = yStart - 12;
+      for (const nameLine of nameLines) {
+        this.page.drawText(nameLine, {
+          x: currentX + 6,
+          y: textY,
+          size: 10,
+          font: this.fontBold,
+          color: rgb(0.06, 0.09, 0.16),
+        });
+        textY -= 12;
+      }
+      if (justLines.length > 0) {
+        textY -= 2;
+        for (const justLine of justLines) {
+          this.page.drawText(justLine, {
+            x: currentX + 6,
+            y: textY,
+            size: 8,
+            font: this.fontRegular,
+            color: rgb(0.39, 0.45, 0.55),
+          });
+          textY -= 10;
+        }
+      }
+
+      currentX += columnWidths[0];
+
+      for (let i = 1; i < row.length; i++) {
+        const val = sanitizeText(String(row[i]));
+        this.page.drawText(val, {
+          x: currentX + 6,
+          y: yStart - 16,
+          size: 9,
+          font: this.fontRegular,
+          color: rgb(0.18, 0.24, 0.35),
+        });
+        currentX += columnWidths[i];
+      }
+
+      this.page.drawLine({
+        start: { x: this.margin, y: yStart - rowHeight },
+        end: { x: this.width - this.margin, y: yStart - rowHeight },
+        thickness: 1,
+        color: rgb(0.94, 0.96, 0.98),
+      });
+
+      this.currentY -= rowHeight;
+    }
+
+    this.page.drawLine({
+      start: { x: this.margin, y: this.currentY },
+      end: { x: this.width - this.margin, y: this.currentY },
+      thickness: 1.5,
+      color: rgb(0.88, 0.91, 0.94),
+    });
+    
+    this.currentY -= 15;
+  }
+}
 
 interface Exercise {
   id: string;
@@ -72,6 +353,128 @@ export default function RoutineDetailPage({ params }: { params: Promise<{ id: st
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [replacingExerciseId, setReplacingExerciseId] = useState<string | null>(null);
   const [hasTargetReps, setHasTargetReps] = useState(true);
+
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [tempName, setTempName] = useState("");
+  const [isSavingName, setIsSavingName] = useState(false);
+
+  const handleRenameRoutine = async () => {
+    if (!tempName.trim()) return;
+    setIsSavingName(true);
+    try {
+      const res = await fetch(`/api/routines/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: tempName.trim() }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setRoutine((prev) => prev ? { ...prev, name: data.routine.name } : prev);
+        setIsEditingName(false);
+      } else {
+        showAlert("Error al renombrar la rutina.");
+      }
+    } catch (err) {
+      console.error("Error renaming routine:", err);
+      showAlert("Error interno del servidor al renombrar.");
+    } finally {
+      setIsSavingName(false);
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!routine) return;
+
+    try {
+      const pdfDoc = await PDFDocument.create();
+      const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+      const writer = new PDFWriter(pdfDoc, fontRegular, fontBold);
+
+      writer.drawSpacing(10);
+      writer.getPage().drawText("FitWe", {
+        x: 40,
+        y: writer.getYPosition() - 24,
+        size: 28,
+        font: fontBold,
+        color: rgb(0.03, 0.45, 0.54),
+      });
+      writer.getPage().drawText("Plan de Entrenamiento - Rutina Individual", {
+        x: 40,
+        y: writer.getYPosition() - 42,
+        size: 11,
+        font: fontRegular,
+        color: rgb(0.39, 0.45, 0.55),
+      });
+      writer.subtractY(52);
+      writer.drawHorizontalLine(rgb(0.03, 0.45, 0.54), 2);
+      writer.drawSpacing(15);
+
+      writer.drawHeading(`Rutina: ${routine.name}`, 2);
+      writer.getPage().drawText(`Fecha de creacion: ${new Date(routine.createdAt).toLocaleDateString("es-ES")}`, {
+        x: 40,
+        y: writer.getYPosition() - 10,
+        size: 9,
+        font: fontRegular,
+        color: rgb(0.39, 0.45, 0.55),
+      });
+      writer.subtractY(25);
+
+      const headers = ["Ejercicio", "Series", "Repeticiones", "Historial"];
+      const columnWidths = [240, 50, 90, 135];
+
+      const rows = routine.exercises.map((re) => {
+        const repsText = re.repsList ? re.repsList : `${re.reps}`;
+        return [
+          { name: re.exercise.name, justificacion: `Grupo Muscular: ${re.exercise.muscleGroup} ${re.exercise.equipment ? `• ${re.exercise.equipment}` : ""}` },
+          re.sets,
+          repsText,
+          re.lastHistory || "Sin registros previos"
+        ];
+      });
+
+      writer.drawTable(headers, columnWidths, rows);
+
+      writer.drawHeading("Pautas Generales de Calentamiento", 2);
+      const safetyPautas = [
+        "Realiza 5-10 minutos de cardio ligero (cinta, elíptica) para elevar la temperatura corporal.",
+        "Ejecuta movilidad articular dinámica enfocada en las articulaciones principales que trabajarás hoy.",
+        "Realiza 2-3 series de aproximación (con peso ascendente pero sin fatiga) antes de iniciar la primera serie efectiva."
+      ];
+
+      for (const pauta of safetyPautas) {
+        writer.ensureSpace(20);
+        writer.getPage().drawCircle({ x: 47, y: writer.getYPosition() - 6, size: 4, color: rgb(0.03, 0.45, 0.54) });
+
+        const lines = wrapText(pauta, 495, fontRegular, 9);
+        for (const line of lines) {
+          writer.ensureSpace(12);
+          writer.getPage().drawText(line, {
+            x: 57,
+            y: writer.getYPosition() - 9,
+            size: 9,
+            font: fontRegular,
+            color: rgb(0.18, 0.24, 0.35),
+          });
+          writer.subtractY(13);
+        }
+        writer.subtractY(3);
+      }
+
+      const pdfBytes = await pdfDoc.save();
+      const blob = new Blob([pdfBytes as any], { type: "application/pdf" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `Rutina_${routine.name.replace(/\s+/g, "_")}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error("Error generating individual PDF:", err);
+      showAlert("Error al exportar el archivo PDF.");
+    }
+  };
 
   useEffect(() => {
     setRepsPerSet((prev) => {
@@ -295,19 +698,71 @@ export default function RoutineDetailPage({ params }: { params: Promise<{ id: st
     <DashboardLayout>
       <div className="space-y-6 max-w-4xl">
         <div className="flex flex-col sm:flex-row sm:items-center gap-4 justify-between bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 flex-1 min-w-0">
             <Link
               href="/entrenamientos"
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all duration-200"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all duration-200 shrink-0"
             >
               <ArrowLeft className="h-5 w-5" />
             </Link>
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">{routine.name}</h1>
+            <div className="flex-1 min-w-0">
+              {isEditingName ? (
+                <div className="flex items-center gap-2 max-w-md">
+                  <input
+                    type="text"
+                    value={tempName}
+                    onChange={(e) => setTempName(e.target.value)}
+                    className="text-2xl font-bold text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-950 border border-slate-350 dark:border-slate-800 rounded-xl py-1 px-3 focus:outline-none focus:ring-2 focus:ring-primary w-full"
+                    disabled={isSavingName}
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleRenameRoutine();
+                      if (e.key === "Escape") setIsEditingName(false);
+                    }}
+                  />
+                  <button
+                    onClick={handleRenameRoutine}
+                    disabled={isSavingName}
+                    className="p-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl transition-all"
+                  >
+                    {isSavingName ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                  </button>
+                  <button
+                    onClick={() => setIsEditingName(false)}
+                    disabled={isSavingName}
+                    className="p-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 rounded-xl transition-all"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 group">
+                  <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white truncate max-w-[200px] sm:max-w-md">
+                    {routine.name}
+                  </h1>
+                  <button
+                    onClick={() => {
+                      setTempName(routine.name);
+                      setIsEditingName(true);
+                    }}
+                    className="p-1 text-slate-400 hover:text-primary transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                    title="Renombrar rutina"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
               <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Creada el {new Date(routine.createdAt).toLocaleDateString("es-ES")}</p>
             </div>
           </div>
-          <div className="flex flex-wrap gap-2 sm:gap-3 w-full sm:w-auto">
+          <div className="flex flex-wrap gap-2 sm:gap-3 w-full sm:w-auto shrink-0">
+            <button
+              onClick={handleDownloadPDF}
+              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 px-4.5 py-2.5 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+            >
+              <Download className="h-4 w-4 text-cyan-600" />
+              Exportar PDF
+            </button>
             <button
               onClick={() => { setReplacingExerciseId(null); setStep("picker"); setIsModalOpen(true); }}
               className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4.5 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"

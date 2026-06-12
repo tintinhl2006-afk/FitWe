@@ -6,6 +6,7 @@ export interface WorkoutPreference {
   injuries: string[];
   goal: "hipertrofia" | "fuerza" | "recomposicion" | "perdida_grasa" | "rendimiento";
   nutrition: string;
+  repeats?: string[];
 }
 
 export interface GeneratedExercise {
@@ -68,6 +69,89 @@ const FALLBACK_EXERCISES = [
   { id: "fb-bike", name: "Bicicleta Estática", muscleGroup: "Cardio", equipment: "Máquina" }
 ];
 
+const getEquipmentScore = (eq: string | null, level: string): number => {
+  if (!eq) return 0;
+  if (level === "principiante") {
+    if (["Máquina", "Polea", "Peso Corporal"].includes(eq)) return 2;
+    return 1;
+  } else if (level === "avanzado" || level === "muy_avanzado") {
+    if (["Barra", "Mancuernas"].includes(eq)) return 2;
+    return 1;
+  }
+  return 1; // intermedio
+};
+
+function getTargetWeeklySets(muscleGroup: string, level: string, priorities: string[]): number {
+  const isBig = ["Pecho", "Espalda", "Pierna"].includes(muscleGroup);
+  let baseSets = 0;
+  if (isBig) {
+    if (level === "principiante") baseSets = 8;
+    else if (level === "intermedio") baseSets = 12;
+    else baseSets = 16; // avanzado o muy_avanzado
+  } else {
+    if (level === "principiante") baseSets = 6;
+    else if (level === "intermedio") baseSets = 9;
+    else baseSets = 12; // avanzado o muy_avanzado
+  }
+
+  // Priority adjustments
+  if (priorities.includes(muscleGroup)) {
+    baseSets += 3;
+  } else if (priorities.length > 0) {
+    baseSets -= 2;
+  }
+
+  return Math.max(3, baseSets);
+}
+
+function getExerciseCount(
+  muscleGroup: string,
+  frequency: number,
+  level: string,
+  priorities: string[]
+): number {
+  const targetWeeklySets = getTargetWeeklySets(muscleGroup, level, priorities);
+  const setsPerWorkout = targetWeeklySets / frequency;
+
+  if (setsPerWorkout <= 4) {
+    return 1;
+  } else if (setsPerWorkout <= 8) {
+    return 2;
+  } else {
+    return 3;
+  }
+}
+
+function getExerciseSets(
+  muscleGroup: string,
+  numExercises: number,
+  frequency: number,
+  level: string,
+  priorities: string[]
+): number[] {
+  const targetWeeklySets = getTargetWeeklySets(muscleGroup, level, priorities);
+  const setsPerWorkout = targetWeeklySets / frequency;
+
+  let remainingSets = Math.round(setsPerWorkout);
+  remainingSets = Math.max(numExercises * 2, remainingSets);
+
+  const setsDistribution = Array(numExercises).fill(2);
+  remainingSets -= numExercises * 2;
+
+  for (let i = 0; i < numExercises && remainingSets > 0; i++) {
+    const add = Math.min(2, remainingSets);
+    setsDistribution[i] += add;
+    remainingSets -= add;
+  }
+
+  for (let i = 0; i < numExercises && remainingSets > 0; i++) {
+    setsDistribution[i] += 1;
+    remainingSets -= 1;
+  }
+
+  return setsDistribution;
+}
+
 export function generateWorkoutPlan(
   pref: WorkoutPreference,
   dbExercises: DbExercise[]
@@ -90,8 +174,8 @@ export function generateWorkoutPlan(
   // 2. Resolve target sets/reps parameters
   let targetSets = 3;
   if (pref.level === "principiante") targetSets = 3;
-  else if (pref.level === "intermedio") targetSets = 3; // some 4, some 3
-  else targetSets = 4; // Avanzado / muy avanzado
+  else if (pref.level === "intermedio") targetSets = 3; 
+  else targetSets = 4;
 
   let targetRepsRange = "8-12";
   let targetReps = 10;
@@ -130,7 +214,7 @@ export function generateWorkoutPlan(
     const candidates = catalog.filter(ex => {
       if (ex.muscleGroup !== muscleGroup) return false;
       if (usedIds.has(ex.id)) return false;
-      if (excludeList.includes(ex.name)) return false;
+      if (excludeList.some(word => ex.name.toLowerCase().includes(word.toLowerCase()))) return false;
       if (strictExcludedNames.some(name => ex.name.toLowerCase().includes(name.toLowerCase()))) return false;
       return true;
     });
@@ -145,16 +229,25 @@ export function generateWorkoutPlan(
       return backupCandidates[0] || null;
     }
 
-    // Sort compounds first or isolation first
+    // Sort candidates: compounds first/isolation first, and equipment based on user level
     candidates.sort((a, b) => {
-      const isACompound = a.name.includes("Banca") || a.name.includes("Sentadilla") || a.name.includes("Remo") || a.name.includes("Militar") || a.name.includes("Jalón") || a.name.includes("Prensa") || a.name.includes("Thrust");
-      const isBCompound = b.name.includes("Banca") || b.name.includes("Sentadilla") || b.name.includes("Remo") || b.name.includes("Militar") || b.name.includes("Jalón") || b.name.includes("Prensa") || b.name.includes("Thrust");
+      const isACompound = a.name.includes("Banca") || a.name.includes("Sentadilla") || a.name.includes("Remo") || a.name.includes("Militar") || a.name.includes("Jalón") || a.name.includes("Prensa") || a.name.includes("Thrust") || a.name.includes("Peso Muerto");
+      const isBCompound = b.name.includes("Banca") || b.name.includes("Sentadilla") || b.name.includes("Remo") || b.name.includes("Militar") || b.name.includes("Jalón") || b.name.includes("Prensa") || b.name.includes("Thrust") || b.name.includes("Peso Muerto");
       
-      if (isCompound) {
-        return isACompound === isBCompound ? 0 : isACompound ? -1 : 1;
-      } else {
-        return isACompound === isBCompound ? 0 : isACompound ? 1 : -1;
+      const aCompMatch = isCompound ? isACompound : !isACompound;
+      const bCompMatch = isCompound ? isBCompound : !isBCompound;
+
+      if (aCompMatch !== bCompMatch) {
+        return aCompMatch ? -1 : 1;
       }
+
+      const scoreA = getEquipmentScore(a.equipment, pref.level);
+      const scoreB = getEquipmentScore(b.equipment, pref.level);
+      if (scoreA !== scoreB) {
+        return scoreB - scoreA;
+      }
+
+      return 0;
     });
 
     // Pick first matching
@@ -173,7 +266,7 @@ export function generateWorkoutPlan(
     customRir?: number,
     customDescanso?: string
   ): GeneratedExercise => {
-    const finalSets = customSets || targetSets;
+    const finalSets = customSets !== undefined ? customSets : targetSets;
     const finalRepsValue = customRepsValue || targetReps;
     const repsList = Array(finalSets).fill(finalRepsValue).join(",");
     const finalRir = customRir !== undefined ? customRir : rir;
@@ -203,46 +296,83 @@ export function generateWorkoutPlan(
 
   // 4. Generate routines based on Split & Days count
   if (selectedSplit === "full_body") {
-    // Generate routines up to target days count
     const routinesToGen = pref.days;
+
+    const piernaCount = getExerciseCount("Pierna", routinesToGen, pref.level, pref.priorities);
+    const piernaSets = getExerciseSets("Pierna", piernaCount, routinesToGen, pref.level, pref.priorities);
+
+    const pechoCount = getExerciseCount("Pecho", routinesToGen, pref.level, pref.priorities);
+    const pechoSets = getExerciseSets("Pecho", pechoCount, routinesToGen, pref.level, pref.priorities);
+
+    const espaldaCount = getExerciseCount("Espalda", routinesToGen, pref.level, pref.priorities);
+    const espaldaSets = getExerciseSets("Espalda", espaldaCount, routinesToGen, pref.level, pref.priorities);
+
+    const hombroCount = getExerciseCount("Hombro", routinesToGen, pref.level, pref.priorities);
+    const hombroSets = getExerciseSets("Hombro", hombroCount, routinesToGen, pref.level, pref.priorities);
+
+    const brazoFreq = Math.max(1, Math.round(routinesToGen / 2));
+    const brazoCount = getExerciseCount("Brazo", brazoFreq, pref.level, pref.priorities);
+    const brazoSets = getExerciseSets("Brazo", brazoCount, brazoFreq, pref.level, pref.priorities);
+
+    const coreFreq = Math.max(1, Math.round(routinesToGen / 2));
+    const coreCount = getExerciseCount("Core", coreFreq, pref.level, pref.priorities);
+    const coreSets = getExerciseSets("Core", coreCount, coreFreq, pref.level, pref.priorities);
+
     for (let day = 1; day <= routinesToGen; day++) {
       const routineExercises: GeneratedExercise[] = [];
-      const ex1 = pickExercise("Pierna", true, [], usedExerciseIds);
-      if (ex1) {
-        usedExerciseIds.add(ex1.id);
-        routineExercises.push(createExerciseEntry(ex1, targetSets, targetRepsRange, targetReps, rir, "3 min"));
+
+      // Pierna
+      for (let i = 0; i < piernaCount; i++) {
+        const ex = pickExercise("Pierna", i === 0, [], usedExerciseIds);
+        if (ex) {
+          usedExerciseIds.add(ex.id);
+          routineExercises.push(createExerciseEntry(ex, piernaSets[i], targetRepsRange, targetReps, rir, "3 min"));
+        }
       }
 
-      const ex2 = pickExercise("Pecho", true, [], usedExerciseIds);
-      if (ex2) {
-        usedExerciseIds.add(ex2.id);
-        routineExercises.push(createExerciseEntry(ex2, targetSets, targetRepsRange, targetReps, rir, "2.5 min"));
+      // Pecho
+      for (let i = 0; i < pechoCount; i++) {
+        const ex = pickExercise("Pecho", i === 0, [], usedExerciseIds);
+        if (ex) {
+          usedExerciseIds.add(ex.id);
+          routineExercises.push(createExerciseEntry(ex, pechoSets[i], targetRepsRange, targetReps, rir, "2.5 min"));
+        }
       }
 
-      const ex3 = pickExercise("Espalda", true, [], usedExerciseIds);
-      if (ex3) {
-        usedExerciseIds.add(ex3.id);
-        routineExercises.push(createExerciseEntry(ex3, targetSets, targetRepsRange, targetReps, rir, "2.5 min"));
+      // Espalda
+      for (let i = 0; i < espaldaCount; i++) {
+        const ex = pickExercise("Espalda", i === 0, [], usedExerciseIds);
+        if (ex) {
+          usedExerciseIds.add(ex.id);
+          routineExercises.push(createExerciseEntry(ex, espaldaSets[i], targetRepsRange, targetReps, rir, "2.5 min"));
+        }
       }
 
-      const ex4 = pickExercise("Hombro", false, [], usedExerciseIds);
-      if (ex4) {
-        usedExerciseIds.add(ex4.id);
-        routineExercises.push(createExerciseEntry(ex4, 3, "10-12", 10, rir + 1, "1.5 min"));
+      // Hombro
+      for (let i = 0; i < hombroCount; i++) {
+        const ex = pickExercise("Hombro", false, [], usedExerciseIds);
+        if (ex) {
+          usedExerciseIds.add(ex.id);
+          routineExercises.push(createExerciseEntry(ex, hombroSets[i], "10-12", 10, rir + 1, "1.5 min"));
+        }
       }
 
-      // Add Arms or Core alternately
+      // Alternate Brazo / Core
       if (day % 2 === 1) {
-        const exArm = pickExercise("Brazo", false, [], usedExerciseIds);
-        if (exArm) {
-          usedExerciseIds.add(exArm.id);
-          routineExercises.push(createExerciseEntry(exArm, 3, "10-12", 12, rir, "1.5 min"));
+        for (let i = 0; i < brazoCount; i++) {
+          const ex = pickExercise("Brazo", false, [], usedExerciseIds);
+          if (ex) {
+            usedExerciseIds.add(ex.id);
+            routineExercises.push(createExerciseEntry(ex, brazoSets[i], "10-12", 12, rir, "1.5 min"));
+          }
         }
       } else {
-        const exCore = pickExercise("Core", false, [], usedExerciseIds);
-        if (exCore) {
-          usedExerciseIds.add(exCore.id);
-          routineExercises.push(createExerciseEntry(exCore, 3, "12-15", 15, rir + 1, "1 min"));
+        for (let i = 0; i < coreCount; i++) {
+          const ex = pickExercise("Core", false, [], usedExerciseIds);
+          if (ex) {
+            usedExerciseIds.add(ex.id);
+            routineExercises.push(createExerciseEntry(ex, coreSets[i], "12-15", 15, rir + 1, "1 min"));
+          }
         }
       }
 
@@ -252,174 +382,238 @@ export function generateWorkoutPlan(
       });
     }
   } else if (selectedSplit === "torso_pierna") {
-    // Generate Torso & Pierna alternately up to target days count
     const routinesToGen = pref.days;
-    for (let day = 1; day <= routinesToGen; day++) {
-      const isTorso = day % 2 === 1;
+    
+    const plannedDays: string[] = [];
+    if (routinesToGen === 3) {
+      const r1 = (pref.repeats && pref.repeats[0]) ? pref.repeats[0].toLowerCase() : "torso";
+      plannedDays.push("torso", "pierna", r1);
+    } else if (routinesToGen === 5) {
+      const r1 = (pref.repeats && pref.repeats[0]) ? pref.repeats[0].toLowerCase() : "torso";
+      plannedDays.push("torso", "pierna", "torso", "pierna", r1);
+    } else {
+      for (let i = 1; i <= routinesToGen; i++) {
+        plannedDays.push(i % 2 === 1 ? "torso" : "pierna");
+      }
+    }
+
+    const torsoFreq = plannedDays.filter(x => x === "torso").length;
+    const piernaFreq = plannedDays.filter(x => x === "pierna").length;
+
+    const pechoCount = getExerciseCount("Pecho", torsoFreq, pref.level, pref.priorities);
+    const pechoSets = getExerciseSets("Pecho", pechoCount, torsoFreq, pref.level, pref.priorities);
+
+    const espaldaCount = getExerciseCount("Espalda", torsoFreq, pref.level, pref.priorities);
+    const espaldaSets = getExerciseSets("Espalda", espaldaCount, torsoFreq, pref.level, pref.priorities);
+
+    const hombroCount = getExerciseCount("Hombro", torsoFreq, pref.level, pref.priorities);
+    const hombroSets = getExerciseSets("Hombro", hombroCount, torsoFreq, pref.level, pref.priorities);
+
+    const brazoCount = getExerciseCount("Brazo", torsoFreq, pref.level, pref.priorities);
+    const brazoSets = getExerciseSets("Brazo", brazoCount, torsoFreq, pref.level, pref.priorities);
+
+    const piernaCount = getExerciseCount("Pierna", piernaFreq, pref.level, pref.priorities);
+    const piernaSets = getExerciseSets("Pierna", piernaCount, piernaFreq, pref.level, pref.priorities);
+
+    const coreCount = getExerciseCount("Core", piernaFreq, pref.level, pref.priorities);
+    const coreSets = getExerciseSets("Core", coreCount, piernaFreq, pref.level, pref.priorities);
+
+    let torsoCountNum = 0;
+    let piernaCountNum = 0;
+
+    plannedDays.forEach((type) => {
+      const isTorso = type === "torso";
+      if (isTorso) torsoCountNum++;
+      else piernaCountNum++;
+
       const routineExercises: GeneratedExercise[] = [];
 
       if (isTorso) {
-        // Pecho compound
-        const ex1 = pickExercise("Pecho", true, [], usedExerciseIds);
-        if (ex1) {
-          usedExerciseIds.add(ex1.id);
-          routineExercises.push(createExerciseEntry(ex1, targetSets, targetRepsRange, targetReps, rir, "3 min"));
+        // Pecho
+        for (let i = 0; i < pechoCount; i++) {
+          const ex = pickExercise("Pecho", i === 0, [], usedExerciseIds);
+          if (ex) {
+            usedExerciseIds.add(ex.id);
+            routineExercises.push(createExerciseEntry(ex, pechoSets[i], targetRepsRange, targetReps, rir, i === 0 ? "3 min" : "2 min"));
+          }
         }
-        // Espalda compound
-        const ex2 = pickExercise("Espalda", true, [], usedExerciseIds);
-        if (ex2) {
-          usedExerciseIds.add(ex2.id);
-          routineExercises.push(createExerciseEntry(ex2, targetSets, targetRepsRange, targetReps, rir, "2.5 min"));
+        // Espalda
+        for (let i = 0; i < espaldaCount; i++) {
+          const ex = pickExercise("Espalda", i === 0, [], usedExerciseIds);
+          if (ex) {
+            usedExerciseIds.add(ex.id);
+            routineExercises.push(createExerciseEntry(ex, espaldaSets[i], targetRepsRange, targetReps, rir, i === 0 ? "2.5 min" : "1.5 min"));
+          }
         }
-        // Hombro compound or isolation
-        const ex3 = pickExercise("Hombro", false, [], usedExerciseIds);
-        if (ex3) {
-          usedExerciseIds.add(ex3.id);
-          routineExercises.push(createExerciseEntry(ex3, 3, "10-12", 10, rir, "2 min"));
+        // Hombro
+        for (let i = 0; i < hombroCount; i++) {
+          const ex = pickExercise("Hombro", false, [], usedExerciseIds);
+          if (ex) {
+            usedExerciseIds.add(ex.id);
+            routineExercises.push(createExerciseEntry(ex, hombroSets[i], "10-12", 10, rir, "2 min"));
+          }
         }
-        // Pecho secondary
-        const ex4 = pickExercise("Pecho", false, [], usedExerciseIds);
-        if (ex4) {
-          usedExerciseIds.add(ex4.id);
-          routineExercises.push(createExerciseEntry(ex4, 3, "10-12", 12, rir + 1, "1.5 min"));
-        }
-        // Espalda pull
-        const ex5 = pickExercise("Espalda", false, [], usedExerciseIds);
-        if (ex5) {
-          usedExerciseIds.add(ex5.id);
-          routineExercises.push(createExerciseEntry(ex5, 3, "10-12", 10, rir + 1, "1.5 min"));
-        }
-        // Arm exercise
-        const ex6 = pickExercise("Brazo", false, [], usedExerciseIds);
-        if (ex6) {
-          usedExerciseIds.add(ex6.id);
-          routineExercises.push(createExerciseEntry(ex6, 3, "12-15", 12, rir, "1.5 min"));
+        // Brazo
+        for (let i = 0; i < brazoCount; i++) {
+          const ex = pickExercise("Brazo", false, [], usedExerciseIds);
+          if (ex) {
+            usedExerciseIds.add(ex.id);
+            routineExercises.push(createExerciseEntry(ex, brazoSets[i], "12-15", 12, rir, "1.5 min"));
+          }
         }
       } else {
-        // Pierna quad compound
-        const ex1 = pickExercise("Pierna", true, [], usedExerciseIds);
-        if (ex1) {
-          usedExerciseIds.add(ex1.id);
-          routineExercises.push(createExerciseEntry(ex1, targetSets, targetRepsRange, targetReps, rir, "3 min"));
+        // Pierna
+        for (let i = 0; i < piernaCount; i++) {
+          const ex = pickExercise("Pierna", i === 0, i === 0 ? [] : ["Sentadilla"], usedExerciseIds);
+          if (ex) {
+            usedExerciseIds.add(ex.id);
+            routineExercises.push(createExerciseEntry(ex, piernaSets[i], targetRepsRange, targetReps, rir, i === 0 ? "3 min" : "2.5 min"));
+          }
         }
-        // Pierna glute / ham focus
-        const ex2 = pickExercise("Pierna", true, ["Sentadilla"], usedExerciseIds);
-        if (ex2) {
-          usedExerciseIds.add(ex2.id);
-          routineExercises.push(createExerciseEntry(ex2, targetSets, targetRepsRange, targetReps, rir, "2.5 min"));
-        }
-        // Leg isolation
-        const ex3 = pickExercise("Pierna", false, [], usedExerciseIds);
-        if (ex3) {
-          usedExerciseIds.add(ex3.id);
-          routineExercises.push(createExerciseEntry(ex3, 3, "10-12", 12, rir, "1.5 min"));
-        }
-        // Core exercise
-        const ex4 = pickExercise("Core", false, [], usedExerciseIds);
-        if (ex4) {
-          usedExerciseIds.add(ex4.id);
-          routineExercises.push(createExerciseEntry(ex4, 3, "12-15", 15, rir + 1, "1 min"));
+        // Core
+        for (let i = 0; i < coreCount; i++) {
+          const ex = pickExercise("Core", false, [], usedExerciseIds);
+          if (ex) {
+            usedExerciseIds.add(ex.id);
+            routineExercises.push(createExerciseEntry(ex, coreSets[i], "12-15", 15, rir + 1, "1 min"));
+          }
         }
       }
 
       generatedRoutines.push({
-        name: isTorso ? `Torso — Día ${Math.ceil(day / 2)}` : `Pierna — Día ${Math.ceil(day / 2)}`,
+        name: isTorso ? `Torso — Día ${torsoCountNum}` : `Pierna — Día ${piernaCountNum}`,
         exercises: routineExercises
       });
-    }
+    });
   } else if (selectedSplit === "ppl") {
-    // Generate Empuje, Tirón, Piernas sequentially
     const routinesToGen = pref.days;
-    const pplNames = ["Empuje (Pecho/Hombro/Tríceps)", "Tirón (Espalda/Bíceps)", "Pierna y Core"];
+    const pplNames = {
+      empuje: "Empuje (Pecho/Hombro/Tríceps)",
+      tiron: "Tirón (Espalda/Bíceps)",
+      pierna: "Pierna y Core"
+    };
 
-    for (let day = 0; day < routinesToGen; day++) {
+    const plannedDays: string[] = [];
+    if (routinesToGen === 4) {
+      const r1 = (pref.repeats && pref.repeats[0]) ? pref.repeats[0].toLowerCase() : "empuje";
+      plannedDays.push("empuje", "tiron", "pierna", r1);
+    } else if (routinesToGen === 5) {
+      const r1 = (pref.repeats && pref.repeats[0]) ? pref.repeats[0].toLowerCase() : "empuje";
+      const r2 = (pref.repeats && pref.repeats[1]) ? pref.repeats[1].toLowerCase() : "tiron";
+      plannedDays.push("empuje", "tiron", "pierna", r1, r2);
+    } else {
+      for (let i = 0; i < routinesToGen; i++) {
+        plannedDays.push(i === 0 ? "empuje" : i === 1 ? "tiron" : "pierna");
+      }
+    }
+
+    const empujeFreq = plannedDays.filter(x => x === "empuje").length;
+    const tironFreq = plannedDays.filter(x => x === "tiron").length;
+    const piernaFreq = plannedDays.filter(x => x === "pierna").length;
+
+    // Empuje volumes
+    const pechoCount = getExerciseCount("Pecho", empujeFreq, pref.level, pref.priorities);
+    const pechoSets = getExerciseSets("Pecho", pechoCount, empujeFreq, pref.level, pref.priorities);
+    const hombroEmpujeCount = getExerciseCount("Hombro", empujeFreq, pref.level, pref.priorities);
+    const hombroEmpujeSets = getExerciseSets("Hombro", hombroEmpujeCount, empujeFreq, pref.level, pref.priorities);
+    const brazoEmpujeCount = getExerciseCount("Brazo", empujeFreq, pref.level, pref.priorities);
+    const brazoEmpujeSets = getExerciseSets("Brazo", brazoEmpujeCount, empujeFreq, pref.level, pref.priorities);
+
+    // Tirón volumes
+    const espaldaCount = getExerciseCount("Espalda", tironFreq, pref.level, pref.priorities);
+    const espaldaSets = getExerciseSets("Espalda", espaldaCount, tironFreq, pref.level, pref.priorities);
+    const hombroTironCount = Math.max(1, Math.round(getExerciseCount("Hombro", tironFreq, pref.level, pref.priorities) / 2));
+    const hombroTironSets = getExerciseSets("Hombro", hombroTironCount, tironFreq, pref.level, pref.priorities);
+    const brazoTironCount = getExerciseCount("Brazo", tironFreq, pref.level, pref.priorities);
+    const brazoTironSets = getExerciseSets("Brazo", brazoTironCount, tironFreq, pref.level, pref.priorities);
+
+    // Pierna volumes
+    const piernaCount = getExerciseCount("Pierna", piernaFreq, pref.level, pref.priorities);
+    const piernaSets = getExerciseSets("Pierna", piernaCount, piernaFreq, pref.level, pref.priorities);
+    const coreCount = getExerciseCount("Core", piernaFreq, pref.level, pref.priorities);
+    const coreSets = getExerciseSets("Core", coreCount, piernaFreq, pref.level, pref.priorities);
+
+    const counts = { empuje: 0, tiron: 0, pierna: 0 };
+
+    plannedDays.forEach((type) => {
+      counts[type as "empuje" | "tiron" | "pierna"]++;
       const routineExercises: GeneratedExercise[] = [];
-      const dayType = day % 3;
 
-      if (dayType === 0) {
-        // EMPUJE
-        const exPecho1 = pickExercise("Pecho", true, [], usedExerciseIds);
-        if (exPecho1) {
-          usedExerciseIds.add(exPecho1.id);
-          routineExercises.push(createExerciseEntry(exPecho1, targetSets, targetRepsRange, targetReps, rir, "3 min"));
+      if (type === "empuje") {
+        // Pecho
+        for (let i = 0; i < pechoCount; i++) {
+          const ex = pickExercise("Pecho", i === 0, [], usedExerciseIds);
+          if (ex) {
+            usedExerciseIds.add(ex.id);
+            routineExercises.push(createExerciseEntry(ex, pechoSets[i], targetRepsRange, targetReps, rir, i === 0 ? "3 min" : "1.5 min"));
+          }
         }
-        const exPecho2 = pickExercise("Pecho", false, [], usedExerciseIds);
-        if (exPecho2) {
-          usedExerciseIds.add(exPecho2.id);
-          routineExercises.push(createExerciseEntry(exPecho2, 3, "10-12", 12, rir + 1, "1.5 min"));
+        // Hombro (Push)
+        for (let i = 0; i < hombroEmpujeCount; i++) {
+          const ex = pickExercise("Hombro", i === 0, [], usedExerciseIds);
+          if (ex) {
+            usedExerciseIds.add(ex.id);
+            routineExercises.push(createExerciseEntry(ex, hombroEmpujeSets[i], i === 0 ? "8-10" : "10-12", i === 0 ? 8 : 12, rir, i === 0 ? "2.5 min" : "1.5 min"));
+          }
         }
-        const exHombro1 = pickExercise("Hombro", true, [], usedExerciseIds);
-        if (exHombro1) {
-          usedExerciseIds.add(exHombro1.id);
-          routineExercises.push(createExerciseEntry(exHombro1, 3, "8-10", 8, rir, "2.5 min"));
+        // Brazo (Tríceps) - Exclude Curl
+        for (let i = 0; i < brazoEmpujeCount; i++) {
+          const ex = pickExercise("Brazo", false, ["Curl"], usedExerciseIds);
+          if (ex) {
+            usedExerciseIds.add(ex.id);
+            routineExercises.push(createExerciseEntry(ex, brazoEmpujeSets[i], "10-12", 12, rir, "1.5 min"));
+          }
         }
-        const exHombro2 = pickExercise("Hombro", false, [], usedExerciseIds);
-        if (exHombro2) {
-          usedExerciseIds.add(exHombro2.id);
-          routineExercises.push(createExerciseEntry(exHombro2, 3, "10-12", 12, rir + 1, "1.5 min"));
+      } else if (type === "tiron") {
+        // Espalda
+        for (let i = 0; i < espaldaCount; i++) {
+          const ex = pickExercise("Espalda", true, [], usedExerciseIds);
+          if (ex) {
+            usedExerciseIds.add(ex.id);
+            routineExercises.push(createExerciseEntry(ex, espaldaSets[i], targetRepsRange, targetReps, rir, i === 0 ? "3 min" : "2 min"));
+          }
         }
-        const exArm = pickExercise("Brazo", false, ["Curl"], usedExerciseIds); // Tríceps
-        if (exArm) {
-          usedExerciseIds.add(exArm.id);
-          routineExercises.push(createExerciseEntry(exArm, 3, "10-12", 12, rir, "1.5 min"));
+        // Hombro (Posterior) - Exclude Press, Elevaciones
+        for (let i = 0; i < hombroTironCount; i++) {
+          const ex = pickExercise("Hombro", false, ["Press", "Elevaciones"], usedExerciseIds);
+          if (ex) {
+            usedExerciseIds.add(ex.id);
+            routineExercises.push(createExerciseEntry(ex, hombroTironSets[i], "12-15", 12, rir + 1, "1.5 min"));
+          }
         }
-      } else if (dayType === 1) {
-        // TIRÓN
-        const exEspalda1 = pickExercise("Espalda", true, [], usedExerciseIds);
-        if (exEspalda1) {
-          usedExerciseIds.add(exEspalda1.id);
-          routineExercises.push(createExerciseEntry(exEspalda1, targetSets, targetRepsRange, targetReps, rir, "3 min"));
-        }
-        const exEspalda2 = pickExercise("Espalda", true, [], usedExerciseIds);
-        if (exEspalda2) {
-          usedExerciseIds.add(exEspalda2.id);
-          routineExercises.push(createExerciseEntry(exEspalda2, 3, "10-12", 10, rir + 1, "2 min"));
-        }
-        const exHombroPost = pickExercise("Hombro", false, ["Press", "Elevaciones"], usedExerciseIds); // Face Pull
-        if (exHombroPost) {
-          usedExerciseIds.add(exHombroPost.id);
-          routineExercises.push(createExerciseEntry(exHombroPost, 3, "12-15", 12, rir + 1, "1.5 min"));
-        }
-        const exBiceps1 = pickExercise("Brazo", false, ["Press", "Extensión"], usedExerciseIds); // Bíceps
-        if (exBiceps1) {
-          usedExerciseIds.add(exBiceps1.id);
-          routineExercises.push(createExerciseEntry(exBiceps1, 3, "10-12", 10, rir, "1.5 min"));
-        }
-        const exBiceps2 = pickExercise("Brazo", false, ["Press", "Extensión", exBiceps1 ? exBiceps1.name : ""], usedExerciseIds);
-        if (exBiceps2) {
-          usedExerciseIds.add(exBiceps2.id);
-          routineExercises.push(createExerciseEntry(exBiceps2, 3, "12-15", 12, rir + 1, "1.5 min"));
+        // Brazo (Bíceps) - Exclude Press, Extensión
+        for (let i = 0; i < brazoTironCount; i++) {
+          const ex = pickExercise("Brazo", false, ["Press", "Extensión"], usedExerciseIds);
+          if (ex) {
+            usedExerciseIds.add(ex.id);
+            routineExercises.push(createExerciseEntry(ex, brazoTironSets[i], "10-12", 10, rir, "1.5 min"));
+          }
         }
       } else {
-        // PIERNA
-        const ex1 = pickExercise("Pierna", true, [], usedExerciseIds);
-        if (ex1) {
-          usedExerciseIds.add(ex1.id);
-          routineExercises.push(createExerciseEntry(ex1, targetSets, targetRepsRange, targetReps, rir, "3 min"));
+        // Pierna
+        for (let i = 0; i < piernaCount; i++) {
+          const ex = pickExercise("Pierna", i === 0, i === 0 ? [] : ["Sentadilla"], usedExerciseIds);
+          if (ex) {
+            usedExerciseIds.add(ex.id);
+            routineExercises.push(createExerciseEntry(ex, piernaSets[i], targetRepsRange, targetReps, rir, i === 0 ? "3 min" : "2.5 min"));
+          }
         }
-        const ex2 = pickExercise("Pierna", true, ["Sentadilla"], usedExerciseIds);
-        if (ex2) {
-          usedExerciseIds.add(ex2.id);
-          routineExercises.push(createExerciseEntry(ex2, targetSets, targetRepsRange, targetReps, rir, "2.5 min"));
-        }
-        const ex3 = pickExercise("Pierna", false, [], usedExerciseIds);
-        if (ex3) {
-          usedExerciseIds.add(ex3.id);
-          routineExercises.push(createExerciseEntry(ex3, 3, "12-15", 12, rir, "1.5 min"));
-        }
-        const exCore = pickExercise("Core", false, [], usedExerciseIds);
-        if (exCore) {
-          usedExerciseIds.add(exCore.id);
-          routineExercises.push(createExerciseEntry(exCore, 3, "12-15", 15, rir + 1, "1 min"));
+        // Core
+        for (let i = 0; i < coreCount; i++) {
+          const ex = pickExercise("Core", false, [], usedExerciseIds);
+          if (ex) {
+            usedExerciseIds.add(ex.id);
+            routineExercises.push(createExerciseEntry(ex, coreSets[i], "12-15", 15, rir + 1, "1 min"));
+          }
         }
       }
 
-      const cycle = Math.floor(day / 3) + 1;
+      const cycle = counts[type as "empuje" | "tiron" | "pierna"];
       generatedRoutines.push({
-        name: `${pplNames[dayType]}${routinesToGen > 3 ? ` — Sesión ${cycle}` : ""}`,
+        name: `${pplNames[type as "empuje" | "tiron" | "pierna"]}${routinesToGen > 3 ? ` — Sesión ${cycle}` : ""}`,
         exercises: routineExercises
       });
-    }
+    });
   }
 
   return generatedRoutines;
