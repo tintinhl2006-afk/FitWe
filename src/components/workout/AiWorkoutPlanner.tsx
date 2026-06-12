@@ -63,7 +63,7 @@ export default function AiWorkoutPlanner({ onClose, onSaved }: AiWorkoutPlannerP
       
       const data = await res.json();
       setGeneratedPlan(data.plan);
-      setSetupStep(3);
+      setSetupStep(4);
     } catch (e: any) {
       setError(e.message || "Ocurrió un error al generar las rutinas");
     } finally {
@@ -425,15 +425,16 @@ export default function AiWorkoutPlanner({ onClose, onSaved }: AiWorkoutPlannerP
               <div className="absolute top-5 left-10 right-10 h-0.5 -translate-y-1/2 z-0 overflow-hidden">
                 <div 
                   className="h-full bg-emerald-500 transition-all duration-300" 
-                  style={{ width: setupStep === 1 ? "0%" : setupStep === 2 ? "50%" : "100%" }} 
+                  style={{ width: setupStep === 1 ? "0%" : setupStep === 2 ? "33.33%" : setupStep === 3 ? "66.66%" : "100%" }} 
                 />
               </div>
               
               <div className="relative flex justify-between items-center z-10">
                 {[
                   { step: 1, label: "Bases", icon: Sliders },
-                  { step: 2, label: "Detalles", icon: Dumbbell },
-                  { step: 3, label: "Resumen", icon: Sparkles }
+                  { step: 2, label: "Ajustes", icon: Target },
+                  { step: 3, label: "Detalles", icon: Dumbbell },
+                  { step: 4, label: "Resumen", icon: Sparkles }
                 ].map((item) => {
                   const Icon = item.icon;
                   const isActive = setupStep === item.step;
@@ -466,7 +467,7 @@ export default function AiWorkoutPlanner({ onClose, onSaved }: AiWorkoutPlannerP
             {/* Step Content */}
             <div className="flex-1 bg-slate-50/50 dark:bg-slate-950/20 border border-slate-200/50 dark:border-slate-800/40 rounded-3xl p-6 shadow-soft flex flex-col min-h-0 overflow-y-auto pr-1">
               
-              {/* STEP 1: Basic Preferences */}
+              {/* STEP 1: Basic Preferences (Days & Goal) */}
               {setupStep === 1 && (
                 <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
                   
@@ -523,6 +524,13 @@ export default function AiWorkoutPlanner({ onClose, onSaved }: AiWorkoutPlannerP
                       ))}
                     </div>
                   </div>
+
+                </div>
+              )}
+
+              {/* STEP 2: Basic Preferences (Level & Split) */}
+              {setupStep === 2 && (
+                <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
 
                   {/* Level */}
                   <div>
@@ -587,8 +595,8 @@ export default function AiWorkoutPlanner({ onClose, onSaved }: AiWorkoutPlannerP
                 </div>
               )}
 
-              {/* STEP 2: Custom details (Priorities & Injuries) */}
-              {setupStep === 2 && (
+              {/* STEP 3: Custom details (Priorities & Injuries) */}
+              {setupStep === 3 && (
                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
                   
                   {/* Priorities */}
@@ -660,8 +668,8 @@ export default function AiWorkoutPlanner({ onClose, onSaved }: AiWorkoutPlannerP
                 </div>
               )}
 
-              {/* STEP 3: Summary & Detailed explanation */}
-              {setupStep === 3 && generatedPlan && (
+              {/* STEP 4: Summary & Detailed explanation */}
+              {setupStep === 4 && generatedPlan && (
                 <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300 flex flex-col flex-1 min-h-0">
                   <div className="flex flex-col items-center justify-center text-center p-4 bg-emerald-500/10 dark:bg-emerald-500/5 border border-emerald-500/20 rounded-2xl gap-2">
                     <div className="bg-emerald-500 text-white p-2 rounded-full">
@@ -745,9 +753,9 @@ export default function AiWorkoutPlanner({ onClose, onSaved }: AiWorkoutPlannerP
                 >
                   Cancelar
                 </button>
-              ) : setupStep === 2 ? (
+              ) : (setupStep === 2 || setupStep === 3) ? (
                 <button
-                  onClick={() => setSetupStep(1)}
+                  onClick={() => setSetupStep((s) => s - 1)}
                   className="px-5 py-3 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-semibold rounded-2xl text-xs hover:bg-slate-50 transition-all flex items-center gap-1.5 cursor-pointer"
                 >
                   <ArrowLeft className="w-4 h-4" />
@@ -757,15 +765,15 @@ export default function AiWorkoutPlanner({ onClose, onSaved }: AiWorkoutPlannerP
                 <div />
               )}
 
-              {setupStep === 1 ? (
+              {(setupStep === 1 || setupStep === 2) ? (
                 <button
-                  onClick={() => setSetupStep(2)}
+                  onClick={() => setSetupStep((s) => s + 1)}
                   className="px-6 py-3 bg-slate-900 text-white font-bold rounded-2xl text-xs hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200 flex items-center gap-1.5 cursor-pointer"
                 >
                   Siguiente
                   <ArrowRight className="w-4 h-4" />
                 </button>
-              ) : setupStep === 2 ? (
+              ) : setupStep === 3 ? (
                 <button
                   onClick={handleGenerate}
                   className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-extrabold rounded-2xl text-xs shadow-md shadow-cyan-500/10 flex items-center gap-1.5 cursor-pointer"
