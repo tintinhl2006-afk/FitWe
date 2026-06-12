@@ -71,7 +71,7 @@ export default function AiWorkoutPlanner({ onClose, onSaved }: AiWorkoutPlannerP
     }
   };
 
-  const handleDownload = () => {
+  const handlePrintPDF = () => {
     if (!generatedPlan) return;
 
     const goalMap = {
@@ -104,74 +104,224 @@ export default function AiWorkoutPlanner({ onClose, onSaved }: AiWorkoutPlannerP
       ? customLesiones.join(", ") 
       : "Ninguna molestia declarada";
 
-    let rutinasMarkdown = "";
+    let rutinasHtml = "";
     generatedPlan.forEach((routine) => {
-      rutinasMarkdown += `### 📅 ${routine.name.toUpperCase()}\n`;
-      rutinasMarkdown += `| Ejercicio | Series | Repeticiones | RIR | Tempo | Descanso | Justificación |\n`;
-      rutinasMarkdown += `| :--- | :---: | :---: | :---: | :---: | :---: | :--- |\n`;
-      
+      rutinasHtml += `
+        <div class="routine-section">
+          <h3>📅 ${routine.name.toUpperCase()}</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Ejercicio</th>
+                <th>Series</th>
+                <th>Repeticiones</th>
+                <th>Intensidad</th>
+                <th>Tempo</th>
+                <th>Descanso</th>
+              </tr>
+            </thead>
+            <tbody>
+      `;
       routine.exercises.forEach((ex: any) => {
-        rutinasMarkdown += `| **${ex.name}** | ${ex.sets} | ${ex.reps} | RIR ${ex.rir} | ${ex.tempo} | ${ex.descanso} | ${ex.justificacion} |\n`;
+        rutinasHtml += `
+          <tr>
+            <td>
+              <div class="exercise-name">${ex.name}</div>
+              <div class="exercise-justification">${ex.justificacion}</div>
+            </td>
+            <td>${ex.sets}</td>
+            <td>${ex.reps}</td>
+            <td>RIR ${ex.rir}</td>
+            <td>${ex.tempo}</td>
+            <td>${ex.descanso}</td>
+          </tr>
+        `;
       });
-      rutinasMarkdown += `\n`;
+      rutinasHtml += `
+            </tbody>
+          </table>
+        </div>
+      `;
     });
 
-    const markdownText = `# 🏋️‍♂️ PLAN DE ENTRENAMIENTO PERSONALIZADO — FITWE
-*Este plan ha sido diseñado algorítmicamente adaptado a tu nivel, objetivos y salud articular.*
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) return;
 
----
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Plan de Entrenamiento - FitWe</title>
+          <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+            body {
+              font-family: 'Inter', sans-serif;
+              color: #1e293b;
+              margin: 40px;
+              line-height: 1.6;
+              font-size: 14px;
+            }
+            .header {
+              text-align: center;
+              border-bottom: 2px solid #06b6d4;
+              padding-bottom: 20px;
+              margin-bottom: 30px;
+            }
+            .header h1 {
+              margin: 0;
+              font-size: 28px;
+              font-weight: 800;
+              color: #0f172a;
+              text-transform: uppercase;
+              letter-spacing: 1px;
+            }
+            .header p {
+              margin: 5px 0 0 0;
+              color: #64748b;
+              font-size: 14px;
+            }
+            .section {
+              margin-bottom: 30px;
+              background: #f8fafc;
+              padding: 20px;
+              border-radius: 12px;
+              border: 1px solid #e2e8f0;
+            }
+            .section h2 {
+              margin-top: 0;
+              font-size: 16px;
+              font-weight: 800;
+              color: #0f172a;
+              text-transform: uppercase;
+              border-bottom: 1px solid #cbd5e1;
+              padding-bottom: 8px;
+              margin-bottom: 15px;
+            }
+            .profile-grid {
+              display: grid;
+              grid-template-cols: 1fr 1fr;
+              gap: 15px;
+            }
+            .profile-item {
+              font-size: 13px;
+            }
+            .profile-item strong {
+              color: #0f172a;
+            }
+            .routine-section {
+              margin-bottom: 40px;
+              page-break-inside: avoid;
+            }
+            .routine-section h3 {
+              font-size: 18px;
+              font-weight: 800;
+              color: #0f172a;
+              margin-bottom: 15px;
+              display: flex;
+              align-items: center;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-bottom: 20px;
+            }
+            th, td {
+              padding: 12px;
+              text-align: left;
+              border-bottom: 1px solid #e2e8f0;
+            }
+            th {
+              background: #f1f5f9;
+              color: #475569;
+              font-weight: 600;
+              font-size: 12px;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+            }
+            td {
+              vertical-align: top;
+            }
+            .exercise-name {
+              font-weight: 600;
+              color: #0f172a;
+            }
+            .exercise-justification {
+              font-size: 11px;
+              color: #64748b;
+              margin-top: 4px;
+              line-height: 1.4;
+            }
+            .guidelines-list {
+              padding-left: 20px;
+              margin: 0;
+            }
+            .guidelines-list li {
+              margin-bottom: 10px;
+            }
+            @media print {
+              body {
+                margin: 20px;
+              }
+              .section {
+                background: transparent;
+                border: none;
+                padding: 0;
+              }
+              .routine-section {
+                page-break-inside: avoid;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>FitWe</h1>
+            <p>Plan de Entrenamiento Personalizado Inteligente</p>
+          </div>
 
-## 📊 RESUMEN DEL PERFIL DE ENTRENAMIENTO
-* **Objetivo principal**: ${goalLabel}
-* **Frecuencia semanal**: ${customDays} días de entrenamiento a la semana
-* **Nivel de experiencia**: ${levelLabel}
-* **Estructura de rutina**: ${splitLabel}
-* **Enfoque en puntos débiles**: ${prioritiesText}
-* **Articulaciones protegidas (Evasión de lesiones)**: ${lesionesText}
+          <div class="section">
+            <h2>Perfil del Plan</h2>
+            <div class="profile-grid">
+              <div class="profile-item"><strong>Objetivo:</strong> ${goalLabel}</div>
+              <div class="profile-item"><strong>Nivel:</strong> ${levelLabel}</div>
+              <div class="profile-item"><strong>Frecuencia:</strong> ${customDays} días a la semana</div>
+              <div class="profile-item"><strong>Rutina:</strong> ${splitLabel}</div>
+              <div class="profile-item"><strong>Puntos a priorizar:</strong> ${prioritiesText}</div>
+              <div class="profile-item"><strong>Lesiones/Molestias:</strong> ${lesionesText}</div>
+            </div>
+          </div>
 
----
+          <div class="section">
+            <h2>Metodología y Pautas Clave</h2>
+            <ul class="guidelines-list">
+              <li><strong>Doble Progresión:</strong> Progresa en repeticiones antes de subir de peso. Cuando completes todas las series con la repetición máxima recomendada y excelente técnica, incrementa la carga en la siguiente sesión.</li>
+              <li><strong>Repeticiones en Recámara (RIR):</strong> Mantén la intensidad indicada en cada serie (generalmente RIR 1 o 2). Termina cada serie sintiendo que te quedaban únicamente esas repeticiones antes de llegar al fallo técnico.</li>
+              <li><strong>Tiempos de Descanso:</strong> Respeta los descansos para garantizar la recuperación completa del sistema nervioso y de los depósitos de energía celular.</li>
+              <li><strong>Seguridad Articular:</strong> Se han evitado los ejercicios lesivos para las zonas que indicaste (${lesionesText}), sustituyéndolos por variantes estables que minimizan el estrés mecánico sobre las articulaciones.</li>
+            </ul>
+          </div>
 
-## 🛠️ DESCRIPCIÓN DEL PLAN Y METODOLOGÍA
-Este programa utiliza una división **${splitLabel}** diseñada para optimizar la frecuencia de estímulo por grupo muscular y garantizar una recuperación completa entre sesiones.
+          <h2>Sesiones de Entrenamiento</h2>
+          ${rutinasHtml}
 
-### Puntos clave del programa:
-1. **Doble Progresión**: Tu objetivo es progresar en repeticiones dentro del rango objetivo antes de subir de peso. Por ejemplo, si tu objetivo es 8-12 repeticiones, cuando logres completar todas tus series a 12 repeticiones con buena técnica, sube la carga para la siguiente sesión y vuelve a buscar el rango inferior.
-2. **Autorregulación (RIR - Repeticiones en Recámara)**: La intensidad se mide en RIR. Un RIR 1 significa que debes terminar la serie sintiendo que prograsivamente podrías haber realizado exactamente una repetición más antes de fallar. Mantén una técnica perfecta.
-3. **Control del Descanso**: Los tiempos de descanso especificados son orientativos pero fundamentales para asegurar la recuperación de los sistemas de fosfágenos (ATP-PC) y optimizar el rendimiento de la serie posterior.
-4. **Protección Articular Activa**: Debido a las limitaciones indicadas (${lesionesText}), se han excluido los ejercicios axiales de alto impacto y de sobrecarga articular directa, sustituyéndolos por variantes estables en polea, máquina o peso corporal que permiten un estímulo muscular idéntico con menor estrés articular.
+          <div class="section" style="page-break-inside: avoid; margin-top: 40px;">
+            <h2>Calentamiento y Seguridad</h2>
+            <ul class="guidelines-list">
+              <li>Dedica 5-10 minutos de movilidad articular y activación aeróbica ligera antes de iniciar la rutina.</li>
+              <li>Realiza 2-3 series de aproximación antes de tus series efectivas con pesos más ligeros.</li>
+              <li>Controla la velocidad del movimiento: 3 segundos en la bajada (fase excéntrica) y 1 segundo en la subida (concéntrica).</li>
+            </ul>
+          </div>
+        </body>
+      </html>
+    `);
 
----
-
-## 📋 RUTINAS Y SESIONES DE ENTRENAMIENTO
-
-${rutinasMarkdown}
-
----
-
-## 🏃‍♂️ PAUTAS DE CALENTAMIENTO Y MOVILIDAD
-*Antes de comenzar cada sesión, dedica de 5 a 10 minutos a preparar tu cuerpo:*
-1. **Activación Cardiovascular**: 5 minutos de cardio suave (cinta, elíptica o bicicleta) para elevar la temperatura corporal.
-2. **Movilidad Articular**: Movimientos dinámicos y rotaciones de hombros, cadera, rodillas y muñecas.
-3. **Series de Aproximación**: En el primer ejercicio compuesto de cada grupo muscular, realiza 2-3 series con peso ascendente y bajas repeticiones antes de empezar tus series efectivas de trabajo.
-
----
-
-## 💡 RECOMENDACIONES GENERALES Y SEGURIDAD
-* **Hidratación**: Bebe agua antes, durante y después de la sesión.
-* **Control técnico**: Prioriza la calidad del movimiento frente a la carga externa. Cada repetición debe controlarse tanto en la fase concéntrica (subida) como en la fase excéntrica (bajada lenta de 3 segundos).
-* **Consistencia**: El factor más determinante para ver resultados es la constancia y el cumplimiento semanal del plan.
-
-*Plan generado con el motor inteligente de FitWe.*
-`;
-
-    const blob = new Blob([markdownText], { type: "text/markdown;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", `Plan_Entrenamiento_FitWe_${customGoal}.md`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    printWindow.document.close();
+    printWindow.focus();
+    
+    setTimeout(() => {
+      printWindow.print();
+    }, 250);
   };
 
   const handleCopyClipboard = () => {
@@ -524,11 +674,11 @@ ${rutinasMarkdown}
                   {/* Actions Row */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 shrink-0">
                     <button
-                      onClick={handleDownload}
+                      onClick={handlePrintPDF}
                       className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 text-white px-4 py-3 text-xs font-bold hover:opacity-95 shadow-sm transition-all cursor-pointer"
                     >
                       <Download className="w-4 h-4" />
-                      Descargar Guía Detallada (.md)
+                      Descargar Guía (PDF)
                     </button>
                     <button
                       onClick={handleCopyClipboard}
