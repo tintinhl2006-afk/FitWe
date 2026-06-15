@@ -235,7 +235,21 @@ class PDFWriter {
         : [];
       
       const cellHeight = (nameLines.length * 12) + (justLines.length * 10) + (justLines.length > 0 ? 6 : 0) + 12;
-      const rowHeight = Math.max(cellHeight, 35);
+
+      // Wrap other columns dynamically
+      const otherColLines: string[][] = [];
+      let maxOtherColHeight = 0;
+      for (let i = 1; i < row.length; i++) {
+        const val = sanitizeText(String(row[i]));
+        const lines = wrapText(val, columnWidths[i] - 12, this.fontRegular, 9);
+        otherColLines.push(lines);
+        const colHeight = (lines.length * 11) + 12;
+        if (colHeight > maxOtherColHeight) {
+          maxOtherColHeight = colHeight;
+        }
+      }
+
+      const rowHeight = Math.max(cellHeight, maxOtherColHeight, 35);
 
       if (this.currentY - rowHeight < this.margin + 10) {
         this.addNewPage();
@@ -274,14 +288,18 @@ class PDFWriter {
       currentX += columnWidths[0];
 
       for (let i = 1; i < row.length; i++) {
-        const val = sanitizeText(String(row[i]));
-        this.page.drawText(val, {
-          x: currentX + 6,
-          y: yStart - 16,
-          size: 9,
-          font: this.fontRegular,
-          color: rgb(0.18, 0.24, 0.35),
-        });
+        const lines = otherColLines[i - 1];
+        let valY = yStart - 16;
+        for (const line of lines) {
+          this.page.drawText(line, {
+            x: currentX + 6,
+            y: valY,
+            size: 9,
+            font: this.fontRegular,
+            color: rgb(0.18, 0.24, 0.35),
+          });
+          valY -= 11;
+        }
         currentX += columnWidths[i];
       }
 
