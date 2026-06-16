@@ -118,7 +118,7 @@ async function main() {
   });
 
   // Helper hash function
-  const gymPasswordHash = await bcrypt.hash('gimnasio123', 10);
+  const gymPasswordHash = await bcrypt.hash('prueba', 10);
   const clientPasswordHash = await bcrypt.hash('cliente123', 10);
 
   // 3. Create Gym Account
