@@ -121,6 +121,7 @@ export default function ClientDetailPage({
     email: "",
     lastName: "",
     documentType: "DNI",
+    documentPrefix: "-",
     documentNumber: "",
     documentLetter: "",
     phone: "",
@@ -207,12 +208,23 @@ export default function ClientDetailPage({
       bYear = String(d.getFullYear());
     }
 
+    let prefix = "-";
+    let num = client.documentNumber || "";
+    if (client.documentType === "NIE" && num) {
+      const firstChar = num.charAt(0).toUpperCase();
+      if (["X", "Y", "Z"].includes(firstChar)) {
+        prefix = firstChar;
+        num = num.slice(1);
+      }
+    }
+
     setEditFormData({
       name: client.name || "",
       email: client.email || "",
       lastName: client.lastName || "",
       documentType: client.documentType || "DNI",
-      documentNumber: client.documentNumber || "",
+      documentPrefix: prefix,
+      documentNumber: num,
       documentLetter: client.documentLetter || "",
       phone: client.phone || "",
       landline: client.landline || "",
@@ -256,12 +268,16 @@ export default function ClientDetailPage({
         ? `${editFormData.birthYear}-${editFormData.birthMonth}-${editFormData.birthDay}`
         : null;
 
+      const finalDocNum = editFormData.documentType === "NIE" && editFormData.documentPrefix !== "-"
+        ? `${editFormData.documentPrefix}${editFormData.documentNumber}`
+        : editFormData.documentNumber;
+
       const payload = {
         name: editFormData.name,
         email: editFormData.email,
         lastName: editFormData.lastName || null,
         documentType: editFormData.documentType,
-        documentNumber: editFormData.documentNumber || null,
+        documentNumber: finalDocNum || null,
         documentLetter: editFormData.documentLetter || null,
         phone: editFormData.phone || null,
         landline: editFormData.landline || null,
@@ -963,7 +979,14 @@ export default function ClientDetailPage({
                   </label>
                   <select
                     value={editFormData.documentType}
-                    onChange={(e) => setEditFormData({ ...editFormData, documentType: e.target.value })}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setEditFormData({
+                        ...editFormData,
+                        documentType: val,
+                        documentPrefix: val === "NIE" ? "X" : "-",
+                      });
+                    }}
                     className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-3 px-4 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-cyan-500"
                   >
                     <option value="DNI">DNI</option>
@@ -980,13 +1003,31 @@ export default function ClientDetailPage({
                   </label>
                   <div className="flex gap-2">
                     <select
+                      value={editFormData.documentPrefix}
+                      onChange={(e) => setEditFormData({ ...editFormData, documentPrefix: e.target.value })}
                       className="w-1/4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-3 px-2 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-cyan-500"
                     >
-                      <option value="-">-</option>
+                      {editFormData.documentType === "NIE" ? (
+                        <>
+                          <option value="X">X</option>
+                          <option value="Y">Y</option>
+                          <option value="Z">Z</option>
+                        </>
+                      ) : (
+                        <option value="-">-</option>
+                      )}
                     </select>
                     <input
                       type="text"
-                      placeholder="Nº dni"
+                      placeholder={
+                        editFormData.documentType === "DNI"
+                          ? "Nº dni"
+                          : editFormData.documentType === "NIE"
+                          ? "Nº nie"
+                          : editFormData.documentType === "Pasaporte"
+                          ? "Nº pasaporte"
+                          : "Nº documento"
+                      }
                       value={editFormData.documentNumber}
                       onChange={(e) => setEditFormData({ ...editFormData, documentNumber: e.target.value })}
                       className="w-2/4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-3 px-4 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-cyan-500"

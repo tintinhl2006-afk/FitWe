@@ -9,8 +9,13 @@ export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user?.id || session.user.role !== "GYM") {
+    if (!session?.user?.id || (session.user.role !== "GYM" && session.user.role !== "EMPLOYEE")) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
+    }
+
+    const gymId = session.user.role === "GYM" ? session.user.id : session.user.gymId;
+    if (!gymId) {
+      return NextResponse.json({ message: "Gimnasio no asociado" }, { status: 400 });
     }
 
     const now = await getNow();
@@ -18,7 +23,7 @@ export async function GET(req: Request) {
     // Auto-generar clases basadas en plantillas para el gimnasio para los próximos 14 días.
     // Esto garantiza consistencia local de forma automática sin depender exclusivamente de un cron externo.
     const templates = await prisma.classTemplate.findMany({
-      where: { gymId: session.user.id },
+      where: { gymId },
     });
     for (const template of templates) {
       await generateClassesFromTemplate(template, 14);
@@ -56,7 +61,7 @@ export async function GET(req: Request) {
 
     const classes = await prisma.gymClass.findMany({
       where: { 
-        gymId: session.user.id,
+        gymId,
         ...dateFilter
       },
       include: {
@@ -77,8 +82,13 @@ export async function DELETE(req: Request) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user?.id || session.user.role !== "GYM") {
+    if (!session?.user?.id || (session.user.role !== "GYM" && session.user.role !== "EMPLOYEE")) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
+    }
+
+    const gymId = session.user.role === "GYM" ? session.user.id : session.user.gymId;
+    if (!gymId) {
+      return NextResponse.json({ message: "Gimnasio no asociado" }, { status: 400 });
     }
 
     const { searchParams } = new URL(req.url);
@@ -89,11 +99,16 @@ export async function DELETE(req: Request) {
     }
 
     const gymClass = await prisma.gymClass.findFirst({
-      where: { id: classId, gymId: session.user.id },
+      where: { id: classId, gymId },
     });
 
     if (!gymClass) {
       return NextResponse.json({ message: "Clase no encontrada" }, { status: 404 });
+    }
+
+    // Si es empleado, solo puede borrar si es el instructor asignado
+    if (session.user.role === "EMPLOYEE" && gymClass.instructorId !== session.user.id) {
+      return NextResponse.json({ message: "No autorizado para eliminar esta clase" }, { status: 403 });
     }
 
     // Delete bookings first, then the class

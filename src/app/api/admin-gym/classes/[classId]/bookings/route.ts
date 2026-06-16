@@ -10,18 +10,23 @@ export async function GET(
 ) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "GYM") {
+    if (!session || (session.user.role !== "GYM" && session.user.role !== "EMPLOYEE")) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
     const { classId } = await params;
+
+    const gymId = session.user.role === "GYM" ? session.user.id : session.user.gymId;
+    if (!gymId) {
+      return NextResponse.json({ message: "Gimnasio no asociado" }, { status: 400 });
+    }
 
     // Verify the class belongs to the GYM
     const gymClass = await prisma.gymClass.findUnique({
       where: { id: classId },
     });
 
-    if (!gymClass || gymClass.gymId !== session.user.id) {
+    if (!gymClass || gymClass.gymId !== gymId) {
       return NextResponse.json({ message: "Clase no encontrada o no autorizada" }, { status: 404 });
     }
 
@@ -58,7 +63,7 @@ export async function DELETE(
 ) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "GYM") {
+    if (!session || (session.user.role !== "GYM" && session.user.role !== "EMPLOYEE")) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
@@ -71,12 +76,17 @@ export async function DELETE(
 
     const { classId } = await params;
 
+    const gymId = session.user.role === "GYM" ? session.user.id : session.user.gymId;
+    if (!gymId) {
+      return NextResponse.json({ message: "Gimnasio no asociado" }, { status: 400 });
+    }
+
     // Verify the class belongs to the GYM
     const gymClass = await prisma.gymClass.findUnique({
       where: { id: classId },
     });
 
-    if (!gymClass || gymClass.gymId !== session.user.id) {
+    if (!gymClass || gymClass.gymId !== gymId) {
       return NextResponse.json({ message: "Clase no encontrada o no autorizada" }, { status: 404 });
     }
 

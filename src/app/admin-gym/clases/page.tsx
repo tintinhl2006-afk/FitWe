@@ -24,6 +24,7 @@ interface GymClass {
   name: string;
   description: string | null;
   instructor: string;
+  instructorId: string | null;
   capacity: number;
   startTime: string;
   endTime: string;
@@ -37,6 +38,7 @@ interface ClassTemplate {
   id: string;
   name: string;
   instructor: string;
+  instructorId: string | null;
   capacity: number;
   dayOfWeek: number;
   startTime: string;
@@ -76,10 +78,13 @@ export default function GymClassesPage() {
   const [isBookingsLoading, setIsBookingsLoading] = useState(false);
   const [isCancelingBookingId, setIsCancelingBookingId] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>("");
+  const [employees, setEmployees] = useState<{ id: string; name: string }[]>([]);
+  const [showOnlyMine, setShowOnlyMine] = useState(true);
 
   const [templateFormData, setTemplateFormData] = useState({
     name: "",
     instructor: "",
+    instructorId: "",
     capacity: "20",
     dayOfWeek: "1",
     startTime: "10:00",
@@ -91,6 +96,7 @@ export default function GymClassesPage() {
     name: "",
     description: "",
     instructor: "",
+    instructorId: "",
     capacity: "20",
     date: session?.user?.serverNow 
       ? new Date(session.user.serverNow).toISOString().split('T')[0]
@@ -98,6 +104,22 @@ export default function GymClassesPage() {
     startTime: "10:00",
     endTime: "11:00"
   });
+
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        const res = await fetch("/api/admin-gym/employees");
+        if (res.ok) {
+          setEmployees(await res.json());
+        }
+      } catch (e) {
+        console.error("Error loading employees:", e);
+      }
+    };
+    if (session?.user?.role === "GYM") {
+      fetchEmployees();
+    }
+  }, [session]);
 
   // Effect to update date if session loads later
   useEffect(() => {
@@ -166,7 +188,7 @@ export default function GymClassesPage() {
       if (!res.ok) throw new Error("Error al crear plantilla");
       setToast({ msg: "Plantilla guardada y clases generadas para los próximos 7 días.", type: "ok" });
       setIsFormOpen(false);
-      setTemplateFormData({ name: "", instructor: "", capacity: "20", dayOfWeek: "1", startTime: "10:00", durationMinutes: "60" });
+      setTemplateFormData({ name: "", instructor: "", instructorId: "", capacity: "20", dayOfWeek: "1", startTime: "10:00", durationMinutes: "60" });
       fetchTemplates();
     } catch (err: any) { setError(err.message); }
     finally { setIsSubmitting(false); }
@@ -188,7 +210,7 @@ export default function GymClassesPage() {
       }
       setToast({ msg: "Evento especial creado correctamente", type: "ok" });
       setIsSingleFormOpen(false);
-      setSingleClassFormData({ ...singleClassFormData, name: "", description: "" });
+      setSingleClassFormData({ ...singleClassFormData, name: "", description: "", instructorId: "" });
       fetchClasses(selectedDate);
     } catch (err: any) { setError(err.message); }
     finally { setIsSubmitting(false); }
@@ -250,9 +272,22 @@ export default function GymClassesPage() {
   };
 
   // Group classes by date
-  
-  // Classes are already filtered at the database level!
-  const filteredClasses = classes;
+  const isGym = session?.user?.role === "GYM";
+  const isEmployee = session?.user?.role === "EMPLOYEE";
+
+  const filteredClasses = classes.filter((c) => {
+    if (isEmployee && showOnlyMine) {
+      return c.instructorId === session?.user?.id;
+    }
+    return true;
+  });
+
+  const filteredTemplates = templates.filter((t) => {
+    if (isEmployee && showOnlyMine) {
+      return t.instructorId === session?.user?.id;
+    }
+    return true;
+  });
 
   const groupedUpcoming = filteredClasses.reduce<Record<string, GymClass[]>>((acc, c) => {
     const dateKey = new Date(c.startTime).toLocaleDateString("es-ES", {
@@ -412,6 +447,33 @@ export default function GymClassesPage() {
             </div>
           )}
 
+          {isEmployee && (
+            <div className="flex justify-end gap-2.5 mb-5">
+              <button
+                onClick={() => setShowOnlyMine(true)}
+                className={cn(
+                  "px-4 py-2 rounded-3xl text-xs font-bold transition-all border cursor-pointer",
+                  showOnlyMine
+                    ? "bg-primary text-white border-transparent shadow-sm"
+                    : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-755 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800"
+                )}
+              >
+                Mis Clases
+              </button>
+              <button
+                onClick={() => setShowOnlyMine(false)}
+                className={cn(
+                  "px-4 py-2 rounded-3xl text-xs font-bold transition-all border cursor-pointer",
+                  !showOnlyMine
+                    ? "bg-primary text-white border-transparent shadow-sm"
+                    : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-755 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800"
+                )}
+              >
+                Todas las Clases
+              </button>
+            </div>
+          )}
+
           {Object.keys(groupedUpcoming).length > 0 ? (
             Object.entries(groupedUpcoming).map(([date, items]) => (
               <div key={date}>
@@ -477,21 +539,24 @@ export default function GymClassesPage() {
                             </div>
                           </div>
 
-                          <div className="shrink-0 self-start sm:self-auto" onClick={(e) => e.stopPropagation()}>
-                            <button
-                              onClick={() => handleCancelClass(c.id)}
-                              disabled={deletingId === c.id}
-                              className="inline-flex items-center gap-2 rounded-full border border-red-200 dark:border-red-800/80 bg-red-50 dark:bg-red-950/30 px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 transition-all cursor-pointer disabled:opacity-50"
-                              title="Cancelar esta clase"
-                            >
-                              {deletingId === c.id ? (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                              ) : (
-                                <Trash2 className="h-3.5 w-3.5" />
-                              )}
-                              Eliminar
-                            </button>
-                          </div>
+                          {/* Solo mostrar botón eliminar al creador/gerente */}
+                          {(isGym || c.instructorId === session?.user?.id) && (
+                            <div className="shrink-0 self-start sm:self-auto" onClick={(e) => e.stopPropagation()}>
+                              <button
+                                onClick={() => handleCancelClass(c.id)}
+                                disabled={deletingId === c.id}
+                                className="inline-flex items-center gap-2 rounded-full border border-red-200 dark:border-red-800/80 bg-red-50 dark:bg-red-950/30 px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 transition-all cursor-pointer disabled:opacity-50"
+                                title="Cancelar esta clase"
+                              >
+                                {deletingId === c.id ? (
+                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                ) : (
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                )}
+                                Eliminar
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </div>
                     );
@@ -539,9 +604,9 @@ export default function GymClassesPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {templates.length === 0 ? (
+                {filteredTemplates.length === 0 ? (
                   <tr><td colSpan={6} className="p-12 text-center text-slate-500">No hay plantillas configuradas</td></tr>
-                ) : templates.map((t) => (
+                ) : filteredTemplates.map((t) => (
                   <tr key={t.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
                     <td className="px-6 py-4 text-sm font-bold text-primary dark:text-cyan-400">{DAYS[t.dayOfWeek - 1]}</td>
                     <td className="px-6 py-4 text-sm font-medium text-slate-900 dark:text-white">{t.name}</td>
@@ -552,9 +617,11 @@ export default function GymClassesPage() {
                     </td>
                     <td className="px-6 py-4 text-sm">{t.capacity} plazas</td>
                     <td className="px-6 py-4 text-right">
-                      <button onClick={() => handleDeleteTemplate(t.id)} className="text-slate-400 hover:text-red-500 p-2 transition-colors">
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                      {(isGym || t.instructorId === session?.user?.id) && (
+                        <button onClick={() => handleDeleteTemplate(t.id)} className="text-slate-400 hover:text-red-500 p-2 transition-colors">
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -581,16 +648,52 @@ export default function GymClassesPage() {
                 <input required type="text" value={singleClassFormData.name} onChange={(e) => setSingleClassFormData({...singleClassFormData, name: e.target.value})} className="w-full rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-4 py-2.5 text-sm text-slate-900 dark:text-white outline-none focus:border-primary" />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Instructor</label>
-                  <input required type="text" value={singleClassFormData.instructor} onChange={(e) => setSingleClassFormData({...singleClassFormData, instructor: e.target.value})} className="w-full rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-4 py-2.5 text-sm text-slate-900 dark:text-white outline-none" />
-                </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {isGym ? (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Instructor</label>
+                    <select
+                      value={singleClassFormData.instructorId || "custom"}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === "custom") {
+                          setSingleClassFormData({ ...singleClassFormData, instructorId: "", instructor: "" });
+                        } else {
+                          const emp = employees.find(emp => emp.id === val);
+                          setSingleClassFormData({ ...singleClassFormData, instructorId: val, instructor: emp?.name || "" });
+                        }
+                      }}
+                      className="w-full rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-4 py-2.5 text-sm text-slate-900 dark:text-white outline-none"
+                    >
+                      <option value="custom">Otro (introducir nombre)...</option>
+                      {employees.map(emp => (
+                        <option key={emp.id} value={emp.id}>{emp.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Instructor</label>
+                    <input
+                      disabled
+                      type="text"
+                      value={session?.user?.name || ""}
+                      className="w-full rounded-3xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 px-4 py-2.5 text-sm text-slate-500 outline-none"
+                    />
+                  </div>
+                )}
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Aforo Máximo</label>
                   <input required type="number" min="1" value={singleClassFormData.capacity} onChange={(e) => setSingleClassFormData({...singleClassFormData, capacity: e.target.value})} className="w-full rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-4 py-2.5 text-sm text-slate-900 dark:text-white outline-none" />
                 </div>
               </div>
+
+              {isGym && !singleClassFormData.instructorId && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Nombre del Instructor</label>
+                  <input required type="text" placeholder="Ej. Juan Gómez" value={singleClassFormData.instructor} onChange={(e) => setSingleClassFormData({...singleClassFormData, instructor: e.target.value})} className="w-full rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-4 py-2.5 text-sm text-slate-900 dark:text-white outline-none" />
+                </div>
+              )}
 
               <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Fecha del Evento</label>
@@ -635,16 +738,52 @@ export default function GymClassesPage() {
                 <input required type="text" value={templateFormData.name} onChange={(e) => setTemplateFormData({...templateFormData, name: e.target.value})} className="w-full rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-4 py-2.5 text-sm text-slate-900 dark:text-white outline-none focus:border-primary" />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Instructor</label>
-                  <input required type="text" value={templateFormData.instructor} onChange={(e) => setTemplateFormData({...templateFormData, instructor: e.target.value})} className="w-full rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-4 py-2.5 text-sm text-slate-900 dark:text-white outline-none" />
-                </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {isGym ? (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Instructor</label>
+                    <select
+                      value={templateFormData.instructorId || "custom"}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === "custom") {
+                          setTemplateFormData({ ...templateFormData, instructorId: "", instructor: "" });
+                        } else {
+                          const emp = employees.find(emp => emp.id === val);
+                          setTemplateFormData({ ...templateFormData, instructorId: val, instructor: emp?.name || "" });
+                        }
+                      }}
+                      className="w-full rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-4 py-2.5 text-sm text-slate-900 dark:text-white outline-none"
+                    >
+                      <option value="custom">Otro (introducir nombre)...</option>
+                      {employees.map(emp => (
+                        <option key={emp.id} value={emp.id}>{emp.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Instructor</label>
+                    <input
+                      disabled
+                      type="text"
+                      value={session?.user?.name || ""}
+                      className="w-full rounded-3xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 px-4 py-2.5 text-sm text-slate-505 outline-none"
+                    />
+                  </div>
+                )}
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Aforo Máximo</label>
                   <input required type="number" min="1" value={templateFormData.capacity} onChange={(e) => setTemplateFormData({...templateFormData, capacity: e.target.value})} className="w-full rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-4 py-2.5 text-sm text-slate-900 dark:text-white outline-none" />
                 </div>
               </div>
+
+              {isGym && !templateFormData.instructorId && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Nombre del Instructor</label>
+                  <input required type="text" placeholder="Ej. Juan Gómez" value={templateFormData.instructor} onChange={(e) => setTemplateFormData({...templateFormData, instructor: e.target.value})} className="w-full rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-4 py-2.5 text-sm text-slate-900 dark:text-white outline-none" />
+                </div>
+              )}
 
               <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Día de la Semana</label>

@@ -21,16 +21,54 @@ export async function GET() {
         email: true,
         role: true,
         monthlyFee: true,
-        stripeSecretKey: true,
-        stripePublishableKey: true,
         stripeAccountId: true,
         stripeConnected: true,
+        stripeEnabled: true,
         redsysFuc: true,
         redsysTerminal: true,
         redsysClave: true,
         redsysEnabled: true,
+        documentType: true,
+        documentNumber: true,
+        documentLetter: true,
+        phone: true,
+        address: true,
+        country: true,
+        province: true,
+        locality: true,
+        postalCode: true,
+        gymCode: true,
       },
     });
+
+    if (!user) {
+      return NextResponse.json(
+        { message: "Usuario no encontrado" },
+        { status: 404 }
+      );
+    }
+
+    // Self-healing: if role is GYM but has no gymCode, generate one automatically
+    if (user.role === "GYM" && !user.gymCode) {
+      let generatedCode = "";
+      let isUnique = false;
+      while (!isUnique) {
+        generatedCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+        const existing = await prisma.user.findFirst({
+          where: { gymCode: generatedCode },
+        });
+        if (!existing) {
+          isUnique = true;
+        }
+      }
+
+      await prisma.user.update({
+        where: { id: session.user.id },
+        data: { gymCode: generatedCode },
+      });
+
+      user.gymCode = generatedCode;
+    }
 
     return NextResponse.json(user);
   } catch (error) {
@@ -57,13 +95,21 @@ export async function PATCH(req: Request) {
       name,
       newPassword,
       monthlyFee,
-      stripeSecretKey,
-      stripePublishableKey,
+      stripeEnabled,
       stripeDisconnect,
       redsysFuc,
       redsysTerminal,
       redsysClave,
       redsysEnabled,
+      documentType,
+      documentNumber,
+      documentLetter,
+      phone,
+      address,
+      country,
+      province,
+      locality,
+      postalCode,
     } = body;
 
     // Build the update payload dynamically
@@ -91,12 +137,8 @@ export async function PATCH(req: Request) {
         }
       }
 
-      // Soporte para claves Stripe manuales
-      if (stripeSecretKey !== undefined) {
-        updateData.stripeSecretKey = stripeSecretKey.trim() || null;
-      }
-      if (stripePublishableKey !== undefined) {
-        updateData.stripePublishableKey = stripePublishableKey.trim() || null;
+      if (stripeEnabled !== undefined) {
+        updateData.stripeEnabled = !!stripeEnabled;
       }
 
       // Soporte para desconectar Stripe Connect
@@ -118,6 +160,17 @@ export async function PATCH(req: Request) {
       if (redsysEnabled !== undefined) {
         updateData.redsysEnabled = !!redsysEnabled;
       }
+
+      // Soporte para datos fiscales del gimnasio
+      if (documentType !== undefined) updateData.documentType = documentType || null;
+      if (documentNumber !== undefined) updateData.documentNumber = documentNumber || null;
+      if (documentLetter !== undefined) updateData.documentLetter = documentLetter || null;
+      if (phone !== undefined) updateData.phone = phone || null;
+      if (address !== undefined) updateData.address = address || null;
+      if (country !== undefined) updateData.country = country || "España";
+      if (province !== undefined) updateData.province = province || null;
+      if (locality !== undefined) updateData.locality = locality || null;
+      if (postalCode !== undefined) updateData.postalCode = postalCode || null;
     }
 
     if (Object.keys(updateData).length === 0) {

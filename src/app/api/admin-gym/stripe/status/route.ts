@@ -35,6 +35,7 @@ export async function GET(req: Request) {
         data: {
           stripeConnected: true,
           stripeAccountId: mockAccountId,
+          stripeEnabled: true,
         },
       });
 
@@ -65,7 +66,10 @@ export async function GET(req: Request) {
     if (isConnected !== gym.stripeConnected) {
       await prisma.user.update({
         where: { id: gymId },
-        data: { stripeConnected: isConnected },
+        data: { 
+          stripeConnected: isConnected,
+          ...(isConnected && { stripeEnabled: true }),
+        },
       });
     }
 

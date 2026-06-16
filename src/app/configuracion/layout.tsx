@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { User, Lock, Settings, Globe, Moon, Download } from "lucide-react";
+import { User, Lock, Settings, Globe, Moon, Download, Dumbbell } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useSession } from "next-auth/react";
 
 const configMenu = [
   {
@@ -12,6 +13,7 @@ const configMenu = [
     items: [
       { name: "Perfil", href: "/configuracion/perfil", icon: User },
       { name: "Cuenta", href: "/configuracion/cuenta", icon: Lock },
+      { name: "Pagos y Facturas", href: "/configuracion/pagos", icon: Download },
     ],
   },
   {
@@ -27,6 +29,21 @@ const configMenu = [
 
 export default function ConfigLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { data: session } = useSession();
+  const isClient = session?.user?.role === "USER";
+
+  const dynamicMenu = configMenu.map((section) => {
+    if (section.title === "CUENTA" && isClient) {
+      return {
+        ...section,
+        items: [
+          ...section.items,
+          { name: "Mi Gimnasio", href: "/configuracion/mi-gimnasio", icon: Dumbbell },
+        ],
+      };
+    }
+    return section;
+  });
 
   return (
     <DashboardLayout>
@@ -37,7 +54,7 @@ export default function ConfigLayout({ children }: { children: React.ReactNode }
           {/* Sidebar */}
           <aside className="w-full md:w-64 shrink-0">
             <nav className="space-y-8">
-              {configMenu.map((section) => (
+              {dynamicMenu.map((section) => (
                 <div key={section.title}>
                   <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 px-3">
                     {section.title}

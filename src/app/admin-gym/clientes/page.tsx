@@ -56,6 +56,7 @@ export default function ClientesPage() {
     password: "",
     lastName: "",
     documentType: "DNI",
+    documentPrefix: "-",
     documentNumber: "",
     documentLetter: "",
     phone: "",
@@ -154,7 +155,9 @@ export default function ClientesPage() {
         password: formData.password,
         lastName: formData.lastName || null,
         documentType: formData.documentType,
-        documentNumber: formData.documentNumber || null,
+        documentNumber: formData.documentType === "NIE" && formData.documentPrefix !== "-"
+          ? `${formData.documentPrefix}${formData.documentNumber}`
+          : (formData.documentNumber || null),
         documentLetter: formData.documentLetter || null,
         phone: formData.phone || null,
         landline: formData.landline || null,
@@ -202,6 +205,7 @@ export default function ClientesPage() {
       password: "",
       lastName: "",
       documentType: "DNI",
+      documentPrefix: "-",
       documentNumber: "",
       documentLetter: "",
       phone: "",
@@ -453,10 +457,7 @@ export default function ClientesPage() {
               </button>
             </div>
 
-            {/* Step Banner */}
-            <div className="bg-[#1e6091] text-white font-semibold text-sm px-7 py-3 tracking-wide shrink-0">
-              Paso 1. Datos del socio
-            </div>
+
 
             {/* Modal Body */}
             <form onSubmit={handleCreateClient} className="flex-1 flex flex-col min-h-0">
@@ -489,7 +490,14 @@ export default function ClientesPage() {
                   </label>
                   <select
                     value={formData.documentType}
-                    onChange={(e) => setFormData({ ...formData, documentType: e.target.value })}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setFormData({
+                        ...formData,
+                        documentType: val,
+                        documentPrefix: val === "NIE" ? "X" : "-",
+                      });
+                    }}
                     className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-3 px-4 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
                   >
                     <option value="DNI">DNI</option>
@@ -506,13 +514,31 @@ export default function ClientesPage() {
                   </label>
                   <div className="flex gap-2">
                     <select
+                      value={formData.documentPrefix}
+                      onChange={(e) => setFormData({ ...formData, documentPrefix: e.target.value })}
                       className="w-1/4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-3 px-2 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-cyan-500"
                     >
-                      <option value="-">-</option>
+                      {formData.documentType === "NIE" ? (
+                        <>
+                          <option value="X">X</option>
+                          <option value="Y">Y</option>
+                          <option value="Z">Z</option>
+                        </>
+                      ) : (
+                        <option value="-">-</option>
+                      )}
                     </select>
                     <input
                       type="text"
-                      placeholder="Nº dni"
+                      placeholder={
+                        formData.documentType === "DNI"
+                          ? "Nº dni"
+                          : formData.documentType === "NIE"
+                          ? "Nº nie"
+                          : formData.documentType === "Pasaporte"
+                          ? "Nº pasaporte"
+                          : "Nº documento"
+                      }
                       value={formData.documentNumber}
                       onChange={(e) => setFormData({ ...formData, documentNumber: e.target.value })}
                       className="w-2/4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-3 px-4 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-cyan-500"
@@ -838,27 +864,20 @@ export default function ClientesPage() {
               {/* Actions Footer */}
               <div className="flex justify-end gap-3 px-7 py-5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 shrink-0">
                 <button
-                  type="button"
-                  disabled
-                  className="inline-flex items-center gap-2 rounded-3xl bg-[#0f172a] text-white px-5 py-2.5 text-sm font-semibold opacity-50 cursor-not-allowed"
-                >
-                  &lt; Atrás
-                </button>
-                <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="inline-flex items-center gap-2 rounded-3xl bg-[#1e40af] hover:bg-[#1d4ed8] text-white px-6 py-2.5 text-sm font-semibold shadow-sm disabled:opacity-70 transition-all active:scale-95"
+                  className="inline-flex items-center gap-2 rounded-3xl bg-[#1e40af] hover:bg-[#1d4ed8] text-white px-6 py-2.5 text-sm font-semibold shadow-sm disabled:opacity-70 transition-all active:scale-95 cursor-pointer"
                 >
                   {isSubmitting ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    "Siguiente >"
+                    "Guardar Ficha"
                   )}
                 </button>
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-5 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                  className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-5 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-205 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                 >
                   Cerrar
                 </button>

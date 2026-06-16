@@ -51,10 +51,9 @@ export async function POST(req: Request) {
       where: { id: user.gymId },
       select: {
         name: true,
-        stripeSecretKey: true,
-        stripePublishableKey: true,
         stripeAccountId: true,
         stripeConnected: true,
+        stripeEnabled: true,
         redsysFuc: true,
         redsysTerminal: true,
         redsysClave: true,
@@ -170,9 +169,14 @@ export async function POST(req: Request) {
     }
 
     // ─── PASARELA SELECCIONADA: STRIPE ───
-    
-    // A. Stripe Connect
-    if (gym.stripeConnected && gym.stripeAccountId) {
+    if (gateway !== "redsys") {
+      if (!gym.stripeEnabled || !gym.stripeConnected || !gym.stripeAccountId) {
+        return NextResponse.json(
+          { message: "La pasarela de pago de Stripe no está activa en este centro." },
+          { status: 400 }
+        );
+      }
+
       const platformSecretKey = process.env.STRIPE_SECRET_KEY;
 
       if (platformSecretKey) {
@@ -228,56 +232,6 @@ export async function POST(req: Request) {
         return NextResponse.json({ url: mockStripeUrl }, { status: 200 });
       }
     }
-
-    // B. Claves Manuales
-    const stripeSecretKey = gym.stripeSecretKey?.trim();
-    if (stripeSecretKey) {
-      try {
-        const stripe = new Stripe(stripeSecretKey, {
-          apiVersion: "2023-10-16" as any,
-        });
-
-        const stripeSession = await stripe.checkout.sessions.create({
-          payment_method_types: ["card"],
-          line_items: [
-            {
-              price_data: {
-                currency: "eur",
-                product_data: {
-                  name: planName,
-                  description: `Suscripción para el centro ${gym.name}`,
-                },
-                unit_amount: Math.round(amount * 100),
-              },
-              quantity: 1,
-            },
-          ],
-          mode: "payment",
-          success_url: `${origin}/dashboard/pago/success?session_id={CHECKOUT_SESSION_ID}${resolvedPlanId ? `&planId=${resolvedPlanId}` : ""}`,
-          cancel_url: `${origin}/dashboard/pago`,
-          metadata: {
-            userId: session.user.id,
-            gymId: user.gymId,
-            planId: resolvedPlanId || "",
-            amount: amount.toString(),
-            durationDays: durationDays.toString(),
-            planName: planName,
-          },
-        });
-
-        return NextResponse.json({ url: stripeSession.url }, { status: 200 });
-      } catch (stripeError: any) {
-        console.error("Error al crear la sesión de Stripe manual:", stripeError);
-        return NextResponse.json(
-          { message: `Error de pasarela de pago: ${stripeError.message || "No se pudo conectar con Stripe."}` },
-          { status: 400 }
-        );
-      }
-    }
-
-    // C. Fallback simulado
-    const mockStripeUrl = `/dashboard/pago/stripe-mock?amount=${amount}&planName=${encodeURIComponent(planName)}${resolvedPlanId ? `&planId=${resolvedPlanId}` : ""}`;
-    return NextResponse.json({ url: mockStripeUrl }, { status: 200 });
   } catch (error) {
     console.error("Error processing payment POST:", error);
     return NextResponse.json(

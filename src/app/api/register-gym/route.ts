@@ -27,6 +27,18 @@ export async function POST(req: Request) {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    let gymCode = "";
+    let isUnique = false;
+    while (!isUnique) {
+      gymCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+      const existing = await prisma.user.findUnique({
+        where: { gymCode },
+      });
+      if (!existing) {
+        isUnique = true;
+      }
+    }
+
     const user = await prisma.user.create({
       data: {
         email,
@@ -34,6 +46,7 @@ export async function POST(req: Request) {
         password: hashedPassword,
         location,
         role: "GYM",
+        gymCode,
       },
     });
 

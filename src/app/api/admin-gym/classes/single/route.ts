@@ -7,14 +7,27 @@ export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user?.id || session.user.role !== "GYM") {
+    if (!session?.user?.id || (session.user.role !== "GYM" && session.user.role !== "EMPLOYEE")) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
-    const body = await req.json();
-    const { name, description, instructor, capacity, date, startTime, endTime } = body;
+    const gymId = session.user.role === "GYM" ? session.user.id : session.user.gymId;
+    if (!gymId) {
+      return NextResponse.json({ message: "Gimnasio no asociado" }, { status: 400 });
+    }
 
-    if (!name || !instructor || !capacity || !date || !startTime || !endTime) {
+    const body = await req.json();
+    const { name, description, instructor, instructorId, capacity, date, startTime, endTime } = body;
+
+    let finalInstructor = instructor;
+    let finalInstructorId = instructorId;
+
+    if (session.user.role === "EMPLOYEE") {
+      finalInstructor = session.user.name;
+      finalInstructorId = session.user.id;
+    }
+
+    if (!name || !finalInstructor || !capacity || !date || !startTime || !endTime) {
       return NextResponse.json({ message: "Faltan campos obligatorios" }, { status: 400 });
     }
 
@@ -33,11 +46,12 @@ export async function POST(req: Request) {
       data: {
         name,
         description,
-        instructor,
+        instructor: finalInstructor,
+        instructorId: finalInstructorId || null,
         capacity: parseInt(capacity),
         startTime: start,
         endTime: end,
-        gymId: session.user.id,
+        gymId,
         // templateId remains null for one-off events
       },
     });

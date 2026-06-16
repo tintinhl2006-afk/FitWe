@@ -95,12 +95,19 @@ export async function PATCH(
       });
 
       if (recordDescription) {
+        let invoiceNumber = null;
+        if (session.user.id) {
+          const { generateNextInvoiceNumber } = await import("@/lib/invoiceUtils");
+          invoiceNumber = await generateNextInvoiceNumber(tx, session.user.id);
+        }
+
         await tx.paymentRecord.create({
           data: {
             userId: clientId,
             amount: recordAmount,
             description: recordDescription,
             date: now,
+            invoiceNumber,
           }
         });
       }

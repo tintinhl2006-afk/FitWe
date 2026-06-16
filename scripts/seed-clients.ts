@@ -72,6 +72,7 @@ async function main() {
           gymId: gym.id,
           subscriptionStatus: isActive ? 'ACTIVE' : 'INACTIVE',
           subscriptionEndDate: endDate,
+          mustChangePassword: false,
         }
       });
       console.log(`Created user: ${name} (${isActive ? 'ACTIVE' : 'INACTIVE'})`);

@@ -18,18 +18,19 @@ import {
   X,
   Tag,
   QrCode,
+  UserCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const gymNavItems = [
-  { title: "Dashboard", href: "/admin-gym", icon: LayoutDashboard },
-  { title: "Control de Acceso", href: "/admin-gym/acceso", icon: QrCode },
-  { title: "Clientes", href: "/admin-gym/clientes", icon: Users },
-  { title: "Tarifas", href: "/admin-gym/tarifas", icon: Tag },
-  { title: "Clases", href: "/admin-gym/clases", icon: Calendar },
-  { title: "Estadísticas", href: "/admin-gym/estadisticas", icon: BarChart3 },
-
-  { title: "Configuración", href: "/admin-gym/configuracion", icon: Settings },
+  { title: "Dashboard", href: "/admin-gym", icon: LayoutDashboard, role: "GYM" },
+  { title: "Control de Acceso", href: "/admin-gym/acceso", icon: QrCode, role: "GYM" },
+  { title: "Clientes", href: "/admin-gym/clientes", icon: Users, role: "GYM" },
+  { title: "Empleados", href: "/admin-gym/empleados", icon: UserCheck, role: "GYM" },
+  { title: "Tarifas", href: "/admin-gym/tarifas", icon: Tag, role: "GYM" },
+  { title: "Clases", href: "/admin-gym/clases", icon: Calendar }, // Visible para todos
+  { title: "Estadísticas", href: "/admin-gym/estadisticas", icon: BarChart3, role: "GYM" },
+  { title: "Configuración", href: "/admin-gym/configuracion", icon: Settings, role: "GYM" },
 ];
 
 export function AdminGymSidebar() {
@@ -47,11 +48,13 @@ export function AdminGymSidebar() {
       </div>
 
       <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
-        {gymNavItems.map((item) => {
-          const isActive =
-            item.href === "/admin-gym"
-              ? pathname === "/admin-gym"
-              : pathname.startsWith(item.href);
+        {gymNavItems
+          .filter((item) => !item.role || item.role === session?.user?.role)
+          .map((item) => {
+            const isActive =
+              item.href === "/admin-gym"
+                ? pathname === "/admin-gym"
+                : pathname.startsWith(item.href);
 
           return (
             <Link
@@ -92,7 +95,7 @@ export function AdminGymSidebar() {
               {session?.user?.name || "Administrador"}
             </p>
             <p className="text-xs text-slate-500 dark:text-slate-500 truncate">
-              Gestor de Gimnasio
+              {session?.user?.role === "EMPLOYEE" ? "Empleado de Gimnasio" : "Gestor de Gimnasio"}
             </p>
           </div>
         </div>

@@ -4,8 +4,9 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { verifyAccessCode } from "@/lib/cryptoUtils";
 import { getNow } from "@/lib/timeUtils";
+import { logger } from "@/lib/logger";
 
-const TOKEN_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes validity
+const TOKEN_EXPIRY_MS = 20 * 1000; // 20 seconds validity
 
 export async function POST(req: Request) {
   try {
@@ -27,6 +28,7 @@ export async function POST(req: Request) {
     if (token) {
       const verified = verifyAccessCode(token);
       if (!verified) {
+        logger.warn(`Intento de acceso denegado: firma QR inválida en gimnasio ${session.user.id}`);
         return NextResponse.json({
           status: "DENIED",
           reason: "INVALID_SIGNATURE",
@@ -51,6 +53,7 @@ export async function POST(req: Request) {
       });
 
       if (!user) {
+        logger.warn(`Intento de acceso denegado: usuario manual '${trimmedInput}' no encontrado en gimnasio ${session.user.id}`);
         return NextResponse.json({
           status: "DENIED",
           reason: "USER_NOT_FOUND",
@@ -77,6 +80,7 @@ export async function POST(req: Request) {
     });
 
     if (!client) {
+      logger.warn(`Intento de acceso denegado: ID de cliente ${targetUserId} no existe en el sistema`);
       return NextResponse.json({
         status: "DENIED",
         reason: "USER_NOT_FOUND",
@@ -86,6 +90,7 @@ export async function POST(req: Request) {
 
     // Verify the client belongs to the logged-in gym
     if (client.gymId !== session.user.id) {
+      logger.warn(`Intento de acceso denegado: Cliente ${client.id} pertenece al gimnasio ${client.gymId}, no a ${session.user.id}`);
       await prisma.accessLog.create({
         data: {
           userId: client.id,
@@ -105,12 +110,13 @@ export async function POST(req: Request) {
     // Check QR expiration if token was used (allowing a 30-second clock drift buffer)
     if (verifiedToken) {
       const nowMs = Date.now();
-      const DRIFT_BUFFER_MS = 30 * 1000; // 30 seconds clock drift grace buffer
+      const DRIFT_BUFFER_MS = 10 * 1000; // 10 seconds clock drift grace buffer
 
       const isFutureToken = verifiedToken.timestamp - nowMs > DRIFT_BUFFER_MS;
       const isExpiredToken = nowMs - verifiedToken.timestamp > (TOKEN_EXPIRY_MS + DRIFT_BUFFER_MS);
 
       if (isFutureToken || isExpiredToken) {
+        logger.warn(`Intento de acceso denegado: Token QR ${isFutureToken ? 'futuro' : 'expirado'} para el cliente ${client.id} (gimnasio ${session.user.id})`);
         await prisma.accessLog.create({
           data: {
             userId: client.id,
@@ -137,6 +143,7 @@ export async function POST(req: Request) {
     const isExpired = client.subscriptionEndDate && client.subscriptionEndDate < serverNow;
 
     if (client.subscriptionStatus !== "ACTIVE" || isExpired) {
+      logger.warn(`Intento de acceso denegado: Suscripción inactiva/vencida para cliente ${client.id} (gimnasio ${session.user.id})`);
       await prisma.accessLog.create({
         data: {
           userId: client.id,
@@ -161,7 +168,7 @@ export async function POST(req: Request) {
       });
     }
 
-    // Access granted! Log successful entry
+    logger.info(`Acceso PERMITIDO para cliente ${client.id} en gimnasio ${session.user.id}`);
     await prisma.accessLog.create({
       data: {
         userId: client.id,
@@ -182,8 +189,8 @@ export async function POST(req: Request) {
         subscriptionEndDate: client.subscriptionEndDate ? client.subscriptionEndDate.toISOString() : null,
       },
     });
-  } catch (error) {
-    console.error("Error validating gym access:", error);
+  } catch (error: any) {
+    logger.error(`Error validating gym access: ${error.message || error}`);
     return NextResponse.json(
       { message: "Error interno en el servidor" },
       { status: 500 }

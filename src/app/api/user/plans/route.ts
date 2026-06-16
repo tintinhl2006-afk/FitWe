@@ -40,10 +40,9 @@ export async function GET() {
     const gym = await prisma.user.findUnique({
       where: { id: user.gymId },
       select: {
-        stripeSecretKey: true,
-        stripePublishableKey: true,
         stripeAccountId: true,
         stripeConnected: true,
+        stripeEnabled: true,
         redsysEnabled: true,
         redsysFuc: true,
         redsysClave: true,
@@ -51,8 +50,7 @@ export async function GET() {
     });
 
     const hasStripe = 
-      (!!gym?.stripeSecretKey && !!gym?.stripePublishableKey) || 
-      (!!gym?.stripeConnected && !!gym?.stripeAccountId);
+      !!gym?.stripeEnabled && !!gym?.stripeConnected && !!gym?.stripeAccountId;
       
     const hasRedsys = 
       !!gym?.redsysEnabled && 
@@ -64,7 +62,6 @@ export async function GET() {
       currentPlanId: user.planId,
       hasStripe,
       hasRedsys,
-      stripePublishableKey: gym?.stripePublishableKey || null,
     });
   } catch (error: any) {
     console.error("Error fetching gym plans:", error);

@@ -38,11 +38,33 @@ export function SettingsForm({ user }: SettingsFormProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
+  const provinces = [
+    "Álava", "Albacete", "Alicante", "Almería", "Asturias", "Ávila", "Badajoz", "Barcelona",
+    "Burgos", "Cáceres", "Cádiz", "Cantabria", "Castellón", "Ciudad Real", "Córdoba", "La Coruña",
+    "Cuenca", "Gerona", "Granada", "Guadalajara", "Guipúzcoa", "Huelva", "Huesca", "Islas Baleares",
+    "Jaén", "León", "Lérida", "Lugo", "Madrid", "Málaga", "Murcia", "Navarra", "Orense",
+    "Palencia", "Las Palmas", "Pontevedra", "La Rioja", "Salamanca", "Segovia", "Sevilla",
+    "Soria", "Tarragona", "Santa Cruz de Tenerife", "Teruel", "Toledo", "Valencia", "Valladolid",
+    "Vizcaya", "Zamora", "Zaragoza", "Ceuta", "Melilla"
+  ];
+
+  // Fiscal states
+  const [documentType, setDocumentType] = useState("DNI");
+  const [documentPrefix, setDocumentPrefix] = useState("-");
+  const [documentNumber, setDocumentNumber] = useState("");
+  const [documentLetter, setDocumentLetter] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [country, setCountry] = useState("España");
+  const [province, setProvince] = useState("");
+  const [locality, setLocality] = useState("");
+  const [postalCode, setPostalCode] = useState("");
+  const [gymCode, setGymCode] = useState("");
+
   // Stripe Settings
-  const [stripeSecretKey, setStripeSecretKey] = useState("");
-  const [stripePublishableKey, setStripePublishableKey] = useState("");
   const [stripeAccountId, setStripeAccountId] = useState("");
   const [stripeConnected, setStripeConnected] = useState(false);
+  const [stripeEnabled, setStripeEnabled] = useState(false);
   
   // Redsys Settings
   const [redsysFuc, setRedsysFuc] = useState("");
@@ -52,7 +74,6 @@ export function SettingsForm({ user }: SettingsFormProps) {
 
   // UI States
   const [isConnectingStripe, setIsConnectingStripe] = useState(false);
-  const [showManualStripe, setShowManualStripe] = useState(false);
 
   const showToast = (type: "success" | "error", message: string) => {
     setToast({ type, message });
@@ -66,15 +87,36 @@ export function SettingsForm({ user }: SettingsFormProps) {
         const data = await res.json();
         setName(data.name || "");
         if (data.role === "GYM") {
-          setStripeSecretKey(data.stripeSecretKey || "");
-          setStripePublishableKey(data.stripePublishableKey || "");
           setStripeAccountId(data.stripeAccountId || "");
           setStripeConnected(!!data.stripeConnected);
+          setStripeEnabled(!!data.stripeEnabled);
           
           setRedsysFuc(data.redsysFuc || "");
           setRedsysTerminal(data.redsysTerminal || "001");
           setRedsysClave(data.redsysClave || "");
           setRedsysEnabled(!!data.redsysEnabled);
+
+          // Cargar datos fiscales
+          setGymCode(data.gymCode || "");
+          setDocumentType(data.documentType || "DNI");
+          let prefix = "-";
+          let num = data.documentNumber || "";
+          if (data.documentType === "NIE" && num) {
+            const firstChar = num.charAt(0).toUpperCase();
+            if (["X", "Y", "Z"].includes(firstChar)) {
+              prefix = firstChar;
+              num = num.slice(1);
+            }
+          }
+          setDocumentPrefix(prefix);
+          setDocumentNumber(num);
+          setDocumentLetter(data.documentLetter || "");
+          setPhone(data.phone || "");
+          setAddress(data.address || "");
+          setCountry(data.country || "España");
+          setProvince(data.province || "");
+          setLocality(data.locality || "");
+          setPostalCode(data.postalCode || "");
         }
       }
     } catch (e) {
@@ -177,13 +219,27 @@ export function SettingsForm({ user }: SettingsFormProps) {
       }
 
       if (user.role === "GYM") {
-        body.stripeSecretKey = stripeSecretKey;
-        body.stripePublishableKey = stripePublishableKey;
+        body.stripeEnabled = stripeEnabled;
         
         body.redsysFuc = redsysFuc;
         body.redsysTerminal = redsysTerminal;
         body.redsysClave = redsysClave;
         body.redsysEnabled = redsysEnabled;
+
+        // Componer datos fiscales
+        const finalDocNum = documentType === "NIE" && documentPrefix !== "-"
+          ? `${documentPrefix}${documentNumber}`
+          : documentNumber;
+
+        body.documentType = documentType;
+        body.documentNumber = finalDocNum;
+        body.documentLetter = documentLetter;
+        body.phone = phone;
+        body.address = address;
+        body.country = country;
+        body.province = province;
+        body.locality = locality;
+        body.postalCode = postalCode;
       }
 
       const res = await fetch("/api/user/settings", {
@@ -274,6 +330,33 @@ export function SettingsForm({ user }: SettingsFormProps) {
           </p>
         </div>
 
+        {/* Código del Centro (Solo para GYM) */}
+        {user.role === "GYM" && gymCode && (
+          <div className="rounded-2xl border border-cyan-200 dark:border-cyan-800 bg-cyan-50/50 dark:bg-cyan-950/10 p-5 space-y-2">
+            <h4 className="text-xs font-bold text-primary dark:text-cyan-400 uppercase tracking-wider">
+              Código de Vinculación de Socios
+            </h4>
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-normal">
+              Comparte este código con tus clientes. Lo necesitarán para crear su cuenta y quedar automáticamente vinculados a tu centro.
+            </p>
+            <div className="flex items-center gap-3 pt-2">
+              <span className="font-mono text-xl font-black bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 px-4 py-2 rounded-xl text-slate-800 dark:text-white tracking-widest shadow-sm select-all">
+                {gymCode}
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText(gymCode);
+                  showToast("success", "¡Código copiado al portapapeles!");
+                }}
+                className="flex items-center gap-1 bg-primary hover:opacity-95 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-all cursor-pointer shadow-sm"
+              >
+                Copiar Código
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* New password field */}
         <div>
           <label htmlFor="settings-password" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
@@ -298,6 +381,174 @@ export function SettingsForm({ user }: SettingsFormProps) {
           </p>
         </div>
 
+        {/* Datos Fiscales del Centro (Solo para GYM) */}
+        {user.role === "GYM" && (
+          <div className="space-y-6 pt-6 border-t border-slate-200 dark:border-slate-800">
+            <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider mb-4">
+              Datos Fiscales y de Facturación (Emisor)
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Tipo de Documento */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Tipo de documento fiscal
+                </label>
+                <select
+                  value={documentType}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setDocumentType(val);
+                    setDocumentPrefix(val === "NIE" ? "X" : "-");
+                  }}
+                  className="w-full rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 py-2.5 px-4 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-cyan-500/20 sm:text-sm"
+                >
+                  <option value="DNI">NIF / CIF</option>
+                  <option value="NIE">NIE</option>
+                  <option value="Pasaporte">Pasaporte</option>
+                  <option value="Otro">Otro</option>
+                </select>
+              </div>
+
+              {/* Documento (Prefijo + Número + Letra) */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Número de Documento
+                </label>
+                <div className="flex gap-2">
+                  <select
+                    value={documentPrefix}
+                    onChange={(e) => setDocumentPrefix(e.target.value)}
+                    className="w-1/4 rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 py-2.5 px-2 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-cyan-500/20 text-center sm:text-sm"
+                  >
+                    {documentType === "NIE" ? (
+                      <>
+                        <option value="X">X</option>
+                        <option value="Y">Y</option>
+                        <option value="Z">Z</option>
+                      </>
+                    ) : (
+                      <option value="-">-</option>
+                    )}
+                  </select>
+                  <input
+                    type="text"
+                    placeholder={
+                      documentType === "DNI"
+                        ? "Nº nif/cif"
+                        : documentType === "NIE"
+                        ? "Nº nie"
+                        : documentType === "Pasaporte"
+                        ? "Nº pasaporte"
+                        : "Nº documento"
+                    }
+                    value={documentNumber}
+                    onChange={(e) => setDocumentNumber(e.target.value)}
+                    className="w-2/4 rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 py-2.5 px-4 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-cyan-500/20 sm:text-sm"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Letra"
+                    maxLength={1}
+                    value={documentLetter}
+                    onChange={(e) => setDocumentLetter(e.target.value.toUpperCase())}
+                    className="w-1/4 rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 py-2.5 px-2 text-center text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-cyan-500/20 sm:text-sm"
+                  />
+                </div>
+              </div>
+
+              {/* Teléfono */}
+              <div>
+                <label htmlFor="settings-phone" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Teléfono de contacto
+                </label>
+                <input
+                  id="settings-phone"
+                  type="text"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="w-full rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 py-2.5 px-4 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-cyan-500/20 sm:text-sm"
+                />
+              </div>
+
+              {/* Dirección Fiscal */}
+              <div>
+                <label htmlFor="settings-address" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Dirección Fiscal
+                </label>
+                <input
+                  id="settings-address"
+                  type="text"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  placeholder="Calle, Número, Piso"
+                  className="w-full rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 py-2.5 px-4 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-cyan-500/20 sm:text-sm"
+                />
+              </div>
+
+              {/* País */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  País
+                </label>
+                <select
+                  value={country}
+                  onChange={(e) => setCountry(e.target.value)}
+                  className="w-full rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 py-2.5 px-4 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-cyan-500/20 sm:text-sm"
+                >
+                  <option value="España">España</option>
+                  <option value="Otro">Otro</option>
+                </select>
+              </div>
+
+              {/* Provincia */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Provincia
+                </label>
+                <select
+                  value={province}
+                  onChange={(e) => setProvince(e.target.value)}
+                  className="w-full rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 py-2.5 px-4 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-cyan-500/20 sm:text-sm"
+                >
+                  <option value="">Seleccionar...</option>
+                  {provinces.map((prov) => (
+                    <option key={prov} value={prov}>{prov}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Localidad */}
+              <div>
+                <label htmlFor="settings-locality" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Localidad
+                </label>
+                <input
+                  id="settings-locality"
+                  type="text"
+                  value={locality}
+                  onChange={(e) => setLocality(e.target.value)}
+                  className="w-full rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 py-2.5 px-4 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-cyan-500/20 sm:text-sm"
+                />
+              </div>
+
+              {/* Código Postal */}
+              <div>
+                <label htmlFor="settings-postalCode" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Código Postal
+                </label>
+                <input
+                  id="settings-postalCode"
+                  type="text"
+                  value={postalCode}
+                  onChange={(e) => setPostalCode(e.target.value)}
+                  className="w-full rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 py-2.5 px-4 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-cyan-500/20 sm:text-sm"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Gym settings section */}
         {user.role === "GYM" && (
           <div className="space-y-6 pt-6 border-t border-slate-200 dark:border-slate-800">
@@ -309,82 +560,89 @@ export function SettingsForm({ user }: SettingsFormProps) {
             <div className="rounded-2xl border border-slate-200 dark:border-slate-800 p-5 bg-slate-50/50 dark:bg-slate-950/20 space-y-4">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-cyan-500" />
+                  <span className={cn("h-2 w-2 rounded-full", stripeEnabled ? "bg-emerald-500" : "bg-slate-400")} />
                   <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">
                     Pasarela Stripe Connect (Tarjeta / Apple Pay / Google Pay)
                   </h4>
                 </div>
-                <span className="text-[10px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded-md bg-cyan-500/10 text-primary dark:text-cyan-400">
-                  RECOMENDADO
-                </span>
+                
+                {/* Switch de habilitación */}
+                <button
+                  type="button"
+                  onClick={() => setStripeEnabled(!stripeEnabled)}
+                  className={cn(
+                    "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out outline-none",
+                    stripeEnabled ? "bg-emerald-500" : "bg-slate-350 dark:bg-slate-700"
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
+                      stripeEnabled ? "translate-x-5" : "translate-x-0"
+                    )}
+                  />
+                </button>
               </div>
 
-              {stripeConnected ? (
-                /* ESTADO: CONECTADO */
-                <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/[0.02] dark:bg-emerald-500/[0.01] p-4 space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500 shrink-0">
-                      <Check className="h-5 w-5" />
+              {stripeEnabled && (
+                <div className="space-y-4 pt-3 border-t border-slate-200 dark:border-slate-850 animate-in fade-in duration-200">
+                  {stripeConnected ? (
+                    /* ESTADO: CONECTADO */
+                    <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/[0.02] dark:bg-emerald-500/[0.01] p-4 space-y-4">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500 shrink-0">
+                          <Check className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <h5 className="text-xs font-bold text-emerald-600 dark:text-emerald-450 uppercase tracking-wide">
+                            Stripe Connect Enlazado
+                          </h5>
+                          <p className="text-xs text-slate-500 mt-0.5">
+                            Tus clientes pueden pagar online. Tus ingresos se transferirán a tu banco de inmediato.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between items-center text-xs pt-2 border-t border-slate-200/50 dark:border-slate-800/50">
+                        <span className="font-mono text-slate-400">
+                          ID: {stripeAccountId ? `${stripeAccountId.slice(0, 12)}...` : "acct_connect_active"}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={handleDisconnectStripe}
+                          className="text-rose-500 hover:text-rose-600 hover:underline font-semibold cursor-pointer"
+                        >
+                          Desconectar Stripe
+                        </button>
+                      </div>
                     </div>
-                    <div>
-                      <h5 className="text-xs font-bold text-emerald-600 dark:text-emerald-450 uppercase tracking-wide">
-                        Stripe Connect Enlazado
-                      </h5>
-                      <p className="text-xs text-slate-500 mt-0.5">
-                        Tus clientes pueden pagar online. Tus ingresos se transferirán a tu banco de inmediato.
+                  ) : (
+                    /* ESTADO: DESCONECTADO */
+                    <div className="space-y-4">
+                      <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                        Vincula tu cuenta bancaria de Stripe para cobrar online al instante sin teclear códigos complejos.
                       </p>
-                    </div>
-                  </div>
 
-                  <div className="flex justify-between items-center text-xs pt-2 border-t border-slate-200/50 dark:border-slate-800/50">
-                    <span className="font-mono text-slate-400">
-                      ID: {stripeAccountId ? `${stripeAccountId.slice(0, 12)}...` : "acct_connect_active"}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={handleDisconnectStripe}
-                      className="text-rose-500 hover:text-rose-600 hover:underline font-semibold cursor-pointer"
-                    >
-                      Desconectar Stripe
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                /* ESTADO: DESCONECTADO */
-                <div className="space-y-4">
-                  <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                    Vincula tu cuenta bancaria de Stripe para cobrar online al instante sin teclear códigos complejos.
-                  </p>
-                  
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-600 dark:text-slate-400 font-medium pb-2">
-                    <div className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-cyan-500 shrink-0" />
-                      <span>Soporta Apple Pay y Google Pay</span>
+                      <button
+                        type="button"
+                        onClick={handleConnectStripe}
+                        disabled={isConnectingStripe}
+                        className="flex w-full sm:w-auto justify-center items-center gap-2 rounded-2xl bg-[#635BFF] hover:bg-[#5951e5] px-5 py-3 text-sm font-bold text-white shadow-soft transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
+                      >
+                        {isConnectingStripe ? (
+                          <>
+                            <RefreshCw className="h-4 w-4 animate-spin text-white" />
+                            <span>Conectando...</span>
+                          </>
+                        ) : (
+                          <>
+                            <ExternalLink className="h-4 w-4 text-white" />
+                            <span>Conectar con Stripe</span>
+                          </>
+                        )}
+                      </button>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-cyan-500 shrink-0" />
-                      <span>Liquidación directa automática</span>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={handleConnectStripe}
-                    disabled={isConnectingStripe}
-                    className="flex w-full sm:w-auto justify-center items-center gap-2 rounded-2xl bg-[#635BFF] hover:bg-[#5951e5] px-5 py-3 text-sm font-bold text-white shadow-soft transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
-                  >
-                    {isConnectingStripe ? (
-                      <>
-                        <RefreshCw className="h-4 w-4 animate-spin text-white" />
-                        <span>Conectando...</span>
-                      </>
-                    ) : (
-                      <>
-                        <ExternalLink className="h-4 w-4 text-white" />
-                        <span>Conectar con Stripe</span>
-                      </>
-                    )}
-                  </button>
+                  )}
                 </div>
               )}
             </div>
@@ -483,69 +741,7 @@ export function SettingsForm({ user }: SettingsFormProps) {
               )}
             </div>
 
-            {/* CONFIGURACIÓN MANUAL AVANZADA (LEGACY STRIPE KEYS) */}
-            <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden">
-              <button
-                type="button"
-                onClick={() => setShowManualStripe(!showManualStripe)}
-                className="w-full flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-950/30 text-left text-xs font-bold text-slate-500 dark:text-slate-400 transition-colors"
-              >
-                <span>CLAVES MANUALES INDEPENDIENTES DE STRIPE (EXPERTOS)</span>
-                {showManualStripe ? (
-                  <ChevronUp className="h-4 w-4" />
-                ) : (
-                  <ChevronDown className="h-4 w-4" />
-                )}
-              </button>
 
-              {showManualStripe && (
-                <div className="p-4 border-t border-slate-200 dark:border-slate-800 space-y-4 animate-in fade-in duration-200">
-                  <p className="text-[11px] text-amber-600 dark:text-amber-450 leading-relaxed font-semibold">
-                    ▲ Atención: Configura tus propias claves API desde el Dashboard de Stripe si deseas operar sin el enrutador Connect.
-                  </p>
-
-                  {/* Stripe Publishable Key */}
-                  <div>
-                    <label htmlFor="settings-stripe-pub" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                      Clave Pública de Stripe (Stripe Publishable Key)
-                    </label>
-                    <div className="relative">
-                      <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-                        <Key className="h-4 w-4 text-slate-400 dark:text-slate-500" />
-                      </div>
-                      <input
-                        id="settings-stripe-pub"
-                        type="text"
-                        value={stripePublishableKey}
-                        onChange={(e) => setStripePublishableKey(e.target.value)}
-                        placeholder="pk_test_..."
-                        className="w-full rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 py-2.5 pl-10 pr-4 text-slate-900 dark:text-white shadow-sm focus:border-primary focus:ring-2 focus:ring-cyan-500/20 outline-none transition-all sm:text-sm font-mono"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Stripe Secret Key */}
-                  <div>
-                    <label htmlFor="settings-stripe-sec" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                      Clave Secreta de Stripe (Stripe Secret Key)
-                    </label>
-                    <div className="relative">
-                      <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-                        <Key className="h-4 w-4 text-slate-400 dark:text-slate-500" />
-                      </div>
-                      <input
-                        id="settings-stripe-sec"
-                        type="password"
-                        value={stripeSecretKey}
-                        onChange={(e) => setStripeSecretKey(e.target.value)}
-                        placeholder="sk_test_..."
-                        className="w-full rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 py-2.5 pl-10 pr-4 text-slate-900 dark:text-white shadow-sm focus:border-primary focus:ring-2 focus:ring-cyan-500/20 outline-none transition-all sm:text-sm font-mono"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
           </div>
         )}
 

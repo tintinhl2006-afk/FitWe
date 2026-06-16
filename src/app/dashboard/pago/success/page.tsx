@@ -30,6 +30,7 @@ interface PaymentDetails {
   cardBrand: string;
   gymName: string;
   endDate: string;
+  invoiceNumber?: string | null;
 }
 
 function PagoLoading() {
@@ -203,6 +204,12 @@ function SuccessContent() {
                   month: "short",
                   year: "numeric",
                 })}
+              </span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-slate-500 dark:text-slate-400">Nº de Factura</span>
+              <span className="font-semibold text-slate-900 dark:text-white font-mono text-xs">
+                {paymentDetails.invoiceNumber || `F-${paymentDetails.id.slice(0, 8).toUpperCase()}`}
               </span>
             </div>
 

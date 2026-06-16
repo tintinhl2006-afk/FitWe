@@ -46,6 +46,7 @@ export async function generateClassesFromTemplate(template: any, daysAheadLimit:
         gymId: template.gymId,
         name: template.name,
         instructor: template.instructor,
+        instructorId: template.instructorId,
         capacity: template.capacity,
         startTime,
         endTime,

@@ -5,33 +5,63 @@ import type { NextRequest } from "next/server";
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // ── Proteger rutas /admin-gym/* (solo GYM) ──
-  if (pathname.startsWith("/admin-gym")) {
-    const token = await getToken({ req: request });
+  const token = await getToken({ req: request });
 
+  // ── Forzar cambio de contraseña provisional ──
+  if (token) {
+    if (token.mustChangePassword && pathname !== "/establecer-contrasena") {
+      return NextResponse.redirect(new URL("/establecer-contrasena", request.url));
+    }
+    if (!token.mustChangePassword && pathname === "/establecer-contrasena") {
+      if (token.role === "GYM") {
+        return NextResponse.redirect(new URL("/admin-gym", request.url));
+      }
+      if (token.role === "EMPLOYEE") {
+        return NextResponse.redirect(new URL("/admin-gym/clases", request.url));
+      }
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
+  } else {
+    if (pathname === "/establecer-contrasena") {
+      return NextResponse.redirect(new URL("/login", request.url));
+    }
+  }
+
+  // ── Proteger rutas /admin-gym/* (GYM y EMPLOYEE) ──
+  if (pathname.startsWith("/admin-gym")) {
     if (!token) {
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("callbackUrl", pathname);
       return NextResponse.redirect(loginUrl);
     }
 
-    if (token.role !== "GYM") {
+    if (token.role !== "GYM" && token.role !== "EMPLOYEE") {
       return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
+
+    // Restricciones adicionales para empleados
+    if (token.role === "EMPLOYEE") {
+      const isClasesRoute = pathname === "/admin-gym/clases" || pathname.startsWith("/admin-gym/clases/");
+      if (!isClasesRoute) {
+        return NextResponse.redirect(new URL("/admin-gym/clases", request.url));
+      }
     }
 
     return NextResponse.next();
   }
 
-  // ── Redirigir GYM fuera de rutas de usuario ──
-  // Si un GYM accede a "/dashboard" o rutas B2C, lo enviamos a /admin-gym
+  // ── Redirigir GYM/EMPLOYEE fuera de rutas de usuario ──
   const userOnlyPaths = ["/dashboard", "/gimnasio", "/entrenamientos", "/nutricion", "/perfil", "/configuracion", "/clases"];
   const isUserRoute = userOnlyPaths.some(p => pathname.startsWith(p));
 
   if (isUserRoute) {
-    const token = await getToken({ req: request });
-
-    if (token && token.role === "GYM") {
-      return NextResponse.redirect(new URL("/admin-gym", request.url));
+    if (token) {
+      if (token.role === "GYM") {
+        return NextResponse.redirect(new URL("/admin-gym", request.url));
+      }
+      if (token.role === "EMPLOYEE") {
+        return NextResponse.redirect(new URL("/admin-gym/clases", request.url));
+      }
     }
 
     // Todas las rutas de usuario requieren sesión
@@ -55,5 +85,6 @@ export const config = {
     "/perfil/:path*",
     "/configuracion/:path*",
     "/clases/:path*",
+    "/establecer-contrasena/:path*",
   ],
 };

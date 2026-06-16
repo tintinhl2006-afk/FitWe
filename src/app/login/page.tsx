@@ -11,6 +11,7 @@ export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const registeredGym = searchParams.get("registered") === "gym";
+  const registeredClient = searchParams.get("registered") === "client";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -37,6 +38,8 @@ export default function LoginPage() {
 
       if (session?.user?.role === "GYM") {
         router.push("/admin-gym");
+      } else if (session?.user?.role === "EMPLOYEE") {
+        router.push("/admin-gym/clases");
       } else {
         router.push("/dashboard");
       }
@@ -60,6 +63,12 @@ export default function LoginPage() {
         {registeredGym && (
           <div className="rounded-3xl bg-cyan-50 dark:bg-cyan-950/30 border border-cyan-200 dark:border-cyan-800 p-3 text-sm text-primary dark:text-cyan-300 text-center">
             Centro deportivo registrado con éxito. ¡Inicia sesión para acceder a tu panel!
+          </div>
+        )}
+
+        {registeredClient && (
+          <div className="rounded-3xl bg-cyan-50 dark:bg-cyan-950/30 border border-cyan-200 dark:border-cyan-800 p-3 text-sm text-primary dark:text-cyan-300 text-center">
+            Cuenta de atleta creada con éxito. ¡Inicia sesión para continuar!
           </div>
         )}
 
@@ -126,11 +135,19 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <div className="mt-6 text-center text-sm">
-          <span className="text-slate-600 dark:text-slate-400">¿Eres un gimnasio y no tienes cuenta? </span>
-          <Link href="/registro-gimnasio" className="font-medium text-primary dark:text-cyan-400 hover:underline">
-            Registra tu centro aquí
-          </Link>
+        <div className="mt-6 space-y-2 text-center text-sm flex flex-col items-center">
+          <div>
+            <span className="text-slate-600 dark:text-slate-400">¿Eres un atleta y no tienes cuenta? </span>
+            <Link href="/registro" className="font-medium text-primary dark:text-cyan-400 hover:underline">
+              Regístrate aquí
+            </Link>
+          </div>
+          <div>
+            <span className="text-slate-600 dark:text-slate-400">¿Eres un gimnasio y no tienes cuenta? </span>
+            <Link href="/registro-gimnasio" className="font-medium text-primary dark:text-cyan-400 hover:underline">
+              Registra tu centro aquí
+            </Link>
+          </div>
         </div>
       </div>
     </div>

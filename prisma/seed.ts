@@ -77,6 +77,8 @@ async function main() {
   await prisma.classBooking.deleteMany({ where: { user: { email: { in: testEmails } } } });
   await prisma.paymentRecord.deleteMany({ where: { user: { email: { in: testEmails } } } });
   await prisma.gymClass.deleteMany({ where: { gym: { email: 'gimnasio@gmail.com' } } });
+  await prisma.classTemplate.deleteMany({ where: { gym: { email: 'gimnasio@gmail.com' } } });
+  await prisma.accessLog.deleteMany({ where: { OR: [ { user: { email: { in: testEmails } } }, { gym: { email: 'gimnasio@gmail.com' } } ] } });
   await prisma.subscriptionPlan.deleteMany({ where: { gym: { email: 'gimnasio@gmail.com' } } });
   await prisma.user.deleteMany({ where: { email: { in: testEmails } } });
 
@@ -117,7 +119,7 @@ async function main() {
 
   // Helper hash function
   const gymPasswordHash = await bcrypt.hash('gimnasio123', 10);
-  const clientPasswordHash = await bcrypt.hash('client123', 10);
+  const clientPasswordHash = await bcrypt.hash('cliente123', 10);
 
   // 3. Create Gym Account
   console.log('🏛️ Creando cuenta de gimnasio "Iron Temple Fitness"...');
@@ -129,6 +131,9 @@ async function main() {
       role: 'GYM',
       monthlyFee: 39.99,
       subscriptionStatus: 'ACTIVE',
+      mustChangePassword: false,
+      gymCode: 'FITWE1',
+      stripeEnabled: true,
     }
   });
 
@@ -289,6 +294,9 @@ async function main() {
     }
   ];
 
+  let seededInvoiceCounter = 1;
+  const currentYear = new Date().getFullYear();
+
   for (const c of clientsData) {
     const endDate = new Date();
     endDate.setDate(endDate.getDate() + c.daysRemaining);
@@ -305,8 +313,11 @@ async function main() {
         planId: c.plan.id,
         subscriptionStatus: c.status,
         subscriptionEndDate: endDate,
+        mustChangePassword: false,
       }
     });
+
+    const invoiceNumber = `F-${currentYear}-${String(seededInvoiceCounter++).padStart(5, "0")}`;
 
     // Create a payment record
     await prisma.paymentRecord.create({
@@ -315,7 +326,8 @@ async function main() {
         amount: c.plan.price,
         description: `Pago de tarifa: ${c.plan.name}`,
         date: new Date(new Date().setDate(new Date().getDate() - (c.plan.durationDays - Math.max(0, c.daysRemaining)))),
-        planId: c.plan.id
+        planId: c.plan.id,
+        invoiceNumber,
       }
     });
 
@@ -363,8 +375,11 @@ async function main() {
       planId: planStandard.id,
       subscriptionStatus: 'ACTIVE',
       subscriptionEndDate: mainClientEndDate,
+      mustChangePassword: false,
     }
   });
+
+  const mainClientInvoiceNumber = `F-${currentYear}-${String(seededInvoiceCounter++).padStart(5, "0")}`;
 
   // Create payment record
   await prisma.paymentRecord.create({
@@ -373,7 +388,16 @@ async function main() {
       amount: planStandard.price,
       description: `Pago de tarifa: ${planStandard.name}`,
       date: new Date('2026-05-01T10:00:00Z'),
-      planId: planStandard.id
+      planId: planStandard.id,
+      invoiceNumber: mainClientInvoiceNumber,
+    }
+  });
+
+  console.log('📈 Configurando secuencia inicial de facturas...');
+  await prisma.gymInvoiceSequence.create({
+    data: {
+      gymId: gym.id,
+      nextValue: seededInvoiceCounter,
     }
   });
 

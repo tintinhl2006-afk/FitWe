@@ -59,7 +59,7 @@ export default function ProfilePage() {
   const [isQrOpen, setIsQrOpen] = useState(false);
   const [qrToken, setQrToken] = useState<string | null>(null);
   const [isQrLoading, setIsQrLoading] = useState(false);
-  const [qrTimeLeft, setQrTimeLeft] = useState(300);
+  const [qrTimeLeft, setQrTimeLeft] = useState(20);
 
   useEffect(() => {
     fetchProfileData(selectedDate);
@@ -67,10 +67,14 @@ export default function ProfilePage() {
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
-    if (isQrOpen && qrTimeLeft > 0) {
-      timer = setInterval(() => {
-        setQrTimeLeft((prev) => prev - 1);
-      }, 1000);
+    if (isQrOpen) {
+      if (qrTimeLeft > 0) {
+        timer = setInterval(() => {
+          setQrTimeLeft((prev) => prev - 1);
+        }, 1000);
+      } else {
+        fetchQrToken();
+      }
     }
     return () => clearInterval(timer);
   }, [isQrOpen, qrTimeLeft]);
@@ -110,7 +114,7 @@ export default function ProfilePage() {
       if (res.ok) {
         const json = await res.json();
         setQrToken(json.token);
-        setQrTimeLeft(300);
+        setQrTimeLeft(20);
       } else {
         showAlert("Error al generar el token de acceso.");
       }
@@ -494,7 +498,7 @@ export default function ProfilePage() {
               ) : qrTimeLeft <= 0 ? (
                 <div className="h-[240px] w-[240px] flex flex-col items-center justify-center text-center px-4">
                   <p className="text-sm font-bold text-red-500 mb-2">Código Expirado</p>
-                  <p className="text-xs text-slate-400 mb-4">Por seguridad, el código QR expira a los 5 minutos.</p>
+                  <p className="text-xs text-slate-400 mb-4">Por seguridad, el código QR expira en 20 segundos.</p>
                   <button
                     onClick={fetchQrToken}
                     className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-bold uppercase tracking-wider text-white shadow-md hover:opacity-90 transition-all cursor-pointer"

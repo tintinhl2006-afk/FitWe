@@ -80,7 +80,7 @@ export default function DashboardPage() {
   // Acceso QR States
   const [qrToken, setQrToken] = useState<string | null>(null);
   const [isQrLoading, setIsQrLoading] = useState(false);
-  const [qrTimeLeft, setQrTimeLeft] = useState(300);
+  const [qrTimeLeft, setQrTimeLeft] = useState(20);
   const [isZoomed, setIsZoomed] = useState(false);
 
   const fetchQrToken = async (currentStatus?: string, currentEndDate?: string | null, currentServerNow?: string) => {
@@ -102,7 +102,7 @@ export default function DashboardPage() {
       if (res.ok) {
         const json = await res.json();
         setQrToken(json.token);
-        setQrTimeLeft(300);
+        setQrTimeLeft(20);
       } else {
         setQrToken(null);
       }
@@ -116,10 +116,15 @@ export default function DashboardPage() {
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
-    if (qrToken && qrTimeLeft > 0) {
-      timer = setInterval(() => {
-        setQrTimeLeft((prev) => prev - 1);
-      }, 1000);
+    if (qrToken) {
+      if (qrTimeLeft > 0) {
+        timer = setInterval(() => {
+          setQrTimeLeft((prev) => prev - 1);
+        }, 1000);
+      } else {
+        // Auto-refresh when time runs out
+        fetchQrToken();
+      }
     }
     return () => clearInterval(timer);
   }, [qrToken, qrTimeLeft]);
@@ -430,7 +435,7 @@ export default function DashboardPage() {
                   ) : qrTimeLeft <= 0 ? (
                     <div className="flex flex-col items-center text-center p-2 py-4">
                       <p className="text-sm font-bold text-red-500 mb-1">Código Expirado</p>
-                      <p className="text-[11px] text-slate-400 mb-3">Expira cada 5 min por seguridad.</p>
+                      <p className="text-[11px] text-slate-400 mb-3">Expira cada 20 segundos por seguridad.</p>
                       <button
                         onClick={() => fetchQrToken()}
                         className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-cyan-500 to-primary px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-white shadow-md hover:opacity-90 transition-all cursor-pointer"

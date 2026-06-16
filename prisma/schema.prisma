@@ -44,10 +44,9 @@ model User {
   isRegisteredCitizen Boolean            @default(false)
   referralSource      String?
   gdprConsent         Boolean            @default(true)
-  stripeSecretKey     String?
-  stripePublishableKey String?
   stripeAccountId     String?
   stripeConnected     Boolean            @default(false)
+  stripeEnabled       Boolean            @default(false)
   redsysFuc           String?
   redsysTerminal      String?            @default("001")
   redsysClave         String?
@@ -74,6 +73,15 @@ model User {
   accessLogs          AccessLog[]        @relation("UserAccessLogs")
   gymAccessLogs       AccessLog[]        @relation("GymAccessLogs")
   savedDiets          SavedDiet[]
+  instructorClasses   GymClass[]         @relation("InstructorClasses")
+  instructorTemplates ClassTemplate[]    @relation("InstructorTemplates")
+  invoiceSequence     GymInvoiceSequence? @relation("GymInvoiceSequence")
+  mustChangePassword  Boolean            @default(true)
+  resetToken          String?
+  resetTokenExpiry    DateTime?
+  gymCode             String?            @unique
+
+  @@index([gymId])
 }
 
 model SubscriptionPlan {
@@ -89,17 +97,23 @@ model SubscriptionPlan {
   gym          User            @relation("GymPlans", fields: [gymId], references: [id])
   users        User[]          @relation("UserPlan")
   payments     PaymentRecord[]
+
+  @@index([gymId])
 }
 
 model PaymentRecord {
-  id          String            @id @default(cuid())
-  userId      String            @db.Uuid
-  amount      Float             @default(0)
-  description String
-  date        DateTime          @default(now())
-  planId      String?           @db.Uuid
-  user        User              @relation(fields: [userId], references: [id])
-  plan        SubscriptionPlan? @relation(fields: [planId], references: [id])
+  id            String            @id @default(cuid())
+  userId        String            @db.Uuid
+  amount        Float             @default(0)
+  description   String
+  date          DateTime          @default(now())
+  planId        String?           @db.Uuid
+  invoiceNumber String?
+  user          User              @relation(fields: [userId], references: [id])
+  plan          SubscriptionPlan? @relation(fields: [planId], references: [id])
+
+  @@index([userId])
+  @@index([planId])
 }
 
 model GymClass {
@@ -115,8 +129,13 @@ model GymClass {
   updatedAt   DateTime       @updatedAt
   templateId  String?        @db.Uuid
   bookings    ClassBooking[]
-  gym         User           @relation("GymClasses", fields: [gymId], references: [id])
-  template    ClassTemplate? @relation(fields: [templateId], references: [id])
+  gym            User           @relation("GymClasses", fields: [gymId], references: [id])
+  template       ClassTemplate? @relation(fields: [templateId], references: [id])
+  instructorId   String?        @db.Uuid
+  instructorUser User?          @relation("InstructorClasses", fields: [instructorId], references: [id], onDelete: SetNull)
+
+  @@index([gymId])
+  @@index([instructorId])
 }
 
 model ClassTemplate {
@@ -132,6 +151,11 @@ model ClassTemplate {
   updatedAt        DateTime   @updatedAt
   gym              User       @relation("GymTemplates", fields: [gymId], references: [id])
   generatedClasses GymClass[]
+  instructorId     String?    @db.Uuid
+  instructorUser   User?      @relation("InstructorTemplates", fields: [instructorId], references: [id], onDelete: SetNull)
+
+  @@index([gymId])
+  @@index([instructorId])
 }
 
 model ClassBooking {
@@ -144,6 +168,8 @@ model ClassBooking {
   user      User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, classId])
+  @@index([userId])
+  @@index([classId])
 }
 
 model Exercise {
@@ -165,6 +191,8 @@ model Routine {
   user            User              @relation(fields: [userId], references: [id])
   exercises       RoutineExercise[]
   workoutSessions WorkoutSession[]
+
+  @@index([userId])
 }
 
 model RoutineExercise {
@@ -178,6 +206,9 @@ model RoutineExercise {
   order      Int      @default(0)
   exercise   Exercise @relation(fields: [exerciseId], references: [id])
   routine    Routine  @relation(fields: [routineId], references: [id])
+
+  @@index([routineId])
+  @@index([exerciseId])
 }
 
 model WorkoutSession {
@@ -191,6 +222,9 @@ model WorkoutSession {
   routine     Routine?     @relation(fields: [routineId], references: [id])
   user        User         @relation(fields: [userId], references: [id])
   workoutSets WorkoutSet[]
+
+  @@index([userId])
+  @@index([routineId])
 }
 
 model WorkoutSet {
@@ -202,6 +236,9 @@ model WorkoutSet {
   isCompleted Boolean        @default(false)
   exercise    Exercise       @relation(fields: [exerciseId], references: [id])
   session     WorkoutSession @relation(fields: [sessionId], references: [id])
+
+  @@index([sessionId])
+  @@index([exerciseId])
 }
 
 model FoodEntry {
@@ -214,11 +251,14 @@ model FoodEntry {
   carbs    Float
   fat      Float
   user     User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
 }
 
 enum Role {
   USER
   GYM
+  EMPLOYEE
 }
 
 model NutritionProfile {
@@ -260,6 +300,8 @@ model FoodItem {
 
   user       User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
   mealEntries MealEntry[]
+
+  @@index([userId])
 }
 
 model MealEntry {
@@ -274,6 +316,9 @@ model MealEntry {
 
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   foodItem FoodItem @relation(fields: [foodItemId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([foodItemId])
 }
 
 model AccessLog {
@@ -286,6 +331,9 @@ model AccessLog {
 
   user User @relation("UserAccessLogs", fields: [userId], references: [id], onDelete: Cascade)
   gym  User @relation("GymAccessLogs", fields: [gymId], references: [id], onDelete: Cascade)
+
+  @@index([gymId])
+  @@index([userId])
 }
 
 model SavedDiet {
@@ -296,6 +344,14 @@ model SavedDiet {
   updatedAt DateTime        @updatedAt
   user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   items     SavedDietItem[]
+
+  @@index([userId])
+}
+
+model GymInvoiceSequence {
+  gymId     String   @id @db.Uuid
+  nextValue Int      @default(1)
+  gym       User     @relation("GymInvoiceSequence", fields: [gymId], references: [id], onDelete: Cascade)
 }
 
 model SavedDietItem {
@@ -310,5 +366,7 @@ model SavedDietItem {
   quantityGrams Float
   mealType      String    // BREAKFAST, LUNCH, DINNER, SNACK
   savedDiet     SavedDiet @relation(fields: [savedDietId], references: [id], onDelete: Cascade)
+
+  @@index([savedDietId])
 }
 

@@ -47,6 +47,7 @@ export const authOptions: NextAuthOptions = {
           monthlyFee: user.monthlyFee,
           gymId: user.gymId || null,
           gymName: user.gym?.name || null,
+          mustChangePassword: user.mustChangePassword,
         };
       }
     })
@@ -66,6 +67,7 @@ export const authOptions: NextAuthOptions = {
         token.monthlyFee = user.monthlyFee;
         token.gymId = user.gymId;
         token.gymName = user.gymName;
+        token.mustChangePassword = user.mustChangePassword;
       }
       
       // Manejar la actualización manual del lado del cliente
@@ -74,6 +76,7 @@ export const authOptions: NextAuthOptions = {
         if (session?.monthlyFee !== undefined) token.monthlyFee = session.monthlyFee;
         if (session?.subscriptionStatus) token.subscriptionStatus = session.subscriptionStatus;
         if (session?.subscriptionEndDate) token.subscriptionEndDate = session.subscriptionEndDate;
+        if (session?.mustChangePassword !== undefined) token.mustChangePassword = session.mustChangePassword;
       }
 
       return token;
@@ -81,13 +84,14 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (token && session.user) {
         session.user.id = token.id as string;
-        session.user.role = token.role as "USER" | "GYM";
+        session.user.role = token.role as "USER" | "GYM" | "EMPLOYEE";
         session.user.name = token.name as string;
         session.user.subscriptionStatus = token.subscriptionStatus as string;
         session.user.subscriptionEndDate = token.subscriptionEndDate as string;
         session.user.monthlyFee = token.monthlyFee as number;
         session.user.gymId = token.gymId as string | null;
         session.user.gymName = token.gymName as string | null;
+        session.user.mustChangePassword = token.mustChangePassword as boolean;
         
         // Fetch image directly from DB (too large for JWT/cookie)
         const dbUser = await prisma.user.findUnique({

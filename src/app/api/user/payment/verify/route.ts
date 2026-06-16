@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import Stripe from "stripe";
+import { logger } from "@/lib/logger";
 
 export async function GET(req: Request) {
   try {
@@ -41,9 +42,12 @@ export async function GET(req: Request) {
       where: { id: user.gymId },
       select: {
         name: true,
-        stripeSecretKey: true,
         stripeAccountId: true,
         stripeConnected: true,
+        stripeEnabled: true,
+        redsysFuc: true,
+        redsysClave: true,
+        redsysEnabled: true,
       },
     });
 
@@ -66,55 +70,34 @@ export async function GET(req: Request) {
       let stripe: Stripe;
       let stripeSession: Stripe.Checkout.Session;
 
-      // A. Verificación vía Stripe Connect
-      if (isStripeConnect) {
-        const platformSecretKey = process.env.STRIPE_SECRET_KEY;
-        if (!platformSecretKey) {
-          return NextResponse.json(
-            { message: "Claves de plataforma no configuradas en el servidor para verificar pagos Connect." },
-            { status: 400 }
-          );
-        }
-        if (!gym.stripeAccountId) {
-          return NextResponse.json(
-            { message: "El gimnasio no dispone de una cuenta de Stripe Connect asociada." },
-            { status: 400 }
-          );
-        }
-
-        stripe = new Stripe(platformSecretKey, {
-          apiVersion: "2023-10-16" as any,
-        });
-
-        // Recuperar la sesión especificando el header stripeAccount (Direct Charges)
-        stripeSession = await stripe.checkout.sessions.retrieve(
-          sessionId,
-          {
-            expand: ["payment_intent"],
-          },
-          {
-            stripeAccount: gym.stripeAccountId,
-          }
+      const platformSecretKey = process.env.STRIPE_SECRET_KEY;
+      if (!platformSecretKey) {
+        return NextResponse.json(
+          { message: "Claves de plataforma no configuradas en el servidor para verificar pagos Connect." },
+          { status: 400 }
         );
       }
-      // B. Verificación vía Claves Manuales
-      else {
-        const stripeSecretKey = gym.stripeSecretKey?.trim();
-        if (!stripeSecretKey) {
-          return NextResponse.json(
-            { message: "El gimnasio no tiene Stripe configurado de forma manual." },
-            { status: 400 }
-          );
-        }
-
-        stripe = new Stripe(stripeSecretKey, {
-          apiVersion: "2023-10-16" as any,
-        });
-
-        stripeSession = await stripe.checkout.sessions.retrieve(sessionId, {
-          expand: ["payment_intent"],
-        });
+      if (!gym.stripeAccountId) {
+        return NextResponse.json(
+          { message: "El gimnasio no dispone de una cuenta de Stripe Connect asociada." },
+          { status: 400 }
+        );
       }
+
+      stripe = new Stripe(platformSecretKey, {
+        apiVersion: "2023-10-16" as any,
+      });
+
+      // Recuperar la sesión especificando el header stripeAccount (Direct Charges)
+      stripeSession = await stripe.checkout.sessions.retrieve(
+        sessionId,
+        {
+          expand: ["payment_intent"],
+        },
+        {
+          stripeAccount: gym.stripeAccountId,
+        }
+      );
 
       if (!stripeSession) {
         return NextResponse.json(
@@ -181,8 +164,8 @@ export async function GET(req: Request) {
               cardLast4 = paymentMethod.card.last4;
               cardBrand = paymentMethod.card.brand;
             }
-          } catch (e) {
-            console.warn("No se pudieron cargar detalles específicos del método de pago:", e);
+          } catch (e: any) {
+            logger.warn(`No se pudieron cargar detalles específicos del método de pago: ${e.message || e}`);
           }
         }
       }
@@ -201,25 +184,35 @@ export async function GET(req: Request) {
       newEndDate.setDate(newEndDate.getDate() + finalDurationDays);
 
       // Guardar registro de pago y activar la suscripción en una transacción atómica
-      const [payment] = await prisma.$transaction([
-        prisma.paymentRecord.create({
+      const payment = await prisma.$transaction(async (tx) => {
+        let invoiceNumber = null;
+        if (user.gymId) {
+          const { generateNextInvoiceNumber } = await import("@/lib/invoiceUtils");
+          invoiceNumber = await generateNextInvoiceNumber(tx, user.gymId);
+        }
+
+        const pRecord = await tx.paymentRecord.create({
           data: {
             userId: user.id,
             amount: finalAmount,
-            description: `${finalPlanName} - Stripe ${isStripeConnect ? "Connect" : "Manual"} (Ref: ${sessionId})`,
+            description: `${finalPlanName} - Stripe Connect (Ref: ${sessionId})`,
             planId: resolvedPlanId,
             date: new Date(),
+            invoiceNumber,
           },
-        }),
-        prisma.user.update({
+        });
+
+        await tx.user.update({
           where: { id: user.id },
           data: {
             subscriptionStatus: "ACTIVE",
             subscriptionEndDate: newEndDate,
             ...(resolvedPlanId && { planId: resolvedPlanId }),
           },
-        }),
-      ]);
+        });
+
+        return pRecord;
+      });
 
       return NextResponse.json({
         message: "Pago de Stripe verificado y aplicado con éxito.",
@@ -232,12 +225,26 @@ export async function GET(req: Request) {
           cardBrand,
           gymName: gym.name,
           endDate: newEndDate.toISOString(),
+          invoiceNumber: payment.invoiceNumber,
         },
       });
     }
 
     // ─── CASO 2: VERIFICACIÓN SIMULADA (MOCK) ───
     if (mock) {
+      // Restringir verificación simulada en producción con pasarelas de pago configuradas
+      const hasRealStripe = !!gym.stripeEnabled && !!gym.stripeConnected && !!gym.stripeAccountId;
+      const hasRealRedsys = !!(gym.redsysEnabled && gym.redsysFuc?.trim() && gym.redsysClave?.trim());
+      const hasRealCredentials = hasRealStripe || hasRealRedsys;
+
+      if (process.env.NODE_ENV === "production" && hasRealCredentials) {
+        logger.warn(`Intento de pago simulado bloqueado en producción para el usuario ${user.id} (gimnasio: ${gym.name})`);
+        return NextResponse.json(
+          { message: "Los pagos simulados están deshabilitados en producción con pasarela de pago activa." },
+          { status: 400 }
+        );
+      }
+
       const mockOrderId = searchParams.get("order") || searchParams.get("session_id");
 
       if (mockOrderId) {
@@ -252,7 +259,7 @@ export async function GET(req: Request) {
         });
 
         if (existingPayment) {
-          console.log(`[Verify] Pago simulado duplicado detectado para Ref: ${mockOrderId}. Evitando doble extensión.`);
+          logger.info(`[Verify] Pago simulado duplicado detectado para Ref: ${mockOrderId}. Evitando doble extensión.`);
           const resolvedPlan = existingPayment.planId
             ? await prisma.subscriptionPlan.findUnique({ where: { id: existingPayment.planId } })
             : null;
@@ -300,25 +307,35 @@ export async function GET(req: Request) {
       newEndDate.setDate(newEndDate.getDate() + finalDurationDays);
 
       // Guardar transacción mock con identificador único
-      const [payment] = await prisma.$transaction([
-        prisma.paymentRecord.create({
+      const payment = await prisma.$transaction(async (tx) => {
+        let invoiceNumber = null;
+        if (user.gymId) {
+          const { generateNextInvoiceNumber } = await import("@/lib/invoiceUtils");
+          invoiceNumber = await generateNextInvoiceNumber(tx, user.gymId);
+        }
+
+        const pRecord = await tx.paymentRecord.create({
           data: {
             userId: user.id,
             amount: finalAmount,
             description: `${finalPlanName} - Pago Simulado en Cuenta Conectada${mockOrderId ? ` (Ref: ${mockOrderId})` : ""}`,
             planId: resolvedPlanId,
             date: new Date(),
+            invoiceNumber,
           },
-        }),
-        prisma.user.update({
+        });
+
+        await tx.user.update({
           where: { id: user.id },
           data: {
             subscriptionStatus: "ACTIVE",
             subscriptionEndDate: newEndDate,
             ...(resolvedPlanId && { planId: resolvedPlanId }),
           },
-        }),
-      ]);
+        });
+
+        return pRecord;
+      });
 
       return NextResponse.json({
         message: "Pago simulado procesado y verificado con éxito.",
@@ -331,6 +348,7 @@ export async function GET(req: Request) {
           cardBrand: "Visa / Test Connect",
           gymName: gym.name,
           endDate: newEndDate.toISOString(),
+          invoiceNumber: payment.invoiceNumber,
         },
       });
     }
@@ -339,8 +357,8 @@ export async function GET(req: Request) {
       { message: "Parámetros de verificación inválidos o ausentes." },
       { status: 400 }
     );
-  } catch (error) {
-    console.error("Error in verification GET route:", error);
+  } catch (error: any) {
+    logger.error(`Error in verification GET route: ${error.message || error}`);
     return NextResponse.json(
       { error: "Error interno del servidor al verificar el pago" },
       { status: 500 }

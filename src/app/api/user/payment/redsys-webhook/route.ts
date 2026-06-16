@@ -135,25 +135,33 @@ export async function POST(req: Request) {
     newEndDate.setDate(newEndDate.getDate() + finalDurationDays);
 
     // Guardar transacción y activar en caliente la suscripción en Neon Postgres
-    await prisma.$transaction([
-      prisma.paymentRecord.create({
+    await prisma.$transaction(async (tx) => {
+      let invoiceNumber = null;
+      if (gymId) {
+        const { generateNextInvoiceNumber } = await import("@/lib/invoiceUtils");
+        invoiceNumber = await generateNextInvoiceNumber(tx, gymId);
+      }
+
+      await tx.paymentRecord.create({
         data: {
           userId: userId,
           amount: finalAmount,
           description: `${finalPlanName} - TPV Virtual Redsys (Pedido: ${order})`,
           planId: resolvedPlanId,
           date: new Date(),
+          invoiceNumber,
         },
-      }),
-      prisma.user.update({
+      });
+
+      await tx.user.update({
         where: { id: userId },
         data: {
           subscriptionStatus: "ACTIVE",
           subscriptionEndDate: newEndDate,
           ...(resolvedPlanId && { planId: resolvedPlanId }),
         },
-      }),
-    ]);
+      });
+    });
 
     console.log(`🎉 Membresía del socio en ${gym.name} renovada con éxito vía Redsys.`);
     return new Response("OK", { status: 200 });

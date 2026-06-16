@@ -16,6 +16,7 @@ import {
   Clock,
   Tag,
   Check,
+  Receipt,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -170,19 +171,29 @@ export default function PaymentPage() {
         </Link>
 
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-3xl bg-cyan-50 dark:bg-cyan-950/30 text-primary dark:text-cyan-400 shadow-sm">
-              <CreditCard className="h-6 w-6" />
-            </div>
-            Mi Suscripción y Cuotas
-          </h1>
-          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-            Inscribe tu membresía directamente en tu centro deportivo{" "}
-            <span className="font-semibold text-slate-700 dark:text-slate-200">
-              {gymName}
-            </span>
-          </p>
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-3xl bg-cyan-50 dark:bg-cyan-950/30 text-primary dark:text-cyan-400 shadow-sm">
+                <CreditCard className="h-6 w-6" />
+              </div>
+              Mi Suscripción y Cuotas
+            </h1>
+            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+              Inscribe tu membresía directamente en tu centro deportivo{" "}
+              <span className="font-semibold text-slate-700 dark:text-slate-200">
+                {gymName}
+              </span>
+            </p>
+          </div>
+          <Link
+            href="/configuracion/pagos"
+            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all active:scale-95 shadow-sm shrink-0"
+          >
+            <Receipt className="h-4 w-4 text-primary" />
+            <span>Ver Facturas e Historial</span>
+          </Link>
+        </div>
 
           {session?.user?.subscriptionEndDate && session.user.subscriptionStatus === "ACTIVE" ? (
             <div className="mt-5 rounded-2xl bg-emerald-500/5 border border-emerald-500/10 dark:border-emerald-500/20 p-4 flex items-center gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
@@ -209,7 +220,7 @@ export default function PaymentPage() {
               </div>
             </div>
           )}
-        </div>
+        
 
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
           {/* Plan Selection */}
