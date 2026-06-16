@@ -12,6 +12,7 @@ import {
   AlertCircle,
   CheckCircle2,
   X,
+  Edit,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCustomAlert } from "@/components/providers/CustomAlertProvider";
@@ -34,13 +35,28 @@ export default function GymPlansPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
 
   const [formData, setFormData] = useState({
     name: "",
     price: "",
     durationDays: "30",
     description: "",
+    isActive: true,
   });
+
+  const handleEditClick = (plan: Plan) => {
+    setEditingPlan(plan);
+    setFormData({
+      name: plan.name,
+      price: plan.price.toString(),
+      durationDays: plan.durationDays.toString(),
+      description: plan.description || "",
+      isActive: plan.isActive,
+    });
+    setError("");
+    setIsModalOpen(true);
+  };
 
   const fetchPlans = async () => {
     try {
@@ -63,18 +79,24 @@ export default function GymPlansPage() {
     setError("");
 
     try {
-      const res = await fetch("/api/admin-gym/plans", {
-        method: "POST",
+      const url = editingPlan 
+        ? `/api/admin-gym/plans/${editingPlan.id}`
+        : "/api/admin-gym/plans";
+      const method = editingPlan ? "PATCH" : "POST";
+
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Error al crear el plan");
+      if (!res.ok) throw new Error(data.message || `Error al ${editingPlan ? 'actualizar' : 'crear'} la tarifa`);
 
       setIsModalOpen(false);
-      setFormData({ name: "", price: "", durationDays: "30", description: "" });
-      setSuccess("Tarifa creada correctamente");
+      setFormData({ name: "", price: "", durationDays: "30", description: "", isActive: true });
+      setEditingPlan(null);
+      setSuccess(editingPlan ? "Tarifa actualizada correctamente" : "Tarifa creada correctamente");
       setTimeout(() => setSuccess(""), 3000);
       await fetchPlans();
     } catch (err: any) {
@@ -131,6 +153,8 @@ export default function GymPlansPage() {
           </div>
           <button
             onClick={() => {
+              setEditingPlan(null);
+              setFormData({ name: "", price: "", durationDays: "30", description: "", isActive: true });
               setIsModalOpen(true);
               setError("");
             }}
@@ -212,28 +236,41 @@ export default function GymPlansPage() {
                   </div>
                 </div>
 
-                <button
-                  onClick={() => handleDelete(plan.id)}
-                  className="flex items-center gap-1.5 text-sm font-medium text-red-500 hover:text-red-700 dark:hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                  Eliminar
-                </button>
+                <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800/60 mt-4">
+                  <button
+                    onClick={() => handleEditClick(plan)}
+                    className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition-colors"
+                  >
+                    <Edit className="h-3.5 w-3.5" />
+                    Editar
+                  </button>
+
+                  <button
+                    onClick={() => handleDelete(plan.id)}
+                    className="flex items-center gap-1.5 text-sm font-medium text-red-500 hover:text-red-700 dark:hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    Eliminar
+                  </button>
+                </div>
               </div>
             ))}
           </div>
         )}
 
-        {/* Create Plan Modal */}
+        {/* Create/Edit Plan Modal */}
         {isModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 backdrop-blur-sm p-4">
             <div className="w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl">
               <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 px-6 py-4">
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-                  Nueva Tarifa
+                  {editingPlan ? "Editar Tarifa" : "Nueva Tarifa"}
                 </h3>
                 <button
-                  onClick={() => setIsModalOpen(false)}
+                  onClick={() => {
+                    setIsModalOpen(false);
+                    setEditingPlan(null);
+                  }}
                   className="p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-2xl"
                 >
                   <X className="h-5 w-5" />
@@ -319,10 +356,33 @@ export default function GymPlansPage() {
                   />
                 </div>
 
+                {editingPlan && (
+                  <div className="flex items-center gap-2 pt-1">
+                    <input
+                      id="plan-is-active"
+                      type="checkbox"
+                      checked={formData.isActive}
+                      onChange={(e) =>
+                        setFormData({ ...formData, isActive: e.target.checked })
+                      }
+                      className="h-4 w-4 rounded border-slate-305 dark:border-slate-705 text-primary focus:ring-primary focus:ring-offset-0 bg-transparent outline-none cursor-pointer"
+                    />
+                    <label
+                      htmlFor="plan-is-active"
+                      className="text-sm font-medium text-slate-700 dark:text-slate-300 select-none cursor-pointer"
+                    >
+                      Tarifa activa para nuevas contrataciones
+                    </label>
+                  </div>
+                )}
+
                 <div className="flex gap-3 pt-2">
                   <button
                     type="button"
-                    onClick={() => setIsModalOpen(false)}
+                    onClick={() => {
+                      setIsModalOpen(false);
+                      setEditingPlan(null);
+                    }}
                     className="flex-1 rounded-2xl px-4 py-2.5 text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                   >
                     Cancelar
@@ -335,7 +395,7 @@ export default function GymPlansPage() {
                     {isSubmitting ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
-                      "Crear Tarifa"
+                      editingPlan ? "Guardar Cambios" : "Crear Tarifa"
                     )}
                   </button>
                 </div>

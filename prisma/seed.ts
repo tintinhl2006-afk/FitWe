@@ -5,47 +5,47 @@ const prisma = new PrismaClient();
 
 const curatedExercises = [
   // PECHO
-  { name: 'Press de Banca', primaryMuscle: 'Pecho', equipment: 'Barra', description: 'Ejercicio básico para el pectoral. Acuéstate en el banco, agarra la barra a una anchura ligeramente superior a los hombros y bájala hasta rozar el pecho medio.' },
-  { name: 'Press de Banca Inclinado', primaryMuscle: 'Pecho', equipment: 'Barra', description: 'Enfocado en el haz clavicular (pecho superior). Banco a 30-45 grados. Baja la barra hasta la parte alta del pecho.' },
-  { name: 'Press con Mancuernas', primaryMuscle: 'Pecho', equipment: 'Mancuernas', description: 'Permite mayor rango de recorrido que la barra. Junta las mancuernas arriba sin que lleguen a chocar.' },
-  { name: 'Aperturas con Mancuernas', primaryMuscle: 'Pecho', equipment: 'Mancuernas', description: 'Movimiento de aislamiento. Mantén una ligera flexión de codo y abre los brazos como si fueras a dar un abrazo.' },
-  { name: 'Press de Pecho en Máquina', primaryMuscle: 'Pecho', equipment: 'Máquina', description: 'Versión guiada del press. Ideal para llegar al fallo muscular con seguridad.' },
+  { name: 'Press de Banca', primaryMuscle: 'Pecho', equipment: 'Barra', imageUrl: '/press_banca.jpg', description: 'Ejercicio básico para el pectoral. Acuéstate en el banco, agarra la barra a una anchura ligeramente superior a los hombros y bájala hasta rozar el pecho medio.' },
+  { name: 'Press de Banca Inclinado', primaryMuscle: 'Pecho', equipment: 'Barra', imageUrl: '/press_inclinado_barra.jpg', description: 'Enfocado en el haz clavicular (pecho superior). Banco a 30-45 grados. Baja la barra hasta la parte alta del pecho.' },
+  { name: 'Press con Mancuernas', primaryMuscle: 'Pecho', equipment: 'Mancuernas', imageUrl: '/press_mancuerna.jpg', description: 'Permite mayor rango de recorrido que la barra. Junta las mancuernas arriba sin que lleguen a chocar.' },
+  { name: 'Aperturas con Mancuernas', primaryMuscle: 'Pecho', equipment: 'Mancuernas', imageUrl: '/aperturas_mancuerna.jpg', description: 'Movimiento de aislamiento. Mantén una ligera flexión de codo y abre los brazos como si fueras a dar un abrazo.' },
+  { name: 'Press de Pecho en Máquina', primaryMuscle: 'Pecho', equipment: 'Máquina', imageUrl: '/press_pecho_maquina.jpg', description: 'Versión guiada del press. Ideal para llegar al fallo muscular con seguridad.' },
 
   // ESPALDA
-  { name: 'Dominadas Pronas', primaryMuscle: 'Espalda', equipment: 'Peso Corporal', description: 'Agarre ancho. Sube hasta pasar la barbilla por encima de la barra.' },
-  { name: 'Jalón al Pecho', primaryMuscle: 'Espalda', equipment: 'Polea', description: 'Tira de la barra hacia la clavícula retrayendo las escápulas. No te balancees excesivamente.' },
-  { name: 'Remo con Barra', primaryMuscle: 'Espalda', equipment: 'Barra', description: 'Inclina el torso a unos 45 grados. Lleva la barra hacia tu ombligo.' },
-  { name: 'Remo con Mancuerna a 1 Mano', primaryMuscle: 'Espalda', equipment: 'Mancuernas', description: 'Apoya una rodilla y mano en un banco. Tira de la mancuerna llevando el codo hacia la cadera.' },
-  { name: 'Remo Gironda (Polea Baja)', primaryMuscle: 'Espalda', equipment: 'Polea', description: 'Sentado en el suelo, tira del triángulo hacia el estómago manteniendo la espalda neutra.' },
-  { name: 'Peso Muerto Clásico', primaryMuscle: 'Espalda', equipment: 'Barra', description: 'Levanta el peso desde el suelo con espalda recta. Trabaja cadena posterior completa.' },
+  { name: 'Dominadas Pronas', primaryMuscle: 'Espalda', equipment: 'Peso Corporal', imageUrl: '/dominadas_prono.jpg', description: 'Agarre ancho. Sube hasta pasar la barbilla por encima de la barra.' },
+  { name: 'Jalón al Pecho', primaryMuscle: 'Espalda', equipment: 'Polea', imageUrl: '/jalon_al_pecho.jpg', description: 'Tira de la barra hacia la clavícula retrayendo las escápulas. No te balancees excesivamente.' },
+  { name: 'Remo con Barra', primaryMuscle: 'Espalda', equipment: 'Barra', imageUrl: '/remo_barra.jpg', description: 'Inclina el torso a unos 45 grados. Lleva la barra hacia tu ombligo.' },
+  { name: 'Remo con Mancuerna a 1 Mano', primaryMuscle: 'Espalda', equipment: 'Mancuernas', imageUrl: '/remo_mancuerna_1_mano.jpg', description: 'Apoya una rodilla y mano en un banco. Tira de la mancuerna llevando el codo hacia la cadera.' },
+  { name: 'Remo Gironda (Polea Baja)', primaryMuscle: 'Espalda', equipment: 'Polea', imageUrl: '/remo_gironda.jpg', description: 'Sentado en el suelo, tira del triángulo hacia el estómago manteniendo la espalda neutra.' },
+  { name: 'Peso Muerto Clásico', primaryMuscle: 'Espalda', equipment: 'Barra', imageUrl: '/peso_muerto.jpg', description: 'Levanta el peso desde el suelo con espalda recta. Trabaja cadena posterior completa.' },
 
   // HOMBRO
-  { name: 'Press Militar de Pie', primaryMuscle: 'Hombro', equipment: 'Barra', description: 'Empuje vertical por excelencia. Aprieta glúteos y core para no arquear la espalda.' },
-  { name: 'Press de Hombro Sentado', primaryMuscle: 'Hombro', equipment: 'Mancuernas', description: 'Sentado con banco a 90 grados. Empuja las mancuernas por encima de la cabeza.' },
-  { name: 'Elevaciones Laterales', primaryMuscle: 'Hombro', equipment: 'Mancuernas', description: 'Aislamiento clave para la anchura de hombros. Eleva los codos ligeramente por delante del torso.' },
-  { name: 'Face Pull', primaryMuscle: 'Hombro', equipment: 'Polea', description: 'Usa la cuerda en polea alta y tira hacia tu cara, separando las manos al final.' },
+  { name: 'Press Militar de Pie', primaryMuscle: 'Hombro', equipment: 'Barra', imageUrl: '/press_militar.jpg', description: 'Empuje vertical por excelencia. Aprieta glúteos y core para no arquear la espalda.' },
+  { name: 'Press de Hombro Sentado', primaryMuscle: 'Hombro', equipment: 'Mancuernas', imageUrl: '/press_hombro_sentado.jpg', description: 'Sentado con banco a 90 grados. Empuja las mancuernas por encima de la cabeza.' },
+  { name: 'Elevaciones Laterales', primaryMuscle: 'Hombro', equipment: 'Mancuernas', imageUrl: '/elevaciones_laterales_mancuerna.jpg', description: 'Aislamiento clave para la anchura de hombros. Eleva los codos ligeramente por delante del torso.' },
+  { name: 'Face Pull', primaryMuscle: 'Hombro', equipment: 'Polea', imageUrl: '/face_pull.jpg', description: 'Usa la cuerda en polea alta y tira hacia tu cara, separando las manos al final.' },
 
   // PIERNA
-  { name: 'Sentadilla Libre', primaryMuscle: 'Pierna', equipment: 'Barra', description: 'El rey de los ejercicios. Barra en la espalda alta, desciende hasta romper el paralelo.' },
-  { name: 'Prensa de Piernas', primaryMuscle: 'Pierna', equipment: 'Máquina', description: 'Ajusta los pies bajos y juntos para cuádriceps, o altos y separados para glúteos e isquios.' },
-  { name: 'Extensiones de Cuádriceps', primaryMuscle: 'Pierna', equipment: 'Máquina', description: 'Aislamiento puro para cuádriceps. Aprieta fuerte un segundo arriba.' },
-  { name: 'Curl Femoral Sentado', primaryMuscle: 'Pierna', equipment: 'Máquina', description: 'Aislamiento para isquiosurales. Mantiene el músculo en mayor elongación inicial.' },
-  { name: 'Hip Thrust (Empuje de Cadera)', primaryMuscle: 'Pierna', equipment: 'Barra', description: 'El mejor ejercicio para aislar el glúteo. Empuja con fuerza usando los talones.' },
+  { name: 'Sentadilla Libre', primaryMuscle: 'Pierna', equipment: 'Barra', imageUrl: '/sentadilla_barra.jpg', description: 'El rey de los ejercicios. Barra en la espalda alta, desciende hasta romper el paralelo.' },
+  { name: 'Prensa de Piernas', primaryMuscle: 'Pierna', equipment: 'Máquina', imageUrl: '/prensa.jpg', description: 'Ajusta los pies bajos y juntos para cuádriceps, o altos y separados para glúteos e isquios.' },
+  { name: 'Extensiones de Cuádriceps', primaryMuscle: 'Pierna', equipment: 'Máquina', imageUrl: '/extension_cuadriceps.jpg', description: 'Aislamiento puro para cuádriceps. Aprieta fuerte un segundo arriba.' },
+  { name: 'Curl Femoral Sentado', primaryMuscle: 'Pierna', equipment: 'Máquina', imageUrl: '/curl_femoral.jpg', description: 'Aislamiento para isquiosurales. Mantiene el músculo en mayor elongación inicial.' },
+  { name: 'Hip Thrust (Empuje de Cadera)', primaryMuscle: 'Pierna', equipment: 'Barra', imageUrl: '/hip_thrust.jpg', description: 'El mejor ejercicio para aislar el glúteo. Empuja con fuerza usando los talones.' },
 
   // BRAZO
-  { name: 'Curl con Barra EZ', primaryMuscle: 'Brazo', equipment: 'Barra', description: 'Versión más amigable con las muñecas gracias al agarre curvado.' },
-  { name: 'Curl de Bíceps Alterno', primaryMuscle: 'Brazo', equipment: 'Mancuernas', description: 'Sube una mancuerna y luego la otra, supinando la muñeca.' },
-  { name: 'Curl Martillo', primaryMuscle: 'Brazo', equipment: 'Mancuernas', description: 'Agarre neutro. Trabaja el bíceps braquial y braquiorradial (antebrazo).' },
-  { name: 'Press Francés', primaryMuscle: 'Brazo', equipment: 'Barra', description: 'Tumbado, lleva la barra hacia la frente o detrás de la cabeza flexionando los codos.' },
-  { name: 'Extensión de Tríceps con Cuerda', primaryMuscle: 'Brazo', equipment: 'Polea', description: 'Abre la cuerda al final del movimiento para mayor contracción lateral.' },
+  { name: 'Curl con Barra EZ', primaryMuscle: 'Brazo', equipment: 'Barra', imageUrl: '/curl_barra_ez.jpg', description: 'Versión más amigable con las muñecas gracias al agarre curvado.' },
+  { name: 'Curl de Bíceps Alterno', primaryMuscle: 'Brazo', equipment: 'Mancuernas', imageUrl: '/curl_biceps_alterno.jpg', description: 'Sube una mancuerna y luego la otra, supinando la muñeca.' },
+  { name: 'Curl Martillo', primaryMuscle: 'Brazo', equipment: 'Mancuernas', imageUrl: '/curl_martillo.jpg', description: 'Agarre neutro. Trabaja el bíceps braquial y braquiorradial (antebrazo).' },
+  { name: 'Press Francés', primaryMuscle: 'Brazo', equipment: 'Barra', imageUrl: '/press_frances_barra.jpg', description: 'Tumbado, lleva la barra hacia la frente o detrás de la cabeza flexionando los codos.' },
+  { name: 'Extensión de Tríceps con Cuerda', primaryMuscle: 'Brazo', equipment: 'Polea', imageUrl: '/extension_triceps_cuerda.jpg', description: 'Abre la cuerda al final del movimiento para mayor contracción lateral.' },
 
   // CORE
-  { name: 'Crunch Abdominal', primaryMuscle: 'Core', equipment: 'Peso Corporal', description: 'Encogimiento clásico. Eleva solo los hombros del suelo apretando el abdomen.' },
-  { name: 'Plancha Abdominal (Plank)', primaryMuscle: 'Core', equipment: 'Peso Corporal', description: 'Isométrico apoyado en antebrazos. Mantén el cuerpo en línea recta.' },
+  { name: 'Crunch Abdominal', primaryMuscle: 'Core', equipment: 'Peso Corporal', imageUrl: '/crunch_abdominal.jpg', description: 'Encogimiento clásico. Eleva solo los hombros del suelo apretando el abdomen.' },
+  { name: 'Plancha Abdominal (Plank)', primaryMuscle: 'Core', equipment: 'Peso Corporal', imageUrl: '/plancha.jpg', description: 'Isométrico apoyado en antebrazos. Mantén el cuerpo en línea recta.' },
 
   // CARDIO
-  { name: 'Cinta de Correr', primaryMuscle: 'Cardio', equipment: 'Máquina', description: 'Trabajo aeróbico o HIIT caminando, trotando o corriendo.' },
-  { name: 'Bicicleta Estática', primaryMuscle: 'Cardio', equipment: 'Máquina', description: 'Cardio de bajo impacto articular.' }
+  { name: 'Cinta de Correr', primaryMuscle: 'Cardio', equipment: 'Máquina', imageUrl: '/cinta_correr.jpg', description: 'Trabajo aeróbico o HIIT caminando, trotando o corriendo.' },
+  { name: 'Bicicleta Estática', primaryMuscle: 'Cardio', equipment: 'Máquina', imageUrl: '/bicicleta.jpg', description: 'Cardio de bajo impacto articular.' }
 ];
 
 async function main() {
@@ -85,29 +85,28 @@ async function main() {
   // 2. Ensure Exercises Curated Catalog Exists
   console.log('💪 Asegurando catálogo curado de ejercicios...');
   for (const ex of curatedExercises) {
-    await prisma.exercise.upsert({
-      where: { id: '00000000-0000-0000-0000-000000000000' }, // Dummy or match by name manually
-      create: {
-        name: ex.name,
-        muscleGroup: ex.primaryMuscle,
-        equipment: ex.equipment,
-        description: ex.description,
-      },
-      update: {}
-    }).catch(async () => {
-      // If upsert unique failed on id, simply find or create by name
-      const exists = await prisma.exercise.findFirst({ where: { name: ex.name } });
-      if (!exists) {
-        await prisma.exercise.create({
-          data: {
-            name: ex.name,
-            muscleGroup: ex.primaryMuscle,
-            equipment: ex.equipment,
-            description: ex.description,
-          }
-        });
-      }
-    });
+    const exists = await prisma.exercise.findFirst({ where: { name: ex.name } });
+    if (!exists) {
+      await prisma.exercise.create({
+        data: {
+          name: ex.name,
+          muscleGroup: ex.primaryMuscle,
+          equipment: ex.equipment,
+          description: ex.description,
+          imageUrl: ex.imageUrl,
+        }
+      });
+    } else {
+      await prisma.exercise.update({
+        where: { id: exists.id },
+        data: {
+          imageUrl: ex.imageUrl,
+          description: ex.description,
+          muscleGroup: ex.primaryMuscle,
+          equipment: ex.equipment,
+        }
+      });
+    }
   }
 
   // Get all active exercises mapped by name for easy reference later
