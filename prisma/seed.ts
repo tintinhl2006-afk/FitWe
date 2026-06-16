@@ -106,6 +106,26 @@ async function main() {
           equipment: ex.equipment,
         }
       });
+      // Deduplicate programmatically to clean up any other duplicates with the same name
+      const duplicates = await prisma.exercise.findMany({
+        where: {
+          name: ex.name,
+          id: { not: exists.id }
+        }
+      });
+      for (const dup of duplicates) {
+        await prisma.routineExercise.updateMany({
+          where: { exerciseId: dup.id },
+          data: { exerciseId: exists.id }
+        });
+        await prisma.workoutSet.updateMany({
+          where: { exerciseId: dup.id },
+          data: { exerciseId: exists.id }
+        });
+        await prisma.exercise.delete({
+          where: { id: dup.id }
+        });
+      }
     }
   }
 
@@ -357,8 +377,8 @@ async function main() {
     });
   }
 
-  // 7. Create The Important Main Client: cliente@gmail.com (Carlos Mendoza)
-  console.log('🔥 Creando el cliente estrella: cliente@gmail.com (Carlos Mendoza)...');
+  // 7. Create The Important Main Client: cliente@gmail.com (Martin Herrero)
+  console.log('🔥 Creando el cliente estrella: cliente@gmail.com (Martin Herrero)...');
   const mainClientEndDate = new Date();
   mainClientEndDate.setDate(mainClientEndDate.getDate() + 25);
 
@@ -366,7 +386,7 @@ async function main() {
     data: {
       email: 'cliente@gmail.com',
       password: clientPasswordHash,
-      name: 'Carlos Mendoza',
+      name: 'Martin Herrero',
       role: 'USER',
       gymId: gym.id,
       weight: 82.5,
@@ -401,7 +421,7 @@ async function main() {
   });
 
   // Create Nutrition Profile
-  console.log('🥗 Creando Perfil de Nutrición de Carlos Mendoza...');
+  console.log('🥗 Creando Perfil de Nutrición de Martin Herrero...');
   await prisma.nutritionProfile.create({
     data: {
       userId: mainClient.id,
