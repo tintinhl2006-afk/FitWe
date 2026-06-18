@@ -91,6 +91,7 @@ export async function PATCH(
         data: {
           subscriptionStatus: finalStatus,
           subscriptionEndDate: finalEndDate,
+          sessionVersion: { increment: 1 },
         },
       });
 

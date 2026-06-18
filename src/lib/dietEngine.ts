@@ -6,7 +6,7 @@ export interface DietFood {
   protein: number;  // per 100g
   carbs: number;    // per 100g
   fat: number;      // per 100g
-  group: "CARB" | "PROTEIN" | "FAT" | "DAIRY" | "FRUIT" | "VEG";
+  group: "CARB" | "PROTEIN" | "FAT" | "DAIRY" | "FRUIT" | "VEG" | "Otros";
   isVegan: boolean;
   isVegetarian: boolean;
   isKeto: boolean;
@@ -20,760 +20,5419 @@ export interface DietFood {
 // 1. Comprehensive Food Catalog
 export const STANDARD_FOODS: DietFood[] = [
   {
-    id: "std-oats",
-    name: "Avena en copos",
-    brand: "FitWe Natural",
-    calories: 389,
-    protein: 16.9,
-    carbs: 66.3,
-    fat: 6.9,
-    group: "CARB",
-    isVegan: true,
-    isVegetarian: true,
-    isKeto: false,
-    allergens: ["GLUTEN"],
-    styles: ["CLASSIC", "MEDITERRANEAN", "QUICK"],
-    portionSize: 50,
-    portionName: "taza de copos (50g)",
-    meals: ["BREAKFAST", "SNACK"]
+    "id": "std-pechuga-pollo",
+    "name": "Pechuga de pollo",
+    "brand": null,
+    "calories": 165,
+    "protein": 31,
+    "carbs": 0,
+    "fat": 3.6,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "CLASSIC",
+      "QUICK"
+    ],
+    "portionSize": 150,
+    "portionName": "filete mediano (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
   },
   {
-    id: "std-chicken",
-    name: "Pechuga de pollo",
-    brand: null,
-    calories: 165,
-    protein: 31.0,
-    carbs: 0.0,
-    fat: 3.6,
-    group: "PROTEIN",
-    isVegan: false,
-    isVegetarian: false,
-    isKeto: true,
-    allergens: [],
-    styles: ["CLASSIC", "QUICK"],
-    portionSize: 150,
-    portionName: "filete mediano (150g)",
-    meals: ["LUNCH", "DINNER"]
+    "id": "std-pechuga-pavo",
+    "name": "Pechuga de pavo",
+    "brand": null,
+    "calories": 114,
+    "protein": 24,
+    "carbs": 0.1,
+    "fat": 2,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "CLASSIC",
+      "QUICK"
+    ],
+    "portionSize": 150,
+    "portionName": "filete mediano (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
   },
   {
-    id: "std-brown-rice",
-    name: "Arroz integral cocido",
-    brand: null,
-    calories: 111,
-    protein: 2.6,
-    carbs: 23.0,
-    fat: 0.9,
-    group: "CARB",
-    isVegan: true,
-    isVegetarian: true,
-    isKeto: false,
-    allergens: [],
-    styles: ["CLASSIC", "MEDITERRANEAN"],
-    portionSize: 150,
-    portionName: "taza colmada (150g)",
-    meals: ["LUNCH", "DINNER"]
+    "id": "std-lomo-cerdo",
+    "name": "Lomo de cerdo",
+    "brand": null,
+    "calories": 143,
+    "protein": 22,
+    "carbs": 0,
+    "fat": 6,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "CLASSIC",
+      "QUICK"
+    ],
+    "portionSize": 150,
+    "portionName": "filete mediano (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
   },
   {
-    id: "std-white-rice",
-    name: "Arroz blanco cocido",
-    brand: null,
-    calories: 130,
-    protein: 2.7,
-    carbs: 28.0,
-    fat: 0.3,
-    group: "CARB",
-    isVegan: true,
-    isVegetarian: true,
-    isKeto: false,
-    allergens: [],
-    styles: ["CLASSIC", "QUICK"],
-    portionSize: 150,
-    portionName: "taza (150g)",
-    meals: ["LUNCH", "DINNER"]
+    "id": "std-ternera",
+    "name": "Ternera",
+    "brand": null,
+    "calories": 137,
+    "protein": 21,
+    "carbs": 0,
+    "fat": 5.8,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "CLASSIC",
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 150,
+    "portionName": "filete mediano (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
   },
   {
-    id: "std-whole-egg",
-    name: "Huevo entero",
-    brand: null,
-    calories: 143,
-    protein: 12.6,
-    carbs: 0.7,
-    fat: 9.5,
-    group: "PROTEIN",
-    isVegan: false,
-    isVegetarian: true,
-    isKeto: true,
-    allergens: ["EGG"],
-    styles: ["CLASSIC", "MEDITERRANEAN", "QUICK"],
-    portionSize: 60,
-    portionName: "unidad grande (60g)",
-    meals: ["BREAKFAST", "LUNCH", "DINNER"]
+    "id": "std-jamon-serrano",
+    "name": "Jamón serrano",
+    "brand": null,
+    "calories": 220,
+    "protein": 30,
+    "carbs": 0,
+    "fat": 11,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 50,
+    "portionName": "ración (50g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK",
+      "DINNER"
+    ]
   },
   {
-    id: "std-egg-white",
-    name: "Clara de huevo",
-    brand: null,
-    calories: 52,
-    protein: 11.0,
-    carbs: 0.7,
-    fat: 0.2,
-    group: "PROTEIN",
-    isVegan: false,
-    isVegetarian: true,
-    isKeto: true,
-    allergens: ["EGG"],
-    styles: ["CLASSIC", "QUICK"],
-    portionSize: 33,
-    portionName: "unidad (33g)",
-    meals: ["BREAKFAST", "LUNCH", "DINNER"]
+    "id": "std-jamon-cocido",
+    "name": "Jamón cocido",
+    "brand": null,
+    "calories": 105,
+    "protein": 18,
+    "carbs": 1,
+    "fat": 3,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "QUICK"
+    ],
+    "portionSize": 60,
+    "portionName": "3 lonchas (60g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
   },
   {
-    id: "std-salmon",
-    name: "Filete de salmón fresco",
-    brand: null,
-    calories: 206,
-    protein: 22.0,
-    carbs: 0.0,
-    fat: 13.0,
-    group: "PROTEIN",
-    isVegan: false,
-    isVegetarian: false,
-    isKeto: true,
-    allergens: ["FISH"],
-    styles: ["MEDITERRANEAN"],
-    portionSize: 150,
-    portionName: "filete mediano (150g)",
-    meals: ["LUNCH", "DINNER"]
+    "id": "std-carne-picada-ternera",
+    "name": "Carne picada de ternera",
+    "brand": null,
+    "calories": 150,
+    "protein": 20,
+    "carbs": 0,
+    "fat": 7.2,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "CLASSIC",
+      "QUICK"
+    ],
+    "portionSize": 150,
+    "portionName": "ración (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
   },
   {
-    id: "std-tuna",
-    name: "Atún al natural",
-    brand: null,
-    calories: 116,
-    protein: 26.0,
-    carbs: 0.0,
-    fat: 1.0,
-    group: "PROTEIN",
-    isVegan: false,
-    isVegetarian: false,
-    isKeto: true,
-    allergens: ["FISH"],
-    styles: ["CLASSIC", "QUICK"],
-    portionSize: 80,
-    portionName: "lata pequeña (80g)",
-    meals: ["BREAKFAST", "LUNCH", "DINNER", "SNACK"]
+    "id": "std-carne-picada-cerdo",
+    "name": "Carne picada de cerdo",
+    "brand": null,
+    "calories": 263,
+    "protein": 17,
+    "carbs": 0,
+    "fat": 21,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "CLASSIC",
+      "QUICK"
+    ],
+    "portionSize": 150,
+    "portionName": "ración (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
   },
   {
-    id: "std-tofu",
-    name: "Tofu firme",
-    brand: null,
-    calories: 144,
-    protein: 17.0,
-    carbs: 2.8,
-    fat: 8.0,
-    group: "PROTEIN",
-    isVegan: true,
-    isVegetarian: true,
-    isKeto: true,
-    allergens: [],
-    styles: ["CLASSIC", "MEDITERRANEAN", "QUICK"],
-    portionSize: 150,
-    portionName: "media porción de bloque (150g)",
-    meals: ["LUNCH", "DINNER"]
+    "id": "std-carne-picada-pollo",
+    "name": "Carne picada de pollo",
+    "brand": null,
+    "calories": 120,
+    "protein": 20,
+    "carbs": 0,
+    "fat": 4.5,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "CLASSIC",
+      "QUICK"
+    ],
+    "portionSize": 150,
+    "portionName": "ración (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
   },
   {
-    id: "std-whole-wheat-bread",
-    name: "Pan integral de centeno",
-    brand: null,
-    calories: 247,
-    protein: 13.0,
-    carbs: 41.0,
-    fat: 3.4,
-    group: "CARB",
-    isVegan: true,
-    isVegetarian: true,
-    isKeto: false,
-    allergens: ["GLUTEN"],
-    styles: ["MEDITERRANEAN", "QUICK"],
-    portionSize: 35,
-    portionName: "rebanada mediana (35g)",
-    meals: ["BREAKFAST", "LUNCH", "DINNER", "SNACK"]
+    "id": "std-muslo-pollo",
+    "name": "Muslo de pollo",
+    "brand": null,
+    "calories": 120,
+    "protein": 20,
+    "carbs": 0,
+    "fat": 4.5,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "CLASSIC"
+    ],
+    "portionSize": 150,
+    "portionName": "unidad (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
   },
   {
-    id: "std-potato",
-    name: "Patata cocida",
-    brand: null,
-    calories: 87,
-    protein: 1.9,
-    carbs: 20.0,
-    fat: 0.1,
-    group: "CARB",
-    isVegan: true,
-    isVegetarian: true,
-    isKeto: false,
-    allergens: [],
-    styles: ["CLASSIC", "MEDITERRANEAN"],
-    portionSize: 200,
-    portionName: "patata mediana (200g)",
-    meals: ["LUNCH", "DINNER"]
+    "id": "std-alitas-pollo",
+    "name": "Alitas de pollo",
+    "brand": null,
+    "calories": 203,
+    "protein": 18,
+    "carbs": 0,
+    "fat": 14,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "CLASSIC"
+    ],
+    "portionSize": 150,
+    "portionName": "ración (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
   },
   {
-    id: "std-avocado",
-    name: "Aguacate fresco",
-    brand: null,
-    calories: 160,
-    protein: 2.0,
-    carbs: 9.0,
-    fat: 15.0,
-    group: "FAT",
-    isVegan: true,
-    isVegetarian: true,
-    isKeto: true,
-    allergens: [],
-    styles: ["MEDITERRANEAN", "QUICK"],
-    portionSize: 100,
-    portionName: "medio aguacate (100g)",
-    meals: ["BREAKFAST", "LUNCH", "DINNER", "SNACK"]
+    "id": "std-costillas-cerdo",
+    "name": "Costillas de cerdo",
+    "brand": null,
+    "calories": 280,
+    "protein": 16,
+    "carbs": 0,
+    "fat": 24,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "CLASSIC"
+    ],
+    "portionSize": 200,
+    "portionName": "ración (200g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
   },
   {
-    id: "std-olive-oil",
-    name: "Aceite de oliva virgen extra",
-    brand: null,
-    calories: 884,
-    protein: 0.0,
-    carbs: 0.0,
-    fat: 100.0,
-    group: "FAT",
-    isVegan: true,
-    isVegetarian: true,
-    isKeto: true,
-    allergens: [],
-    styles: ["CLASSIC", "MEDITERRANEAN", "QUICK"],
-    portionSize: 10,
-    portionName: "cucharada sopera (10g)",
-    meals: ["BREAKFAST", "LUNCH", "DINNER"]
+    "id": "std-hamburguesa-ternera",
+    "name": "Hamburguesa de ternera",
+    "brand": null,
+    "calories": 200,
+    "protein": 18,
+    "carbs": 0,
+    "fat": 14,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "CLASSIC",
+      "QUICK"
+    ],
+    "portionSize": 120,
+    "portionName": "unidad (120g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
   },
   {
-    id: "std-walnuts",
-    name: "Nueces peladas",
-    brand: null,
-    calories: 654,
-    protein: 15.0,
-    carbs: 14.0,
-    fat: 65.0,
-    group: "FAT",
-    isVegan: true,
-    isVegetarian: true,
-    isKeto: true,
-    allergens: ["NUTS"],
-    styles: ["MEDITERRANEAN"],
-    portionSize: 20,
-    portionName: "puñado pequeño / 7 nueces (20g)",
-    meals: ["BREAKFAST", "SNACK"]
+    "id": "std-hamburguesa-pollo",
+    "name": "Hamburguesa de pollo",
+    "brand": null,
+    "calories": 150,
+    "protein": 18,
+    "carbs": 1,
+    "fat": 8,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "CLASSIC",
+      "QUICK"
+    ],
+    "portionSize": 120,
+    "portionName": "unidad (120g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
   },
   {
-    id: "std-peanut-butter",
-    name: "Crema de cacahuete natural",
-    brand: null,
-    calories: 588,
-    protein: 25.0,
-    carbs: 20.0,
-    fat: 50.0,
-    group: "FAT",
-    isVegan: true,
-    isVegetarian: true,
-    isKeto: true,
-    allergens: ["NUTS"],
-    styles: ["CLASSIC", "QUICK"],
-    portionSize: 15,
-    portionName: "cucharadita colmada (15g)",
-    meals: ["BREAKFAST", "SNACK"]
+    "id": "std-chorizo",
+    "name": "Chorizo",
+    "brand": null,
+    "calories": 350,
+    "protein": 22,
+    "carbs": 2,
+    "fat": 28,
+    "group": "FAT",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 40,
+    "portionName": "ración (40g)",
+    "meals": [
+      "LUNCH",
+      "SNACK",
+      "DINNER"
+    ]
   },
   {
-    id: "std-skim-milk",
-    name: "Leche desnatada",
-    brand: null,
-    calories: 35,
-    protein: 3.4,
-    carbs: 4.8,
-    fat: 0.1,
-    group: "DAIRY",
-    isVegan: false,
-    isVegetarian: true,
-    isKeto: false,
-    allergens: ["LACTOSE"],
-    styles: ["CLASSIC", "MEDITERRANEAN", "QUICK"],
-    portionSize: 200,
-    portionName: "vaso normal (200ml)",
-    meals: ["BREAKFAST", "SNACK"]
+    "id": "std-salchichon",
+    "name": "Salchichón",
+    "brand": null,
+    "calories": 380,
+    "protein": 26,
+    "carbs": 1.5,
+    "fat": 30,
+    "group": "FAT",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 40,
+    "portionName": "ración (40g)",
+    "meals": [
+      "LUNCH",
+      "SNACK",
+      "DINNER"
+    ]
   },
   {
-    id: "std-greek-yogurt",
-    name: "Yogur griego natural 0%",
-    brand: null,
-    calories: 57,
-    protein: 10.0,
-    carbs: 4.0,
-    fat: 0.0,
-    group: "DAIRY",
-    isVegan: false,
-    isVegetarian: true,
-    isKeto: true,
-    allergens: ["LACTOSE"],
-    styles: ["MEDITERRANEAN"],
-    portionSize: 125,
-    portionName: "tarrina individual (125g)",
-    meals: ["BREAKFAST", "SNACK"]
+    "id": "std-lomo-embuchado",
+    "name": "Lomo embuchado",
+    "brand": null,
+    "calories": 230,
+    "protein": 36,
+    "carbs": 1,
+    "fat": 9,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 50,
+    "portionName": "ración (50g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK",
+      "DINNER"
+    ]
   },
   {
-    id: "std-whipped-cheese",
-    name: "Queso fresco batido 0%",
-    brand: null,
-    calories: 47,
-    protein: 8.0,
-    carbs: 3.5,
-    fat: 0.0,
-    group: "DAIRY",
-    isVegan: false,
-    isVegetarian: true,
-    isKeto: true,
-    allergens: ["LACTOSE"],
-    styles: ["CLASSIC", "QUICK"],
-    portionSize: 250,
-    portionName: "tarrina mediana (250g)",
-    meals: ["BREAKFAST", "SNACK"]
+    "id": "std-morcilla",
+    "name": "Morcilla",
+    "brand": null,
+    "calories": 320,
+    "protein": 11,
+    "carbs": 14,
+    "fat": 25,
+    "group": "FAT",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "CLASSIC"
+    ],
+    "portionSize": 80,
+    "portionName": "ración (80g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
   },
   {
-    id: "std-banana",
-    name: "Plátano maduro",
-    brand: null,
-    calories: 89,
-    protein: 1.1,
-    carbs: 22.8,
-    fat: 0.3,
-    group: "FRUIT",
-    isVegan: true,
-    isVegetarian: true,
-    isKeto: false,
-    allergens: [],
-    styles: ["CLASSIC", "QUICK"],
-    portionSize: 100,
-    portionName: "plátano mediano (100g)",
-    meals: ["BREAKFAST", "SNACK"]
+    "id": "std-conejo",
+    "name": "Conejo",
+    "brand": null,
+    "calories": 135,
+    "protein": 22,
+    "carbs": 0,
+    "fat": 5,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "CLASSIC",
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 150,
+    "portionName": "ración (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
   },
   {
-    id: "std-apple",
-    name: "Manzana roja",
-    brand: null,
-    calories: 52,
-    protein: 0.3,
-    carbs: 14.0,
-    fat: 0.2,
-    group: "FRUIT",
-    isVegan: true,
-    isVegetarian: true,
-    isKeto: false,
-    allergens: [],
-    styles: ["MEDITERRANEAN", "QUICK"],
-    portionSize: 150,
-    portionName: "unidad mediana (150g)",
-    meals: ["BREAKFAST", "SNACK"]
+    "id": "std-cordero",
+    "name": "Cordero",
+    "brand": null,
+    "calories": 230,
+    "protein": 18,
+    "carbs": 0,
+    "fat": 17,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "CLASSIC",
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 150,
+    "portionName": "ración (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
   },
   {
-    id: "std-broccoli",
-    name: "Brócoli cocido",
-    brand: null,
-    calories: 34,
-    protein: 2.8,
-    carbs: 7.0,
-    fat: 0.4,
-    group: "VEG",
-    isVegan: true,
-    isVegetarian: true,
-    isKeto: true,
-    allergens: [],
-    styles: ["CLASSIC", "MEDITERRANEAN"],
-    portionSize: 150,
-    portionName: "taza de ramilletes (150g)",
-    meals: ["LUNCH", "DINNER"]
+    "id": "std-fuet",
+    "name": "Fuet",
+    "brand": null,
+    "calories": 410,
+    "protein": 28,
+    "carbs": 2,
+    "fat": 32,
+    "group": "FAT",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 30,
+    "portionName": "ración (30g)",
+    "meals": [
+      "LUNCH",
+      "DINNER",
+      "SNACK"
+    ]
   },
   {
-    id: "std-spinach",
-    name: "Espinacas frescas",
-    brand: null,
-    calories: 23,
-    protein: 2.9,
-    carbs: 3.6,
-    fat: 0.4,
-    group: "VEG",
-    isVegan: true,
-    isVegetarian: true,
-    isKeto: true,
-    allergens: [],
-    styles: ["MEDITERRANEAN", "QUICK"],
-    portionSize: 100,
-    portionName: "2 tazas colmadas (100g)",
-    meals: ["LUNCH", "DINNER"]
+    "id": "std-lacon",
+    "name": "Lacón",
+    "brand": null,
+    "calories": 170,
+    "protein": 22,
+    "carbs": 0.5,
+    "fat": 9,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 100,
+    "portionName": "ración (100g)",
+    "meals": [
+      "LUNCH",
+      "DINNER",
+      "SNACK"
+    ]
   },
   {
-    id: "std-whey-protein",
-    name: "Proteína de suero (Whey)",
-    brand: "FitWe Performance",
-    calories: 360,
-    protein: 80.0,
-    carbs: 5.0,
-    fat: 3.0,
-    group: "PROTEIN",
-    isVegan: false,
-    isVegetarian: true,
-    isKeto: true,
-    allergens: ["LACTOSE"],
-    styles: ["CLASSIC", "QUICK"],
-    portionSize: 30,
-    portionName: "cazo / scoop (30g)",
-    meals: ["BREAKFAST", "SNACK"]
+    "id": "std-bacon",
+    "name": "Bacon",
+    "brand": null,
+    "calories": 541,
+    "protein": 37,
+    "carbs": 1.4,
+    "fat": 42,
+    "group": "FAT",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "CLASSIC",
+      "QUICK"
+    ],
+    "portionSize": 40,
+    "portionName": "2 lonchas (40g)",
+    "meals": [
+      "BREAKFAST",
+      "LUNCH",
+      "DINNER"
+    ]
   },
   {
-    id: "std-vegan-protein",
-    name: "Proteína vegana (Guisante/Arroz)",
-    brand: "FitWe Organic",
-    calories: 380,
-    protein: 75.0,
-    carbs: 6.0,
-    fat: 4.0,
-    group: "PROTEIN",
-    isVegan: true,
-    isVegetarian: true,
-    isKeto: true,
-    allergens: [],
-    styles: ["QUICK"],
-    portionSize: 30,
-    portionName: "cazo / scoop (30g)",
-    meals: ["BREAKFAST", "SNACK"]
+    "id": "std-chistorra",
+    "name": "Chistorra",
+    "brand": null,
+    "calories": 490,
+    "protein": 16,
+    "carbs": 1,
+    "fat": 48,
+    "group": "FAT",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "CLASSIC"
+    ],
+    "portionSize": 50,
+    "portionName": "ración (50g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
   },
   {
-    id: "std-whole-pasta",
-    name: "Pasta integral cocida",
-    brand: null,
-    calories: 124,
-    protein: 5.3,
-    carbs: 26.0,
-    fat: 0.8,
-    group: "CARB",
-    isVegan: true,
-    isVegetarian: true,
-    isKeto: false,
-    allergens: ["GLUTEN"],
-    styles: ["MEDITERRANEAN"],
-    portionSize: 150,
-    portionName: "plato colmado (150g)",
-    meals: ["LUNCH", "DINNER"]
+    "id": "std-salchicha-cerdo",
+    "name": "Salchicha de cerdo",
+    "brand": null,
+    "calories": 290,
+    "protein": 14,
+    "carbs": 2,
+    "fat": 25,
+    "group": "FAT",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "CLASSIC",
+      "QUICK"
+    ],
+    "portionSize": 100,
+    "portionName": "2 unidades (100g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
   },
   {
-    id: "std-almond-milk",
-    name: "Leche de almendras sin azúcar",
-    brand: null,
-    calories: 13,
-    protein: 0.4,
-    carbs: 0.2,
-    fat: 1.1,
-    group: "DAIRY",
-    isVegan: true,
-    isVegetarian: true,
-    isKeto: true,
-    allergens: ["NUTS"],
-    styles: ["QUICK"],
-    portionSize: 200,
-    portionName: "vaso grande (200ml)",
-    meals: ["BREAKFAST", "SNACK"]
+    "id": "std-salchicha-pavo",
+    "name": "Salchicha de pavo",
+    "brand": null,
+    "calories": 150,
+    "protein": 15,
+    "carbs": 1.5,
+    "fat": 9,
+    "group": "FAT",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "QUICK"
+    ],
+    "portionSize": 100,
+    "portionName": "2 unidades (100g)",
+    "meals": [
+      "LUNCH",
+      "DINNER",
+      "SNACK"
+    ]
   },
   {
-    id: "std-turkey-breast",
-    name: "Pechuga de pavo",
-    brand: null,
-    calories: 111,
-    protein: 24.0,
-    carbs: 0.0,
-    fat: 1.5,
-    group: "PROTEIN",
-    isVegan: false,
-    isVegetarian: false,
-    isKeto: true,
-    allergens: [],
-    styles: ["CLASSIC", "MEDITERRANEAN", "QUICK"],
-    portionSize: 150,
-    portionName: "filete mediano (150g)",
-    meals: ["LUNCH", "DINNER"]
+    "id": "std-cecina",
+    "name": "Cecina",
+    "brand": null,
+    "calories": 250,
+    "protein": 39,
+    "carbs": 1,
+    "fat": 9.5,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 50,
+    "portionName": "ración (50g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK",
+      "DINNER"
+    ]
   },
   {
-    id: "std-lean-beef",
-    name: "Ternera magra",
-    brand: null,
-    calories: 137,
-    protein: 22.0,
-    carbs: 0.0,
-    fat: 5.4,
-    group: "PROTEIN",
-    isVegan: false,
-    isVegetarian: false,
-    isKeto: true,
-    allergens: [],
-    styles: ["CLASSIC", "MEDITERRANEAN"],
-    portionSize: 150,
-    portionName: "filete de ternera (150g)",
-    meals: ["LUNCH", "DINNER"]
+    "id": "std-sobrasada",
+    "name": "Sobrasada",
+    "brand": null,
+    "calories": 590,
+    "protein": 11,
+    "carbs": 1.5,
+    "fat": 60,
+    "group": "FAT",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 30,
+    "portionName": "ración (30g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK",
+      "LUNCH"
+    ]
   },
   {
-    id: "std-hake",
-    name: "Lomo de merluza",
-    brand: null,
-    calories: 89,
-    protein: 18.0,
-    carbs: 0.0,
-    fat: 1.8,
-    group: "PROTEIN",
-    isVegan: false,
-    isVegetarian: false,
-    isKeto: true,
-    allergens: ["FISH"],
-    styles: ["MEDITERRANEAN", "QUICK"],
-    portionSize: 180,
-    portionName: "lomo de merluza (180g)",
-    meals: ["LUNCH", "DINNER"]
+    "id": "std-butifarra",
+    "name": "Butifarra",
+    "brand": null,
+    "calories": 310,
+    "protein": 17,
+    "carbs": 1.2,
+    "fat": 26,
+    "group": "FAT",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "CLASSIC"
+    ],
+    "portionSize": 120,
+    "portionName": "unidad (120g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
   },
   {
-    id: "std-sweet-potato",
-    name: "Boniato asado",
-    brand: null,
-    calories: 86,
-    protein: 1.6,
-    carbs: 20.0,
-    fat: 0.1,
-    group: "CARB",
-    isVegan: true,
-    isVegetarian: true,
-    isKeto: false,
-    allergens: [],
-    styles: ["CLASSIC", "MEDITERRANEAN"],
-    portionSize: 150,
-    portionName: "boniato mediano (150g)",
-    meals: ["LUNCH", "DINNER"]
+    "id": "std-chuleta-cerdo",
+    "name": "Chuleta de cerdo",
+    "brand": null,
+    "calories": 231,
+    "protein": 20,
+    "carbs": 0,
+    "fat": 16,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "CLASSIC"
+    ],
+    "portionSize": 150,
+    "portionName": "chuleta (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
   },
   {
-    id: "std-quinoa",
-    name: "Quinoa cocida",
-    brand: null,
-    calories: 120,
-    protein: 4.4,
-    carbs: 21.3,
-    fat: 1.9,
-    group: "CARB",
-    isVegan: true,
-    isVegetarian: true,
-    isKeto: false,
-    allergens: [],
-    styles: ["MEDITERRANEAN"],
-    portionSize: 150,
-    portionName: "taza de quinoa (150g)",
-    meals: ["LUNCH", "DINNER"]
+    "id": "std-entrecot-ternera",
+    "name": "Entrecot de ternera",
+    "brand": null,
+    "calories": 190,
+    "protein": 21,
+    "carbs": 0,
+    "fat": 11.5,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "CLASSIC",
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 200,
+    "portionName": "entrecot (200g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
   },
   {
-    id: "std-lentils",
-    name: "Lentejas cocidas",
-    brand: null,
-    calories: 116,
-    protein: 9.0,
-    carbs: 20.0,
-    fat: 0.4,
-    group: "CARB",
-    isVegan: true,
-    isVegetarian: true,
-    isKeto: false,
-    allergens: [],
-    styles: ["MEDITERRANEAN"],
-    portionSize: 150,
-    portionName: "plato pequeño (150g)",
-    meals: ["LUNCH", "DINNER"]
+    "id": "std-salchichon-pavo",
+    "name": "Salchichón de pavo",
+    "brand": null,
+    "calories": 270,
+    "protein": 20,
+    "carbs": 2,
+    "fat": 20,
+    "group": "FAT",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "QUICK"
+    ],
+    "portionSize": 40,
+    "portionName": "ración (40g)",
+    "meals": [
+      "LUNCH",
+      "SNACK",
+      "DINNER"
+    ]
   },
   {
-    id: "std-almonds",
-    name: "Almendras crudas",
-    brand: null,
-    calories: 579,
-    protein: 21.0,
-    carbs: 22.0,
-    fat: 49.0,
-    group: "FAT",
-    isVegan: true,
-    isVegetarian: true,
-    isKeto: true,
-    allergens: ["NUTS"],
-    styles: ["CLASSIC", "MEDITERRANEAN", "QUICK"],
-    portionSize: 20,
-    portionName: "puñado de 15 almendras (20g)",
-    meals: ["BREAKFAST", "SNACK"]
+    "id": "std-pato",
+    "name": "Pato",
+    "brand": null,
+    "calories": 220,
+    "protein": 19,
+    "carbs": 0,
+    "fat": 16,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "CLASSIC"
+    ],
+    "portionSize": 150,
+    "portionName": "ración (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
   },
   {
-    id: "std-strawberries",
-    name: "Fresas frescas",
-    brand: null,
-    calories: 32,
-    protein: 0.7,
-    carbs: 7.7,
-    fat: 0.3,
-    group: "FRUIT",
-    isVegan: true,
-    isVegetarian: true,
-    isKeto: true,
-    allergens: [],
-    styles: ["MEDITERRANEAN", "QUICK"],
-    portionSize: 150,
-    portionName: "taza de fresas (150g)",
-    meals: ["BREAKFAST", "SNACK"]
+    "id": "std-merluza",
+    "name": "Merluza",
+    "brand": null,
+    "calories": 89,
+    "protein": 16,
+    "carbs": 0,
+    "fat": 2.7,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [
+      "FISH"
+    ],
+    "styles": [
+      "CLASSIC",
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 150,
+    "portionName": "filete mediano (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
   },
   {
-    id: "std-blueberries",
-    name: "Arándanos frescos",
-    brand: null,
-    calories: 57,
-    protein: 0.7,
-    carbs: 14.0,
-    fat: 0.3,
-    group: "FRUIT",
-    isVegan: true,
-    isVegetarian: true,
-    isKeto: false,
-    allergens: [],
-    styles: ["CLASSIC", "MEDITERRANEAN"],
-    portionSize: 100,
-    portionName: "taza de arándanos (100g)",
-    meals: ["BREAKFAST", "SNACK"]
+    "id": "std-bacalao",
+    "name": "Bacalao",
+    "brand": null,
+    "calories": 82,
+    "protein": 18,
+    "carbs": 0,
+    "fat": 0.7,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [
+      "FISH"
+    ],
+    "styles": [
+      "CLASSIC",
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 150,
+    "portionName": "lomo mediano (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
   },
   {
-    id: "std-zucchini",
-    name: "Calabacín a la plancha",
-    brand: null,
-    calories: 17,
-    protein: 1.2,
-    carbs: 3.1,
-    fat: 0.3,
-    group: "VEG",
-    isVegan: true,
-    isVegetarian: true,
-    isKeto: true,
-    allergens: [],
-    styles: ["MEDITERRANEAN", "QUICK"],
-    portionSize: 150,
-    portionName: "calabacín mediano (150g)",
-    meals: ["LUNCH", "DINNER"]
+    "id": "std-salmon",
+    "name": "Salmón",
+    "brand": null,
+    "calories": 208,
+    "protein": 20,
+    "carbs": 0,
+    "fat": 13,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [
+      "FISH"
+    ],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 150,
+    "portionName": "rodaja (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
   },
   {
-    id: "std-cottage-cheese",
-    name: "Queso cottage light",
-    brand: null,
-    calories: 72,
-    protein: 11.0,
-    carbs: 2.7,
-    fat: 1.8,
-    group: "DAIRY",
-    isVegan: false,
-    isVegetarian: true,
-    isKeto: true,
-    allergens: ["LACTOSE"],
-    styles: ["CLASSIC", "MEDITERRANEAN", "QUICK"],
-    portionSize: 150,
-    portionName: "media taza (150g)",
-    meals: ["BREAKFAST", "SNACK"]
+    "id": "std-atun",
+    "name": "Atún",
+    "brand": null,
+    "calories": 130,
+    "protein": 29,
+    "carbs": 0,
+    "fat": 0.6,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [
+      "FISH"
+    ],
+    "styles": [
+      "QUICK"
+    ],
+    "portionSize": 100,
+    "portionName": "lata (100g)",
+    "meals": [
+      "LUNCH",
+      "SNACK",
+      "DINNER"
+    ]
   },
   {
-    id: "std-brown-rice-dry",
-    name: "Arroz integral (en seco)",
-    brand: null,
-    calories: 362,
-    protein: 7.5,
-    carbs: 76.0,
-    fat: 2.5,
-    group: "CARB",
-    isVegan: true,
-    isVegetarian: true,
-    isKeto: false,
-    allergens: [],
-    styles: ["CLASSIC", "MEDITERRANEAN"],
-    portionSize: 50,
-    portionName: "ración en seco (50g)",
-    meals: ["LUNCH", "DINNER"]
+    "id": "std-sardinas",
+    "name": "Sardinas",
+    "brand": null,
+    "calories": 208,
+    "protein": 22,
+    "carbs": 0,
+    "fat": 13,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [
+      "FISH"
+    ],
+    "styles": [
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 120,
+    "portionName": "ración (120g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
   },
   {
-    id: "std-white-rice-dry",
-    name: "Arroz blanco (en seco)",
-    brand: null,
-    calories: 360,
-    protein: 7.0,
-    carbs: 80.0,
-    fat: 0.6,
-    group: "CARB",
-    isVegan: true,
-    isVegetarian: true,
-    isKeto: false,
-    allergens: [],
-    styles: ["CLASSIC", "QUICK"],
-    portionSize: 50,
-    portionName: "ración en seco (50g)",
-    meals: ["LUNCH", "DINNER"]
+    "id": "std-boquerones",
+    "name": "Boquerones",
+    "brand": null,
+    "calories": 140,
+    "protein": 18,
+    "carbs": 0,
+    "fat": 7,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [
+      "FISH"
+    ],
+    "styles": [
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 100,
+    "portionName": "ración (100g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
   },
   {
-    id: "std-whole-pasta-dry",
-    name: "Pasta integral (en seco)",
-    brand: null,
-    calories: 348,
-    protein: 13.0,
-    carbs: 65.0,
-    fat: 2.5,
-    group: "CARB",
-    isVegan: true,
-    isVegetarian: true,
-    isKeto: false,
-    allergens: ["GLUTEN"],
-    styles: ["MEDITERRANEAN"],
-    portionSize: 70,
-    portionName: "ración en seco (70g)",
-    meals: ["LUNCH", "DINNER"]
+    "id": "std-dorada",
+    "name": "Dorada",
+    "brand": null,
+    "calories": 110,
+    "protein": 19.5,
+    "carbs": 0,
+    "fat": 3.5,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [
+      "FISH"
+    ],
+    "styles": [
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 150,
+    "portionName": "filete mediano (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
   },
   {
-    id: "std-lentils-dry",
-    name: "Lentejas (en seco)",
-    brand: null,
-    calories: 352,
-    protein: 25.0,
-    carbs: 53.0,
-    fat: 1.1,
-    group: "CARB",
-    isVegan: true,
-    isVegetarian: true,
-    isKeto: false,
-    allergens: [],
-    styles: ["MEDITERRANEAN"],
-    portionSize: 60,
-    portionName: "ración en seco (60g)",
-    meals: ["LUNCH", "DINNER"]
+    "id": "std-lubina",
+    "name": "Lubina",
+    "brand": null,
+    "calories": 97,
+    "protein": 18.4,
+    "carbs": 0,
+    "fat": 2.6,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [
+      "FISH"
+    ],
+    "styles": [
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 150,
+    "portionName": "filete (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
   },
   {
-    id: "std-quinoa-dry",
-    name: "Quinoa (en seco)",
-    brand: null,
-    calories: 368,
-    protein: 14.0,
-    carbs: 64.0,
-    fat: 6.0,
-    group: "CARB",
-    isVegan: true,
-    isVegetarian: true,
-    isKeto: false,
-    allergens: [],
-    styles: ["MEDITERRANEAN"],
-    portionSize: 50,
-    portionName: "ración en seco (50g)",
-    meals: ["LUNCH", "DINNER"]
+    "id": "std-calamares",
+    "name": "Calamares",
+    "brand": null,
+    "calories": 92,
+    "protein": 15.6,
+    "carbs": 3.1,
+    "fat": 1.4,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [
+      "FISH"
+    ],
+    "styles": [
+      "CLASSIC",
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 150,
+    "portionName": "ración (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-sepia",
+    "name": "Sepia",
+    "brand": null,
+    "calories": 80,
+    "protein": 16,
+    "carbs": 0.7,
+    "fat": 0.9,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [
+      "FISH"
+    ],
+    "styles": [
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 150,
+    "portionName": "ración (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-pulpo",
+    "name": "Pulpo",
+    "brand": null,
+    "calories": 86,
+    "protein": 18,
+    "carbs": 0,
+    "fat": 1,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [
+      "FISH"
+    ],
+    "styles": [
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 120,
+    "portionName": "pata (120g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-gambas",
+    "name": "Gambas",
+    "brand": null,
+    "calories": 99,
+    "protein": 24,
+    "carbs": 0,
+    "fat": 0.3,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [
+      "FISH"
+    ],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 100,
+    "portionName": "ración (100g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-langostinos",
+    "name": "Langostinos",
+    "brand": null,
+    "calories": 99,
+    "protein": 24,
+    "carbs": 0,
+    "fat": 0.3,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [
+      "FISH"
+    ],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 100,
+    "portionName": "ración (100g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-mejillones",
+    "name": "Mejillones",
+    "brand": null,
+    "calories": 86,
+    "protein": 11.9,
+    "carbs": 3.7,
+    "fat": 2.2,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [
+      "FISH"
+    ],
+    "styles": [
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 100,
+    "portionName": "ración limpia (100g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-almejas",
+    "name": "Almejas",
+    "brand": null,
+    "calories": 74,
+    "protein": 12.8,
+    "carbs": 2,
+    "fat": 1.2,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [
+      "FISH"
+    ],
+    "styles": [
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 100,
+    "portionName": "ración (100g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-trucha",
+    "name": "Trucha",
+    "brand": null,
+    "calories": 141,
+    "protein": 20,
+    "carbs": 0,
+    "fat": 6.6,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [
+      "FISH"
+    ],
+    "styles": [
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 150,
+    "portionName": "filete (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-lenguado",
+    "name": "Lenguado",
+    "brand": null,
+    "calories": 80,
+    "protein": 16.5,
+    "carbs": 0,
+    "fat": 1.3,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [
+      "FISH"
+    ],
+    "styles": [
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 150,
+    "portionName": "filete mediano (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-bonito",
+    "name": "Bonito",
+    "brand": null,
+    "calories": 138,
+    "protein": 23,
+    "carbs": 0,
+    "fat": 5,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [
+      "FISH"
+    ],
+    "styles": [
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 150,
+    "portionName": "ración (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-caballa",
+    "name": "Caballa",
+    "brand": null,
+    "calories": 205,
+    "protein": 19,
+    "carbs": 0,
+    "fat": 14,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [
+      "FISH"
+    ],
+    "styles": [
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 150,
+    "portionName": "filete (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-pez-espada",
+    "name": "Pez espada",
+    "brand": null,
+    "calories": 144,
+    "protein": 20,
+    "carbs": 0,
+    "fat": 7,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [
+      "FISH"
+    ],
+    "styles": [
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 150,
+    "portionName": "filete mediano (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-berberechos",
+    "name": "Berberechos",
+    "brand": null,
+    "calories": 79,
+    "protein": 15,
+    "carbs": 1.5,
+    "fat": 1,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [
+      "FISH"
+    ],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 80,
+    "portionName": "lata (80g)",
+    "meals": [
+      "LUNCH",
+      "SNACK",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-navajas",
+    "name": "Navajas",
+    "brand": null,
+    "calories": 85,
+    "protein": 16,
+    "carbs": 1.5,
+    "fat": 1.2,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [
+      "FISH"
+    ],
+    "styles": [
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 100,
+    "portionName": "ración (100g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-gulas",
+    "name": "Gulas",
+    "brand": null,
+    "calories": 165,
+    "protein": 10,
+    "carbs": 8,
+    "fat": 10.5,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": false,
+    "allergens": [
+      "FISH",
+      "GLUTEN"
+    ],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 100,
+    "portionName": "ración (100g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-mejillones-escabeche",
+    "name": "Mejillones en escabeche",
+    "brand": null,
+    "calories": 170,
+    "protein": 14,
+    "carbs": 3,
+    "fat": 11,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [
+      "FISH"
+    ],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 80,
+    "portionName": "lata (80g)",
+    "meals": [
+      "LUNCH",
+      "SNACK",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-boquerones-vinagre",
+    "name": "Boquerones en vinagre",
+    "brand": null,
+    "calories": 150,
+    "protein": 17,
+    "carbs": 1,
+    "fat": 8.5,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [
+      "FISH"
+    ],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 80,
+    "portionName": "ración (80g)",
+    "meals": [
+      "LUNCH",
+      "SNACK",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-cigalas",
+    "name": "Cigalas",
+    "brand": null,
+    "calories": 85,
+    "protein": 17.5,
+    "carbs": 0.5,
+    "fat": 1,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [
+      "FISH"
+    ],
+    "styles": [
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 150,
+    "portionName": "ración (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-chipirones",
+    "name": "Chipirones",
+    "brand": null,
+    "calories": 82,
+    "protein": 16,
+    "carbs": 1.2,
+    "fat": 1.4,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": false,
+    "isKeto": true,
+    "allergens": [
+      "FISH"
+    ],
+    "styles": [
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 150,
+    "portionName": "ración (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-tomate",
+    "name": "Tomate",
+    "brand": null,
+    "calories": 18,
+    "protein": 0.9,
+    "carbs": 3.9,
+    "fat": 0.2,
+    "group": "VEG",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 150,
+    "portionName": "unidad grande (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-lechuga",
+    "name": "Lechuga",
+    "brand": null,
+    "calories": 15,
+    "protein": 1.2,
+    "carbs": 2.9,
+    "fat": 0.3,
+    "group": "VEG",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 100,
+    "portionName": "ración (100g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-cebolla",
+    "name": "Cebolla",
+    "brand": null,
+    "calories": 40,
+    "protein": 1.1,
+    "carbs": 9.3,
+    "fat": 0.1,
+    "group": "VEG",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "CLASSIC",
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 50,
+    "portionName": "media unidad (50g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-zanahoria",
+    "name": "Zanahoria",
+    "brand": null,
+    "calories": 41,
+    "protein": 0.9,
+    "carbs": 9.6,
+    "fat": 0.2,
+    "group": "VEG",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "CLASSIC",
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 100,
+    "portionName": "unidad mediana (100g)",
+    "meals": [
+      "LUNCH",
+      "SNACK",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-pepino",
+    "name": "Pepino",
+    "brand": null,
+    "calories": 15,
+    "protein": 0.7,
+    "carbs": 3.6,
+    "fat": 0.1,
+    "group": "VEG",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 100,
+    "portionName": "medio pepino (100g)",
+    "meals": [
+      "LUNCH",
+      "SNACK",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-calabacin",
+    "name": "Calabacín",
+    "brand": null,
+    "calories": 17,
+    "protein": 1.2,
+    "carbs": 3.1,
+    "fat": 0.3,
+    "group": "VEG",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 150,
+    "portionName": "ración (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-berenjena",
+    "name": "Berenjena",
+    "brand": null,
+    "calories": 25,
+    "protein": 1,
+    "carbs": 6,
+    "fat": 0.2,
+    "group": "VEG",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 150,
+    "portionName": "ración (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-pimiento-rojo",
+    "name": "Pimiento rojo",
+    "brand": null,
+    "calories": 31,
+    "protein": 1,
+    "carbs": 6,
+    "fat": 0.3,
+    "group": "VEG",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 100,
+    "portionName": "medio pimiento (100g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-pimiento-verde",
+    "name": "Pimiento verde",
+    "brand": null,
+    "calories": 20,
+    "protein": 0.9,
+    "carbs": 4.6,
+    "fat": 0.2,
+    "group": "VEG",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 100,
+    "portionName": "medio pimiento (100g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-pimiento-amarillo",
+    "name": "Pimiento amarillo",
+    "brand": null,
+    "calories": 27,
+    "protein": 1,
+    "carbs": 6.3,
+    "fat": 0.2,
+    "group": "VEG",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 100,
+    "portionName": "medio pimiento (100g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-brocoli",
+    "name": "Brócoli",
+    "brand": null,
+    "calories": 34,
+    "protein": 2.8,
+    "carbs": 7,
+    "fat": 0.4,
+    "group": "VEG",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "CLASSIC",
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 150,
+    "portionName": "taza de ramilletes (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-coliflor",
+    "name": "Coliflor",
+    "brand": null,
+    "calories": 25,
+    "protein": 1.9,
+    "carbs": 5,
+    "fat": 0.3,
+    "group": "VEG",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "CLASSIC"
+    ],
+    "portionSize": 150,
+    "portionName": "ración (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-espinacas",
+    "name": "Espinacas",
+    "brand": null,
+    "calories": 23,
+    "protein": 2.9,
+    "carbs": 3.6,
+    "fat": 0.4,
+    "group": "VEG",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "CLASSIC",
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 100,
+    "portionName": "tazón (100g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-acelgas",
+    "name": "Acelgas",
+    "brand": null,
+    "calories": 19,
+    "protein": 1.8,
+    "carbs": 3.7,
+    "fat": 0.2,
+    "group": "VEG",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "CLASSIC",
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 150,
+    "portionName": "ración (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-repollo",
+    "name": "Repollo",
+    "brand": null,
+    "calories": 23,
+    "protein": 1.3,
+    "carbs": 5.5,
+    "fat": 0.1,
+    "group": "VEG",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "CLASSIC"
+    ],
+    "portionSize": 150,
+    "portionName": "ración (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-judias-verdes",
+    "name": "Judías verdes",
+    "brand": null,
+    "calories": 31,
+    "protein": 1.8,
+    "carbs": 7,
+    "fat": 0.1,
+    "group": "VEG",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "CLASSIC",
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 150,
+    "portionName": "ración (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-alcachofas",
+    "name": "Alcachofas",
+    "brand": null,
+    "calories": 47,
+    "protein": 3.3,
+    "carbs": 10.5,
+    "fat": 0.2,
+    "group": "VEG",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "CLASSIC",
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 120,
+    "portionName": "ración (120g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-esparragos",
+    "name": "Espárragos",
+    "brand": null,
+    "calories": 20,
+    "protein": 2.2,
+    "carbs": 3.9,
+    "fat": 0.1,
+    "group": "VEG",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 100,
+    "portionName": "manojo pequeño (100g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-champinones",
+    "name": "Champiñones",
+    "brand": null,
+    "calories": 22,
+    "protein": 3.1,
+    "carbs": 3.3,
+    "fat": 0.3,
+    "group": "VEG",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "CLASSIC",
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 100,
+    "portionName": "taza (100g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-setas",
+    "name": "Setas",
+    "brand": null,
+    "calories": 31,
+    "protein": 2.5,
+    "carbs": 5.3,
+    "fat": 0.3,
+    "group": "VEG",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 100,
+    "portionName": "ración (100g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-ajo",
+    "name": "Ajo",
+    "brand": null,
+    "calories": 149,
+    "protein": 6.4,
+    "carbs": 33,
+    "fat": 0.5,
+    "group": "VEG",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "CLASSIC",
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 5,
+    "portionName": "diente (5g)",
+    "meals": [
+      "BREAKFAST",
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-puerro",
+    "name": "Puerro",
+    "brand": null,
+    "calories": 61,
+    "protein": 1.5,
+    "carbs": 14,
+    "fat": 0.3,
+    "group": "VEG",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "CLASSIC",
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 100,
+    "portionName": "unidad (100g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-calabaza",
+    "name": "Calabaza",
+    "brand": null,
+    "calories": 26,
+    "protein": 1,
+    "carbs": 6.5,
+    "fat": 0.1,
+    "group": "VEG",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "CLASSIC"
+    ],
+    "portionSize": 150,
+    "portionName": "ración (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-apio",
+    "name": "Apio",
+    "brand": null,
+    "calories": 16,
+    "protein": 0.7,
+    "carbs": 3,
+    "fat": 0.2,
+    "group": "VEG",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "CLASSIC",
+      "QUICK"
+    ],
+    "portionSize": 50,
+    "portionName": "tallo (50g)",
+    "meals": [
+      "LUNCH",
+      "SNACK",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-rabano",
+    "name": "Rábano",
+    "brand": null,
+    "calories": 16,
+    "protein": 0.7,
+    "carbs": 3.4,
+    "fat": 0.1,
+    "group": "VEG",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 50,
+    "portionName": "3 unidades (50g)",
+    "meals": [
+      "LUNCH",
+      "SNACK",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-canonigos",
+    "name": "Canónigos",
+    "brand": null,
+    "calories": 14,
+    "protein": 1.8,
+    "carbs": 1.5,
+    "fat": 0.2,
+    "group": "VEG",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 50,
+    "portionName": "tazón (50g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-rucula",
+    "name": "Rúcula",
+    "brand": null,
+    "calories": 25,
+    "protein": 2.6,
+    "carbs": 2.1,
+    "fat": 0.7,
+    "group": "VEG",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 50,
+    "portionName": "tazón (50g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-pimientos-padron",
+    "name": "Pimientos de Padrón",
+    "brand": null,
+    "calories": 20,
+    "protein": 0.9,
+    "carbs": 3.5,
+    "fat": 0.2,
+    "group": "VEG",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 100,
+    "portionName": "ración (100g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-pimientos-piquillo",
+    "name": "Pimientos del piquillo",
+    "brand": null,
+    "calories": 45,
+    "protein": 1.2,
+    "carbs": 8.5,
+    "fat": 0.5,
+    "group": "VEG",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 100,
+    "portionName": "ración (100g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-coles-bruselas",
+    "name": "Coles de Bruselas",
+    "brand": null,
+    "calories": 43,
+    "protein": 3.4,
+    "carbs": 9,
+    "fat": 0.3,
+    "group": "VEG",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "CLASSIC"
+    ],
+    "portionSize": 150,
+    "portionName": "ración (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-lombarda",
+    "name": "Lombarda",
+    "brand": null,
+    "calories": 31,
+    "protein": 1.5,
+    "carbs": 7,
+    "fat": 0.2,
+    "group": "VEG",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "CLASSIC"
+    ],
+    "portionSize": 150,
+    "portionName": "ración (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-remolacha",
+    "name": "Remolacha",
+    "brand": null,
+    "calories": 43,
+    "protein": 1.6,
+    "carbs": 9.6,
+    "fat": 0.2,
+    "group": "VEG",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 100,
+    "portionName": "ración (100g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-esparrago-blanco",
+    "name": "Espárrago blanco",
+    "brand": null,
+    "calories": 18,
+    "protein": 1.2,
+    "carbs": 3,
+    "fat": 0.1,
+    "group": "VEG",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 100,
+    "portionName": "ración (100g)",
+    "meals": [
+      "LUNCH",
+      "DINNER",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-bimi",
+    "name": "Bimi",
+    "brand": null,
+    "calories": 35,
+    "protein": 3,
+    "carbs": 4,
+    "fat": 0.5,
+    "group": "VEG",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 100,
+    "portionName": "ración (100g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-grelos",
+    "name": "Grelos",
+    "brand": null,
+    "calories": 22,
+    "protein": 2.5,
+    "carbs": 3,
+    "fat": 0.3,
+    "group": "VEG",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "CLASSIC"
+    ],
+    "portionSize": 150,
+    "portionName": "ración (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-platano",
+    "name": "Plátano",
+    "brand": null,
+    "calories": 89,
+    "protein": 1.1,
+    "carbs": 22.8,
+    "fat": 0.3,
+    "group": "FRUIT",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "CLASSIC",
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 120,
+    "portionName": "unidad mediana (120g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-manzana",
+    "name": "Manzana",
+    "brand": null,
+    "calories": 52,
+    "protein": 0.3,
+    "carbs": 14,
+    "fat": 0.2,
+    "group": "FRUIT",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "CLASSIC",
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 150,
+    "portionName": "unidad mediana (150g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-pera",
+    "name": "Pera",
+    "brand": null,
+    "calories": 57,
+    "protein": 0.4,
+    "carbs": 15,
+    "fat": 0.1,
+    "group": "FRUIT",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 150,
+    "portionName": "unidad mediana (150g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-naranja",
+    "name": "Naranja",
+    "brand": null,
+    "calories": 47,
+    "protein": 0.9,
+    "carbs": 11.8,
+    "fat": 0.1,
+    "group": "FRUIT",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 150,
+    "portionName": "unidad mediana (150g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-mandarina",
+    "name": "Mandarina",
+    "brand": null,
+    "calories": 53,
+    "protein": 0.8,
+    "carbs": 13.3,
+    "fat": 0.3,
+    "group": "FRUIT",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 80,
+    "portionName": "unidad (80g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-limon",
+    "name": "Limón",
+    "brand": null,
+    "calories": 29,
+    "protein": 1.1,
+    "carbs": 9,
+    "fat": 0.3,
+    "group": "FRUIT",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 50,
+    "portionName": "unidad (50g)",
+    "meals": [
+      "BREAKFAST",
+      "LUNCH",
+      "SNACK",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-lima",
+    "name": "Lima",
+    "brand": null,
+    "calories": 30,
+    "protein": 0.7,
+    "carbs": 10.5,
+    "fat": 0.2,
+    "group": "FRUIT",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "QUICK"
+    ],
+    "portionSize": 50,
+    "portionName": "unidad (50g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-fresa",
+    "name": "Fresa",
+    "brand": null,
+    "calories": 32,
+    "protein": 0.7,
+    "carbs": 7.7,
+    "fat": 0.3,
+    "group": "FRUIT",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 100,
+    "portionName": "taza (100g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-arandanos",
+    "name": "Arándanos",
+    "brand": null,
+    "calories": 57,
+    "protein": 0.7,
+    "carbs": 14,
+    "fat": 0.3,
+    "group": "FRUIT",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 100,
+    "portionName": "taza (100g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-frambuesas",
+    "name": "Frambuesas",
+    "brand": null,
+    "calories": 52,
+    "protein": 1.2,
+    "carbs": 12,
+    "fat": 0.7,
+    "group": "FRUIT",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 100,
+    "portionName": "taza (100g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-pina",
+    "name": "Piña",
+    "brand": null,
+    "calories": 50,
+    "protein": 0.5,
+    "carbs": 13,
+    "fat": 0.1,
+    "group": "FRUIT",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "QUICK"
+    ],
+    "portionSize": 120,
+    "portionName": "rodaja (120g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-sandia",
+    "name": "Sandía",
+    "brand": null,
+    "calories": 30,
+    "protein": 0.6,
+    "carbs": 7.6,
+    "fat": 0.2,
+    "group": "FRUIT",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 200,
+    "portionName": "tajada (200g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-melon",
+    "name": "Melón",
+    "brand": null,
+    "calories": 34,
+    "protein": 0.8,
+    "carbs": 8.2,
+    "fat": 0.2,
+    "group": "FRUIT",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 200,
+    "portionName": "tajada (200g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-melocototon",
+    "name": "Melocotón",
+    "brand": null,
+    "calories": 39,
+    "protein": 0.9,
+    "carbs": 9.5,
+    "fat": 0.3,
+    "group": "FRUIT",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 150,
+    "portionName": "unidad (150g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-nectarina",
+    "name": "Nectarina",
+    "brand": null,
+    "calories": 44,
+    "protein": 1.1,
+    "carbs": 10.6,
+    "fat": 0.3,
+    "group": "FRUIT",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 150,
+    "portionName": "unidad (150g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-albaricoque",
+    "name": "Albaricoque",
+    "brand": null,
+    "calories": 48,
+    "protein": 1.4,
+    "carbs": 11,
+    "fat": 0.4,
+    "group": "FRUIT",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 80,
+    "portionName": "2 unidades (80g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-cerezas",
+    "name": "Cerezas",
+    "brand": null,
+    "calories": 50,
+    "protein": 1,
+    "carbs": 12,
+    "fat": 0.3,
+    "group": "FRUIT",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 100,
+    "portionName": "ración (100g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-ciruela",
+    "name": "Ciruela",
+    "brand": null,
+    "calories": 46,
+    "protein": 0.7,
+    "carbs": 11.4,
+    "fat": 0.3,
+    "group": "FRUIT",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 100,
+    "portionName": "2 unidades (100g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-uva",
+    "name": "Uva",
+    "brand": null,
+    "calories": 67,
+    "protein": 0.6,
+    "carbs": 18,
+    "fat": 0.4,
+    "group": "FRUIT",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 100,
+    "portionName": "racimo pequeño (100g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-mango",
+    "name": "Mango",
+    "brand": null,
+    "calories": 60,
+    "protein": 0.8,
+    "carbs": 15,
+    "fat": 0.4,
+    "group": "FRUIT",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "QUICK"
+    ],
+    "portionSize": 150,
+    "portionName": "media unidad (150g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-higo",
+    "name": "Higo",
+    "brand": null,
+    "calories": 74,
+    "protein": 0.8,
+    "carbs": 19,
+    "fat": 0.3,
+    "group": "FRUIT",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 80,
+    "portionName": "2 unidades (80g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-caqui",
+    "name": "Caqui",
+    "brand": null,
+    "calories": 70,
+    "protein": 0.6,
+    "carbs": 18.6,
+    "fat": 0.2,
+    "group": "FRUIT",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "QUICK"
+    ],
+    "portionSize": 150,
+    "portionName": "unidad (150g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-nispero",
+    "name": "Níspero",
+    "brand": null,
+    "calories": 47,
+    "protein": 0.4,
+    "carbs": 12,
+    "fat": 0.2,
+    "group": "FRUIT",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 100,
+    "portionName": "3 unidades (100g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-granada",
+    "name": "Granada",
+    "brand": null,
+    "calories": 83,
+    "protein": 1.7,
+    "carbs": 19,
+    "fat": 1.2,
+    "group": "FRUIT",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 100,
+    "portionName": "media unidad (100g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-paraguayo",
+    "name": "Paraguayo",
+    "brand": null,
+    "calories": 44,
+    "protein": 0.9,
+    "carbs": 10.5,
+    "fat": 0.1,
+    "group": "FRUIT",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 130,
+    "portionName": "unidad (130g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-chirimoya",
+    "name": "Chirimoya",
+    "brand": null,
+    "calories": 75,
+    "protein": 1.6,
+    "carbs": 17.7,
+    "fat": 0.7,
+    "group": "FRUIT",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "CLASSIC"
+    ],
+    "portionSize": 150,
+    "portionName": "unidad (150g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-kiwi",
+    "name": "Kiwi",
+    "brand": null,
+    "calories": 61,
+    "protein": 1.1,
+    "carbs": 15,
+    "fat": 0.5,
+    "group": "FRUIT",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 80,
+    "portionName": "unidad (80g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-pomelo",
+    "name": "Pomelo",
+    "brand": null,
+    "calories": 42,
+    "protein": 0.8,
+    "carbs": 10.7,
+    "fat": 0.1,
+    "group": "FRUIT",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 150,
+    "portionName": "unidad (150g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-higos-secos",
+    "name": "Higos secos",
+    "brand": null,
+    "calories": 249,
+    "protein": 3.3,
+    "carbs": 54,
+    "fat": 0.9,
+    "group": "FRUIT",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 30,
+    "portionName": "ración (30g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-leche-entera",
+    "name": "Leche entera",
+    "brand": null,
+    "calories": 61,
+    "protein": 3.3,
+    "carbs": 4.7,
+    "fat": 3.3,
+    "group": "CARB",
+    "isVegan": false,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [
+      "LACTOSE"
+    ],
+    "styles": [
+      "CLASSIC",
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 200,
+    "portionName": "vaso (200ml)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-leche-semidesnatada",
+    "name": "Leche semidesnatada",
+    "brand": null,
+    "calories": 46,
+    "protein": 3.4,
+    "carbs": 4.8,
+    "fat": 1.6,
+    "group": "CARB",
+    "isVegan": false,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [
+      "LACTOSE"
+    ],
+    "styles": [
+      "CLASSIC",
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 200,
+    "portionName": "vaso (200ml)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-leche-desnatada",
+    "name": "Leche desnatada",
+    "brand": null,
+    "calories": 34,
+    "protein": 3.4,
+    "carbs": 4.9,
+    "fat": 0.1,
+    "group": "CARB",
+    "isVegan": false,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [
+      "LACTOSE"
+    ],
+    "styles": [
+      "CLASSIC",
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 200,
+    "portionName": "vaso (200ml)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-yogur-natural",
+    "name": "Yogur natural",
+    "brand": null,
+    "calories": 57,
+    "protein": 3.5,
+    "carbs": 4.7,
+    "fat": 3.3,
+    "group": "CARB",
+    "isVegan": false,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [
+      "LACTOSE"
+    ],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 125,
+    "portionName": "unidad (125g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-yogur-griego",
+    "name": "Yogur griego",
+    "brand": null,
+    "calories": 120,
+    "protein": 4,
+    "carbs": 3.5,
+    "fat": 10,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [
+      "LACTOSE"
+    ],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 125,
+    "portionName": "unidad (125g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-queso-fresco",
+    "name": "Queso fresco",
+    "brand": null,
+    "calories": 100,
+    "protein": 12,
+    "carbs": 3,
+    "fat": 4,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [
+      "LACTOSE"
+    ],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 80,
+    "portionName": "tarrina pequeña (80g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-queso-curado",
+    "name": "Queso curado",
+    "brand": null,
+    "calories": 380,
+    "protein": 25,
+    "carbs": 1,
+    "fat": 30,
+    "group": "FAT",
+    "isVegan": false,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [
+      "LACTOSE"
+    ],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 30,
+    "portionName": "cuña (30g)",
+    "meals": [
+      "BREAKFAST",
+      "LUNCH",
+      "SNACK",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-queso-semicurado",
+    "name": "Queso semicurado",
+    "brand": null,
+    "calories": 350,
+    "protein": 24,
+    "carbs": 1,
+    "fat": 28,
+    "group": "FAT",
+    "isVegan": false,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [
+      "LACTOSE"
+    ],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 30,
+    "portionName": "cuña (30g)",
+    "meals": [
+      "BREAKFAST",
+      "LUNCH",
+      "SNACK",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-queso-tierno",
+    "name": "Queso tierno",
+    "brand": null,
+    "calories": 310,
+    "protein": 20,
+    "carbs": 1,
+    "fat": 25,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [
+      "LACTOSE"
+    ],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 30,
+    "portionName": "cuña (30g)",
+    "meals": [
+      "BREAKFAST",
+      "LUNCH",
+      "SNACK",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-queso-cottage",
+    "name": "Queso cottage",
+    "brand": null,
+    "calories": 98,
+    "protein": 11,
+    "carbs": 3.4,
+    "fat": 4.3,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [
+      "LACTOSE"
+    ],
+    "styles": [
+      "QUICK"
+    ],
+    "portionSize": 100,
+    "portionName": "ración (100g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-queso-mozzarella",
+    "name": "Queso mozzarella",
+    "brand": null,
+    "calories": 280,
+    "protein": 28,
+    "carbs": 3.1,
+    "fat": 17,
+    "group": "FAT",
+    "isVegan": false,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [
+      "LACTOSE"
+    ],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 100,
+    "portionName": "bola (100g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-queso-cabra",
+    "name": "Queso de cabra",
+    "brand": null,
+    "calories": 364,
+    "protein": 22,
+    "carbs": 0.1,
+    "fat": 30,
+    "group": "FAT",
+    "isVegan": false,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [
+      "LACTOSE"
+    ],
+    "styles": [
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 30,
+    "portionName": "rodaja (30g)",
+    "meals": [
+      "LUNCH",
+      "SNACK",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-queso-azul",
+    "name": "Queso azul",
+    "brand": null,
+    "calories": 353,
+    "protein": 21,
+    "carbs": 2.3,
+    "fat": 29,
+    "group": "FAT",
+    "isVegan": false,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [
+      "LACTOSE"
+    ],
+    "styles": [
+      "CLASSIC"
+    ],
+    "portionSize": 30,
+    "portionName": "ración (30g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-queso-mascarpone",
+    "name": "Queso mascarpone",
+    "brand": null,
+    "calories": 429,
+    "protein": 5.8,
+    "carbs": 4.6,
+    "fat": 44,
+    "group": "FAT",
+    "isVegan": false,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [
+      "LACTOSE"
+    ],
+    "styles": [
+      "CLASSIC"
+    ],
+    "portionSize": 50,
+    "portionName": "ración (50g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-queso-parmesano",
+    "name": "Queso parmesano",
+    "brand": null,
+    "calories": 431,
+    "protein": 38,
+    "carbs": 4.1,
+    "fat": 29,
+    "group": "FAT",
+    "isVegan": false,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [
+      "LACTOSE"
+    ],
+    "styles": [
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 15,
+    "portionName": "cucharada (15g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-kefir",
+    "name": "Kéfir",
+    "brand": null,
+    "calories": 60,
+    "protein": 3.5,
+    "carbs": 4.8,
+    "fat": 3,
+    "group": "CARB",
+    "isVegan": false,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [
+      "LACTOSE"
+    ],
+    "styles": [
+      "QUICK"
+    ],
+    "portionSize": 200,
+    "portionName": "vaso (200ml)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-nata",
+    "name": "Nata",
+    "brand": null,
+    "calories": 340,
+    "protein": 2,
+    "carbs": 3,
+    "fat": 35,
+    "group": "FAT",
+    "isVegan": false,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [
+      "LACTOSE"
+    ],
+    "styles": [
+      "CLASSIC"
+    ],
+    "portionSize": 50,
+    "portionName": "ración (50g)",
+    "meals": [
+      "BREAKFAST",
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-mantequilla",
+    "name": "Mantequilla",
+    "brand": null,
+    "calories": 717,
+    "protein": 0.9,
+    "carbs": 0.1,
+    "fat": 81,
+    "group": "FAT",
+    "isVegan": false,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [
+      "LACTOSE"
+    ],
+    "styles": [
+      "CLASSIC",
+      "QUICK"
+    ],
+    "portionSize": 15,
+    "portionName": "cucharada (15g)",
+    "meals": [
+      "BREAKFAST"
+    ]
+  },
+  {
+    "id": "std-queso-burgos",
+    "name": "Queso de Burgos",
+    "brand": null,
+    "calories": 180,
+    "protein": 11.5,
+    "carbs": 3.5,
+    "fat": 13.5,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [
+      "LACTOSE"
+    ],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 80,
+    "portionName": "tarrina (80g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-queso-oveja",
+    "name": "Queso de oveja",
+    "brand": null,
+    "calories": 420,
+    "protein": 26,
+    "carbs": 1,
+    "fat": 35,
+    "group": "FAT",
+    "isVegan": false,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [
+      "LACTOSE"
+    ],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 30,
+    "portionName": "cuña (30g)",
+    "meals": [
+      "BREAKFAST",
+      "LUNCH",
+      "SNACK",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-queso-manchego",
+    "name": "Queso Manchego",
+    "brand": null,
+    "calories": 460,
+    "protein": 26,
+    "carbs": 0.5,
+    "fat": 40,
+    "group": "FAT",
+    "isVegan": false,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [
+      "LACTOSE"
+    ],
+    "styles": [
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 30,
+    "portionName": "cuña (30g)",
+    "meals": [
+      "BREAKFAST",
+      "LUNCH",
+      "SNACK",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-queso-untar",
+    "name": "Queso de untar",
+    "brand": null,
+    "calories": 240,
+    "protein": 6,
+    "carbs": 4,
+    "fat": 22,
+    "group": "FAT",
+    "isVegan": false,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [
+      "LACTOSE"
+    ],
+    "styles": [
+      "QUICK"
+    ],
+    "portionSize": 30,
+    "portionName": "ración (30g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-queso-batido",
+    "name": "Queso batido",
+    "brand": null,
+    "calories": 46,
+    "protein": 8,
+    "carbs": 3.5,
+    "fat": 0.1,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [
+      "LACTOSE"
+    ],
+    "styles": [
+      "QUICK"
+    ],
+    "portionSize": 150,
+    "portionName": "ración (150g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-cuajada",
+    "name": "Cuajada",
+    "brand": null,
+    "calories": 92,
+    "protein": 5.5,
+    "carbs": 4.8,
+    "fat": 5.6,
+    "group": "CARB",
+    "isVegan": false,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [
+      "LACTOSE"
+    ],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 130,
+    "portionName": "tarrina (130g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-leche-cabra",
+    "name": "Leche de cabra",
+    "brand": null,
+    "calories": 68,
+    "protein": 3.6,
+    "carbs": 4.5,
+    "fat": 4.1,
+    "group": "CARB",
+    "isVegan": false,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [
+      "LACTOSE"
+    ],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 200,
+    "portionName": "vaso (200ml)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-lentejas",
+    "name": "Lentejas",
+    "brand": null,
+    "calories": 116,
+    "protein": 9,
+    "carbs": 20,
+    "fat": 0.4,
+    "group": "CARB",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "CLASSIC",
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 150,
+    "portionName": "plato cocido (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-garbanzos",
+    "name": "Garbanzos",
+    "brand": null,
+    "calories": 139,
+    "protein": 7,
+    "carbs": 19,
+    "fat": 2.1,
+    "group": "CARB",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "CLASSIC",
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 150,
+    "portionName": "plato cocido (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-alubias-blancas",
+    "name": "Alubias blancas",
+    "brand": null,
+    "calories": 105,
+    "protein": 7.5,
+    "carbs": 17,
+    "fat": 0.5,
+    "group": "CARB",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "CLASSIC",
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 150,
+    "portionName": "plato cocido (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-alubias-pintas",
+    "name": "Alubias pintas",
+    "brand": null,
+    "calories": 110,
+    "protein": 8,
+    "carbs": 18,
+    "fat": 0.6,
+    "group": "CARB",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "CLASSIC",
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 150,
+    "portionName": "plato cocido (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-alubias-negras",
+    "name": "Alubias negras",
+    "brand": null,
+    "calories": 114,
+    "protein": 8,
+    "carbs": 20,
+    "fat": 0.5,
+    "group": "CARB",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "CLASSIC"
+    ],
+    "portionSize": 150,
+    "portionName": "plato cocido (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-guisantes",
+    "name": "Guisantes",
+    "brand": null,
+    "calories": 81,
+    "protein": 5.4,
+    "carbs": 14,
+    "fat": 0.4,
+    "group": "VEG",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "CLASSIC",
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 150,
+    "portionName": "ración (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-habas",
+    "name": "Habas",
+    "brand": null,
+    "calories": 88,
+    "protein": 8,
+    "carbs": 12,
+    "fat": 0.7,
+    "group": "CARB",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "CLASSIC",
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 100,
+    "portionName": "ración (100g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-soja",
+    "name": "Soja",
+    "brand": null,
+    "calories": 147,
+    "protein": 13,
+    "carbs": 11,
+    "fat": 6.8,
+    "group": "PROTEIN",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "CLASSIC"
+    ],
+    "portionSize": 100,
+    "portionName": "ración (100g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-altramuces",
+    "name": "Altramuces",
+    "brand": null,
+    "calories": 120,
+    "protein": 15.6,
+    "carbs": 10,
+    "fat": 3,
+    "group": "CARB",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 50,
+    "portionName": "ración (50g)",
+    "meals": [
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-lenteja-roja",
+    "name": "Lenteja roja",
+    "brand": null,
+    "calories": 330,
+    "protein": 24,
+    "carbs": 50,
+    "fat": 1.5,
+    "group": "CARB",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "CLASSIC"
+    ],
+    "portionSize": 70,
+    "portionName": "ración en seco (70g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-tofu",
+    "name": "Tofu",
+    "brand": null,
+    "calories": 76,
+    "protein": 8,
+    "carbs": 1.9,
+    "fat": 4.8,
+    "group": "PROTEIN",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "CLASSIC",
+      "QUICK"
+    ],
+    "portionSize": 125,
+    "portionName": "bloque ración (125g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-seitan",
+    "name": "Seitán",
+    "brand": null,
+    "calories": 120,
+    "protein": 24,
+    "carbs": 2.5,
+    "fat": 1.2,
+    "group": "PROTEIN",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [
+      "GLUTEN"
+    ],
+    "styles": [
+      "CLASSIC",
+      "QUICK"
+    ],
+    "portionSize": 120,
+    "portionName": "ración (120g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-avena",
+    "name": "Avena",
+    "brand": null,
+    "calories": 389,
+    "protein": 16.9,
+    "carbs": 66.3,
+    "fat": 6.9,
+    "group": "CARB",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [
+      "GLUTEN"
+    ],
+    "styles": [
+      "CLASSIC",
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 50,
+    "portionName": "taza de copos (50g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-arroz-blanco",
+    "name": "Arroz blanco",
+    "brand": null,
+    "calories": 130,
+    "protein": 2.7,
+    "carbs": 28,
+    "fat": 0.3,
+    "group": "CARB",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "CLASSIC",
+      "QUICK"
+    ],
+    "portionSize": 150,
+    "portionName": "plato (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-arroz-integral",
+    "name": "Arroz integral",
+    "brand": null,
+    "calories": 111,
+    "protein": 2.6,
+    "carbs": 23,
+    "fat": 0.9,
+    "group": "CARB",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "CLASSIC",
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 150,
+    "portionName": "plato (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-pasta",
+    "name": "Pasta",
+    "brand": null,
+    "calories": 131,
+    "protein": 5,
+    "carbs": 25,
+    "fat": 0.6,
+    "group": "CARB",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [
+      "GLUTEN"
+    ],
+    "styles": [
+      "CLASSIC",
+      "QUICK"
+    ],
+    "portionSize": 150,
+    "portionName": "plato (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-pan-integral",
+    "name": "Pan integral",
+    "brand": null,
+    "calories": 250,
+    "protein": 9,
+    "carbs": 46,
+    "fat": 2,
+    "group": "CARB",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [
+      "GLUTEN"
+    ],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 50,
+    "portionName": "2 rebanadas (50g)",
+    "meals": [
+      "BREAKFAST",
+      "LUNCH",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-pan-blanco",
+    "name": "Pan blanco",
+    "brand": null,
+    "calories": 265,
+    "protein": 9,
+    "carbs": 49,
+    "fat": 3.2,
+    "group": "CARB",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [
+      "GLUTEN"
+    ],
+    "styles": [
+      "QUICK"
+    ],
+    "portionSize": 50,
+    "portionName": "rebanada (50g)",
+    "meals": [
+      "BREAKFAST",
+      "LUNCH",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-pan-molde",
+    "name": "Pan de molde",
+    "brand": null,
+    "calories": 260,
+    "protein": 8.5,
+    "carbs": 47,
+    "fat": 3,
+    "group": "CARB",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [
+      "GLUTEN"
+    ],
+    "styles": [
+      "QUICK"
+    ],
+    "portionSize": 50,
+    "portionName": "2 rebanadas (50g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-patata",
+    "name": "Patata",
+    "brand": null,
+    "calories": 77,
+    "protein": 2,
+    "carbs": 17,
+    "fat": 0.1,
+    "group": "CARB",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "CLASSIC",
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 150,
+    "portionName": "unidad (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-boniato",
+    "name": "Boniato",
+    "brand": null,
+    "calories": 86,
+    "protein": 1.6,
+    "carbs": 20,
+    "fat": 0.1,
+    "group": "CARB",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "CLASSIC"
+    ],
+    "portionSize": 150,
+    "portionName": "unidad (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-quinoa",
+    "name": "Quinoa",
+    "brand": null,
+    "calories": 120,
+    "protein": 4.4,
+    "carbs": 21.3,
+    "fat": 1.9,
+    "group": "CARB",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 150,
+    "portionName": "ración (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-harina-trigo",
+    "name": "Harina de trigo",
+    "brand": null,
+    "calories": 364,
+    "protein": 10,
+    "carbs": 76,
+    "fat": 1,
+    "group": "CARB",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [
+      "GLUTEN"
+    ],
+    "styles": [
+      "CLASSIC"
+    ],
+    "portionSize": 50,
+    "portionName": "ración (50g)",
+    "meals": [
+      "BREAKFAST",
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-harina-avena",
+    "name": "Harina de avena",
+    "brand": null,
+    "calories": 389,
+    "protein": 16.9,
+    "carbs": 66.3,
+    "fat": 6.9,
+    "group": "CARB",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [
+      "GLUTEN"
+    ],
+    "styles": [
+      "CLASSIC",
+      "QUICK"
+    ],
+    "portionSize": 50,
+    "portionName": "ración (50g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-tortitas-arroz",
+    "name": "Tortitas de arroz",
+    "brand": null,
+    "calories": 387,
+    "protein": 8.2,
+    "carbs": 81,
+    "fat": 2.8,
+    "group": "CARB",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "QUICK"
+    ],
+    "portionSize": 30,
+    "portionName": "3 unidades (30g)",
+    "meals": [
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-tortitas-maiz",
+    "name": "Tortitas de maíz",
+    "brand": null,
+    "calories": 380,
+    "protein": 7,
+    "carbs": 80,
+    "fat": 3,
+    "group": "CARB",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "QUICK"
+    ],
+    "portionSize": 30,
+    "portionName": "3 unidades (30g)",
+    "meals": [
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-cereales-maiz",
+    "name": "Cereales de maíz",
+    "brand": null,
+    "calories": 357,
+    "protein": 8,
+    "carbs": 84,
+    "fat": 0.4,
+    "group": "CARB",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "QUICK"
+    ],
+    "portionSize": 40,
+    "portionName": "taza (40g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-galletas-maria",
+    "name": "Galletas maría",
+    "brand": null,
+    "calories": 440,
+    "protein": 7,
+    "carbs": 75,
+    "fat": 12,
+    "group": "CARB",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [
+      "GLUTEN"
+    ],
+    "styles": [
+      "QUICK"
+    ],
+    "portionSize": 30,
+    "portionName": "5 unidades (30g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-cuscus",
+    "name": "Cuscús",
+    "brand": null,
+    "calories": 112,
+    "protein": 3.8,
+    "carbs": 23,
+    "fat": 0.2,
+    "group": "CARB",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [
+      "GLUTEN"
+    ],
+    "styles": [
+      "QUICK"
+    ],
+    "portionSize": 150,
+    "portionName": "ración cocida (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-pan-centeno",
+    "name": "Pan de centeno",
+    "brand": null,
+    "calories": 260,
+    "protein": 8.5,
+    "carbs": 48,
+    "fat": 1.8,
+    "group": "CARB",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [
+      "GLUTEN"
+    ],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 50,
+    "portionName": "2 rebanadas (50g)",
+    "meals": [
+      "BREAKFAST",
+      "LUNCH",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-pan-espelta",
+    "name": "Pan de espelta",
+    "brand": null,
+    "calories": 262,
+    "protein": 9.8,
+    "carbs": 49,
+    "fat": 2.2,
+    "group": "CARB",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [
+      "GLUTEN"
+    ],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 50,
+    "portionName": "2 rebanadas (50g)",
+    "meals": [
+      "BREAKFAST",
+      "LUNCH",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-picos",
+    "name": "Picos",
+    "brand": null,
+    "calories": 410,
+    "protein": 10,
+    "carbs": 76,
+    "fat": 6.5,
+    "group": "CARB",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [
+      "GLUTEN"
+    ],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 20,
+    "portionName": "puñado (20g)",
+    "meals": [
+      "LUNCH",
+      "SNACK",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-reganas",
+    "name": "Regañás",
+    "brand": null,
+    "calories": 415,
+    "protein": 9.5,
+    "carbs": 78,
+    "fat": 5.8,
+    "group": "CARB",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [
+      "GLUTEN"
+    ],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 20,
+    "portionName": "puñado (20g)",
+    "meals": [
+      "LUNCH",
+      "SNACK",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-gofio",
+    "name": "Gofio",
+    "brand": null,
+    "calories": 365,
+    "protein": 11,
+    "carbs": 71,
+    "fat": 2.5,
+    "group": "CARB",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [
+      "GLUTEN"
+    ],
+    "styles": [
+      "CLASSIC"
+    ],
+    "portionSize": 30,
+    "portionName": "ración (30g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-arroz-basmati",
+    "name": "Arroz basmati",
+    "brand": null,
+    "calories": 130,
+    "protein": 2.7,
+    "carbs": 28,
+    "fat": 0.3,
+    "group": "CARB",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 150,
+    "portionName": "plato cocido (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-arroz-bomba",
+    "name": "Arroz bomba",
+    "brand": null,
+    "calories": 130,
+    "protein": 2.5,
+    "carbs": 28.5,
+    "fat": 0.2,
+    "group": "CARB",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "CLASSIC",
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 150,
+    "portionName": "plato cocido (150g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-harina-maiz",
+    "name": "Harina de maíz",
+    "brand": null,
+    "calories": 350,
+    "protein": 6,
+    "carbs": 78,
+    "fat": 1,
+    "group": "CARB",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "CLASSIC"
+    ],
+    "portionSize": 50,
+    "portionName": "ración (50g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-castanas",
+    "name": "Castañas",
+    "brand": null,
+    "calories": 196,
+    "protein": 2,
+    "carbs": 40,
+    "fat": 2.2,
+    "group": "CARB",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "CLASSIC"
+    ],
+    "portionSize": 50,
+    "portionName": "5 unidades (50g)",
+    "meals": [
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-aceite-oliva",
+    "name": "Aceite de oliva",
+    "brand": null,
+    "calories": 884,
+    "protein": 0,
+    "carbs": 0,
+    "fat": 100,
+    "group": "FAT",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "CLASSIC",
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 10,
+    "portionName": "cucharada (10ml)",
+    "meals": [
+      "BREAKFAST",
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-aceite-girasol",
+    "name": "Aceite de girasol",
+    "brand": null,
+    "calories": 884,
+    "protein": 0,
+    "carbs": 0,
+    "fat": 100,
+    "group": "FAT",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "CLASSIC"
+    ],
+    "portionSize": 10,
+    "portionName": "cucharada (10ml)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-aguacate",
+    "name": "Aguacate",
+    "brand": null,
+    "calories": 160,
+    "protein": 2,
+    "carbs": 9,
+    "fat": 15,
+    "group": "FAT",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 75,
+    "portionName": "media unidad (75g)",
+    "meals": [
+      "BREAKFAST",
+      "LUNCH",
+      "SNACK",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-nueces",
+    "name": "Nueces",
+    "brand": null,
+    "calories": 654,
+    "protein": 15,
+    "carbs": 14,
+    "fat": 65,
+    "group": "FAT",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [
+      "NUTS"
+    ],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 30,
+    "portionName": "puñado (30g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-almendras",
+    "name": "Almendras",
+    "brand": null,
+    "calories": 579,
+    "protein": 21,
+    "carbs": 22,
+    "fat": 49,
+    "group": "FAT",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [
+      "NUTS"
+    ],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 30,
+    "portionName": "puñado (30g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-avellanas",
+    "name": "Avellanas",
+    "brand": null,
+    "calories": 628,
+    "protein": 15,
+    "carbs": 17,
+    "fat": 61,
+    "group": "FAT",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [
+      "NUTS"
+    ],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 30,
+    "portionName": "puñado (30g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-pistachos",
+    "name": "Pistachos",
+    "brand": null,
+    "calories": 562,
+    "protein": 20,
+    "carbs": 27,
+    "fat": 45,
+    "group": "FAT",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [
+      "NUTS"
+    ],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 30,
+    "portionName": "puñado (30g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-cacahuetes",
+    "name": "Cacahuetes",
+    "brand": null,
+    "calories": 567,
+    "protein": 25.8,
+    "carbs": 16.1,
+    "fat": 49.2,
+    "group": "FAT",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [
+      "NUTS"
+    ],
+    "styles": [
+      "QUICK"
+    ],
+    "portionSize": 30,
+    "portionName": "puñado (30g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-anacardos",
+    "name": "Anacardos",
+    "brand": null,
+    "calories": 553,
+    "protein": 18,
+    "carbs": 30,
+    "fat": 44,
+    "group": "FAT",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [
+      "NUTS"
+    ],
+    "styles": [
+      "QUICK"
+    ],
+    "portionSize": 30,
+    "portionName": "puñado (30g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-pinones",
+    "name": "Piñones",
+    "brand": null,
+    "calories": 673,
+    "protein": 13.7,
+    "carbs": 13,
+    "fat": 68,
+    "group": "FAT",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [
+      "NUTS"
+    ],
+    "styles": [
+      "MEDITERRANEAN"
+    ],
+    "portionSize": 20,
+    "portionName": "cucharada (20g)",
+    "meals": [
+      "LUNCH",
+      "SNACK",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-pipas-girasol",
+    "name": "Pipas de girasol",
+    "brand": null,
+    "calories": 584,
+    "protein": 20,
+    "carbs": 20,
+    "fat": 51,
+    "group": "FAT",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "QUICK"
+    ],
+    "portionSize": 30,
+    "portionName": "puñado (30g)",
+    "meals": [
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-pipas-calabaza",
+    "name": "Pipas de calabaza",
+    "brand": null,
+    "calories": 559,
+    "protein": 30,
+    "carbs": 10,
+    "fat": 49,
+    "group": "FAT",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 30,
+    "portionName": "puñado (30g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-aceitunas-verdes",
+    "name": "Aceitunas verdes",
+    "brand": null,
+    "calories": 145,
+    "protein": 1,
+    "carbs": 4,
+    "fat": 15,
+    "group": "FAT",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 50,
+    "portionName": "ración (50g)",
+    "meals": [
+      "LUNCH",
+      "SNACK",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-aceitunas-negras",
+    "name": "Aceitunas negras",
+    "brand": null,
+    "calories": 115,
+    "protein": 0.8,
+    "carbs": 6,
+    "fat": 10.7,
+    "group": "FAT",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 50,
+    "portionName": "ración (50g)",
+    "meals": [
+      "LUNCH",
+      "SNACK",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-margarina",
+    "name": "Margarina",
+    "brand": null,
+    "calories": 717,
+    "protein": 0.1,
+    "carbs": 0.5,
+    "fat": 81,
+    "group": "FAT",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "QUICK"
+    ],
+    "portionSize": 10,
+    "portionName": "cucharadita (10g)",
+    "meals": [
+      "BREAKFAST"
+    ]
+  },
+  {
+    "id": "std-crema-cacahuete",
+    "name": "Crema de cacahuete",
+    "brand": null,
+    "calories": 590,
+    "protein": 25,
+    "carbs": 20,
+    "fat": 50,
+    "group": "FAT",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [
+      "NUTS"
+    ],
+    "styles": [
+      "QUICK"
+    ],
+    "portionSize": 20,
+    "portionName": "cucharada (20g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-huevo-entero",
+    "name": "Huevo entero",
+    "brand": null,
+    "calories": 143,
+    "protein": 12.6,
+    "carbs": 0.7,
+    "fat": 9.5,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [
+      "EGG"
+    ],
+    "styles": [
+      "CLASSIC",
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 60,
+    "portionName": "unidad (60g)",
+    "meals": [
+      "BREAKFAST",
+      "LUNCH",
+      "SNACK",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-clara-huevo",
+    "name": "Clara de huevo",
+    "brand": null,
+    "calories": 52,
+    "protein": 11,
+    "carbs": 0.7,
+    "fat": 0.2,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [
+      "EGG"
+    ],
+    "styles": [
+      "CLASSIC",
+      "QUICK"
+    ],
+    "portionSize": 100,
+    "portionName": "ración (100g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-proteina-suero",
+    "name": "Proteína de suero",
+    "brand": null,
+    "calories": 380,
+    "protein": 80,
+    "carbs": 5,
+    "fat": 3,
+    "group": "PROTEIN",
+    "isVegan": false,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [
+      "LACTOSE"
+    ],
+    "styles": [
+      "QUICK"
+    ],
+    "portionSize": 30,
+    "portionName": "cacito (30g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-proteina-vegana",
+    "name": "Proteína vegana",
+    "brand": null,
+    "calories": 380,
+    "protein": 78,
+    "carbs": 6,
+    "fat": 4,
+    "group": "PROTEIN",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "QUICK"
+    ],
+    "portionSize": 30,
+    "portionName": "cacito (30g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-gazpacho",
+    "name": "Gazpacho",
+    "brand": null,
+    "calories": 45,
+    "protein": 0.8,
+    "carbs": 4.2,
+    "fat": 2.5,
+    "group": "VEG",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 250,
+    "portionName": "vaso (250ml)",
+    "meals": [
+      "LUNCH",
+      "DINNER",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-salmorejo",
+    "name": "Salmorejo",
+    "brand": null,
+    "calories": 85,
+    "protein": 1.2,
+    "carbs": 8.5,
+    "fat": 5,
+    "group": "CARB",
+    "isVegan": false,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [
+      "GLUTEN"
+    ],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 200,
+    "portionName": "cuenco (200ml)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-tomate-frito",
+    "name": "Tomate frito",
+    "brand": null,
+    "calories": 80,
+    "protein": 1.5,
+    "carbs": 7.5,
+    "fat": 4.5,
+    "group": "VEG",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "CLASSIC",
+      "QUICK"
+    ],
+    "portionSize": 50,
+    "portionName": "ración (50g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-bebida-avena",
+    "name": "Bebida de avena",
+    "brand": null,
+    "calories": 45,
+    "protein": 1,
+    "carbs": 7.5,
+    "fat": 1,
+    "group": "CARB",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [
+      "GLUTEN"
+    ],
+    "styles": [
+      "QUICK"
+    ],
+    "portionSize": 200,
+    "portionName": "vaso (200ml)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-bebida-soja",
+    "name": "Bebida de soja",
+    "brand": null,
+    "calories": 40,
+    "protein": 3,
+    "carbs": 2.5,
+    "fat": 1.8,
+    "group": "PROTEIN",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "QUICK"
+    ],
+    "portionSize": 200,
+    "portionName": "vaso (200ml)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-bebida-almendra",
+    "name": "Bebida de almendra",
+    "brand": null,
+    "calories": 25,
+    "protein": 0.5,
+    "carbs": 2,
+    "fat": 1.5,
+    "group": "FAT",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [
+      "NUTS"
+    ],
+    "styles": [
+      "QUICK"
+    ],
+    "portionSize": 200,
+    "portionName": "vaso (200ml)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-mayonesa",
+    "name": "Mayonesa",
+    "brand": null,
+    "calories": 680,
+    "protein": 1,
+    "carbs": 1.5,
+    "fat": 75,
+    "group": "FAT",
+    "isVegan": false,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [
+      "EGG"
+    ],
+    "styles": [
+      "QUICK"
+    ],
+    "portionSize": 15,
+    "portionName": "cucharada (15g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-allioli",
+    "name": "Allioli",
+    "brand": null,
+    "calories": 700,
+    "protein": 1.2,
+    "carbs": 2,
+    "fat": 77,
+    "group": "FAT",
+    "isVegan": false,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [
+      "EGG"
+    ],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 15,
+    "portionName": "cucharada (15g)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-chocolate-negro-85",
+    "name": "Chocolate negro 85%",
+    "brand": null,
+    "calories": 580,
+    "protein": 9,
+    "carbs": 20,
+    "fat": 46,
+    "group": "FAT",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "QUICK"
+    ],
+    "portionSize": 20,
+    "portionName": "onza (20g)",
+    "meals": [
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-miel",
+    "name": "Miel",
+    "brand": null,
+    "calories": 300,
+    "protein": 0.3,
+    "carbs": 82,
+    "fat": 0,
+    "group": "CARB",
+    "isVegan": false,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 15,
+    "portionName": "cucharada (15g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
+  },
+  {
+    "id": "std-vinagre-vino",
+    "name": "Vinagre de vino",
+    "brand": null,
+    "calories": 19,
+    "protein": 0.1,
+    "carbs": 0.6,
+    "fat": 0,
+    "group": "Otros",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 10,
+    "portionName": "cucharada (10ml)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-vinagre-modena",
+    "name": "Vinagre de Módena",
+    "brand": null,
+    "calories": 90,
+    "protein": 0.5,
+    "carbs": 20,
+    "fat": 0,
+    "group": "CARB",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": false,
+    "allergens": [],
+    "styles": [
+      "MEDITERRANEAN",
+      "QUICK"
+    ],
+    "portionSize": 10,
+    "portionName": "cucharada (10ml)",
+    "meals": [
+      "LUNCH",
+      "DINNER"
+    ]
+  },
+  {
+    "id": "std-cacao-polvo",
+    "name": "Cacao en polvo",
+    "brand": null,
+    "calories": 350,
+    "protein": 22,
+    "carbs": 12,
+    "fat": 11,
+    "group": "Otros",
+    "isVegan": true,
+    "isVegetarian": true,
+    "isKeto": true,
+    "allergens": [],
+    "styles": [
+      "QUICK"
+    ],
+    "portionSize": 10,
+    "portionName": "cucharada (10g)",
+    "meals": [
+      "BREAKFAST",
+      "SNACK"
+    ]
   }
 ];
 
@@ -896,7 +5555,32 @@ export function solveMealGrams(
 
   const addDynamicItem = (f: DietFood | undefined, wUnits: number) => {
     if (!f) return;
-    const qty = Math.round(wUnits * 100);
+    
+    // Realistic maximum portion caps per food type (in grams)
+    // These prevent the solver from prescribing absurd quantities
+    let maxGrams = 600; // generous default
+    if (f.group === "FAT") maxGrams = 60;  // oils, nuts, avocado
+    if (f.id === "std-aceite-oliva" || f.id === "std-aceite-girasol") maxGrams = 30; // max 3 tbsp oil
+    if (f.id === "std-mantequilla" || f.id === "std-margarina") maxGrams = 30;
+    if (f.id === "std-aguacate") maxGrams = 200; // half a large avocado
+    if (f.id === "std-crema-cacahuete") maxGrams = 40;
+    // Drinks: cap at 500ml for breakfast, 400ml for snacks
+    const drinkIds = ["std-leche-entera","std-leche-semidesnatada","std-leche-desnatada",
+      "std-bebida-avena","std-bebida-soja","std-bebida-almendra","std-kefir","std-leche-cabra"];
+    if (drinkIds.includes(f.id)) maxGrams = 500;
+    // Protein foods: reasonable single-serving caps
+    if (f.id === "std-huevo-entero") maxGrams = 300; // max ~5 eggs
+    if (f.id === "std-clara-huevo") maxGrams = 250; // max ~7 egg whites
+    if (f.id === "std-tofu") maxGrams = 400;
+    if (f.id === "std-proteina-suero" || f.id === "std-proteina-vegana") maxGrams = 80; // max ~2.5 scoops
+    // Yogurt / dairy protein
+    if (f.id === "std-yogur-griego" || f.id === "std-yogur-natural") maxGrams = 400;
+    if (f.id === "std-queso-batido" || f.id === "std-queso-fresco") maxGrams = 400;
+    if (f.id === "std-queso-cottage") maxGrams = 400;
+    // Cheese: small amounts
+    if (f.id === "std-queso-tierno" || f.id === "std-queso-burgos") maxGrams = 200;
+    
+    const qty = Math.min(Math.round(wUnits * 100), maxGrams);
     const cal = Math.round((f.calories * qty) / 100);
     const pro = Math.round(((f.protein * qty) / 100) * 10) / 10;
     const carb = Math.round(((f.carbs * qty) / 100) * 10) / 10;
@@ -913,9 +5597,35 @@ export function solveMealGrams(
     });
   };
 
+
   addDynamicItem(cFood, wc);
   addDynamicItem(pFood, wp);
   addDynamicItem(fFood, wf);
+
+  // Sum actual calories of the result
+  let totalSolvedCals = 0;
+  result.forEach(item => {
+    totalSolvedCals += item.calories;
+  });
+
+  // If solved calories exceed target by more than 20 kcal, scale down dynamic items
+  if (totalSolvedCals > targetCalories + 20) {
+    const fixedCals = fixedCalories;
+    const targetDynCals = Math.max(50, targetCalories - fixedCals);
+    const actualDynCals = Math.max(50, totalSolvedCals - fixedCals);
+    const scale = targetDynCals / actualDynCals;
+
+    result.forEach(item => {
+      if (item.food.group !== "VEG" && item.food.group !== "FRUIT") {
+        item.quantityGrams = Math.round(item.quantityGrams * scale);
+        item.calories = Math.round((item.food.calories * item.quantityGrams) / 100);
+        item.protein = Math.round(((item.food.protein * item.quantityGrams) / 100) * 10) / 10;
+        item.carbs = Math.round(((item.food.carbs * item.quantityGrams) / 100) * 10) / 10;
+        item.fat = Math.round(((item.food.fat * item.quantityGrams) / 100) * 10) / 10;
+        item.equivalentText = getPortionEquivalent(item.food, item.quantityGrams);
+      }
+    });
+  }
 
   return result;
 }
@@ -1063,77 +5773,277 @@ export function getMealTemplate(
   veg?: DietFood;
   fruit?: DietFood;
 } {
-  const getFood = (group: string, backupId: string) => {
-    // Filter by group AND check if the food is suitable for this specific meal type
-    let list = availableFoods.filter((f) => f.group === group && f.meals.includes(mealType as any));
-    
-    // Fallback if user exclusions or tags left this group empty for this meal
-    if (list.length === 0) {
-      list = availableFoods.filter((f) => f.group === group);
+  // Normalize mealType for dynamic snack numbers (e.g. SNACK-1, SNACK-2 -> SNACK)
+  const normMealType = mealType.startsWith("SNACK") ? "SNACK" : mealType;
+
+  /**
+   * Picks a food from a curated whitelist of IDs.
+   * Priority order: user-preferred → not-recently-used → random from pool.
+   * Falls back to STANDARD_FOODS if availableFoods has none of the IDs.
+   */
+  const pickFromPool = (ids: string[], fallbackId: string): DietFood | undefined => {
+    // Filter only available (not excluded) foods that are in our curated pool
+    let pool = availableFoods.filter((f) => ids.includes(f.id));
+    if (pool.length === 0) {
+      // Hard fallback: search the whole STANDARD_FOODS catalog
+      return STANDARD_FOODS.find((f) => f.id === fallbackId);
     }
 
-    // Try to exclude already used foods to avoid repetition
-    const freshList = list.filter((f) => !usedFoodIds.includes(f.id));
-    if (freshList.length > 0) {
-      list = freshList;
+    // Prefer foods the user has marked as favourite
+    const preferredPool = pool.filter((f) => prioritizedFoodIds.includes(f.id));
+    if (preferredPool.length > 0) {
+      pool = preferredPool;
+    } else {
+      // Avoid repeating the same food day-to-day
+      const freshPool = pool.filter((f) => !usedFoodIds.includes(f.id));
+      if (freshPool.length > 0) pool = freshPool;
     }
-    
-    // 1. Prioritize foods liked by the user (if any are in this group)
-    const preferredList = list.filter((f) => prioritizedFoodIds.includes(f.id));
-    
-    // 2. Otherwise prioritize style if possible (with 75% weight, leaving 25% weight to choose any other valid food in the list for variety)
-    const styleList = list.filter((f) => f.styles.includes(style));
-    
-    let finalSelection = list;
-    if (preferredList.length > 0) {
-      finalSelection = preferredList;
-    } else if (styleList.length > 0 && Math.random() < 0.75) {
-      finalSelection = styleList;
-    }
-    
-    if (finalSelection.length === 0) {
-      // Return absolute fallback from standard list if user constraints left group empty
-      return STANDARD_FOODS.find((f) => f.id === backupId);
-    }
-    return finalSelection[Math.floor(Math.random() * finalSelection.length)];
+
+    return pool[Math.floor(Math.random() * pool.length)];
   };
 
-  switch (mealType) {
-    case "BREAKFAST":
-      // Breakfast: Carb (oats/bread) + Protein (eggs/whites/protein shake) + Fruit/Dairy (milk/banana)
+  /** Pick any vegetable appropriate for the given meal type */
+  const pickVeg = (type: string, fallbackId: string): DietFood | undefined => {
+    const normType = type.startsWith("SNACK") ? "SNACK" : type;
+    // Exclude raw-only vegetables from hot meals and condiment-type foods
+    const rawOnlyIds = ["std-ajo", "std-rabano", "std-apio", "std-pepino", "std-esparrago-blanco"];
+    let pool = availableFoods.filter(
+      (f) => f.group === "VEG" && f.meals.includes(normType as any) && !rawOnlyIds.includes(f.id)
+    );
+    if (pool.length === 0) pool = availableFoods.filter((f) => f.group === "VEG" && !rawOnlyIds.includes(f.id));
+    const freshPool = pool.filter((f) => !usedFoodIds.includes(f.id));
+    if (freshPool.length > 0) pool = freshPool;
+    if (pool.length === 0) return STANDARD_FOODS.find((f) => f.id === fallbackId);
+    return pool[Math.floor(Math.random() * pool.length)];
+  };
+
+  /** Pick any fruit */
+  const pickFruit = (fallbackId: string): DietFood | undefined => {
+    // Exclude dried fruits from main breakfast (too calorie-dense for fruit slot)
+    const lightFruitIds = [
+      "std-platano","std-manzana","std-pera","std-naranja","std-mandarina",
+      "std-fresa","std-arandanos","std-frambuesas","std-pina","std-sandia",
+      "std-melon","std-melocototon","std-nectarina","std-albaricoque",
+      "std-cerezas","std-ciruela","std-uva","std-mango","std-kiwi",
+      "std-pomelo","std-granada","std-paraguayo","std-higo","std-caqui",
+      "std-nispero","std-chirimoya","std-lima","std-limon"
+    ];
+    let pool = availableFoods.filter((f) => lightFruitIds.includes(f.id));
+    if (pool.length === 0) pool = availableFoods.filter((f) => f.group === "FRUIT");
+    const freshPool = pool.filter((f) => !usedFoodIds.includes(f.id));
+    if (freshPool.length > 0) pool = freshPool;
+    if (pool.length === 0) return STANDARD_FOODS.find((f) => f.id === fallbackId);
+    return pool[Math.floor(Math.random() * pool.length)];
+  };
+
+  switch (normMealType) {
+    case "BREAKFAST": {
+      /**
+       * Spanish breakfast: drink + starch + protein/dairy + fruit
+       *
+       * CARB slot → the DRINK (milk, plant milk, kéfir, yogur natural) OR
+       *             a solid starch (avena, pan) when dairy is already in PROTEIN slot.
+       * PROTEIN slot → eggs / yogur griego / queso fresco / queso batido / proteína
+       * FAT slot    → nuts / mantequilla / crema de cacahuete / aguacate (spread)
+       * FRUIT slot  → any light fruit
+       *
+       * Coherent combos that arise:
+       *   Leche + Huevos + Nueces + Plátano
+       *   Avena + Yogur griego + Almendras + Fresas
+       *   Bebida de avena + Proteína de suero + Nueces + Naranja
+       *   Pan integral + Queso batido + Mantequilla + Manzana
+       */
+
+      // CARB = liquid base of breakfast OR solid starch
+      const breakfastCarbPool = [
+        // Liquid drinks (preferred)
+        "std-leche-entera","std-leche-semidesnatada","std-leche-desnatada",
+        "std-bebida-avena","std-bebida-soja","std-kefir","std-leche-cabra",
+        // Solid starches
+        "std-avena","std-pan-integral","std-pan-centeno","std-pan-espelta",
+        "std-pan-molde","std-harina-avena","std-galletas-maria",
+      ];
+
+      // PROTEIN = protein-rich dairy or eggs or shake
+      const breakfastProteinPool = [
+        "std-huevo-entero","std-clara-huevo",
+        "std-yogur-griego","std-queso-batido","std-queso-fresco",
+        "std-queso-cottage","std-queso-burgos","std-queso-tierno",
+        "std-proteina-suero","std-proteina-vegana",
+      ];
+
+      // FAT = nuts, spreads, or small amount of butter/oil
+      const breakfastFatPool = [
+        "std-nueces","std-almendras","std-avellanas","std-pistachos",
+        "std-cacahuetes","std-anacardos",
+        "std-crema-cacahuete","std-mantequilla","std-aceite-oliva",
+      ];
+
       return {
-        carb: getFood("CARB", "std-oats"),
-        protein: getFood("PROTEIN", "std-egg-white"),
-        fruit: getFood("FRUIT", "std-banana"),
-        fat: getFood("FAT", "std-olive-oil"),
+        carb: pickFromPool(breakfastCarbPool, "std-avena"),
+        protein: pickFromPool(breakfastProteinPool, "std-huevo-entero"),
+        fat: pickFromPool(breakfastFatPool, "std-nueces"),
+        fruit: pickFruit("std-platano"),
       };
-    case "LUNCH":
-      // Lunch: Carb (rice/pasta/potato) + Protein (chicken/turkey/beef/tofu) + Veg + Fat (avocado/oil)
+    }
+
+    case "LUNCH": {
+      /**
+       * Main midday meal: starch + lean protein + vegetable + olive oil
+       *
+       * CARB slot   → rice / pasta / potatoes / legumes / bread
+       * PROTEIN slot → chicken / turkey / beef / fish / eggs / legumes
+       * VEG slot    → any vegetable (160g portion)
+       * FAT slot    → olive oil (main), occasionally avocado
+       *
+       * Coherent combos that arise:
+       *   Arroz + Pechuga de pollo + Brócoli + Aceite de oliva
+       *   Lentejas + Merluza + Espinacas + Aceite de oliva
+       *   Pasta + Ternera magra + Champiñones + Aceite de oliva
+       *   Patatas + Salmón + Judías verdes + Aceite de oliva
+       */
+
+      // CARB = complex starch (no drinks, no sweets)
+      const lunchCarbPool = [
+        "std-arroz-integral","std-arroz-blanco","std-arroz-basmati","std-arroz-bomba",
+        "std-pasta",
+        "std-patata","std-boniato",
+        "std-lentejas","std-garbanzos","std-alubias-blancas","std-alubias-pintas",
+        "std-lenteja-roja",
+        "std-quinoa","std-cuscus",
+        "std-pan-integral","std-pan-centeno",
+      ];
+
+      // PROTEIN = lean meat, fish, eggs, legumes (NOT cured meats / cold cuts)
+      const lunchProteinPool = [
+        // Poultry
+        "std-pechuga-pollo","std-pechuga-pavo","std-muslo-pollo","std-alitas-pollo",
+        // Red meat
+        "std-lomo-cerdo","std-ternera","std-entrecot-ternera","std-chuleta-cerdo","std-conejo","std-cordero",
+        // Fish & seafood
+        "std-salmon","std-merluza","std-atun","std-bacalao","std-dorada","std-lubina",
+        "std-trucha","std-lenguado","std-sardinas","std-gambas","std-langostinos",
+        "std-pulpo","std-calamares","std-chipirones","std-sepia","std-cigalas",
+        // Eggs / plant
+        "std-huevo-entero","std-tofu","std-seitan",
+      ];
+
+      // FAT = almost always olive oil; avocado occasionally
+      const lunchFatPool = [
+        "std-aceite-oliva",
+        "std-aceite-oliva",  // double weight → more likely
+        "std-aceite-oliva",
+        "std-aguacate",
+      ];
+
       return {
-        carb: getFood("CARB", "std-brown-rice"),
-        protein: getFood("PROTEIN", "std-chicken"),
-        veg: getFood("VEG", "std-broccoli"),
-        fat: getFood("FAT", "std-olive-oil"),
+        carb: pickFromPool(lunchCarbPool, "std-arroz-integral"),
+        protein: pickFromPool(lunchProteinPool, "std-pechuga-pollo"),
+        veg: pickVeg("LUNCH", "std-brocoli"),
+        fat: pickFromPool(lunchFatPool, "std-aceite-oliva"),
       };
-    case "DINNER":
-      // Dinner: Protein (salmon/fish/eggs/tofu) + Veg + Fat (oil/avocado) + light Carb (potato)
+    }
+
+    case "DINNER": {
+      /**
+       * Lighter evening meal: protein (preferably fish/eggs) + vegetable + light carb + olive oil
+       *
+       * CARB slot   → light starch (potato, bread, small rice, legumes)
+       * PROTEIN slot → fish / eggs preferred; light chicken; tofu
+       * VEG slot    → any vegetable
+       * FAT slot    → olive oil
+       *
+       * Coherent combos:
+       *   Patatas + Salmón + Espinacas + Aceite de oliva
+       *   Pan integral + Huevos + Brócoli + Aceite de oliva
+       *   Lentejas + Merluza + Judías verdes + Aceite de oliva
+       */
+
+      // CARB = lighter starch options for dinner
+      const dinnerCarbPool = [
+        "std-patata","std-boniato",
+        "std-pan-integral","std-pan-centeno","std-pan-espelta",
+        "std-arroz-integral","std-arroz-blanco","std-arroz-basmati",
+        "std-lentejas","std-garbanzos","std-lenteja-roja",
+        "std-pasta",
+        "std-quinoa","std-cuscus",
+      ];
+
+      // PROTEIN = fish and eggs strongly preferred for dinner; chicken OK
+      const dinnerProteinPool = [
+        // Fish (repeated for higher probability)
+        "std-salmon","std-salmon","std-merluza","std-merluza",
+        "std-bacalao","std-dorada","std-lubina","std-trucha","std-lenguado",
+        "std-atun","std-sardinas","std-gambas","std-langostinos","std-pulpo",
+        "std-calamares","std-chipirones","std-sepia",
+        // Eggs (also very common for dinner in Spain)
+        "std-huevo-entero","std-huevo-entero","std-clara-huevo",
+        // Light chicken
+        "std-pechuga-pollo","std-pechuga-pavo",
+        // Plant protein
+        "std-tofu","std-seitan",
+        // Light lean beef
+        "std-ternera","std-lomo-cerdo",
+      ];
+
+      // FAT = olive oil
+      const dinnerFatPool = [
+        "std-aceite-oliva","std-aceite-oliva","std-aceite-oliva",
+        "std-aguacate",
+      ];
+
       return {
-        carb: getFood("CARB", "std-potato"),
-        protein: getFood("PROTEIN", "std-salmon"),
-        veg: getFood("VEG", "std-spinach"),
-        fat: getFood("FAT", "std-olive-oil"),
+        carb: pickFromPool(dinnerCarbPool, "std-patata"),
+        protein: pickFromPool(dinnerProteinPool, "std-salmon"),
+        veg: pickVeg("DINNER", "std-espinacas"),
+        fat: pickFromPool(dinnerFatPool, "std-aceite-oliva"),
       };
-    case "SNACK":
-      // Snack: Fruit + Fat (nuts/peanut butter) + Protein/Dairy (yogurt/cheese/shake)
+    }
+
+    case "SNACK": {
+      /**
+       * Between-meal snack: fruit + dairy/protein + nuts
+       *
+       * FRUIT slot   → any light fruit
+       * PROTEIN slot → yogur, cottage cheese, queso fresco, protein shake, kéfir
+       * FAT slot     → nuts, seeds, dark chocolate, crema de cacahuete
+       *
+       * Coherent combos:
+       *   Manzana + Yogur griego + Nueces
+       *   Plátano + Queso cottage + Almendras
+       *   Naranja + Proteína de suero + Cacahuetes
+       */
+
+      // PROTEIN/DAIRY for snack
+      const snackProteinPool = [
+        "std-yogur-griego","std-yogur-natural","std-queso-batido",
+        "std-queso-fresco","std-queso-cottage","std-queso-burgos","std-queso-tierno",
+        "std-proteina-suero","std-proteina-vegana",
+        "std-kefir","std-leche-semidesnatada",
+        "std-huevo-entero","std-clara-huevo",
+      ];
+
+      // FAT for snack = nuts and seeds (no oils for snack)
+      const snackFatPool = [
+        "std-nueces","std-almendras","std-avellanas","std-pistachos",
+        "std-cacahuetes","std-anacardos",
+        "std-crema-cacahuete",
+        "std-chocolate-negro-85",
+        "std-pipas-girasol","std-pipas-calabaza",
+      ];
+
       return {
-        protein: getFood("PROTEIN", "std-whey-protein"),
-        fat: getFood("FAT", "std-walnuts"),
-        fruit: getFood("FRUIT", "std-apple"),
+        protein: pickFromPool(snackProteinPool, "std-yogur-griego"),
+        fat: pickFromPool(snackFatPool, "std-nueces"),
+        fruit: pickFruit("std-manzana"),
       };
+    }
+
     default:
       return {};
   }
 }
+
 
 // 5. Generate Full Diet Plan
 export interface MealPlan {
@@ -1155,7 +6065,8 @@ export function generateDietPlan(
   allergensList: string[],
   culinaryStyle: string,
   excludedFoodIds: string[] = [],
-  prioritizedFoodIds: string[] = []
+  prioritizedFoodIds: string[] = [],
+  mealsConfig: string | null = null
 ): MealPlan[] {
   // Pre-filter catalog
   let filteredFoods = filterFoodsForUser(STANDARD_FOODS, dietType, allergensList);
@@ -1165,12 +6076,68 @@ export function generateDietPlan(
     filteredFoods = filteredFoods.filter((f) => !excludedFoodIds.includes(f.id));
   }
 
-  const mealAllocations = [
+  // Parse custom allocations or fall back to default
+  let mealAllocations = [
     { type: "BREAKFAST", label: "Desayuno", pct: 0.25 },
     { type: "LUNCH", label: "Almuerzo", pct: 0.35 },
     { type: "DINNER", label: "Cena", pct: 0.25 },
     { type: "SNACK", label: "Snacks", pct: 0.15 },
   ];
+
+  if (mealsConfig) {
+    const parts = mealsConfig.split(",").map(s => s.trim()).filter(Boolean);
+    if (parts.length > 0) {
+      const snacks = parts.filter(p => p === "SNACK" || p.startsWith("SNACK-"));
+      const numSnacks = snacks.length;
+
+      let pctBreakfast = 0.25;
+      let pctLunch = 0.35;
+      let pctDinner = 0.25;
+      let pctSnacksTotal = 0.15;
+
+      if (numSnacks === 0) {
+        pctBreakfast = 0.30;
+        pctLunch = 0.40;
+        pctDinner = 0.30;
+        pctSnacksTotal = 0;
+      }
+
+      let snackCount = 0;
+      mealAllocations = parts.map(id => {
+        let pct = 0;
+        let label = "";
+        if (id === "BREAKFAST") {
+          pct = pctBreakfast;
+          label = "Desayuno";
+        } else if (id === "LUNCH") {
+          pct = pctLunch;
+          label = "Almuerzo";
+        } else if (id === "DINNER") {
+          pct = pctDinner;
+          label = "Cena";
+        } else if (id === "SNACK") {
+          pct = pctSnacksTotal;
+          label = "Snacks";
+        } else if (id.startsWith("SNACK-")) {
+          snackCount++;
+          pct = numSnacks > 0 ? pctSnacksTotal / numSnacks : 0;
+          label = `Snack ${snackCount}`;
+        } else {
+          pct = 0.10;
+          label = id;
+        }
+        return { type: id, label, pct };
+      });
+
+      // Normalize percentages to sum to exactly 1.0
+      const totalPct = mealAllocations.reduce((acc, m) => acc + m.pct, 0);
+      if (totalPct > 0) {
+        mealAllocations.forEach(m => {
+          m.pct = m.pct / totalPct;
+        });
+      }
+    }
+  }
 
   const usedFoodIds: string[] = [];
 

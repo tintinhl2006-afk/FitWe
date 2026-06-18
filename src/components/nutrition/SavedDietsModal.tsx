@@ -88,7 +88,7 @@ export default function SavedDietsModal({
   const loadDiets = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch("/api/user/nutrition/saved-diets");
+      const res = await fetch(`/api/user/nutrition/saved-diets?t=${Date.now()}`, { cache: "no-store" });
       if (res.ok) {
         const data = await res.json();
         setDiets(data);

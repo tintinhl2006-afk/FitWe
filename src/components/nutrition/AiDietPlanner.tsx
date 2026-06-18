@@ -82,6 +82,128 @@ export default function AiDietPlanner({ onClose, onSaved, initialDate }: AiDietP
   const [isSavingTemplate, setIsSavingTemplate] = useState(false);
   const [templateName, setTemplateName] = useState("");
 
+  // Free-search state inside swap modal
+  const [swapSearchQuery, setSwapSearchQuery] = useState("");
+  const [swapMode, setSwapMode] = useState<"recommended" | "search">("recommended");
+
+  /** Returns a human-friendly label explaining WHY this food appears (its role in the meal) */
+  const getRoleLabel = (item: SolvedItem): { label: string; emoji: string } => {
+    const group = item.food.group;
+    const id = item.food.id;
+    // Drinks
+    const drinkIds = ["std-leche-entera","std-leche-semidesnatada","std-leche-desnatada",
+      "std-bebida-avena","std-bebida-soja","std-bebida-almendra","std-kefir","std-leche-cabra"];
+    if (drinkIds.includes(id)) return { label: "Bebida láctea / vegetal", emoji: "🥛" };
+    if (group === "FRUIT") return { label: "Pieza de fruta", emoji: "🍎" };
+    if (group === "VEG") return { label: "Verdura / Hortaliza", emoji: "🥦" };
+    // Oils & nuts
+    const oilIds = ["std-aceite-oliva","std-aceite-girasol"];
+    if (oilIds.includes(id)) return { label: "Aceite saludable", emoji: "🫒" };
+    if (group === "FAT") return { label: "Fuente de grasas saludables", emoji: "🥜" };
+    // CARB breakdown
+    const grainIds = ["std-arroz-integral","std-arroz-blanco","std-arroz-basmati","std-arroz-bomba",
+      "std-pasta","std-quinoa","std-cuscus","std-avena","std-harina-avena"];
+    const breadIds = ["std-pan-integral","std-pan-centeno","std-pan-espelta","std-pan-molde",
+      "std-pan-blanco","std-galletas-maria","std-tortitas-arroz","std-tortitas-maiz"];
+    const legumeCarbIds = ["std-lentejas","std-garbanzos","std-alubias-blancas",
+      "std-alubias-pintas","std-lenteja-roja","std-altramuces"];
+    const tuberIds = ["std-patata","std-boniato"];
+    if (grainIds.includes(id)) return { label: "Cereal / Grano", emoji: "🌾" };
+    if (breadIds.includes(id)) return { label: "Pan / Tostada", emoji: "🍞" };
+    if (legumeCarbIds.includes(id)) return { label: "Legumbre (carbohidrato)", emoji: "🫘" };
+    if (tuberIds.includes(id)) return { label: "Tubérculo", emoji: "🥔" };
+    if (group === "CARB") return { label: "Fuente de carbohidratos", emoji: "🌾" };
+    // PROTEIN breakdown
+    const eggIds = ["std-huevo-entero","std-clara-huevo"];
+    const fishIds = ["std-salmon","std-merluza","std-atun","std-bacalao","std-dorada","std-lubina",
+      "std-trucha","std-lenguado","std-sardinas","std-gambas","std-langostinos","std-pulpo",
+      "std-calamares","std-chipirones","std-sepia","std-cigalas","std-pez-espada",
+      "std-berberechos","std-mejillones-escabeche","std-boquerones-vinagre","std-navajas","std-gulas"];
+    const poultryIds = ["std-pechuga-pollo","std-pechuga-pavo","std-muslo-pollo","std-alitas-pollo","std-pato"];
+    const meatIds = ["std-lomo-cerdo","std-ternera","std-entrecot-ternera","std-chuleta-cerdo",
+      "std-conejo","std-cordero","std-carne-picada-ternera","std-hamburguesa-ternera","std-costillas"];
+    const dairyProtIds = ["std-yogur-griego","std-queso-fresco","std-queso-cottage","std-queso-burgos",
+      "std-queso-tierno","std-queso-batido","std-bebida-soja"];
+    const shakeIds = ["std-proteina-suero","std-proteina-vegana"];
+    const plantProtIds = ["std-tofu","std-seitan","std-tempeh"];
+    if (eggIds.includes(id)) return { label: "Huevo", emoji: "🥚" };
+    if (fishIds.includes(id)) return { label: "Pescado / Marisco", emoji: "🐟" };
+    if (poultryIds.includes(id)) return { label: "Ave de corral", emoji: "🍗" };
+    if (meatIds.includes(id)) return { label: "Carne roja", emoji: "🥩" };
+    if (dairyProtIds.includes(id)) return { label: "Lácteo proteico", emoji: "🧀" };
+    if (shakeIds.includes(id)) return { label: "Proteína en polvo", emoji: "💪" };
+    if (plantProtIds.includes(id)) return { label: "Proteína vegetal", emoji: "🌿" };
+    if (group === "PROTEIN") return { label: "Fuente de proteínas", emoji: "💪" };
+    return { label: "Alimento", emoji: "🍽️" };
+  };
+
+  /** Returns the list of food IDs sharing the same sub-category role */
+  const getRolePool = (food: DietFood): string[] => {
+    const id = food.id;
+    // Drinks
+    const drinkIds = ["std-leche-entera","std-leche-semidesnatada","std-leche-desnatada",
+      "std-bebida-avena","std-bebida-soja","std-bebida-almendra","std-kefir","std-leche-cabra"];
+    if (drinkIds.includes(id)) return drinkIds;
+
+    // Oils & nuts
+    const oilIds = ["std-aceite-oliva","std-aceite-girasol"];
+    if (oilIds.includes(id)) return oilIds;
+
+    // Grains
+    const grainIds = ["std-arroz-integral","std-arroz-blanco","std-arroz-basmati","std-arroz-bomba",
+      "std-pasta","std-quinoa","std-cuscus","std-avena","std-harina-avena"];
+    if (grainIds.includes(id)) return grainIds;
+
+    // Breads
+    const breadIds = ["std-pan-integral","std-pan-centeno","std-pan-espelta","std-pan-molde",
+      "std-pan-blanco","std-galletas-maria","std-tortitas-arroz","std-tortitas-maiz"];
+    if (breadIds.includes(id)) return breadIds;
+
+    // Legumes
+    const legumeCarbIds = ["std-lentejas","std-garbanzos","std-alubias-blancas",
+      "std-alubias-pintas","std-lenteja-roja","std-altramuces"];
+    if (legumeCarbIds.includes(id)) return legumeCarbIds;
+
+    // Tubers
+    const tuberIds = ["std-patata","std-boniato"];
+    if (tuberIds.includes(id)) return tuberIds;
+
+    // Eggs
+    const eggIds = ["std-huevo-entero","std-clara-huevo"];
+    if (eggIds.includes(id)) return eggIds;
+
+    // Fish
+    const fishIds = ["std-salmon","std-merluza","std-atun","std-bacalao","std-dorada","std-lubina",
+      "std-trucha","std-lenguado","std-sardinas","std-gambas","std-langostinos","std-pulpo",
+      "std-calamares","std-chipirones","std-sepia","std-cigalas","std-pez-espada",
+      "std-berberechos","std-mejillones-escabeche","std-boquerones-vinagre","std-navajas","std-gulas"];
+    if (fishIds.includes(id)) return fishIds;
+
+    // Poultry
+    const poultryIds = ["std-pechuga-pollo","std-pechuga-pavo","std-muslo-pollo","std-alitas-pollo","std-pato"];
+    if (poultryIds.includes(id)) return poultryIds;
+
+    // Meat
+    const meatIds = ["std-lomo-cerdo","std-ternera","std-entrecot-ternera","std-chuleta-cerdo",
+      "std-conejo","std-cordero","std-carne-picada-ternera","std-hamburguesa-ternera","std-costillas"];
+    if (meatIds.includes(id)) return meatIds;
+
+    // Dairy proteins
+    const dairyProtIds = ["std-yogur-griego","std-queso-fresco","std-queso-cottage","std-queso-burgos",
+      "std-queso-tierno","std-queso-batido","std-bebida-soja"];
+    if (dairyProtIds.includes(id)) return dairyProtIds;
+
+    // Shakes
+    const shakeIds = ["std-proteina-suero","std-proteina-vegana"];
+    if (shakeIds.includes(id)) return shakeIds;
+
+    // Plant proteins
+    const plantProtIds = ["std-tofu","std-seitan","std-tempeh"];
+    if (plantProtIds.includes(id)) return plantProtIds;
+
+    return [];
+  };
+
   useEffect(() => {
     if (!swappingItem) {
       setShowCustomFoodForm(false);
@@ -90,8 +212,11 @@ export default function AiDietPlanner({ onClose, onSaved, initialDate }: AiDietP
       setCustomFoodProtein("");
       setCustomFoodCarbs("");
       setCustomFoodFat("");
+      setSwapMode("recommended");
+      setSwapSearchQuery("");
     }
   }, [swappingItem]);
+
 
   const handleCreateCustomFood = () => {
     if (!swappingItem) return;
@@ -142,7 +267,7 @@ export default function AiDietPlanner({ onClose, onSaved, initialDate }: AiDietP
     const loadInitialProfile = async () => {
       setIsLoading(true);
       try {
-        const res = await fetch("/api/user/nutrition-profile");
+        const res = await fetch(`/api/user/nutrition-profile?t=${Date.now()}`, { cache: "no-store" });
         if (res.ok) {
           const profileData = await res.json();
           if (profileData) {
@@ -193,6 +318,7 @@ export default function AiDietPlanner({ onClose, onSaved, initialDate }: AiDietP
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...profile,
+          isManual: true,
           excludedFoods: excluded.join(","),
           prioritizedFoods: prioritized.join(","),
           dietType: customDietType,
@@ -1246,200 +1372,323 @@ export default function AiDietPlanner({ onClose, onSaved, initialDate }: AiDietP
       </div>
 
       {/* Client-Side Smart Swap Modal */}
-      {swappingItem && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl flex flex-col max-h-[80vh] animate-in zoom-in-95 duration-200">
-            <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-slate-800">
-              <h3 className="font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-                <RefreshCw className="w-4 h-4 text-cyan-500" />
-                Intercambiar Alimento
-              </h3>
-              <button 
-                onClick={() => setSwappingItem(null)}
-                className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
+      {swappingItem && (() => {
+        const roleInfo = getRoleLabel(swappingItem.oldItem);
+        const currentMealType = mealPlan[swappingItem.mealIndex].mealType;
+        
+        const pool = getRolePool(swappingItem.oldItem.food);
+        
+        // Build recommended list using pool (same category/role, same meal type)
+        let recommendedAlts = availableFoods.filter(
+          food => {
+            const matchesPool = pool.length > 0 ? pool.includes(food.id) : food.group === swappingItem.oldItem.food.group;
+            return (
+              matchesPool &&
+              food.id !== swappingItem.oldItem.food.id &&
+              food.meals &&
+              food.meals.includes(currentMealType as any)
+            );
+          }
+        );
+        if (recommendedAlts.length === 0) {
+          recommendedAlts = availableFoods.filter(
+            food => {
+              const matchesPool = pool.length > 0 ? pool.includes(food.id) : food.group === swappingItem.oldItem.food.group;
+              return matchesPool && food.id !== swappingItem.oldItem.food.id;
+            }
+          );
+        }
+        // Fallback to entire group if pool is too restrictive
+        if (recommendedAlts.length === 0) {
+          recommendedAlts = availableFoods.filter(
+            food =>
+              food.group === swappingItem.oldItem.food.group &&
+              food.id !== swappingItem.oldItem.food.id &&
+              food.meals &&
+              food.meals.includes(currentMealType as any)
+          );
+        }
+        if (recommendedAlts.length === 0) {
+          recommendedAlts = availableFoods.filter(
+            food =>
+              food.group === swappingItem.oldItem.food.group &&
+              food.id !== swappingItem.oldItem.food.id
+          );
+        }
 
-            <div className="py-4 space-y-1">
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Seleccionando un equivalente para: <strong className="text-slate-700 dark:text-slate-300">{swappingItem.oldItem.food.name}</strong> ({swappingItem.oldItem.quantityGrams}g)
-              </p>
-            </div>
+        // Build free-search results
+        const searchResults = swapSearchQuery.trim().length > 0
+          ? availableFoods
+              .filter(food =>
+                food.id !== swappingItem.oldItem.food.id &&
+                food.name.toLowerCase().includes(swapSearchQuery.toLowerCase())
+              )
+              .slice(0, 30)
+          : [];
 
-            {showCustomFoodForm ? (
-              <div className="flex-1 overflow-y-auto space-y-4 pr-1 animate-in fade-in duration-200">
-                <div className="bg-slate-50 dark:bg-slate-950/40 p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400 flex items-start gap-2 leading-relaxed">
-                  <AlertCircle className="w-4 h-4 text-cyan-500 shrink-0 mt-0.5" />
-                  <span>El nuevo alimento se creará automáticamente como fuente de <strong>{swappingItem.oldItem.food.group === "CARB" ? "Carbohidratos" : swappingItem.oldItem.food.group === "PROTEIN" ? "Proteínas" : "Grasas"}</strong> para garantizar la conversión correcta.</span>
+        const renderFoodCard = (altFood: DietFood, keyPrefix: string) => {
+          const oldItem = swappingItem.oldItem;
+          const group = oldItem.food.group;
+          let ratio = 1;
+          if (group === "CARB" && altFood.carbs > 0 && oldItem.food.carbs > 0) {
+            ratio = oldItem.food.carbs / altFood.carbs;
+          } else if (group === "PROTEIN" && altFood.protein > 0 && oldItem.food.protein > 0) {
+            ratio = oldItem.food.protein / altFood.protein;
+          } else if (group === "FAT" && altFood.fat > 0 && oldItem.food.fat > 0) {
+            ratio = oldItem.food.fat / altFood.fat;
+          } else {
+            ratio = oldItem.food.calories > 0 && altFood.calories > 0
+              ? oldItem.food.calories / altFood.calories
+              : 1;
+          }
+          const altQty = Math.min(800, Math.max(10, Math.round(oldItem.quantityGrams * ratio)));
+          const altPortionText = getPortionEquivalent(altFood, altQty);
+          const altCals = Math.round((altFood.calories * altQty) / 100);
+          return (
+            <div
+              key={`${keyPrefix}-${altFood.id}`}
+              onClick={() => handleSwap(altFood)}
+              className="p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-cyan-500 dark:hover:border-cyan-500 bg-slate-50/50 dark:bg-slate-950/30 hover:bg-white dark:hover:bg-slate-900 cursor-pointer transition-all flex justify-between items-center group"
+            >
+              <div className="space-y-0.5 min-w-0 flex-1 pr-3">
+                <div className="font-bold text-slate-800 dark:text-slate-100 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 text-sm leading-tight">
+                  {altFood.name}
                 </div>
+                <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                  {altQty}g &bull; {altPortionText}
+                </div>
+              </div>
+              <div className="text-right shrink-0">
+                <div className="text-xs font-bold text-cyan-600 dark:text-cyan-400">{altCals} kcal</div>
+                <div className="text-[10px] text-slate-400 mt-0.5">
+                  P:{altFood.protein}g C:{altFood.carbs}g G:{altFood.fat}g
+                </div>
+              </div>
+            </div>
+          );
+        };
 
-                <div className="space-y-3">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Nombre del Alimento</label>
-                    <input 
+        return (
+          <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-slate-950/70 backdrop-blur-sm p-0 sm:p-4 animate-in fade-in duration-200">
+            <div className="w-full sm:max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col max-h-[92vh] sm:max-h-[80vh] animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200">
+              {/* Header */}
+              <div className="flex justify-between items-start p-5 pb-0 shrink-0">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <RefreshCw className="w-4 h-4 text-cyan-500 shrink-0" />
+                    <h3 className="font-extrabold text-slate-900 dark:text-white text-base">Cambiar alimento</h3>
+                  </div>
+                  {/* Role badge */}
+                  <div className="inline-flex items-center gap-1.5 bg-cyan-50 dark:bg-cyan-950/40 border border-cyan-200 dark:border-cyan-800/60 rounded-full px-2.5 py-1 mt-1">
+                    <span className="text-base leading-none">{roleInfo.emoji}</span>
+                    <span className="text-[11px] font-bold text-cyan-700 dark:text-cyan-300 uppercase tracking-wide">{roleInfo.label}</span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSwappingItem(null)}
+                  className="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors ml-2 shrink-0"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Current food info */}
+              <div className="px-5 pt-3 pb-2 shrink-0">
+                <div className="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-2.5 flex items-center gap-2.5">
+                  <div className="w-1 h-8 rounded-full bg-cyan-400 shrink-0" />
+                  <div className="min-w-0">
+                    <div className="text-[11px] text-slate-400 leading-none mb-0.5">Reemplazando</div>
+                    <div className="font-bold text-slate-700 dark:text-slate-200 text-sm truncate">{swappingItem.oldItem.food.name}</div>
+                    <div className="text-[10px] text-slate-400">{swappingItem.oldItem.quantityGrams}g &bull; {swappingItem.oldItem.calories} kcal</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Mode tabs */}
+              {!showCustomFoodForm && (
+                <div className="px-5 pb-3 shrink-0">
+                  <div className="flex gap-1 bg-slate-100 dark:bg-slate-800 rounded-xl p-1">
+                    <button
+                      onClick={() => { setSwapMode("recommended"); setSwapSearchQuery(""); }}
+                      className={cn(
+                        "flex-1 py-1.5 rounded-lg text-xs font-bold transition-all",
+                        swapMode === "recommended"
+                          ? "bg-white dark:bg-slate-700 text-cyan-600 dark:text-cyan-400 shadow-sm"
+                          : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"
+                      )}
+                    >
+                      ⭐ Recomendados
+                    </button>
+                    <button
+                      onClick={() => setSwapMode("search")}
+                      className={cn(
+                        "flex-1 py-1.5 rounded-lg text-xs font-bold transition-all",
+                        swapMode === "search"
+                          ? "bg-white dark:bg-slate-700 text-cyan-600 dark:text-cyan-400 shadow-sm"
+                          : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"
+                      )}
+                    >
+                      🔍 Buscar
+                    </button>
+                    <button
+                      onClick={() => setShowCustomFoodForm(true)}
+                      className={cn(
+                        "flex-1 py-1.5 rounded-lg text-xs font-bold transition-all",
+                        "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"
+                      )}
+                    >
+                      ✏️ Crear
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Content area */}
+              {showCustomFoodForm ? (
+                <div className="flex-1 overflow-y-auto px-5 space-y-4 pb-2 animate-in fade-in duration-200">
+                  <div className="bg-slate-50 dark:bg-slate-950/40 p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400 flex items-start gap-2 leading-relaxed">
+                    <AlertCircle className="w-4 h-4 text-cyan-500 shrink-0 mt-0.5" />
+                    <span>Introduce los datos nutricionales <strong>por cada 100g</strong>. La porción se calculará automáticamente para igualar las calorías del alimento original.</span>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Nombre del Alimento</label>
+                      <input
+                        type="text"
+                        placeholder="Ej: Queso manchego"
+                        value={customFoodName}
+                        onChange={(e) => setCustomFoodName(e.target.value)}
+                        className="w-full text-sm px-3.5 py-2.5 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none transition-shadow"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Calorías / 100g</label>
+                        <input
+                          type="number"
+                          placeholder="357"
+                          value={customFoodCalories}
+                          onChange={(e) => setCustomFoodCalories(e.target.value)}
+                          className="w-full text-sm px-3.5 py-2.5 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none transition-shadow"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Proteínas / 100g</label>
+                        <input
+                          type="number"
+                          placeholder="26"
+                          value={customFoodProtein}
+                          onChange={(e) => setCustomFoodProtein(e.target.value)}
+                          className="w-full text-sm px-3.5 py-2.5 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none transition-shadow"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Carbohidratos / 100g</label>
+                        <input
+                          type="number"
+                          placeholder="0"
+                          value={customFoodCarbs}
+                          onChange={(e) => setCustomFoodCarbs(e.target.value)}
+                          className="w-full text-sm px-3.5 py-2.5 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none transition-shadow"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Grasas / 100g</label>
+                        <input
+                          type="number"
+                          placeholder="30"
+                          value={customFoodFat}
+                          onChange={(e) => setCustomFoodFat(e.target.value)}
+                          className="w-full text-sm px-3.5 py-2.5 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none transition-shadow"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : swapMode === "search" ? (
+                <div className="flex-1 flex flex-col overflow-hidden px-5">
+                  {/* Search input */}
+                  <div className="relative mb-3 shrink-0">
+                    <input
                       type="text"
-                      value={customFoodName}
-                      onChange={(e) => setCustomFoodName(e.target.value)}
-                      className="w-full text-xs px-3.5 py-2.5 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white rounded-xl focus:ring-1 focus:ring-cyan-500 outline-none"
+                      autoFocus
+                      placeholder="Buscar cualquier alimento..."
+                      value={swapSearchQuery}
+                      onChange={(e) => setSwapSearchQuery(e.target.value)}
+                      className="w-full text-sm pl-10 pr-3.5 py-2.5 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none transition-shadow"
                     />
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm">🔍</span>
                   </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Calorías (por 100g)</label>
-                      <input 
-                        type="number"
-                        value={customFoodCalories}
-                        onChange={(e) => setCustomFoodCalories(e.target.value)}
-                        className="w-full text-xs px-3.5 py-2.5 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white rounded-xl focus:ring-1 focus:ring-cyan-500 outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Proteínas (por 100g)</label>
-                      <input 
-                        type="number"
-                        value={customFoodProtein}
-                        onChange={(e) => setCustomFoodProtein(e.target.value)}
-                        className="w-full text-xs px-3.5 py-2.5 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white rounded-xl focus:ring-1 focus:ring-cyan-500 outline-none"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Carbohidratos (por 100g)</label>
-                      <input 
-                        type="number"
-                        value={customFoodCarbs}
-                        onChange={(e) => setCustomFoodCarbs(e.target.value)}
-                        className="w-full text-xs px-3.5 py-2.5 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white rounded-xl focus:ring-1 focus:ring-cyan-500 outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Grasas (por 100g)</label>
-                      <input 
-                        type="number"
-                        value={customFoodFat}
-                        onChange={(e) => setCustomFoodFat(e.target.value)}
-                        className="w-full text-xs px-3.5 py-2.5 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white rounded-xl focus:ring-1 focus:ring-cyan-500 outline-none"
-                      />
-                    </div>
+                  <div className="flex-1 overflow-y-auto space-y-2 pr-0.5 pb-2 flex flex-col">
+                    {swapSearchQuery.trim().length === 0 ? (
+                      <div className="flex-1 flex flex-col items-center justify-center py-10 text-center text-slate-400 dark:text-slate-500 text-sm">
+                        <div className="text-3xl mb-2">🔍</div>
+                        Escribe para buscar cualquier alimento del catálogo
+                      </div>
+                    ) : searchResults.length === 0 ? (
+                      <div className="flex-1 flex flex-col items-center justify-center py-10 text-center text-slate-400 dark:text-slate-500 text-sm">
+                        <div className="text-3xl mb-2">😕</div>
+                        No se encontró &quot;{swapSearchQuery}&quot;.<br/>
+                        <button onClick={() => setShowCustomFoodForm(true)} className="mt-2 text-cyan-500 hover:underline text-xs font-bold">Crear alimento personalizado</button>
+                      </div>
+                    ) : (
+                      searchResults.map(food => renderFoodCard(food, "search"))
+                    )}
                   </div>
                 </div>
+              ) : (
+                /* Recommended tab */
+                <div className="flex-1 overflow-y-auto px-5 space-y-2 pb-2 flex flex-col">
+                  {recommendedAlts.length === 0 ? (
+                    <div className="flex-1 flex flex-col items-center justify-center py-10 text-center text-slate-400 dark:text-slate-500 text-sm">
+                      <div className="text-3xl mb-2">😕</div>
+                      No hay alternativas recomendadas disponibles.
+                      <br />
+                      <button onClick={() => setSwapMode("search")} className="mt-2 text-cyan-500 hover:underline text-xs font-bold">Buscar en el catálogo completo</button>
+                    </div>
+                  ) : (
+                    recommendedAlts.map(food => renderFoodCard(food, "rec"))
+                  )}
+                </div>
+              )}
 
-                <div className="pt-2 flex gap-2">
-                  <button 
-                    onClick={() => setShowCustomFoodForm(false)}
-                    className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors"
+              {/* Footer buttons */}
+              <div className="px-5 pt-2 pb-5 border-t border-slate-100 dark:border-slate-800 shrink-0 mt-2">
+                {showCustomFoodForm ? (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setShowCustomFoodForm(false)}
+                      className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                    >
+                      Volver
+                    </button>
+                    <button
+                      onClick={handleCreateCustomFood}
+                      className="flex-[2] py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white text-sm font-bold transition-all shadow-md shadow-cyan-500/20"
+                    >
+                      Crear e intercambiar
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setSwappingItem(null)}
+                    className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-sm font-semibold text-slate-700 dark:text-slate-300 transition-colors"
                   >
                     Cancelar
                   </button>
-                  <button 
-                    onClick={handleCreateCustomFood}
-                    className="flex-[2] py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white text-xs font-bold transition-all shadow-md shadow-cyan-500/10"
-                  >
-                    Crear e Intercambiar
-                  </button>
-                </div>
+                )}
               </div>
-            ) : (
-              <>
-                <div className="py-2 flex justify-between items-center border-b border-slate-100 dark:border-slate-800/60 mb-2 shrink-0">
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Alternativas equivalentes</span>
-                  <button
-                    onClick={() => setShowCustomFoodForm(true)}
-                    className="inline-flex items-center gap-1 text-[11px] font-bold text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300 hover:underline"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    Crear alternativa propia
-                  </button>
-                </div>
-
-                <div className="flex-1 overflow-y-auto space-y-2 pr-1">
-                  {(() => {
-                    const currentMealType = mealPlan[swappingItem.mealIndex].mealType;
-                    let alts = availableFoods.filter(
-                      food => 
-                        food.group === swappingItem.oldItem.food.group && 
-                        food.id !== swappingItem.oldItem.food.id &&
-                        food.meals && 
-                        food.meals.includes(currentMealType as any)
-                    );
-                    
-                    if (alts.length === 0) {
-                      alts = availableFoods.filter(
-                        food => 
-                          food.group === swappingItem.oldItem.food.group && 
-                          food.id !== swappingItem.oldItem.food.id
-                      );
-                    }
-
-                    return alts.map(altFood => {
-                      const oldItem = swappingItem.oldItem;
-                      const group = oldItem.food.group;
-                      let ratio = 1;
-                      
-                      if (group === "CARB" && altFood.carbs > 0 && oldItem.food.carbs > 0) {
-                        ratio = oldItem.food.carbs / altFood.carbs;
-                      } else if (group === "PROTEIN" && altFood.protein > 0 && oldItem.food.protein > 0) {
-                        ratio = oldItem.food.protein / altFood.protein;
-                      } else if (group === "FAT" && altFood.fat > 0 && oldItem.food.fat > 0) {
-                        ratio = oldItem.food.fat / altFood.fat;
-                      } else {
-                        ratio = oldItem.food.calories / altFood.calories;
-                      }
-
-                      const altQty = Math.max(10, Math.round(oldItem.quantityGrams * ratio));
-                      const altPortionText = getPortionEquivalent(altFood, altQty);
-
-                      return (
-                        <div 
-                          key={altFood.id}
-                          onClick={() => handleSwap(altFood)}
-                          className="p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-cyan-500 dark:hover:border-cyan-500 bg-slate-50/50 dark:bg-slate-950/30 hover:bg-white dark:hover:bg-slate-900 cursor-pointer transition-all flex justify-between items-center group"
-                        >
-                          <div className="space-y-1">
-                            <div className="font-bold text-slate-800 dark:text-slate-100 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 text-sm">
-                              {altFood.name}
-                            </div>
-                            <div className="text-[11px] text-slate-500 dark:text-slate-400 flex gap-2">
-                              <span className="font-bold text-slate-700 dark:text-slate-300">{altQty}g</span>
-                              <span>({altPortionText})</span>
-                            </div>
-                          </div>
-
-                          <div className="text-right">
-                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Porción Equivalente</div>
-                            <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
-                              P: {altFood.protein}g | C: {altFood.carbs}g | G: {altFood.fat}g
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    });
-                  })()}
-                  {availableFoods.filter(food => food.group === swappingItem.oldItem.food.group && food.id !== swappingItem.oldItem.food.id).length === 0 && (
-                    <div className="p-8 text-center text-slate-500 dark:text-slate-400 text-xs">
-                      No se encontraron alimentos equivalentes aptos para tus exclusiones y tipo de dieta.
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
-            
-            <div className="pt-4 mt-2 border-t border-slate-100 dark:border-slate-800">
-              <button 
-                onClick={() => setSwappingItem(null)}
-                className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-sm font-semibold text-slate-750 dark:text-slate-350 transition-colors"
-              >
-                Cerrar
-              </button>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
+
+
 
     </div>
   );

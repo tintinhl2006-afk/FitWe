@@ -275,6 +275,7 @@ export async function PUT(req: Request) {
 
     if (password) {
       updateData.password = await bcrypt.hash(password, 10);
+      updateData.sessionVersion = { increment: 1 };
     }
 
     const updatedEmployee = await prisma.user.update({

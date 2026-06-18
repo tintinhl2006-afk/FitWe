@@ -48,6 +48,7 @@ export const authOptions: NextAuthOptions = {
           gymId: user.gymId || null,
           gymName: user.gym?.name || null,
           mustChangePassword: user.mustChangePassword,
+          sessionVersion: user.sessionVersion,
         };
       }
     })
@@ -68,6 +69,7 @@ export const authOptions: NextAuthOptions = {
         token.gymId = user.gymId;
         token.gymName = user.gymName;
         token.mustChangePassword = user.mustChangePassword;
+        token.sessionVersion = (user as any).sessionVersion;
       }
       
       // Manejar la actualización manual del lado del cliente
@@ -77,12 +79,26 @@ export const authOptions: NextAuthOptions = {
         if (session?.subscriptionStatus) token.subscriptionStatus = session.subscriptionStatus;
         if (session?.subscriptionEndDate) token.subscriptionEndDate = session.subscriptionEndDate;
         if (session?.mustChangePassword !== undefined) token.mustChangePassword = session.mustChangePassword;
+        if (session?.sessionVersion !== undefined) token.sessionVersion = session.sessionVersion;
       }
 
       return token;
     },
     async session({ session, token }) {
       if (token && session.user) {
+        // Fetch image and sessionVersion directly from DB to validate session
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: { image: true, sessionVersion: true },
+        });
+
+        // Si el usuario no existe o la versión de sesión no coincide, invalidamos la sesión de inmediato
+        if (!dbUser || dbUser.sessionVersion !== (token.sessionVersion as number)) {
+          console.log(`Sesión invalidada para el usuario ${token.email} (ID: ${token.id}). Razón: Sesión expirada o revocada.`);
+          (session as any).user = null;
+          return session;
+        }
+
         session.user.id = token.id as string;
         session.user.role = token.role as "USER" | "GYM" | "EMPLOYEE";
         session.user.name = token.name as string;
@@ -92,13 +108,7 @@ export const authOptions: NextAuthOptions = {
         session.user.gymId = token.gymId as string | null;
         session.user.gymName = token.gymName as string | null;
         session.user.mustChangePassword = token.mustChangePassword as boolean;
-        
-        // Fetch image directly from DB (too large for JWT/cookie)
-        const dbUser = await prisma.user.findUnique({
-          where: { id: token.id as string },
-          select: { image: true },
-        });
-        session.user.image = dbUser?.image || null;
+        session.user.image = dbUser.image || null;
         
         // Always refresh serverNow from the cookie on each session request
         session.user.serverNow = (await getNow()).toISOString();

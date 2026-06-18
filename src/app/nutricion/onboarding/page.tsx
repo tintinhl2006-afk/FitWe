@@ -53,7 +53,7 @@ export default function NutritionOnboardingPage() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await fetch("/api/user/nutrition-profile");
+        const res = await fetch(`/api/user/nutrition-profile?t=${Date.now()}`, { cache: "no-store" });
         if (res.ok) {
           const profile = await res.json();
           if (profile) {
@@ -232,14 +232,14 @@ export default function NutritionOnboardingPage() {
             {/* Premium CTA Buttons */}
             <div className="flex flex-col gap-3">
               <button 
-                onClick={() => router.push("/nutricion")}
+                onClick={() => { window.location.href = "/nutricion"; }}
                 className="w-full flex justify-center items-center gap-2 py-4 px-6 rounded-2xl font-bold text-white bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-cyan-500/20"
               >
                 Ir al Diario de Nutrición
               </button>
 
               <button 
-                onClick={() => router.push("/nutricion?generate=true")}
+                onClick={() => { window.location.href = "/nutricion?generate=true"; }}
                 className="w-full flex justify-center items-center gap-2 py-3.5 px-6 rounded-2xl font-bold text-slate-700 dark:text-slate-300 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors"
               >
                 <Sparkles className="w-4 h-4 text-violet-500 fill-violet-500 animate-pulse" />

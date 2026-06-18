@@ -215,7 +215,10 @@ export async function PATCH(
       const hashedPassword = await bcrypt.hash(newPassword, 12);
       await prisma.user.update({
         where: { id: clientId },
-        data: { password: hashedPassword },
+        data: { 
+          password: hashedPassword,
+          sessionVersion: { increment: 1 }
+        },
       });
       return NextResponse.json({
         message: "Contraseña cambiada con éxito",

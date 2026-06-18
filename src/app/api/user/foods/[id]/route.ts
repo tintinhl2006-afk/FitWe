@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getFoodCategory } from "@/lib/nutritionUtils";
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -12,7 +13,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     }
 
     const body = await req.json();
-    const { name, brand, calories, protein, carbs, fat } = body;
+    const { name, brand, calories, protein, carbs, fat, category } = body;
 
     const existingFood = await prisma.foodItem.findUnique({
       where: { id },
@@ -32,6 +33,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       data: {
         name: name !== undefined ? name : existingFood.name,
         brand: brand !== undefined ? brand : existingFood.brand,
+        category: category ? category : (category === "" ? getFoodCategory(name || existingFood.name) : existingFood.category),
         calories: calories !== undefined ? Number(calories) : existingFood.calories,
         protein: protein !== undefined ? Number(protein) : existingFood.protein,
         carbs: carbs !== undefined ? Number(carbs) : existingFood.carbs,

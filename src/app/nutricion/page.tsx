@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { Plus, Flame, Beef, Wheat, Droplet, Calendar as CalendarIcon, Loader2, Trash2, X, Search, Settings, Target as TargetIcon, Edit3, BarChart3, PieChart, Sparkles, Folder } from "lucide-react";
+import { Plus, Flame, Beef, Wheat, Droplet, Calendar as CalendarIcon, Loader2, Trash2, X, Search, Settings, Target as TargetIcon, Edit3, BarChart3, PieChart, Sparkles, Folder, ChevronUp, ChevronDown, GripVertical } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
@@ -11,11 +11,25 @@ import { useCustomAlert } from "@/components/providers/CustomAlertProvider";
 import AiDietPlanner from "@/components/nutrition/AiDietPlanner";
 import SavedDietsModal from "@/components/nutrition/SavedDietsModal";
 
+const FOOD_CATEGORIES = [
+  "Todos",
+  "Carne",
+  "Pescado",
+  "Verdura",
+  "Fruta",
+  "Lácteos",
+  "Legumbres",
+  "Cereales/Carbohidratos",
+  "Grasas/Aceites/Frutos Secos",
+  "Otros"
+];
+
 interface FoodItem {
   id: string;
   name: string;
   brand: string | null;
   imageUrl: string | null;
+  category?: string | null;
   calories: number;
   protein: number;
   carbs: number;
@@ -30,12 +44,29 @@ interface MealEntry {
   foodItem: FoodItem;
 }
 
-const MEAL_TYPES = [
-  { id: "BREAKFAST", label: "Desayuno" },
-  { id: "LUNCH", label: "Almuerzo" },
-  { id: "DINNER", label: "Cena" },
-  { id: "SNACK", label: "Snacks" },
-];
+const getMealTypesFromConfig = (config: string | null | undefined): { id: string; label: string; isOrphaned?: boolean; }[] => {
+  if (!config) {
+    return [
+      { id: "BREAKFAST", label: "Desayuno" },
+      { id: "LUNCH", label: "Almuerzo" },
+      { id: "DINNER", label: "Cena" },
+      { id: "SNACK-1", label: "Snack 1" },
+    ];
+  }
+  const parts = config.split(",").map(s => s.trim()).filter(Boolean);
+  let snackCount = 0;
+  return parts.map(id => {
+    if (id === "BREAKFAST") return { id, label: "Desayuno" };
+    if (id === "LUNCH") return { id, label: "Almuerzo" };
+    if (id === "DINNER") return { id, label: "Cena" };
+    if (id === "SNACK") return { id, label: "Snack 1" };
+    if (id.startsWith("SNACK-")) {
+      snackCount++;
+      return { id, label: `Snack ${snackCount}` };
+    }
+    return { id, label: id };
+  });
+};
 
 export default function NutricionPage() {
   const router = useRouter();
@@ -76,14 +107,185 @@ export default function NutricionPage() {
   // Create Food
   const [isCreatingFood, setIsCreatingFood] = useState(false);
   const [newFood, setNewFood] = useState({
-    name: "", brand: "", calories: "", protein: "", carbs: "", fat: ""
+    name: "", brand: "", category: "", calories: "", protein: "", carbs: "", fat: ""
   });
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState("Todos");
 
   // Log Meal
   const [selectedFood, setSelectedFood] = useState<FoodItem | null>(null);
   const [quantityGrams, setQuantityGrams] = useState("");
   const [isLoggingMeal, setIsLoggingMeal] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // Drag & Drop States for Meal Sections Reordering
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
+  const mealTypesList = getMealTypesFromConfig(profile?.mealsConfig);
+
+  // Rendered meal sections (includes active config + any orphaned logged meals)
+  const renderedMealSections = (() => {
+    const sections = [...mealTypesList];
+    const activeIds = new Set(mealTypesList.map(m => m.id));
+    
+    // Find unique mealType in user logged meals that are not in the active configuration
+    const orphanedIds = Array.from(new Set(
+      meals
+        .map(m => m.mealType)
+        .filter(id => !activeIds.has(id))
+    ));
+    
+    orphanedIds.forEach(id => {
+      let label = "";
+      if (id === "BREAKFAST") label = "Desayuno (Inactivo)";
+      else if (id === "LUNCH") label = "Almuerzo (Inactivo)";
+      else if (id === "DINNER") label = "Cena (Inactivo)";
+      else if (id.startsWith("SNACK-")) {
+        const num = id.split("-")[1];
+        label = `Snack ${num} (Inactivo)`;
+      } else {
+        label = `${id} (Inactivo)`;
+      }
+      sections.push({ id, label, isOrphaned: true });
+    });
+    
+    return sections;
+  })();
+
+  const saveMealsConfig = async (newConfig: string) => {
+    try {
+      // Optimización local inmediata en el estado
+      setProfile((prev: any) => prev ? { ...prev, mealsConfig: newConfig } : { mealsConfig: newConfig });
+
+      const res = await fetch("/api/user/nutrition-profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          isManual: true,
+          targetCalories: profile?.targetCalories,
+          targetProtein: profile?.targetProtein,
+          targetCarbs: profile?.targetCarbs,
+          targetFat: profile?.targetFat,
+          dietType: profile?.dietType,
+          allergens: profile?.allergens,
+          culinaryStyle: profile?.culinaryStyle,
+          excludedFoods: profile?.excludedFoods,
+          prioritizedFoods: profile?.prioritizedFoods,
+          mealsConfig: newConfig
+        })
+      });
+
+      if (!res.ok) {
+        throw new Error("No se pudo guardar la configuración de comidas.");
+      }
+    } catch (error) {
+      console.error(error);
+      showAlert("Error al actualizar la configuración de comidas");
+      if (selectedDate) fetchNutritionData(selectedDate);
+    }
+  };
+
+  const handleNumMealsChange = async (num: number) => {
+    const currentOrder = profile?.mealsConfig
+      ? profile.mealsConfig.split(",").map((s: string) => s.trim()).filter(Boolean)
+      : ["BREAKFAST", "LUNCH", "DINNER", "SNACK"];
+
+    const coreMeals = ["BREAKFAST", "LUNCH", "DINNER"];
+    let newOrder = [...currentOrder];
+    
+    // Convert generic SNACK to SNACK-1 if it exists
+    newOrder = newOrder.map(id => id === "SNACK" ? "SNACK-1" : id);
+
+    const numSnacks = num - 3;
+    const activeSnacks = newOrder.filter(id => id.startsWith("SNACK-"));
+    const activeSnackNums = activeSnacks.map(id => Number(id.split("-")[1])).filter(n => !isNaN(n));
+    const maxSnackNum = activeSnackNums.length > 0 ? Math.max(...activeSnackNums) : 0;
+
+    if (activeSnacks.length < numSnacks) {
+      for (let i = maxSnackNum + 1; i <= numSnacks; i++) {
+        newOrder.push(`SNACK-${i}`);
+      }
+    } else if (activeSnacks.length > numSnacks) {
+      let count = 0;
+      newOrder = newOrder.filter(id => {
+        if (id.startsWith("SNACK-")) {
+          count++;
+          return count <= numSnacks;
+        }
+        return true;
+      });
+    }
+
+    coreMeals.forEach(meal => {
+      if (!newOrder.includes(meal)) {
+        newOrder.push(meal);
+      }
+    });
+
+    const newConfigStr = newOrder.join(",");
+    await saveMealsConfig(newConfigStr);
+  };
+
+  const handleMoveMeal = async (index: number, direction: "up" | "down") => {
+    const activeOrder = [...mealTypesList];
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= activeOrder.length) return;
+
+    const temp = activeOrder[index];
+    activeOrder[index] = activeOrder[targetIndex];
+    activeOrder[targetIndex] = temp;
+
+    const newConfigStr = activeOrder.map(m => m.id).join(",");
+    await saveMealsConfig(newConfigStr);
+  };
+
+  // Drag & Drop event handlers
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = "move";
+    // For Firefox compatibility
+    e.dataTransfer.setData("text/html", "");
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === index) return;
+    setDragOverIndex(index);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDrop = async (e: React.DragEvent, targetIndex: number) => {
+    e.preventDefault();
+    setDragOverIndex(null);
+    if (draggedIndex === null || draggedIndex === targetIndex) return;
+
+    const sourceSection = renderedMealSections[draggedIndex];
+    const targetSection = renderedMealSections[targetIndex];
+    if (sourceSection.isOrphaned || targetSection.isOrphaned) return;
+
+    const activeOrder = [...mealTypesList];
+    const sourceActiveIndex = activeOrder.findIndex(m => m.id === sourceSection.id);
+    const targetActiveIndex = activeOrder.findIndex(m => m.id === targetSection.id);
+
+    if (sourceActiveIndex !== -1 && targetActiveIndex !== -1) {
+      const temp = activeOrder[sourceActiveIndex];
+      activeOrder[sourceActiveIndex] = activeOrder[targetActiveIndex];
+      activeOrder[targetActiveIndex] = temp;
+
+      const newConfigStr = activeOrder.map(m => m.id).join(",");
+      await saveMealsConfig(newConfigStr);
+    }
+
+    setDraggedIndex(null);
+  };
 
   // Initialize date when session is ready
   useEffect(() => {
@@ -97,7 +299,7 @@ export default function NutricionPage() {
   const fetchNutritionData = async (date: string) => {
     setIsLoading(true);
     try {
-      const res = await fetch(`/api/user/nutrition?date=${date}`);
+      const res = await fetch(`/api/user/nutrition?date=${date}&t=${Date.now()}`, { cache: "no-store" });
       if (res.ok) {
         const data = await res.json();
         if (!data.profile) {
@@ -157,6 +359,7 @@ export default function NutricionPage() {
     setNewFood({
       name: food.name,
       brand: food.brand || "",
+      category: food.category || "",
       calories: food.calories.toString(),
       protein: food.protein.toString(),
       carbs: food.carbs.toString(),
@@ -179,7 +382,7 @@ export default function NutricionPage() {
       });
 
       if (res.ok) {
-        setNewFood({ name: "", brand: "", calories: "", protein: "", carbs: "", fat: "" });
+        setNewFood({ name: "", brand: "", category: "", calories: "", protein: "", carbs: "", fat: "" });
         setEditingFoodId(null);
         setActiveTab("mis_alimentos");
         fetchFoods();
@@ -263,8 +466,24 @@ export default function NutricionPage() {
     { calories: 0, protein: 0, carbs: 0, fat: 0 }
   );
 
+  const filteredAndSortedFoods = foods
+    .filter((food: any) => {
+      if (selectedCategoryFilter !== "Todos") {
+        return food.category === selectedCategoryFilter;
+      }
+      return true;
+    })
+    .sort((a: any, b: any) => {
+      const catA = a.category || "Otros";
+      const catB = b.category || "Otros";
+      if (catA !== catB) {
+        return catA.localeCompare(catB);
+      }
+      return a.name.localeCompare(b.name);
+    });
+
   // Desglose por tipo de comida
-  const mealBreakdowns = MEAL_TYPES.map((type) => {
+  const mealBreakdowns = mealTypesList.map((type) => {
     const sectionMeals = meals.filter((m) => m.mealType === type.id);
     const cals = sectionMeals.reduce((acc, m) => acc + calcNutrients(m).cal, 0);
     const pro = sectionMeals.reduce((acc, m) => acc + calcNutrients(m).pro, 0);
@@ -448,14 +667,84 @@ export default function NutricionPage() {
 
         {/* Secciones de Comida */}
         <div className="space-y-6">
-          {MEAL_TYPES.map((mealType) => {
+        {/* Cabecera de Comidas del Día y Selector */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-5 bg-slate-50 dark:bg-slate-900/40 p-4 rounded-3xl border border-slate-100 dark:border-slate-800/60">
+          <div>
+            <h2 className="text-xl font-bold text-slate-850 dark:text-white leading-tight">Comidas del Día</h2>
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">Desliza/arrastra las comidas para ordenarlas o usa las flechas.</p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">Cantidad de comidas:</span>
+            <select
+              value={mealTypesList.length}
+              onChange={(e) => handleNumMealsChange(Number(e.target.value))}
+              className="text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5 font-bold text-slate-700 dark:text-slate-200 shadow-sm focus:outline-none focus:ring-1 focus:ring-cyan-500"
+            >
+              <option value={3}>3 comidas (mínimo)</option>
+              <option value={4}>4 comidas (+1 Snack)</option>
+              <option value={5}>5 comidas (+2 Snacks)</option>
+              <option value={6}>6 comidas (+3 Snacks)</option>
+              <option value={7}>7 comidas (+4 Snacks)</option>
+              <option value={8}>8 comidas (+5 Snacks)</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Secciones de Comida */}
+        <div className="space-y-6">
+          {renderedMealSections.map((mealType, index) => {
             const sectionMeals = meals.filter(m => m.mealType === mealType.id);
             const sectionCals = sectionMeals.reduce((acc, m) => acc + calcNutrients(m).cal, 0);
 
             return (
-              <div key={mealType.id} className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
-                <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/50">
-                  <h2 className="text-lg font-bold text-slate-900 dark:text-white">{mealType.label}</h2>
+              <div 
+                key={mealType.id}
+                draggable={!mealType.isOrphaned}
+                onDragStart={(e) => handleDragStart(e, index)}
+                onDragOver={(e) => handleDragOver(e, index)}
+                onDragLeave={handleDragLeave}
+                onDragEnd={handleDragEnd}
+                onDrop={(e) => handleDrop(e, index)}
+                className={cn(
+                  "bg-white dark:bg-slate-900 rounded-2xl shadow-sm border overflow-hidden transition-all duration-200",
+                  mealType.isOrphaned 
+                    ? "border-red-250 dark:border-red-950/40 bg-red-50/10 dark:bg-red-950/5" 
+                    : "border-slate-200 dark:border-slate-800",
+                  draggedIndex === index && "opacity-40 scale-[0.98] border-dashed border-cyan-500",
+                  dragOverIndex === index && "border-t-4 border-t-cyan-500 border-dashed"
+                )}
+              >
+                <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/50 cursor-grab active:cursor-grabbing">
+                  <div className="flex items-center gap-2.5">
+                    {!mealType.isOrphaned && (
+                      <div className="text-slate-400 dark:text-slate-600 hover:text-slate-600 dark:hover:text-slate-400 transition-colors shrink-0 hidden sm:block">
+                        <GripVertical className="w-4 h-4" />
+                      </div>
+                    )}
+                    <h2 className="text-lg font-bold text-slate-900 dark:text-white">{mealType.label}</h2>
+                    {!mealType.isOrphaned && (
+                      <div className="flex items-center gap-1 ml-2 shrink-0">
+                        {index > 0 && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleMoveMeal(index, "up"); }}
+                            className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+                            title="Subir"
+                          >
+                            <ChevronUp className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                        {index < mealTypesList.length - 1 && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleMoveMeal(index, "down"); }}
+                            className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+                            title="Bajar"
+                          >
+                            <ChevronDown className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
                   <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">{Math.round(sectionCals)} kcal</span>
                 </div>
                 
@@ -499,17 +788,20 @@ export default function NutricionPage() {
                   )}
                 </div>
 
-                <div className="p-3 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800">
-                  <button 
-                    onClick={() => openAddFoodModal(mealType.id)}
-                    className="w-full py-2.5 rounded-2xl text-primary hover:bg-cyan-50 dark:hover:bg-cyan-950/30 font-semibold text-sm transition-colors flex items-center justify-center gap-2"
-                  >
-                    <Plus className="w-4 h-4" /> Añadir Alimento
-                  </button>
-                </div>
+                {!mealType.isOrphaned && (
+                  <div className="p-3 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800">
+                    <button 
+                      onClick={() => openAddFoodModal(mealType.id)}
+                      className="w-full py-2.5 rounded-2xl text-primary hover:bg-cyan-50 dark:hover:bg-cyan-950/30 font-semibold text-sm transition-colors flex items-center justify-center gap-2"
+                    >
+                      <Plus className="w-4 h-4" /> Añadir Alimento
+                    </button>
+                  </div>
+                )}
               </div>
             );
           })}
+        </div>
         </div>
       </div>
 
@@ -519,7 +811,7 @@ export default function NutricionPage() {
           <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl w-full max-w-lg overflow-hidden border border-slate-200 dark:border-slate-800 flex flex-col max-h-[90vh]">
             <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-900/50">
               <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-                Añadir a {MEAL_TYPES.find(m => m.id === modalMealType)?.label}
+                Añadir a {mealTypesList.find(m => m.id === modalMealType)?.label || modalMealType}
               </h2>
               <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800">
                 <X size={20} />
@@ -536,7 +828,7 @@ export default function NutricionPage() {
               <button
                 onClick={() => {
                   setEditingFoodId(null);
-                  setNewFood({ name: "", brand: "", calories: "", protein: "", carbs: "", fat: "" });
+                  setNewFood({ name: "", brand: "", category: "", calories: "", protein: "", carbs: "", fat: "" });
                   setActiveTab("nuevo_alimento");
                 }}
                 className={cn("flex-1 py-3 text-sm font-semibold transition-colors border-b-2", (activeTab === "nuevo_alimento" || activeTab === "editar_alimento") ? "border-primary text-primary dark:text-cyan-400" : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300")}
@@ -548,70 +840,106 @@ export default function NutricionPage() {
             <div className="overflow-y-auto p-5 custom-scrollbar">
               {activeTab === "mis_alimentos" ? (
                 <div className="space-y-4">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <input 
-                      type="text" 
-                      placeholder="Buscar alimento..." 
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-9 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-3xl text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-primary transition-all text-slate-900 dark:text-white"
-                    />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <input 
+                        type="text" 
+                        placeholder="Buscar alimento..." 
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full pl-9 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-3xl text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-primary transition-all text-slate-900 dark:text-white"
+                      />
+                    </div>
+                    <div>
+                      <select
+                        value={selectedCategoryFilter}
+                        onChange={(e) => setSelectedCategoryFilter(e.target.value)}
+                        className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-3xl text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-primary transition-all text-slate-900 dark:text-white cursor-pointer"
+                      >
+                        {FOOD_CATEGORIES.map(category => (
+                          <option key={category} value={category} className="text-slate-900 dark:text-white bg-white dark:bg-slate-950">
+                            {category === "Todos" ? "Todas las categorías" : category}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
 
                   <div className="space-y-2">
                     {isSearching ? (
                       <div className="flex justify-center py-8"><Loader2 className="animate-spin text-primary w-6 h-6" /></div>
-                    ) : foods.length > 0 ? (
-                      foods.map(food => (
-                        <div key={food.id} className="border border-slate-200 dark:border-slate-800 rounded-3xl p-3 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between hover:border-primary/50 dark:hover:border-primary/50 transition-colors bg-white dark:bg-slate-900">
-                          <div className="flex items-center gap-3">
-                            <div>
-                              <p className="font-semibold text-sm text-slate-900 dark:text-white line-clamp-1">{food.name}</p>
-                              <p className="text-xs text-slate-500">100g • {food.calories}kcal</p>
-                            </div>
-                          </div>
-                          
-                          {selectedFood?.id === food.id ? (
-                            <div className="flex items-center gap-2 w-full sm:w-auto">
-                              <input 
-                                type="number" 
-                                min="1"
-                                placeholder="Gramos" 
-                                autoFocus
-                                value={quantityGrams}
-                                onChange={(e) => setQuantityGrams(e.target.value)}
-                                className="w-20 px-2 py-1.5 text-sm border border-slate-300 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-slate-900 dark:text-white"
-                              />
-                              <button 
-                                onClick={handleLogMeal}
-                                disabled={isLoggingMeal || !quantityGrams}
-                                className="px-3 py-1.5 bg-primary hover:bg-primary disabled:opacity-50 text-white rounded-2xl text-sm font-semibold transition-colors"
-                              >
-                                {isLoggingMeal ? <Loader2 className="w-4 h-4 animate-spin" /> : "Guardar"}
-                              </button>
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-2 w-full sm:w-auto">
-                              {food.userId === session?.user?.id && (
-                                <button 
-                                  onClick={() => handleEditClick(food)}
-                                  className="p-1.5 text-slate-400 hover:text-cyan-500 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 rounded-xl transition-colors"
-                                  title="Editar alimento"
-                                >
-                                  <Edit3 className="w-4 h-4" />
-                                </button>
+                    ) : filteredAndSortedFoods.length > 0 ? (
+                      (() => {
+                        let lastCategory = "";
+                        return filteredAndSortedFoods.map(food => {
+                          const currentCategory = food.category || "Otros";
+                          const showHeader = selectedCategoryFilter === "Todos" && currentCategory !== lastCategory;
+                          lastCategory = currentCategory;
+                          return (
+                            <div key={food.id} className="space-y-2">
+                              {showHeader && (
+                                <div className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider pt-4 pb-1 first:pt-1 flex items-center gap-1.5">
+                                  <Folder className="w-3.5 h-3.5" />
+                                  <span>{currentCategory}</span>
+                                </div>
                               )}
-                              <button 
-                                onClick={() => setSelectedFood(food)}
-                                className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-2xl text-sm font-medium transition-colors w-full sm:w-auto"
-                              >
-                                Seleccionar
-                              </button>
+                              <div className="border border-slate-200 dark:border-slate-800 rounded-3xl p-3 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between hover:border-primary/50 dark:hover:border-primary/50 transition-colors bg-white dark:bg-slate-900">
+                                <div className="flex items-center gap-3">
+                                  <div>
+                                    <p className="font-semibold text-sm text-slate-900 dark:text-white line-clamp-1">{food.name}</p>
+                                    <p className="text-xs text-slate-500 flex items-center gap-1.5 mt-0.5">
+                                      <span>100g • {food.calories}kcal</span>
+                                      <span className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-md text-[10px] font-medium border border-slate-200/50 dark:border-slate-700/50">
+                                        {food.category || "Otros"}
+                                      </span>
+                                    </p>
+                                  </div>
+                                </div>
+                                
+                                {selectedFood?.id === food.id ? (
+                                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                                    <input 
+                                      type="number" 
+                                      min="1"
+                                      placeholder="Gramos" 
+                                      autoFocus
+                                      value={quantityGrams}
+                                      onChange={(e) => setQuantityGrams(e.target.value)}
+                                      className="w-20 px-2 py-1.5 text-sm border border-slate-300 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-slate-900 dark:text-white"
+                                    />
+                                    <button 
+                                      onClick={handleLogMeal}
+                                      disabled={isLoggingMeal || !quantityGrams}
+                                      className="px-3 py-1.5 bg-primary hover:bg-primary disabled:opacity-50 text-white rounded-2xl text-sm font-semibold transition-colors"
+                                    >
+                                      {isLoggingMeal ? <Loader2 className="w-4 h-4 animate-spin" /> : "Guardar"}
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                                    {food.userId === session?.user?.id && (
+                                      <button 
+                                        onClick={() => handleEditClick(food)}
+                                        className="p-1.5 text-slate-400 hover:text-cyan-500 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 rounded-xl transition-colors"
+                                        title="Editar alimento"
+                                      >
+                                        <Edit3 className="w-4 h-4" />
+                                      </button>
+                                    )}
+                                    <button 
+                                      onClick={() => setSelectedFood(food)}
+                                      className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-2xl text-sm font-medium transition-colors w-full sm:w-auto"
+                                    >
+                                      Seleccionar
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          )}
-                        </div>
-                      ))
+                          );
+                        });
+                      })()
                     ) : (
                       <div className="text-center py-8 text-slate-500 dark:text-slate-400">
                         <p className="text-sm">No se encontraron alimentos.</p>
@@ -626,10 +954,23 @@ export default function NutricionPage() {
                     <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Nombre del Alimento *</label>
                     <input required type="text" value={newFood.name} onChange={e => setNewFood({...newFood, name: e.target.value})} className="w-full px-3 py-2 rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-primary transition-all text-sm" />
                   </div>
-                  <div className="grid grid-cols-1 gap-4">
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Marca (Opcional)</label>
                       <input type="text" value={newFood.brand} onChange={e => setNewFood({...newFood, brand: e.target.value})} className="w-full px-3 py-2 rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-primary transition-all text-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Categoría (Opcional)</label>
+                      <select 
+                        value={newFood.category} 
+                        onChange={e => setNewFood({...newFood, category: e.target.value})} 
+                        className="w-full px-3 py-2 rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-primary transition-all text-sm"
+                      >
+                        <option value="">Auto-detectar</option>
+                        {FOOD_CATEGORIES.filter(c => c !== "Todos").map(cat => (
+                          <option key={cat} value={cat}>{cat}</option>
+                        ))}
+                      </select>
                     </div>
                   </div>
                   

@@ -29,7 +29,8 @@ export async function POST(req: Request) {
       allergens,
       culinaryStyle,
       excludedFoods,
-      prioritizedFoods
+      prioritizedFoods,
+      mealsConfig
     } = body;
 
     // Fetch user units to perform correct BMR conversion (Mifflin-St Jeor)
@@ -107,7 +108,8 @@ export async function POST(req: Request) {
         culinaryStyle: culinaryStyle || undefined,
         excludedFoods: excludedFoods !== undefined ? excludedFoods : undefined,
         prioritizedFoods: prioritizedFoods !== undefined ? prioritizedFoods : undefined,
-      },
+        ...(mealsConfig !== undefined ? { mealsConfig } : {}),
+      } as any,
       create: {
         userId: session.user.id,
         ...bioData,
@@ -117,7 +119,8 @@ export async function POST(req: Request) {
         culinaryStyle: culinaryStyle || "CLASSIC",
         excludedFoods: excludedFoods || "",
         prioritizedFoods: prioritizedFoods || "",
-      },
+        mealsConfig: mealsConfig || "BREAKFAST,LUNCH,DINNER,SNACK",
+      } as any,
     });
 
     return NextResponse.json(profile);

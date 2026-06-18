@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { generateDietPlan, STANDARD_FOODS, filterFoodsForUser, solveMealGrams } from "@/lib/dietEngine";
+import { getFoodCategory } from "@/lib/nutritionUtils";
 
 // GET: Generate a customized diet plan based on the user's active nutrition profile and custom overrides
 export async function GET(req: Request) {
@@ -56,7 +57,8 @@ export async function GET(req: Request) {
       allergensList,
       culinaryStyle,
       excluded,
-      prioritized
+      prioritized,
+      (profile as any).mealsConfig || null
     );
 
     return NextResponse.json({
@@ -148,6 +150,7 @@ export async function POST(req: Request) {
               userId: null, // Global standard food
               name: item.foodName,
               brand: item.brand || null,
+              category: getFoodCategory(item.foodName),
               calories: Number(item.caloriesPer100g) || 0,
               protein: Number(item.proteinPer100g) || 0,
               carbs: Number(item.carbsPer100g) || 0,
