@@ -102,7 +102,7 @@ export default function AiDietPlanner({ onClose, onSaved, initialDate }: AiDietP
     if (group === "FAT") return { label: "Fuente de grasas saludables", emoji: "🥜" };
     // CARB breakdown
     const grainIds = ["std-arroz-integral","std-arroz-blanco","std-arroz-basmati","std-arroz-bomba",
-      "std-pasta","std-quinoa","std-cuscus","std-avena","std-harina-avena"];
+      "std-pasta","std-quinoa","std-cuscus","std-avena"];
     const breadIds = ["std-pan-integral","std-pan-centeno","std-pan-espelta","std-pan-molde",
       "std-pan-blanco","std-galletas-maria","std-tortitas-arroz","std-tortitas-maiz"];
     const legumeCarbIds = ["std-lentejas","std-garbanzos","std-alubias-blancas",
@@ -151,7 +151,7 @@ export default function AiDietPlanner({ onClose, onSaved, initialDate }: AiDietP
 
     // Grains
     const grainIds = ["std-arroz-integral","std-arroz-blanco","std-arroz-basmati","std-arroz-bomba",
-      "std-pasta","std-quinoa","std-cuscus","std-avena","std-harina-avena"];
+      "std-pasta","std-quinoa","std-cuscus","std-avena"];
     if (grainIds.includes(id)) return grainIds;
 
     // Breads
@@ -698,16 +698,16 @@ export default function AiDietPlanner({ onClose, onSaved, initialDate }: AiDietP
       <div className="relative w-full max-w-4xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-300">
         
         {/* Header */}
-        <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-cyan-50/40 via-transparent to-blue-50/20 dark:from-slate-950/40 dark:to-transparent">
+        <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-cyan-50/40 via-transparent to-blue-50/20 dark:from-slate-950/40 dark:to-transparent">
           <div className="flex items-center gap-3">
-            <div className="bg-gradient-to-tr from-cyan-500 to-blue-600 p-2.5 rounded-2xl text-white shadow-md shadow-cyan-500/20">
+            <div className="bg-gradient-to-tr from-cyan-500 to-blue-600 p-2 rounded-2xl text-white shadow-md shadow-cyan-500/20">
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-slate-950 dark:text-white flex items-center gap-2">
+              <h2 className="text-lg sm:text-xl font-bold text-slate-950 dark:text-white flex items-center gap-2">
                 Planificador de Dieta Personalizada
               </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">
                 Configura tus gustos, macros y alérgenos para generar tu menú del día.
               </p>
             </div>
@@ -752,10 +752,10 @@ export default function AiDietPlanner({ onClose, onSaved, initialDate }: AiDietP
 
         {/* Setup Wizard Progression View */}
         {!isLoading && !error && showSetup && (
-          <div className="flex-1 overflow-hidden p-6 flex flex-col min-h-0 space-y-6">
+          <div className="flex-1 overflow-hidden p-4 sm:p-5 flex flex-col min-h-0 space-y-4 sm:space-y-5">
             
             {/* Beautiful Progressive Step Indicator */}
-            <div className="relative mb-6 max-w-md w-full mx-auto px-4 shrink-0">
+            <div className="relative mb-4 sm:mb-5 max-w-md w-full mx-auto px-4 shrink-0">
               {/* Background Line */}
               <div className="absolute top-5 left-10 right-10 h-0.5 bg-slate-200 dark:bg-slate-800 -translate-y-1/2 z-0" />
               
@@ -803,73 +803,75 @@ export default function AiDietPlanner({ onClose, onSaved, initialDate }: AiDietP
               </div>
             </div>
 
-            {/* Step Content */}
-            <div className="flex-1 max-w-2xl w-full mx-auto bg-slate-50/50 dark:bg-slate-950/20 border border-slate-200/50 dark:border-slate-800/40 rounded-3xl p-6 md:p-8 shadow-soft overflow-y-auto flex flex-col min-h-0 pr-1">
+            {/* Scrollable Wizard Content Wrapper */}
+            <div className="flex-1 overflow-y-auto min-h-0 pr-1 py-1">
+              {/* Step Content */}
+              <div className="max-w-2xl w-full mx-auto bg-slate-50/50 dark:bg-slate-950/20 border border-slate-200/50 dark:border-slate-800/40 rounded-3xl p-4 sm:p-5 md:p-6 shadow-soft overflow-visible flex flex-col">
               
               {/* STEP 1: Confirm Calories Goal & Macros */}
               {setupStep === 1 && (
-                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
                   <div className="text-center space-y-1">
-                    <h3 className="text-lg font-bold text-slate-950 dark:text-white flex items-center justify-center gap-2">
+                    <h3 className="text-base sm:text-lg font-bold text-slate-950 dark:text-white flex items-center justify-center gap-2">
                       <Sliders className="w-5 h-5 text-cyan-500" /> Objetivo Calórico y Macros Configurados
                     </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                    <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">
                       Confirma que tu objetivo calórico y distribución de macros son correctos para tu plan.
                     </p>
                   </div>
 
-                  <div className="space-y-5">
+                  <div className="space-y-3.5">
                     {/* Calories Goal Card */}
-                    <div className="bg-gradient-to-br from-cyan-500/5 to-blue-500/5 border border-cyan-500/10 dark:border-cyan-500/20 rounded-3xl p-6 text-center space-y-2">
-                      <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Objetivo Calórico Diario</span>
-                      <div className="text-3xl font-black text-slate-900 dark:text-white flex items-center justify-center gap-1.5">
-                        <Flame className="w-6 h-6 text-amber-500 fill-amber-500 animate-pulse" />
-                        {customCalories} <span className="text-lg font-normal text-slate-500">kcal</span>
+                    <div className="bg-gradient-to-br from-cyan-500/5 to-blue-500/5 border border-cyan-500/10 dark:border-cyan-500/20 rounded-2xl p-4 text-center space-y-1.5">
+                      <span className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-widest">Objetivo Calórico Diario</span>
+                      <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white flex items-center justify-center gap-1.5">
+                        <Flame className="w-5 h-5 sm:w-6 sm:h-6 text-amber-500 fill-amber-500 animate-pulse" />
+                        {customCalories} <span className="text-base sm:text-lg font-normal text-slate-500">kcal</span>
                       </div>
                     </div>
 
                     {/* Macros Grid */}
-                    <div className="grid grid-cols-3 gap-3.5">
+                    <div className="grid grid-cols-3 gap-2 sm:gap-3">
                       {/* Protein */}
-                      <div className="p-4 bg-rose-50/50 dark:bg-rose-950/10 border border-rose-100 dark:border-rose-950/30 rounded-2xl text-center space-y-1">
-                        <p className="text-[10px] font-bold text-rose-500 dark:text-rose-400 uppercase tracking-wider">Proteínas</p>
-                        <p className="text-xl font-black text-rose-950 dark:text-rose-300">{liveMacros.protein}g</p>
-                        <p className="text-[10px] font-medium text-slate-500">{customProteinPct}%</p>
+                      <div className="p-2.5 sm:p-3 bg-rose-50/50 dark:bg-rose-950/10 border border-rose-100 dark:border-rose-950/30 rounded-xl text-center space-y-0.5 sm:space-y-1">
+                        <p className="text-[9px] sm:text-[10px] font-bold text-rose-500 dark:text-rose-400 uppercase tracking-wider">Proteínas</p>
+                        <p className="text-lg font-black text-rose-950 dark:text-rose-300">{liveMacros.protein}g</p>
+                        <p className="text-[9px] sm:text-[10px] font-medium text-slate-500">{customProteinPct}%</p>
                       </div>
 
                       {/* Carbs */}
-                      <div className="p-4 bg-amber-50/50 dark:bg-amber-950/10 border border-amber-100 dark:border-amber-950/30 rounded-2xl text-center space-y-1">
-                        <p className="text-[10px] font-bold text-amber-500 dark:text-amber-400 uppercase tracking-wider">Carbohidratos</p>
-                        <p className="text-xl font-black text-amber-950 dark:text-amber-300">{liveMacros.carbs}g</p>
-                        <p className="text-[10px] font-medium text-slate-500">{customCarbsPct}%</p>
+                      <div className="p-2.5 sm:p-3 bg-amber-50/50 dark:bg-amber-950/10 border border-amber-100 dark:border-amber-950/30 rounded-xl text-center space-y-0.5 sm:space-y-1">
+                        <p className="text-[9px] sm:text-[10px] font-bold text-amber-500 dark:text-amber-400 uppercase tracking-wider">Carbohidratos</p>
+                        <p className="text-lg font-black text-amber-950 dark:text-amber-300">{liveMacros.carbs}g</p>
+                        <p className="text-[9px] sm:text-[10px] font-medium text-slate-500">{customCarbsPct}%</p>
                       </div>
 
                       {/* Fat */}
-                      <div className="p-4 bg-sky-50/50 dark:bg-sky-950/10 border border-sky-100 dark:border-sky-950/30 rounded-2xl text-center space-y-1">
-                        <p className="text-[10px] font-bold text-sky-500 dark:text-sky-400 uppercase tracking-wider">Grasas</p>
-                        <p className="text-xl font-black text-sky-950 dark:text-sky-300">{liveMacros.fat}g</p>
-                        <p className="text-[10px] font-medium text-slate-500">{customFatPct}%</p>
+                      <div className="p-2.5 sm:p-3 bg-sky-50/50 dark:bg-sky-950/10 border border-sky-100 dark:border-sky-950/30 rounded-xl text-center space-y-0.5 sm:space-y-1">
+                        <p className="text-[9px] sm:text-[10px] font-bold text-sky-500 dark:text-sky-400 uppercase tracking-wider">Grasas</p>
+                        <p className="text-lg font-black text-sky-950 dark:text-sky-300">{liveMacros.fat}g</p>
+                        <p className="text-[9px] sm:text-[10px] font-medium text-slate-500">{customFatPct}%</p>
                       </div>
                     </div>
 
                     {/* Helper text */}
-                    <div className="bg-slate-50 dark:bg-slate-900/40 border border-slate-200/50 dark:border-slate-800/40 rounded-2xl p-4 text-xs text-slate-500 dark:text-slate-400 flex items-start gap-2.5 leading-relaxed">
+                    <div className="bg-slate-50 dark:bg-slate-900/40 border border-slate-200/50 dark:border-slate-800/40 rounded-2xl p-3 text-xs text-slate-500 dark:text-slate-400 flex items-start gap-2 leading-relaxed">
                       <AlertCircle className="w-4 h-4 text-cyan-500 shrink-0 mt-0.5" />
-                      <p>
+                      <p className="text-[11px] sm:text-xs">
                         Estos objetivos se usarán para estimar las porciones de alimentos de tu menú diario. Puedes reajustarlos en cualquier momento.
                       </p>
                     </div>
 
                     {/* Button to edit objectives */}
-                    <div className="text-center pt-2">
+                    <div className="text-center pt-1">
                       <button 
                         onClick={() => {
                           onClose();
                           router.push("/nutricion/onboarding?edit=true");
                         }}
-                        className="inline-flex items-center gap-2 text-xs text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300 font-bold hover:underline"
+                        className="inline-flex items-center gap-2 text-[11px] sm:text-xs text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300 font-bold hover:underline"
                       >
-                        <Wand2 className="w-4 h-4 text-cyan-500" />
+                        <Wand2 className="w-3.5 h-3.5 text-cyan-500" />
                         ¿Quieres cambiar tus macros o calorías? Ajusta tus objetivos
                       </button>
                     </div>
@@ -880,20 +882,20 @@ export default function AiDietPlanner({ onClose, onSaved, initialDate }: AiDietP
 
               {/* STEP 2: Restrictions & Culinary Styles */}
               {setupStep === 2 && (
-                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                  <div className="text-center space-y-1">
-                    <h3 className="text-lg font-bold text-slate-950 dark:text-white flex items-center justify-center gap-2">
+                <div className="space-y-3.5 sm:space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                  <div className="text-center space-y-0.5">
+                    <h3 className="text-base sm:text-lg font-bold text-slate-950 dark:text-white flex items-center justify-center gap-2">
                       <ChefHat className="w-5 h-5 text-violet-500" /> Tipo de Dieta y Restricciones
                     </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Adaptamos las recetas a tus hábitos diarios y exclusiones médicas.</p>
+                    <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">Adaptamos las recetas a tus hábitos diarios y exclusiones médicas.</p>
                   </div>
 
-                  <div className="space-y-5">
+                  <div className="space-y-2.5 sm:space-y-3">
                     
                     {/* Diet Type */}
                     <div>
-                      <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Tipo de Dieta</label>
-                      <div className="grid grid-cols-2 gap-2.5">
+                      <label className="block text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Tipo de Dieta</label>
+                      <div className="grid grid-cols-2 gap-2">
                         {[
                           { id: "STANDARD", label: "Estándar", desc: "Todo tipo de alimentos" },
                           { id: "VEGETARIAN", label: "Vegetariana", desc: "Sin carnes ni pescados" },
@@ -905,14 +907,14 @@ export default function AiDietPlanner({ onClose, onSaved, initialDate }: AiDietP
                             type="button"
                             onClick={() => setCustomDietType(diet.id)}
                             className={cn(
-                              "p-3.5 rounded-2xl border text-left transition-all text-xs flex flex-col justify-between h-20 bg-white dark:bg-slate-900/60",
+                              "p-2 sm:p-2.5 rounded-xl border text-left transition-all text-[11px] sm:text-xs flex flex-col justify-center gap-0.5 bg-white dark:bg-slate-900/60",
                               customDietType === diet.id
                                 ? "border-violet-500 bg-violet-50/50 dark:bg-violet-900/20 ring-1 ring-violet-500"
                                 : "border-slate-200 dark:border-slate-800 hover:border-violet-200 dark:hover:border-violet-850"
                             )}
                           >
-                            <span className="font-bold text-slate-900 dark:text-white">{diet.label}</span>
-                            <span className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight">{diet.desc}</span>
+                            <span className="font-bold text-slate-900 dark:text-white leading-none">{diet.label}</span>
+                            <span className="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 leading-tight">{diet.desc}</span>
                           </button>
                         ))}
                       </div>
@@ -920,10 +922,10 @@ export default function AiDietPlanner({ onClose, onSaved, initialDate }: AiDietP
 
                     {/* Culinary Style */}
                     <div>
-                      <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Estilo Gastronómico</label>
-                      <div className="grid grid-cols-3 gap-2.5">
+                      <label className="block text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Estilo Gastronómico</label>
+                      <div className="grid grid-cols-3 gap-2">
                         {[
-                          { id: "CLASSIC", label: "Fitness Clásico", desc: "Arroz, pollo, claras..." },
+                          { id: "CLASSIC", label: "Fitness Clásico", desc: "Arroz, pollo..." },
                           { id: "MEDITERRANEAN", label: "Mediterráneo", desc: "Salud y variedad" },
                           { id: "QUICK", label: "Fácil/Rápido", desc: "Poco tiempo/prep" },
                         ].map((style) => (
@@ -932,23 +934,23 @@ export default function AiDietPlanner({ onClose, onSaved, initialDate }: AiDietP
                             type="button"
                             onClick={() => setCustomCulinaryStyle(style.id)}
                             className={cn(
-                              "p-3 rounded-2xl border text-left transition-all text-xs flex flex-col justify-between h-24 bg-white dark:bg-slate-900/60",
+                              "p-2 sm:p-2.5 rounded-xl border text-left transition-all text-[11px] sm:text-xs flex flex-col justify-center gap-0.5 bg-white dark:bg-slate-900/60",
                               customCulinaryStyle === style.id
                                 ? "border-violet-500 bg-violet-50/50 dark:bg-violet-900/20 ring-1 ring-violet-500"
                                 : "border-slate-200 dark:border-slate-800 hover:border-violet-200 dark:hover:border-violet-850"
                             )}
                           >
-                            <span className="font-bold text-slate-900 dark:text-white leading-tight">{style.label}</span>
-                            <span className="text-[9px] text-slate-500 dark:text-slate-400 leading-tight mt-1">{style.desc}</span>
+                            <span className="font-bold text-slate-900 dark:text-white leading-none">{style.label}</span>
+                            <span className="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 leading-tight">{style.desc}</span>
                           </button>
                         ))}
                       </div>
                     </div>
 
                     {/* Allergens exclusions */}
-                    <div className="space-y-2 pt-1">
-                      <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Restricciones / Alérgenos</label>
-                      <div className="flex flex-wrap gap-2">
+                    <div className="space-y-1.5 pt-0.5">
+                      <label className="block text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Restricciones / Alérgenos</label>
+                      <div className="flex flex-wrap gap-1.5">
                         {[
                           { id: "GLUTEN", label: "Gluten" },
                           { id: "LACTOSE", label: "Lactosa" },
@@ -967,7 +969,7 @@ export default function AiDietPlanner({ onClose, onSaved, initialDate }: AiDietP
                                 );
                               }}
                               className={cn(
-                                "px-3.5 py-1.5 rounded-full text-xs font-bold border transition-all",
+                                "px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold border transition-all",
                                 isSelected 
                                   ? "bg-red-50 text-red-600 border-red-200 dark:bg-red-950/20" 
                                   : "bg-white text-slate-600 border-slate-200 dark:bg-slate-900 dark:border-slate-800 hover:bg-slate-50"
@@ -983,10 +985,11 @@ export default function AiDietPlanner({ onClose, onSaved, initialDate }: AiDietP
                   </div>
                 </div>
               )}
+              </div>
             </div>
 
             {/* Bottom Wizard Footer Navigation */}
-            <div className="pt-6 border-t border-slate-100 dark:border-slate-800 flex justify-between gap-3 mt-auto shrink-0">
+            <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between gap-3 mt-auto shrink-0">
               {setupStep === 1 ? (
                 <button 
                   onClick={onClose} 
