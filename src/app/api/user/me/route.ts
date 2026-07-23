@@ -20,7 +20,6 @@ export async function GET(req: Request) {
         userId = decoded.id as string;
       }
     } catch (e) {
-      // Fallback base64 decoding
       try {
         const parsed = JSON.parse(Buffer.from(tokenString, "base64").toString("utf-8"));
         if (parsed && parsed.id) {
@@ -54,6 +53,12 @@ export async function GET(req: Request) {
       return NextResponse.json({ message: "Usuario no encontrado" }, { status: 404 });
     }
 
+    // Evaluate real subscription expiration against end date
+    const now = new Date();
+    const isExpired = user.subscriptionEndDate ? new Date(user.subscriptionEndDate) < now : false;
+    const isSubscriptionActive = user.subscriptionStatus === "ACTIVE" && !isExpired;
+    const finalSubscriptionStatus = isSubscriptionActive ? "ACTIVE" : "INACTIVE";
+
     return NextResponse.json({
       user: {
         id: user.id,
@@ -62,7 +67,8 @@ export async function GET(req: Request) {
         role: user.role,
         gymId: user.gymId || null,
         gymName: user.gym?.name || null,
-        subscriptionStatus: user.subscriptionStatus,
+        subscriptionStatus: finalSubscriptionStatus,
+        subscriptionEndDate: user.subscriptionEndDate?.toISOString() || null,
         avatarUrl: user.image || null,
       },
     });

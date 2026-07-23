@@ -34,12 +34,19 @@ export async function POST(req: Request) {
       );
     }
 
+    // Evaluate real subscription expiration against end date
+    const now = new Date();
+    const isExpired = user.subscriptionEndDate ? new Date(user.subscriptionEndDate) < now : false;
+    const isSubscriptionActive = user.subscriptionStatus === "ACTIVE" && !isExpired;
+    const finalSubscriptionStatus = isSubscriptionActive ? "ACTIVE" : "INACTIVE";
+
     const tokenPayload = {
       id: user.id,
       email: user.email,
       name: user.name,
       role: user.role,
-      subscriptionStatus: user.subscriptionStatus,
+      subscriptionStatus: finalSubscriptionStatus,
+      subscriptionEndDate: user.subscriptionEndDate?.toISOString() || null,
       gymId: user.gymId,
       gymName: user.gym?.name || null,
       sessionVersion: user.sessionVersion,
@@ -54,7 +61,6 @@ export async function POST(req: Request) {
         secret,
       });
     } catch (encodeErr) {
-      // Fallback base64 signed payload if NextAuth encode fails
       token = Buffer.from(JSON.stringify(tokenPayload)).toString("base64");
     }
 
@@ -65,7 +71,8 @@ export async function POST(req: Request) {
       role: user.role,
       gymId: user.gymId || null,
       gymName: user.gym?.name || null,
-      subscriptionStatus: user.subscriptionStatus,
+      subscriptionStatus: finalSubscriptionStatus,
+      subscriptionEndDate: user.subscriptionEndDate?.toISOString() || null,
       avatarUrl: user.image || null,
     };
 

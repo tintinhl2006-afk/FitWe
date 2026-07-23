@@ -173,8 +173,8 @@ export default function HomeScreen() {
               </View>
               <View>
                 <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#ffffff' }}>Pase de Torno Digital</Text>
-                <Text style={{ fontSize: 11, color: user?.subscriptionStatus === 'ACTIVE' ? '#10b981' : '#f59e0b', fontWeight: 'bold' }}>
-                  {user?.subscriptionStatus === 'ACTIVE' ? '✓ Cuota Activa' : 'Pase de Acceso'}
+                <Text style={{ fontSize: 11, color: user?.subscriptionStatus === 'ACTIVE' ? '#10b981' : '#f43f5e', fontWeight: 'bold' }}>
+                  {user?.subscriptionStatus === 'ACTIVE' ? '✓ Cuota Activa' : '✕ Cuota Inactiva / Vencida'}
                 </Text>
               </View>
             </View>
