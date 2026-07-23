@@ -76,7 +76,7 @@ export async function POST(req: Request) {
   } catch (error: any) {
     console.error("Mobile login error:", error);
     return NextResponse.json(
-      { message: error?.message || "Error interno del servidor" },
+      { message: error?.message || String(error) || "Error interno del servidor" },
       { status: 500 }
     );
   }
