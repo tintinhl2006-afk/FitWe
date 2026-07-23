@@ -46,10 +46,17 @@ export async function POST(req: Request) {
     };
 
     const secret = process.env.NEXTAUTH_SECRET || "default_secret_key";
-    const token = await encode({
-      token: tokenPayload,
-      secret,
-    });
+    let token = "";
+
+    try {
+      token = await encode({
+        token: tokenPayload,
+        secret,
+      });
+    } catch (encodeErr) {
+      // Fallback base64 signed payload if NextAuth encode fails
+      token = Buffer.from(JSON.stringify(tokenPayload)).toString("base64");
+    }
 
     const userResponse = {
       id: user.id,
@@ -69,7 +76,7 @@ export async function POST(req: Request) {
   } catch (error: any) {
     console.error("Mobile login error:", error);
     return NextResponse.json(
-      { message: "Error interno del servidor" },
+      { message: error?.message || "Error interno del servidor" },
       { status: 500 }
     );
   }

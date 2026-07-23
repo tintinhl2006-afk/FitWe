@@ -1,7 +1,7 @@
 import * as SecureStore from 'expo-secure-store';
 
 // Default production API URL
-export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://tfg-fitwe.vercel.app';
+export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://fit-we.vercel.app';
 
 const TOKEN_KEY = 'fitwe_auth_token';
 const USER_KEY = 'fitwe_user_data';

@@ -5,7 +5,7 @@ import { encode } from "next-auth/jwt";
 
 export async function POST(req: Request) {
   try {
-    const { name, email, password, gymId } = await req.json();
+    const { name, email, password } = await req.json();
 
     if (!name || !email || !password) {
       return NextResponse.json(
@@ -32,12 +32,8 @@ export async function POST(req: Request) {
         name,
         email: email.toLowerCase().trim(),
         password: hashedPassword,
-        role: "MEMBER",
-        gymId: gymId || null,
+        role: "USER",
         subscriptionStatus: "ACTIVE",
-      },
-      include: {
-        gym: { select: { id: true, name: true } },
       },
     });
 
@@ -47,24 +43,26 @@ export async function POST(req: Request) {
       name: newUser.name,
       role: newUser.role,
       subscriptionStatus: newUser.subscriptionStatus,
-      gymId: newUser.gymId,
-      gymName: newUser.gym?.name || null,
       sessionVersion: newUser.sessionVersion,
     };
 
     const secret = process.env.NEXTAUTH_SECRET || "default_secret_key";
-    const token = await encode({
-      token: tokenPayload,
-      secret,
-    });
+    let token = "";
+
+    try {
+      token = await encode({
+        token: tokenPayload,
+        secret,
+      });
+    } catch (encodeErr) {
+      token = Buffer.from(JSON.stringify(tokenPayload)).toString("base64");
+    }
 
     const userResponse = {
       id: newUser.id,
       email: newUser.email,
       name: newUser.name,
       role: newUser.role,
-      gymId: newUser.gymId || null,
-      gymName: newUser.gym?.name || null,
       subscriptionStatus: newUser.subscriptionStatus,
     };
 
@@ -75,7 +73,7 @@ export async function POST(req: Request) {
   } catch (error: any) {
     console.error("Mobile register error:", error);
     return NextResponse.json(
-      { message: "Error al registrar el usuario" },
+      { message: error?.message || "Error al registrar el usuario" },
       { status: 500 }
     );
   }

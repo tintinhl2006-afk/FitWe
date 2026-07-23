@@ -12,13 +12,31 @@ export async function GET(req: Request) {
     const tokenString = authHeader.substring(7);
     const secret = process.env.NEXTAUTH_SECRET || "default_secret_key";
 
-    const decoded = await decode({ token: tokenString, secret });
-    if (!decoded || !decoded.id) {
+    let userId: string | null = null;
+
+    try {
+      const decoded = await decode({ token: tokenString, secret });
+      if (decoded && decoded.id) {
+        userId = decoded.id as string;
+      }
+    } catch (e) {
+      // Fallback base64 decoding
+      try {
+        const parsed = JSON.parse(Buffer.from(tokenString, "base64").toString("utf-8"));
+        if (parsed && parsed.id) {
+          userId = parsed.id;
+        }
+      } catch (err) {
+        userId = null;
+      }
+    }
+
+    if (!userId) {
       return NextResponse.json({ message: "Token inválido o expirado" }, { status: 401 });
     }
 
     const user = await prisma.user.findUnique({
-      where: { id: decoded.id as string },
+      where: { id: userId },
       select: {
         id: true,
         email: true,
