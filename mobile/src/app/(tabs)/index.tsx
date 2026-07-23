@@ -21,12 +21,11 @@ import {
   ShieldCheck,
   RefreshCw,
   X,
-  Zap,
-  Trophy,
-  Clock,
   TrendingUp,
+  Clock,
   Building2,
   Utensils,
+  Plus,
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { api } from '../../lib/apiClient';
@@ -69,8 +68,7 @@ export default function HomeScreen() {
   const [isLoading, setIsLoading] = useState(true);
 
   const [dashData, setDashData] = useState<DashboardData | null>(null);
-  const [caloriesToday, setCaloriesToday] = useState(1850);
-  const goalCalories = 2400;
+  const [caloriesToday, setCaloriesToday] = useState(0);
 
   useEffect(() => {
     fetchDashboardData();
@@ -90,48 +88,15 @@ export default function HomeScreen() {
   }, [user]);
 
   async function fetchDashboardData() {
+    setIsLoading(true);
     try {
       const res = await api.get('/api/dashboard');
       if (res) {
         setDashData(res);
       }
     } catch (e) {
-      // Mock data fallback if offline
-      setDashData({
-        routinesCount: 3,
-        weeklySessionsCount: 4,
-        weeklyVolume: 14200,
-        weeklyMinutes: 215,
-        streak: 5,
-        totalSessions: 28,
-        weeklyChart: [
-          { day: 'Lun', minutos: 45, count: 1 },
-          { day: 'Mar', minutos: 60, count: 1 },
-          { day: 'Mié', minutos: 0, count: 0 },
-          { day: 'Jue', minutos: 50, count: 1 },
-          { day: 'Vie', minutos: 60, count: 1 },
-          { day: 'Sáb', minutos: 0, count: 0 },
-          { day: 'Dom', minutos: 0, count: 0 },
-        ],
-        recentSessions: [
-          {
-            id: 's1',
-            routineName: 'Torso Hipertrofia A',
-            date: 'Ayer, 18:30',
-            durationMinutes: 55,
-            volume: 4800,
-            setsCount: 16,
-          },
-          {
-            id: 's2',
-            routineName: 'Pierna y Core',
-            date: 'Hace 3 días',
-            durationMinutes: 60,
-            volume: 6200,
-            setsCount: 18,
-          },
-        ],
-      });
+      console.error('Error al cargar datos reales del dashboard:', e);
+      setDashData(null);
     } finally {
       setIsLoading(false);
     }
@@ -190,55 +155,6 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* Streak & Weekly Stats Row */}
-        <View style={{ flexDirection: 'row', gap: 12, marginBottom: 20 }}>
-          {/* Streak Card */}
-          <View
-            style={{
-              flex: 1,
-              backgroundColor: '#1e293b',
-              borderRadius: 20,
-              padding: 16,
-              borderWidth: 1,
-              borderColor: '#334155',
-            }}
-          >
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-              <Flame size={18} color="#f59e0b" />
-              <Text style={{ fontSize: 12, fontWeight: '700', color: '#f59e0b' }}>Racha Actual</Text>
-            </View>
-            <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 4 }}>
-              <Text style={{ fontSize: 26, fontWeight: '900', color: '#ffffff' }}>
-                {dashData?.streak || 5}
-              </Text>
-              <Text style={{ fontSize: 12, fontWeight: '700', color: '#94a3b8' }}>días seguidos</Text>
-            </View>
-          </View>
-
-          {/* Volume Card */}
-          <View
-            style={{
-              flex: 1,
-              backgroundColor: '#1e293b',
-              borderRadius: 20,
-              padding: 16,
-              borderWidth: 1,
-              borderColor: '#334155',
-            }}
-          >
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-              <TrendingUp size={18} color="#a855f7" />
-              <Text style={{ fontSize: 12, fontWeight: '700', color: '#a855f7' }}>Volumen Semanal</Text>
-            </View>
-            <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 4 }}>
-              <Text style={{ fontSize: 24, fontWeight: '900', color: '#ffffff' }}>
-                {(dashData?.weeklyVolume || 14200).toLocaleString()}
-              </Text>
-              <Text style={{ fontSize: 12, fontWeight: '700', color: '#94a3b8' }}>kg</Text>
-            </View>
-          </View>
-        </View>
-
         {/* QR Access Pass Card */}
         <View
           style={{
@@ -257,7 +173,9 @@ export default function HomeScreen() {
               </View>
               <View>
                 <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#ffffff' }}>Pase de Torno Digital</Text>
-                <Text style={{ fontSize: 11, color: '#10b981', fontWeight: 'bold' }}>✓ Cuota Activa</Text>
+                <Text style={{ fontSize: 11, color: user?.subscriptionStatus === 'ACTIVE' ? '#10b981' : '#f59e0b', fontWeight: 'bold' }}>
+                  {user?.subscriptionStatus === 'ACTIVE' ? '✓ Cuota Activa' : 'Pase de Acceso'}
+                </Text>
               </View>
             </View>
 
@@ -303,6 +221,55 @@ export default function HomeScreen() {
           </Text>
         </View>
 
+        {/* Streak & Weekly Stats Row */}
+        <View style={{ flexDirection: 'row', gap: 12, marginBottom: 20 }}>
+          {/* Streak Card */}
+          <View
+            style={{
+              flex: 1,
+              backgroundColor: '#1e293b',
+              borderRadius: 20,
+              padding: 16,
+              borderWidth: 1,
+              borderColor: '#334155',
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+              <Flame size={18} color="#f59e0b" />
+              <Text style={{ fontSize: 12, fontWeight: '700', color: '#f59e0b' }}>Racha Actual</Text>
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 4 }}>
+              <Text style={{ fontSize: 26, fontWeight: '900', color: '#ffffff' }}>
+                {dashData?.streak ?? 0}
+              </Text>
+              <Text style={{ fontSize: 12, fontWeight: '700', color: '#94a3b8' }}>días seguidos</Text>
+            </View>
+          </View>
+
+          {/* Volume Card */}
+          <View
+            style={{
+              flex: 1,
+              backgroundColor: '#1e293b',
+              borderRadius: 20,
+              padding: 16,
+              borderWidth: 1,
+              borderColor: '#334155',
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+              <TrendingUp size={18} color="#a855f7" />
+              <Text style={{ fontSize: 12, fontWeight: '700', color: '#a855f7' }}>Volumen Semanal</Text>
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 4 }}>
+              <Text style={{ fontSize: 24, fontWeight: '900', color: '#ffffff' }}>
+                {(dashData?.weeklyVolume ?? 0).toLocaleString()}
+              </Text>
+              <Text style={{ fontSize: 12, fontWeight: '700', color: '#94a3b8' }}>kg</Text>
+            </View>
+          </View>
+        </View>
+
         {/* Weekly Activity Bar Chart */}
         <View
           style={{
@@ -318,7 +285,7 @@ export default function HomeScreen() {
             <View>
               <Text style={{ fontSize: 15, fontWeight: 'bold', color: '#ffffff' }}>Actividad Semanal</Text>
               <Text style={{ fontSize: 12, color: '#94a3b8' }}>
-                {dashData?.weeklyMinutes || 215} minutos entrenados esta semana
+                {dashData?.weeklyMinutes ?? 0} minutos entrenados esta semana
               </Text>
             </View>
 
@@ -328,30 +295,36 @@ export default function HomeScreen() {
           </View>
 
           {/* Custom Native Bar Chart */}
-          <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', height: 110, paddingTop: 10 }}>
-            {dashData?.weeklyChart?.map((item, idx) => {
-              const barHeightPct = item.minutos > 0 ? (item.minutos / maxMinutesInChart) * 100 : 8;
-              const hasTrained = item.minutos > 0;
-              return (
-                <View key={idx} style={{ alignItems: 'center', flex: 1 }}>
-                  <Text style={{ fontSize: 9, fontWeight: 'bold', color: hasTrained ? '#06b6d4' : 'transparent', marginBottom: 4 }}>
-                    {item.minutos > 0 ? `${item.minutos}m` : ''}
-                  </Text>
-                  <View
-                    style={{
-                      width: 22,
-                      height: `${barHeightPct}%`,
-                      backgroundColor: hasTrained ? '#06b6d4' : '#334155',
-                      borderRadius: 6,
-                    }}
-                  />
-                  <Text style={{ fontSize: 11, fontWeight: 'bold', color: hasTrained ? '#ffffff' : '#64748b', marginTop: 6 }}>
-                    {item.day}
-                  </Text>
-                </View>
-              );
-            })}
-          </View>
+          {dashData?.weeklyChart && dashData.weeklyChart.length > 0 ? (
+            <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', height: 110, paddingTop: 10 }}>
+              {dashData.weeklyChart.map((item, idx) => {
+                const barHeightPct = item.minutos > 0 ? (item.minutos / maxMinutesInChart) * 100 : 8;
+                const hasTrained = item.minutos > 0;
+                return (
+                  <View key={idx} style={{ alignItems: 'center', flex: 1 }}>
+                    <Text style={{ fontSize: 9, fontWeight: 'bold', color: hasTrained ? '#06b6d4' : 'transparent', marginBottom: 4 }}>
+                      {item.minutos > 0 ? `${item.minutos}m` : ''}
+                    </Text>
+                    <View
+                      style={{
+                        width: 22,
+                        height: `${barHeightPct}%`,
+                        backgroundColor: hasTrained ? '#06b6d4' : '#334155',
+                        borderRadius: 6,
+                      }}
+                    />
+                    <Text style={{ fontSize: 11, fontWeight: 'bold', color: hasTrained ? '#ffffff' : '#64748b', marginTop: 6 }}>
+                      {item.day}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
+          ) : (
+            <View style={{ paddingVertical: 20, alignItems: 'center' }}>
+              <Text style={{ fontSize: 13, color: '#94a3b8' }}>Sin registros de actividad esta semana</Text>
+            </View>
+          )}
         </View>
 
         {/* Recent Workout Sessions */}
@@ -359,42 +332,79 @@ export default function HomeScreen() {
           Últimos Entrenamientos Registrados
         </Text>
 
-        <View style={{ gap: 12, marginBottom: 24 }}>
-          {dashData?.recentSessions?.map((session) => (
-            <View
-              key={session.id}
+        {dashData?.recentSessions && dashData.recentSessions.length > 0 ? (
+          <View style={{ gap: 12, marginBottom: 24 }}>
+            {dashData.recentSessions.map((session) => (
+              <View
+                key={session.id}
+                style={{
+                  backgroundColor: '#1e293b',
+                  borderRadius: 18,
+                  padding: 16,
+                  borderWidth: 1,
+                  borderColor: '#334155',
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                  <View style={{ padding: 10, borderRadius: 12, backgroundColor: 'rgba(168, 85, 247, 0.15)' }}>
+                    <Dumbbell size={20} color="#a855f7" />
+                  </View>
+                  <View>
+                    <Text style={{ fontSize: 15, fontWeight: 'bold', color: '#ffffff' }}>{session.routineName}</Text>
+                    <Text style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>
+                      {session.date} • {session.durationMinutes} min
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={{ alignItems: 'flex-end' }}>
+                  <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#a855f7' }}>
+                    {session.volume.toLocaleString()} kg
+                  </Text>
+                  <Text style={{ fontSize: 11, color: '#64748b' }}>{session.setsCount} series</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        ) : (
+          <View
+            style={{
+              backgroundColor: '#1e293b',
+              borderRadius: 20,
+              padding: 20,
+              alignItems: 'center',
+              borderWidth: 1,
+              borderColor: '#334155',
+              marginBottom: 24,
+            }}
+          >
+            <Dumbbell size={32} color="#64748b" style={{ marginBottom: 8 }} />
+            <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#ffffff', textAlign: 'center' }}>
+              No has registrado ninguna sesión aún
+            </Text>
+            <Text style={{ fontSize: 12, color: '#94a3b8', textAlign: 'center', marginTop: 2, marginBottom: 12 }}>
+              Comienza un entrenamiento para ver aquí tu volumen e historial.
+            </Text>
+            <TouchableOpacity
+              onPress={() => router.push('/workout')}
               style={{
-                backgroundColor: '#1e293b',
-                borderRadius: 18,
-                padding: 16,
-                borderWidth: 1,
-                borderColor: '#334155',
+                backgroundColor: '#a855f7',
+                paddingHorizontal: 16,
+                paddingVertical: 10,
+                borderRadius: 12,
                 flexDirection: 'row',
-                justifyContent: 'space-between',
                 alignItems: 'center',
+                gap: 6,
               }}
             >
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                <View style={{ padding: 10, borderRadius: 12, backgroundColor: 'rgba(168, 85, 247, 0.15)' }}>
-                  <Dumbbell size={20} color="#a855f7" />
-                </View>
-                <View>
-                  <Text style={{ fontSize: 15, fontWeight: 'bold', color: '#ffffff' }}>{session.routineName}</Text>
-                  <Text style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>
-                    {session.date} • {session.durationMinutes} min
-                  </Text>
-                </View>
-              </View>
-
-              <View style={{ alignItems: 'flex-end' }}>
-                <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#a855f7' }}>
-                  {session.volume.toLocaleString()} kg
-                </Text>
-                <Text style={{ fontSize: 11, color: '#64748b' }}>{session.setsCount} series</Text>
-              </View>
-            </View>
-          ))}
-        </View>
+              <Plus size={16} color="#ffffff" />
+              <Text style={{ color: '#ffffff', fontWeight: 'bold', fontSize: 13 }}>Iniciar Entreno</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </ScrollView>
 
       {/* Fullscreen QR Modal */}
