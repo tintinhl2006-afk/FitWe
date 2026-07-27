@@ -11,6 +11,7 @@ export default function ProfileStackLayout() {
       <Stack.Screen name="settings/password" />
       <Stack.Screen name="settings/appearance" />
       <Stack.Screen name="settings/gym" />
+      <Stack.Screen name="payment" options={{ animation: 'slide_from_bottom' }} />
     </Stack>
   );
 }

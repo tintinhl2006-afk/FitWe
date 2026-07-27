@@ -276,7 +276,7 @@ export default function HomeScreen() {
                       Tu cuota ha expirado o está inactiva en el centro. Renuévala para activar tu código QR de acceso.
                     </Text>
                     <TouchableOpacity
-                      onPress={() => router.push('/profile')}
+                      onPress={() => router.push('/profile/payment')}
                       style={{ marginTop: 14, backgroundColor: colors.primary, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 999 }}
                     >
                       <Text style={{ color: '#fff', fontSize: 12, fontWeight: 'bold', textTransform: 'uppercase' }}>Pagar Cuota</Text>

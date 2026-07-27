@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, Alert, Share, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
-import { User, Ruler, Lock, Palette as PaletteIcon, Download, LogOut, ChevronRight, Building2, Trash2 } from 'lucide-react-native';
+import { User, Ruler, Lock, Palette as PaletteIcon, Download, LogOut, ChevronRight, Building2, Trash2, CreditCard } from 'lucide-react-native';
 import { useAppTheme } from '../../../../context/ThemeContext';
 import { useAuth } from '../../../../context/AuthContext';
 import { SettingsHeader } from '../../../../components/SettingsHeader';
@@ -85,6 +85,7 @@ export default function SettingsMenuScreen() {
           <MenuRow colors={colors} icon={<PaletteIcon size={18} color={colors.primary} />} label="Apariencia" onPress={() => router.push('/profile/settings/appearance')} />
           <MenuRow colors={colors} icon={<Lock size={18} color={colors.primary} />} label="Cambiar Contraseña" onPress={() => router.push('/profile/settings/password')} />
           <MenuRow colors={colors} icon={<Building2 size={18} color={colors.primary} />} label="Mi Gimnasio" onPress={() => router.push('/profile/settings/gym')} />
+          <MenuRow colors={colors} icon={<CreditCard size={18} color={colors.primary} />} label="Mi Suscripción y Cuotas" onPress={() => router.push('/profile/payment')} />
           <MenuRow
             colors={colors}
             icon={isExporting ? <ActivityIndicator size="small" color={colors.primary} /> : <Download size={18} color={colors.primary} />}

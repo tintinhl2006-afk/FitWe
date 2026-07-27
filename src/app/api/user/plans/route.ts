@@ -1,29 +1,27 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getRequestUserId } from "@/lib/apiAuth";
 
 export const dynamic = "force-dynamic";
 
 // GET available plans for the current user's gym
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    console.log("[API PLANS GET] Session user:", session?.user);
-    if (!session?.user?.id) {
+    const userId = await getRequestUserId(req);
+    if (!userId) {
       console.warn("[API PLANS GET] Unauthorized access attempt");
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
     // Get user's gymId
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: userId },
       select: { gymId: true, planId: true },
     });
     console.log("[API PLANS GET] DB User:", user);
 
     if (!user?.gymId) {
-      console.warn(`[API PLANS GET] User ${session.user.id} has no gymId`);
+      console.warn(`[API PLANS GET] User ${userId} has no gymId`);
       return NextResponse.json({ message: "No estás vinculado a ningún gimnasio" }, { status: 400 });
     }
 

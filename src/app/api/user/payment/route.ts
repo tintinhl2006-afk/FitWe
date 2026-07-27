@@ -1,20 +1,19 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import Stripe from "stripe";
 // @ts-ignore
 import { Redsys } from "node-redsys-api";
+import { getRequestAuth } from "@/lib/apiAuth";
 
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const auth = await getRequestAuth(req);
 
-    if (!session?.user?.id) {
+    if (!auth) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
-    if (session.user.role !== "USER") {
+    if (auth.role !== "USER") {
       return NextResponse.json(
         { message: "Solo los clientes pueden realizar pagos" },
         { status: 403 }
@@ -24,18 +23,22 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { planId, gateway } = body;
 
-    // Detectar y resolver el origen de forma segura (forzando localhost en desarrollo)
+    // Detectar y resolver el origen de forma segura (forzando localhost en desarrollo).
+    // Peticiones nativas (móvil) no envían cabecera Origin, así que reconstruimos la URL
+    // pública a partir del host de la petición en su lugar.
     const rawOrigin = req.headers.get("origin") || "";
     const isLocal =
       process.env.NODE_ENV === "development" ||
       rawOrigin.includes("localhost") ||
       rawOrigin.includes("127.0.0.1") ||
       rawOrigin.includes("192.168.");
-    const origin = isLocal ? "http://localhost:3000" : rawOrigin;
+    const host = req.headers.get("host") || "";
+    const fallbackOrigin = host ? `https://${host}` : "";
+    const origin = isLocal ? "http://localhost:3000" : rawOrigin || fallbackOrigin;
 
     // Obtener datos del usuario cliente
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: auth.id },
       select: { gymId: true },
     });
 
@@ -133,7 +136,7 @@ export async function POST(req: Request) {
             Ds_Merchant_UrlOK: `${origin}/dashboard/pago/success?mock_redsys=true&planId=${resolvedPlanId || ""}&order=${order}&amount=${amount}`,
             Ds_Merchant_UrlKO: `${origin}/dashboard/pago`,
             Ds_Merchant_MerchantData: JSON.stringify({
-              userId: session.user.id,
+              userId: auth.id,
               planId: resolvedPlanId || "",
               gymId: user.gymId,
             }),
@@ -205,7 +208,7 @@ export async function POST(req: Request) {
               success_url: `${origin}/dashboard/pago/success?session_id={CHECKOUT_SESSION_ID}&stripe_connect=true${resolvedPlanId ? `&planId=${resolvedPlanId}` : ""}`,
               cancel_url: `${origin}/dashboard/pago`,
               metadata: {
-                userId: session.user.id,
+                userId: auth.id,
                 gymId: user.gymId,
                 planId: resolvedPlanId || "",
                 amount: amount.toString(),
