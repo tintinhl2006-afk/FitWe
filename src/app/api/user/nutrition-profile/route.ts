@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { calculateMetabolicTargets, BioData } from "@/lib/nutritionUtils";
+import { getRequestUserId } from "@/lib/apiAuth";
 
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const userId = await getRequestUserId(req);
+    if (!userId) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
@@ -35,7 +34,7 @@ export async function POST(req: Request) {
 
     // Fetch user units to perform correct BMR conversion (Mifflin-St Jeor)
     const userPref = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: userId },
       select: { weightUnit: true, measurementUnit: true }
     });
     const weightUnit = userPref?.weightUnit || "kg";
@@ -99,7 +98,7 @@ export async function POST(req: Request) {
 
     // Save or update to Prisma
     const profile = await prisma.nutritionProfile.upsert({
-      where: { userId: session.user.id },
+      where: { userId },
       update: {
         ...(isManual && !gender ? {} : bioData), // Don't overwrite existing bio data with dummy values if manual mode without bio
         ...targets,
@@ -111,7 +110,7 @@ export async function POST(req: Request) {
         ...(mealsConfig !== undefined ? { mealsConfig } : {}),
       } as any,
       create: {
-        userId: session.user.id,
+        userId,
         ...bioData,
         ...targets,
         dietType: dietType || "STANDARD",
@@ -133,15 +132,15 @@ export async function POST(req: Request) {
   }
 }
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const userId = await getRequestUserId(req);
+    if (!userId) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
     const profile = await prisma.nutritionProfile.findUnique({
-      where: { userId: session.user.id },
+      where: { userId },
     });
 
     return NextResponse.json(profile || null);

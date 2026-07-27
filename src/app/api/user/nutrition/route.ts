@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getRequestUserId } from "@/lib/apiAuth";
 
 export async function GET(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const userId = await getRequestUserId(req);
 
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
@@ -30,7 +29,7 @@ export async function GET(req: Request) {
 
     const meals = await prisma.mealEntry.findMany({
       where: {
-        userId: session.user.id,
+        userId,
         date: {
           gte: startDate,
           lte: endDate,
@@ -43,7 +42,7 @@ export async function GET(req: Request) {
     });
 
     const profile = await prisma.nutritionProfile.findUnique({
-      where: { userId: session.user.id }
+      where: { userId }
     });
 
     return NextResponse.json({ meals, profile });

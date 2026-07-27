@@ -1,14 +1,13 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getFoodCategory } from "@/lib/nutritionUtils";
 import { STANDARD_FOODS } from "@/lib/dietEngine";
+import { getRequestUserId } from "@/lib/apiAuth";
 
 export async function GET(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const userId = await getRequestUserId(req);
+    if (!userId) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
@@ -42,7 +41,7 @@ export async function GET(req: Request) {
     const allFoods = await prisma.foodItem.findMany({
       where: {
         OR: [
-          { userId: session.user.id },
+          { userId },
           { userId: null },
         ],
       },
@@ -70,8 +69,8 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const userId = await getRequestUserId(req);
+    if (!userId) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
@@ -94,7 +93,7 @@ export async function POST(req: Request) {
 
     const food = await prisma.foodItem.create({
       data: {
-        userId: session.user.id,
+        userId,
         name,
         brand: brand || null,
         category: category || getFoodCategory(name),

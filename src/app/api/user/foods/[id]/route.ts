@@ -1,14 +1,13 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getFoodCategory } from "@/lib/nutritionUtils";
+import { getRequestUserId } from "@/lib/apiAuth";
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const userId = await getRequestUserId(req);
+    if (!userId) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
@@ -24,7 +23,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     }
 
     // Only allow editing foods they created (not global ones or other people's)
-    if (existingFood.userId !== session.user.id) {
+    if (existingFood.userId !== userId) {
       return NextResponse.json({ message: "No tienes permiso para editar este alimento" }, { status: 403 });
     }
 
