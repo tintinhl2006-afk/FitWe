@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getRequestUserId } from "@/lib/apiAuth";
 
 // POST: Apply a saved diet to a specific date in the user's daily food journal
 export async function POST(
@@ -9,8 +8,8 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const userId = await getRequestUserId(req);
+    if (!userId) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
@@ -24,7 +23,7 @@ export async function POST(
 
     // Verify ownership and load diet items
     const savedDiet = await prisma.savedDiet.findFirst({
-      where: { id, userId: session.user.id },
+      where: { id, userId },
       include: { items: true },
     });
 
@@ -43,7 +42,7 @@ export async function POST(
       // 1. Clean up existing meal entries for the selected day
       await tx.mealEntry.deleteMany({
         where: {
-          userId: session.user.id,
+          userId,
           date: {
             gte: startDate,
             lte: endDate,
@@ -58,7 +57,7 @@ export async function POST(
           where: {
             name: item.foodName,
             OR: [
-              { userId: session.user.id },
+              { userId },
               { userId: null }
             ]
           }
@@ -82,7 +81,7 @@ export async function POST(
         // 3. Create the MealEntry log
         await tx.mealEntry.create({
           data: {
-            userId: session.user.id,
+            userId,
             foodItemId: foodItem.id,
             mealType: item.mealType, // BREAKFAST, LUNCH, DINNER, SNACK
             quantityGrams: Number(item.quantityGrams),

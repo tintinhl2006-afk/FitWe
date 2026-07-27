@@ -1,9 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, ActivityIndicator, Alert, Modal } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { X, Sparkles, ArrowLeft, ArrowRight, Check, Trash2, RefreshCcw } from 'lucide-react-native';
+import { X, Sparkles, ArrowLeft, ArrowRight, Check, Trash2, RefreshCcw, Save } from 'lucide-react-native';
 import { useAppTheme } from '../../../context/ThemeContext';
 import { Card, SectionLabel, Chip, OptionCard, Field, TextField, Stepper } from '../../../components/ui';
+import { SaveTemplateModal } from '../../../components/nutrition/SaveTemplateModal';
 import { Palette } from '../../../constants/theme';
 import { api } from '../../../lib/apiClient';
 
@@ -93,6 +94,7 @@ export default function GenerateDietScreen() {
   const [mealPlan, setMealPlan] = useState<MealPlan[] | null>(null);
   const [availableFoods, setAvailableFoods] = useState<DietFoodLite[]>([]);
   const [swapTarget, setSwapTarget] = useState<{ mealIndex: number; itemIndex: number } | null>(null);
+  const [isSaveTemplateOpen, setIsSaveTemplateOpen] = useState(false);
 
   const targetDate = params.date || new Date().toISOString().split('T')[0];
   const totalPct = proteinPct + carbsPct + fatPct;
@@ -215,6 +217,19 @@ export default function GenerateDietScreen() {
     }
   }
 
+  const templateItems = (mealPlan || []).flatMap((meal) =>
+    meal.items.map((item) => ({
+      foodName: item.food.name,
+      brand: item.food.brand,
+      calories: item.food.calories,
+      protein: item.food.protein,
+      carbs: item.food.carbs,
+      fat: item.food.fat,
+      quantityGrams: item.quantityGrams,
+      mealType: meal.mealType,
+    }))
+  );
+
   const swapCandidates = swapTarget && mealPlan ? availableFoods.filter((f) => f.group === mealPlan[swapTarget.mealIndex].items[swapTarget.itemIndex].food.group) : [];
 
   return (
@@ -305,6 +320,14 @@ export default function GenerateDietScreen() {
                     {Math.round(totals.calories)} kcal · {Math.round(totals.protein)}g P · {Math.round(totals.carbs)}g C · {Math.round(totals.fat)}g G
                   </Text>
                 </View>
+
+                <TouchableOpacity
+                  onPress={() => setIsSaveTemplateOpen(true)}
+                  style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, height: 42, borderRadius: 14, borderWidth: 1, borderColor: colors.border }}
+                >
+                  <Save size={14} color={colors.textSecondary} />
+                  <Text style={{ color: colors.textSecondary, fontWeight: 'bold', fontSize: 12 }}>Guardar como Plantilla</Text>
+                </TouchableOpacity>
 
                 {mealPlan.map((meal, mealIndex) => (
                   <Card key={meal.mealType} padding={14}>
@@ -411,6 +434,14 @@ export default function GenerateDietScreen() {
           </View>
         </View>
       </Modal>
+
+      <SaveTemplateModal
+        visible={isSaveTemplateOpen}
+        onClose={() => setIsSaveTemplateOpen(false)}
+        onSaved={() => Alert.alert('Guardado', 'Plantilla guardada en "Mis Dietas".')}
+        items={templateItems}
+        defaultName={`Menú ${dietType === 'STANDARD' ? '' : dietType.toLowerCase()} ${targetDate}`.trim()}
+      />
     </SafeAreaView>
   );
 }

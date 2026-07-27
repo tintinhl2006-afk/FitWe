@@ -14,11 +14,14 @@ import {
   Target,
   BarChart3,
   Sparkles,
+  Folder,
+  Save,
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useAppTheme } from '../../../context/ThemeContext';
 import { Palette } from '../../../constants/theme';
 import { api } from '../../../lib/apiClient';
+import { SaveTemplateModal, SavedDietItemInput } from '../../../components/nutrition/SaveTemplateModal';
 
 interface FoodItem {
   id: string;
@@ -115,6 +118,7 @@ export default function NutritionScreen() {
   const [isCreatingFood, setIsCreatingFood] = useState(false);
 
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
+  const [isSaveTemplateOpen, setIsSaveTemplateOpen] = useState(false);
 
   const [isSetupOpen, setIsSetupOpen] = useState(false);
   const [setupCalories, setSetupCalories] = useState('2000');
@@ -172,6 +176,17 @@ export default function NutritionScreen() {
       cals: sectionMeals.reduce((acc, m) => acc + calcNutrients(m).cal, 0),
     };
   });
+
+  const templateItems: SavedDietItemInput[] = meals.map((meal) => ({
+    foodName: meal.foodItem.name,
+    brand: meal.foodItem.brand,
+    calories: meal.foodItem.calories,
+    protein: meal.foodItem.protein,
+    carbs: meal.foodItem.carbs,
+    fat: meal.foodItem.fat,
+    quantityGrams: meal.quantityGrams,
+    mealType: meal.mealType,
+  }));
 
   function openAddFoodModal(mealType: string) {
     setModalMealType(mealType);
@@ -346,6 +361,13 @@ export default function NutritionScreen() {
                 <Target size={14} color={colors.textSecondary} />
                 <Text style={{ color: colors.textSecondary, fontWeight: 'bold', fontSize: 12 }}>Objetivos</Text>
               </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => router.push({ pathname: '/nutrition/saved-diets', params: { date: selectedDate } })}
+                style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, height: 42, borderRadius: 14, borderWidth: 1, borderColor: colors.border }}
+              >
+                <Folder size={14} color={colors.textSecondary} />
+                <Text style={{ color: colors.textSecondary, fontWeight: 'bold', fontSize: 12 }}>Mis Dietas</Text>
+              </TouchableOpacity>
             </View>
 
             <TouchableOpacity
@@ -364,6 +386,16 @@ export default function NutritionScreen() {
               <Sparkles size={16} color="#fff" />
               <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 13 }}>Generar Menú Diario con IA</Text>
             </TouchableOpacity>
+
+            {meals.length > 0 && (
+              <TouchableOpacity
+                onPress={() => setIsSaveTemplateOpen(true)}
+                style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, height: 40, borderRadius: 14, marginBottom: 20 }}
+              >
+                <Save size={13} color={colors.primaryAccent} />
+                <Text style={{ color: colors.primaryAccent, fontWeight: 'bold', fontSize: 12 }}>Guardar el día de hoy como plantilla</Text>
+              </TouchableOpacity>
+            )}
 
             {/* Macro cards */}
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 20 }}>
@@ -625,6 +657,14 @@ export default function NutritionScreen() {
           </View>
         </View>
       </Modal>
+
+      <SaveTemplateModal
+        visible={isSaveTemplateOpen}
+        onClose={() => setIsSaveTemplateOpen(false)}
+        onSaved={() => Alert.alert('Guardado', 'Plantilla guardada en "Mis Dietas".')}
+        items={templateItems}
+        defaultName={`Dieta del día ${selectedDate}`}
+      />
     </SafeAreaView>
   );
 }

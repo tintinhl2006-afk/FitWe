@@ -6,6 +6,7 @@ export default function NutritionStackLayout() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />
       <Stack.Screen name="generate-diet" options={{ animation: 'slide_from_bottom' }} />
+      <Stack.Screen name="saved-diets" />
     </Stack>
   );
 }

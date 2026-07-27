@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getRequestUserId } from "@/lib/apiAuth";
 
 // PUT: Update a saved diet (name and/or its food items)
 export async function PUT(
@@ -9,8 +8,8 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const userId = await getRequestUserId(req);
+    if (!userId) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
@@ -20,7 +19,7 @@ export async function PUT(
 
     // Verify ownership
     const existingDiet = await prisma.savedDiet.findFirst({
-      where: { id, userId: session.user.id },
+      where: { id, userId },
     });
 
     if (!existingDiet) {
@@ -80,8 +79,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const userId = await getRequestUserId(req);
+    if (!userId) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
@@ -89,7 +88,7 @@ export async function DELETE(
 
     // Verify ownership and delete
     const existingDiet = await prisma.savedDiet.findFirst({
-      where: { id, userId: session.user.id },
+      where: { id, userId },
     });
 
     if (!existingDiet) {
