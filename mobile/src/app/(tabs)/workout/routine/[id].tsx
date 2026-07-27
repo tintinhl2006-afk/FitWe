@@ -12,10 +12,6 @@ import {
   Check,
   Edit2,
   Dumbbell,
-  Activity,
-  Accessibility,
-  Target,
-  BicepsFlexed,
   Play,
   Minus,
   RefreshCcw,
@@ -26,6 +22,7 @@ import {
 import { useAppTheme } from '../../../../context/ThemeContext';
 import { Palette } from '../../../../constants/theme';
 import { api } from '../../../../lib/apiClient';
+import { ExerciseAvatar } from '../../../../components/workout/ExerciseAvatar';
 
 const REORDER_ROW_HEIGHT = 64;
 
@@ -34,6 +31,7 @@ interface Exercise {
   name: string;
   muscleGroup: string;
   equipment: string | null;
+  imageUrl?: string | null;
 }
 
 interface RoutineExercise {
@@ -55,16 +53,6 @@ interface Routine {
 
 const MUSCLE_GROUPS = ['', 'Pecho', 'Espalda', 'Pierna', 'Brazo', 'Hombro', 'Core', 'Cardio'];
 const EQUIPMENT_TYPES = ['', 'Barra', 'Mancuernas', 'Máquina', 'Peso Corporal'];
-
-function getExerciseIcon(equipment: string | null | undefined, muscleGroup: string, color: string) {
-  const group = muscleGroup.toLowerCase();
-  const eq = equipment?.toLowerCase() || '';
-  if (group === 'cardio') return <Activity size={18} color={Palette.cyan500} />;
-  if (eq === 'mancuernas') return <Dumbbell size={18} color={Palette.amber500} />;
-  if (eq === 'peso corporal') return <Accessibility size={18} color={Palette.emerald500} />;
-  if (eq === 'barra' || eq === 'máquina' || eq === 'polea') return <Target size={18} color={Palette.cyan500} />;
-  return <BicepsFlexed size={18} color={color} />;
-}
 
 function getRepsArray(re: RoutineExercise): number[] {
   if (re.repsList) return re.repsList.split(',').map((v) => parseInt(v.trim(), 10) || re.reps);
@@ -522,9 +510,7 @@ export default function RoutineDetailScreen() {
               return (
                 <View key={re.id} style={{ backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 18, padding: 16 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                    <View style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: colors.surfaceAlt, alignItems: 'center', justifyContent: 'center' }}>
-                      {getExerciseIcon(re.exercise.equipment, re.exercise.muscleGroup, colors.textMuted)}
-                    </View>
+                    <ExerciseAvatar imageUrl={re.exercise.imageUrl} equipment={re.exercise.equipment} muscleGroup={re.exercise.muscleGroup} size={40} />
                     <View style={{ flex: 1 }}>
                       <Text style={{ fontSize: 15, fontWeight: '900', color: colors.textPrimary }}>{re.exercise.name}</Text>
                       <Text style={{ fontSize: 11, color: colors.textMuted, marginTop: 2 }}>
@@ -633,9 +619,7 @@ export default function RoutineDetailScreen() {
                       onPress={() => selectExerciseForConfig(ex)}
                       style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: 16, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surfaceSunken }}
                     >
-                      <View style={{ height: 36, width: 36, borderRadius: 18, backgroundColor: colors.surfaceAlt, alignItems: 'center', justifyContent: 'center' }}>
-                        {getExerciseIcon(ex.equipment, ex.muscleGroup, colors.textMuted)}
-                      </View>
+                      <ExerciseAvatar imageUrl={ex.imageUrl} equipment={ex.equipment} muscleGroup={ex.muscleGroup} size={36} />
                       <View style={{ flex: 1 }}>
                         <Text style={{ fontSize: 13, fontWeight: 'bold', color: colors.textPrimary }}>{ex.name}</Text>
                         <Text style={{ fontSize: 11, color: colors.textMuted, marginTop: 2 }}>
@@ -651,9 +635,7 @@ export default function RoutineDetailScreen() {
               selectedExercise && (
                 <ScrollView contentContainerStyle={{ padding: 18 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.surfaceAlt, padding: 14, borderRadius: 16, marginBottom: 18 }}>
-                    <View style={{ height: 48, width: 48, borderRadius: 24, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' }}>
-                      {getExerciseIcon(selectedExercise.equipment, selectedExercise.muscleGroup, colors.textMuted)}
-                    </View>
+                    <ExerciseAvatar imageUrl={selectedExercise.imageUrl} equipment={selectedExercise.equipment} muscleGroup={selectedExercise.muscleGroup} size={48} />
                     <View>
                       <Text style={{ fontSize: 15, fontWeight: '900', color: colors.textPrimary }}>{selectedExercise.name}</Text>
                       <Text style={{ fontSize: 12, color: colors.textMuted, marginTop: 2 }}>
@@ -819,9 +801,7 @@ function DraggableExerciseRow({
           marginBottom: 8,
         }}
       >
-        <View style={{ height: 32, width: 32, borderRadius: 16, backgroundColor: colors.surfaceAlt, alignItems: 'center', justifyContent: 'center' }}>
-          {getExerciseIcon(item.exercise.equipment, item.exercise.muscleGroup, colors.textMuted)}
-        </View>
+        <ExerciseAvatar imageUrl={item.exercise.imageUrl} equipment={item.exercise.equipment} muscleGroup={item.exercise.muscleGroup} size={32} />
         <Text style={{ flex: 1, fontSize: 14, fontWeight: 'bold', color: colors.textPrimary }} numberOfLines={1}>
           {item.exercise.name}
         </Text>

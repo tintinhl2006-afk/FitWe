@@ -6,12 +6,14 @@ import { useAppTheme } from '../../../../context/ThemeContext';
 import { usePreferences } from '../../../../context/PreferencesContext';
 import { Palette } from '../../../../constants/theme';
 import { api } from '../../../../lib/apiClient';
+import { ExerciseAvatar } from '../../../../components/workout/ExerciseAvatar';
 
 interface Exercise {
   id: string;
   name: string;
   muscleGroup: string;
   equipment?: string | null;
+  imageUrl?: string | null;
 }
 
 interface WorkoutSet {
@@ -296,8 +298,9 @@ export default function LiveWorkoutScreen() {
 
           return (
             <View key={exercise.id} style={{ backgroundColor: colors.surface, borderRadius: 18, borderWidth: 1, borderColor: colors.border, overflow: 'hidden' }}>
-              <View style={{ padding: 14, borderBottomWidth: 1, borderBottomColor: colors.border, backgroundColor: colors.surfaceSunken }}>
-                <Text style={{ fontSize: 16, fontWeight: '900', color: colors.textPrimary }}>
+              <View style={{ padding: 14, borderBottomWidth: 1, borderBottomColor: colors.border, backgroundColor: colors.surfaceSunken, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                <ExerciseAvatar imageUrl={exercise.imageUrl} equipment={exercise.equipment} muscleGroup={exercise.muscleGroup} size={36} />
+                <Text style={{ fontSize: 16, fontWeight: '900', color: colors.textPrimary, flex: 1 }} numberOfLines={1}>
                   {exIndex + 1}. {exercise.name}
                 </Text>
               </View>
