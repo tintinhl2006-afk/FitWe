@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, TextInput, ActivityIndicator, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Plus, Dumbbell, Trash2, Play, Sparkles } from 'lucide-react-native';
+import { Plus, Dumbbell, Trash2, Play, Sparkles, BicepsFlexed, ChevronRight } from 'lucide-react-native';
 import { useAppTheme } from '../../../context/ThemeContext';
 import { Palette } from '../../../constants/theme';
 import { api } from '../../../lib/apiClient';
@@ -145,6 +145,30 @@ export default function WorkoutScreen() {
             </TouchableOpacity>
           </View>
         </View>
+
+        <TouchableOpacity
+          onPress={() => router.push('/workout/exercises')}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 10,
+            backgroundColor: colors.surface,
+            borderWidth: 1,
+            borderColor: colors.border,
+            borderRadius: 16,
+            padding: 14,
+            marginBottom: 18,
+          }}
+        >
+          <View style={{ height: 34, width: 34, borderRadius: 12, backgroundColor: colors.surfaceAlt, alignItems: 'center', justifyContent: 'center' }}>
+            <BicepsFlexed size={16} color={colors.primary} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: 13, fontWeight: 'bold', color: colors.textPrimary }}>Catálogo de Ejercicios</Text>
+            <Text style={{ fontSize: 11, color: colors.textMuted, marginTop: 1 }}>Explora ejercicios, tu historial y progresión</Text>
+          </View>
+          <ChevronRight size={18} color={colors.textMuted} />
+        </TouchableOpacity>
 
         {!isSubscriptionActive && (
           <View
