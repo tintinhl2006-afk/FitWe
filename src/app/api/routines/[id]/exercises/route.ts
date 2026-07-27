@@ -1,17 +1,16 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { verifyRoutineAccess } from "@/lib/routineAccess";
+import { getRequestAuth } from "@/lib/apiAuth";
 
 export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    const auth = await getRequestAuth(req);
 
-    if (!session?.user?.id) {
+    if (!auth) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
@@ -27,7 +26,7 @@ export async function POST(
     }
 
     // Verificar acceso (usuario dueño O gimnasio del cliente)
-    const routine = await verifyRoutineAccess(routineId, session.user.id, session.user.role);
+    const routine = await verifyRoutineAccess(routineId, auth.id, auth.role);
 
     if (!routine) {
       return NextResponse.json(

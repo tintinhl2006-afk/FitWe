@@ -1,23 +1,22 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { verifyRoutineAccess } from "@/lib/routineAccess";
+import { getRequestAuth } from "@/lib/apiAuth";
 
 export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string; routineExerciseId: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const auth = await getRequestAuth(req);
+    if (!auth) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
     const { id: routineId, routineExerciseId } = await params;
     const { exerciseId, sets, reps, repsList, weight } = await req.json();
 
-    const routine = await verifyRoutineAccess(routineId, session.user.id, session.user.role);
+    const routine = await verifyRoutineAccess(routineId, auth.id, auth.role);
 
     if (!routine) {
       return NextResponse.json({ message: "No autorizado" }, { status: 404 });
@@ -47,14 +46,14 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string; routineExerciseId: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const auth = await getRequestAuth(req);
+    if (!auth) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
     const { id: routineId, routineExerciseId } = await params;
 
-    const routine = await verifyRoutineAccess(routineId, session.user.id, session.user.role);
+    const routine = await verifyRoutineAccess(routineId, auth.id, auth.role);
 
     if (!routine) {
       return NextResponse.json({ message: "No autorizado" }, { status: 404 });

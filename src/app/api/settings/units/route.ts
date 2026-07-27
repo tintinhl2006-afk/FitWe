@@ -1,28 +1,27 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getRequestUserId } from "@/lib/apiAuth";
 
-export async function GET() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) return NextResponse.json({}, { status: 401 });
-  const user = await prisma.user.findUnique({ 
-    where: { id: session.user.id }, 
-    select: { weightUnit: true, distanceUnit: true, measurementUnit: true } 
+export async function GET(req: Request) {
+  const userId = await getRequestUserId(req);
+  if (!userId) return NextResponse.json({}, { status: 401 });
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { weightUnit: true, distanceUnit: true, measurementUnit: true }
   });
   return NextResponse.json(user);
 }
 
 export async function PATCH(req: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) return NextResponse.json({}, { status: 401 });
-  
+  const userId = await getRequestUserId(req);
+  if (!userId) return NextResponse.json({}, { status: 401 });
+
   const { weightUnit, distanceUnit, measurementUnit } = await req.json();
 
   try {
     // 1. Fetch current settings to compare
     const oldUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: userId },
       select: { weightUnit: true, distanceUnit: true, measurementUnit: true, weight: true, height: true }
     });
 
@@ -40,7 +39,7 @@ export async function PATCH(req: Request) {
           UPDATE "WorkoutSet"
           SET "weight" = ROUND(CAST("weight" * ${factor} AS numeric), 1)
           WHERE "sessionId" IN (
-            SELECT "id" FROM "WorkoutSession" WHERE "userId" = CAST(${session.user.id} AS uuid)
+            SELECT "id" FROM "WorkoutSession" WHERE "userId" = CAST(${userId} AS uuid)
           ) AND "exerciseId" IN (
             SELECT "id" FROM "Exercise" WHERE LOWER("muscleGroup") != 'cardio'
           )
@@ -51,7 +50,7 @@ export async function PATCH(req: Request) {
           UPDATE "RoutineExercise"
           SET "weight" = ROUND(CAST("weight" * ${factor} AS numeric), 1)
           WHERE "routineId" IN (
-            SELECT "id" FROM "Routine" WHERE "userId" = CAST(${session.user.id} AS uuid)
+            SELECT "id" FROM "Routine" WHERE "userId" = CAST(${userId} AS uuid)
           ) AND "exerciseId" IN (
             SELECT "id" FROM "Exercise" WHERE LOWER("muscleGroup") != 'cardio'
           )
@@ -62,7 +61,7 @@ export async function PATCH(req: Request) {
           await prisma.$executeRaw`
             UPDATE "User"
             SET "weight" = ROUND(CAST("weight" * ${factor} AS numeric), 1)
-            WHERE "id" = CAST(${session.user.id} AS uuid)
+            WHERE "id" = CAST(${userId} AS uuid)
           `;
         }
 
@@ -70,7 +69,7 @@ export async function PATCH(req: Request) {
         await prisma.$executeRaw`
           UPDATE "NutritionProfile"
           SET "weight" = ROUND(CAST("weight" * ${factor} AS numeric), 1)
-          WHERE "userId" = CAST(${session.user.id} AS uuid)
+          WHERE "userId" = CAST(${userId} AS uuid)
         `;
       }
 
@@ -83,7 +82,7 @@ export async function PATCH(req: Request) {
           UPDATE "WorkoutSet"
           SET "weight" = ROUND(CAST("weight" * ${factor} AS numeric), 1)
           WHERE "sessionId" IN (
-            SELECT "id" FROM "WorkoutSession" WHERE "userId" = CAST(${session.user.id} AS uuid)
+            SELECT "id" FROM "WorkoutSession" WHERE "userId" = CAST(${userId} AS uuid)
           ) AND "exerciseId" IN (
             SELECT "id" FROM "Exercise" WHERE LOWER("muscleGroup") = 'cardio'
           )
@@ -94,7 +93,7 @@ export async function PATCH(req: Request) {
           UPDATE "RoutineExercise"
           SET "weight" = ROUND(CAST("weight" * ${factor} AS numeric), 1)
           WHERE "routineId" IN (
-            SELECT "id" FROM "Routine" WHERE "userId" = CAST(${session.user.id} AS uuid)
+            SELECT "id" FROM "Routine" WHERE "userId" = CAST(${userId} AS uuid)
           ) AND "exerciseId" IN (
             SELECT "id" FROM "Exercise" WHERE LOWER("muscleGroup") = 'cardio'
           )
@@ -110,7 +109,7 @@ export async function PATCH(req: Request) {
           await prisma.$executeRaw`
             UPDATE "User"
             SET "height" = ROUND(CAST("height" * ${factor} AS numeric), 1)
-            WHERE "id" = CAST(${session.user.id} AS uuid)
+            WHERE "id" = CAST(${userId} AS uuid)
           `;
         }
 
@@ -118,7 +117,7 @@ export async function PATCH(req: Request) {
         await prisma.$executeRaw`
           UPDATE "NutritionProfile"
           SET "height" = ROUND(CAST("height" * ${factor} AS numeric), 1)
-          WHERE "userId" = CAST(${session.user.id} AS uuid)
+          WHERE "userId" = CAST(${userId} AS uuid)
         `;
       }
     }
@@ -127,7 +126,7 @@ export async function PATCH(req: Request) {
   }
 
   const user = await prisma.user.update({ 
-    where: { id: session.user.id }, 
+    where: { id: userId }, 
     data: { weightUnit, distanceUnit, measurementUnit } 
   });
   return NextResponse.json(user);

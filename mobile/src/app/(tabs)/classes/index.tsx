@@ -1,307 +1,413 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, ActivityIndicator } from 'react-native';
 import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  SafeAreaView,
-  ActivityIndicator,
-  Alert,
-} from 'react-native';
-import { Calendar as CalendarIcon, Clock, User, Check, Users, MapPin, Filter } from 'lucide-react-native';
+  Calendar,
+  CalendarDays,
+  Clock,
+  Users,
+  CheckCircle2,
+  X,
+  AlertCircle,
+  Lock,
+  User as UserIcon,
+} from 'lucide-react-native';
+import { useAppTheme } from '../../../context/ThemeContext';
+import { Palette } from '../../../constants/theme';
 import { api } from '../../../lib/apiClient';
 
-interface GymClass {
+interface ClassItem {
   id: string;
-  title: string;
+  name: string;
   instructor: string;
-  time: string;
-  duration: string;
-  room: string;
-  spotsTotal: number;
-  spotsBooked: number;
-  category: string;
-  bookedByMe?: boolean;
+  capacity: number;
+  startTime: string;
+  endTime: string;
+  spotsLeft: number;
+  isOpen: boolean;
+  isFull: boolean;
+  opensAt: string | null;
+  userBookingId: string | null;
+  isBooked: boolean;
+}
+
+function timeUntil(dateStr: string, now: Date): string {
+  const diff = new Date(dateStr).getTime() - now.getTime();
+  if (diff <= 0) return 'Ahora';
+  const hours = Math.floor(diff / 3600000);
+  const mins = Math.floor((diff % 3600000) / 60000);
+  if (hours > 24) {
+    const days = Math.floor(hours / 24);
+    return `${days}d ${hours % 24}h`;
+  }
+  return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+}
+
+function capitalize(s: string) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 export default function ClassesScreen() {
-  const [selectedDay, setSelectedDay] = useState('HOY');
-  const [selectedCategory, setSelectedCategory] = useState('TODAS');
-  const [isLoading, setIsLoading] = useState(true);
-  const [classList, setClassList] = useState<GymClass[]>([]);
+  const { colors } = useAppTheme();
 
-  const categories = ['TODAS', 'CARDIO', 'FUERZA', 'MOBILITY', 'FUNCIONAL'];
+  const now = new Date();
+  const todayStr = now.toISOString().split('T')[0];
+
+  const [selectedDate, setSelectedDate] = useState(todayStr);
+  const [classes, setClasses] = useState<ClassItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [actionId, setActionId] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ msg: string; type: 'ok' | 'err' } | null>(null);
+  const [noGym, setNoGym] = useState(false);
+  const [isSubscriptionActive, setIsSubscriptionActive] = useState(true);
 
   useEffect(() => {
-    fetchClasses();
-  }, [selectedDay]);
+    api
+      .get('/api/user/subscription-status')
+      .then((sub) => {
+        const expired = sub.subscriptionEndDate ? new Date(sub.subscriptionEndDate) < new Date(sub.serverNow) : false;
+        setIsSubscriptionActive(sub.subscriptionStatus === 'ACTIVE' && !expired);
+      })
+      .catch(() => {});
+  }, []);
 
-  async function fetchClasses() {
+  async function fetchClasses(date: string) {
     setIsLoading(true);
+    setNoGym(false);
     try {
-      const res = await api.get('/api/classes').catch(() => null);
-      if (res && Array.isArray(res)) {
-        setClassList(res);
-      } else {
-        // Fallback default classes catalog
-        setClassList([
-          {
-            id: 'c1',
-            title: 'Spinning & Cardio Extreme',
-            instructor: 'Carlos Gómez',
-            time: '09:00 - 09:45',
-            duration: '45 min',
-            room: 'Sala Bici 1',
-            spotsTotal: 20,
-            spotsBooked: 14,
-            category: 'CARDIO',
-            bookedByMe: false,
-          },
-          {
-            id: 'c2',
-            title: 'Power CrossFit & Conditioning',
-            instructor: 'Laura Martínez',
-            time: '11:00 - 12:00',
-            duration: '60 min',
-            room: 'Box Funcional',
-            spotsTotal: 15,
-            spotsBooked: 12,
-            category: 'FUNCIONAL',
-            bookedByMe: true,
-          },
-          {
-            id: 'c3',
-            title: 'Yoga Vinyasa & Mobility',
-            instructor: 'Sofia Ruiz',
-            time: '18:30 - 19:30',
-            duration: '60 min',
-            room: 'Sala Mente',
-            spotsTotal: 18,
-            spotsBooked: 18,
-            category: 'MOBILITY',
-            bookedByMe: false,
-          },
-          {
-            id: 'c4',
-            title: 'BodyPump & Hipertrofia',
-            instructor: 'Javier Fernández',
-            time: '20:00 - 20:50',
-            duration: '50 min',
-            room: 'Sala Principal',
-            spotsTotal: 25,
-            spotsBooked: 19,
-            category: 'FUERZA',
-            bookedByMe: false,
-          },
-        ]);
-      }
-    } catch (error) {
-      console.error('Error fetching classes:', error);
+      const res = await api.get(`/api/classes?date=${date}`);
+      setClasses(Array.isArray(res) ? res : []);
+    } catch (e) {
+      const message = e instanceof Error ? e.message : '';
+      if (message.includes('gimnasio')) setNoGym(true);
+      setClasses([]);
     } finally {
       setIsLoading(false);
     }
   }
 
-  async function toggleBooking(id: string) {
-    const targetClass = classList.find((c) => c.id === id);
-    if (!targetClass) return;
+  useEffect(() => {
+    fetchClasses(selectedDate);
+  }, [selectedDate]);
 
-    const isCurrentlyBooked = targetClass.bookedByMe;
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 4000);
+    return () => clearTimeout(t);
+  }, [toast]);
 
+  async function handleBook(classId: string) {
+    if (!isSubscriptionActive) return;
+    setActionId(classId);
     try {
-      if (isCurrentlyBooked) {
-        await api.delete(`/api/classes/${id}/book`).catch(() => null);
-      } else {
-        await api.post(`/api/classes/${id}/book`).catch(() => null);
-      }
-
-      setClassList((prev) =>
-        prev.map((c) => {
-          if (c.id === id) {
-            const newBooked = !c.bookedByMe;
-            return {
-              ...c,
-              bookedByMe: newBooked,
-              spotsBooked: newBooked ? c.spotsBooked + 1 : c.spotsBooked - 1,
-            };
-          }
-          return c;
-        })
-      );
-    } catch (error: any) {
-      Alert.alert('Reserva', isCurrentlyBooked ? 'Reserva cancelada' : '¡Plaza reservada con éxito!');
+      await api.post('/api/classes', { classId });
+      setToast({ msg: '¡Reserva confirmada!', type: 'ok' });
+      fetchClasses(selectedDate);
+    } catch (e: any) {
+      setToast({ msg: e.message || 'Error al reservar', type: 'err' });
+    } finally {
+      setActionId(null);
     }
   }
 
-  const filteredClasses = classList.filter(
-    (c) => selectedCategory === 'TODAS' || c.category.toUpperCase() === selectedCategory
-  );
+  async function handleCancel(bookingId: string) {
+    if (!isSubscriptionActive) return;
+    setActionId(bookingId);
+    try {
+      await api.delete(`/api/classes?bookingId=${bookingId}`);
+      setToast({ msg: 'Reserva cancelada', type: 'ok' });
+      fetchClasses(selectedDate);
+    } catch (e: any) {
+      setToast({ msg: e.message || 'Error de conexión', type: 'err' });
+    } finally {
+      setActionId(null);
+    }
+  }
+
+  const grouped = classes.reduce<Record<string, ClassItem[]>>((acc, c) => {
+    const dateKey = capitalize(new Date(c.startTime).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' }));
+    if (!acc[dateKey]) acc[dateKey] = [];
+    acc[dateKey].push(c);
+    return acc;
+  }, {});
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#0f172a' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
         {/* Header */}
-        <View style={{ marginBottom: 20 }}>
-          <Text style={{ fontSize: 24, fontWeight: '900', color: '#ffffff' }}>Clases Colectivas</Text>
-          <Text style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>
-            Reserva tu plaza con antelación en tu centro
-          </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+          <Calendar size={22} color={colors.primaryAccent} />
+          <Text style={{ fontSize: 22, fontWeight: '900', color: colors.textPrimary }}>Clases del Gimnasio</Text>
         </View>
+        <Text style={{ fontSize: 13, color: colors.textSecondary, marginBottom: 18 }}>
+          Reserva tu plaza con hasta 48 horas de antelación.
+        </Text>
 
-        {/* Day Selector Bar */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            {['HOY', 'MAÑANA', 'MIÉRCOLES', 'JUEVES', 'VIERNES'].map((day) => (
-              <TouchableOpacity
-                key={day}
-                onPress={() => setSelectedDay(day)}
-                style={{
-                  paddingHorizontal: 16,
-                  paddingVertical: 10,
-                  borderRadius: 14,
-                  backgroundColor: selectedDay === day ? '#06b6d4' : '#1e293b',
-                  borderWidth: 1,
-                  borderColor: selectedDay === day ? '#06b6d4' : '#334155',
-                }}
-              >
-                <Text
-                  style={{
-                    fontSize: 12,
-                    fontWeight: 'bold',
-                    color: selectedDay === day ? '#ffffff' : '#94a3b8',
-                  }}
-                >
-                  {day}
-                </Text>
-              </TouchableOpacity>
-            ))}
+        {!isSubscriptionActive && (
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 10,
+              padding: 14,
+              borderRadius: 16,
+              marginBottom: 18,
+              backgroundColor: 'rgba(239,68,68,0.08)',
+              borderWidth: 1,
+              borderStyle: 'dashed',
+              borderColor: 'rgba(239,68,68,0.3)',
+            }}
+          >
+            <Lock size={18} color={Palette.red500} />
+            <Text style={{ flex: 1, fontSize: 12, fontWeight: '600', color: colors.textSecondary }}>
+              Tu cuota ha caducado. Renuévala para poder reservar clases.
+            </Text>
           </View>
-        </ScrollView>
+        )}
 
-        {/* Categories Bar */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20 }}>
-          <View style={{ flexDirection: 'row', gap: 6 }}>
-            {categories.map((cat) => (
-              <TouchableOpacity
-                key={cat}
-                onPress={() => setSelectedCategory(cat)}
-                style={{
-                  paddingHorizontal: 12,
-                  paddingVertical: 6,
-                  borderRadius: 10,
-                  backgroundColor: selectedCategory === cat ? 'rgba(6, 182, 212, 0.2)' : '#0f172a',
-                  borderWidth: 1,
-                  borderColor: selectedCategory === cat ? '#06b6d4' : '#1e293b',
-                }}
-              >
-                <Text
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 'bold',
-                    color: selectedCategory === cat ? '#06b6d4' : '#64748b',
-                  }}
-                >
-                  {cat}
-                </Text>
-              </TouchableOpacity>
-            ))}
+        {/* Toast */}
+        {toast && (
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 8,
+              padding: 12,
+              borderRadius: 16,
+              marginBottom: 14,
+              backgroundColor: toast.type === 'ok' ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
+              borderWidth: 1,
+              borderColor: toast.type === 'ok' ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)',
+            }}
+          >
+            {toast.type === 'ok' ? <CheckCircle2 size={16} color={Palette.emerald500} /> : <AlertCircle size={16} color={Palette.red500} />}
+            <Text style={{ flex: 1, fontSize: 12, fontWeight: '600', color: toast.type === 'ok' ? Palette.emerald500 : Palette.red500 }}>
+              {toast.msg}
+            </Text>
+            <TouchableOpacity onPress={() => setToast(null)}>
+              <X size={14} color={colors.textMuted} />
+            </TouchableOpacity>
           </View>
-        </ScrollView>
+        )}
 
-        {/* Classes List */}
-        {isLoading ? (
-          <ActivityIndicator color="#06b6d4" style={{ marginVertical: 40 }} />
-        ) : filteredClasses.length > 0 ? (
-          <View style={{ gap: 14 }}>
-            {filteredClasses.map((item) => {
-              const isFull = item.spotsBooked >= item.spotsTotal && !item.bookedByMe;
-              return (
-                <View
-                  key={item.id}
-                  style={{
-                    backgroundColor: '#1e293b',
-                    borderRadius: 20,
-                    padding: 18,
-                    borderWidth: 1,
-                    borderColor: item.bookedByMe ? '#10b981' : '#334155',
-                  }}
-                >
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-                    <View style={{ flex: 1, marginRight: 8 }}>
-                      <Text style={{ fontSize: 17, fontWeight: 'bold', color: '#ffffff' }}>{item.title}</Text>
-                      <Text style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>
-                        {item.instructor} • {item.room}
-                      </Text>
-                    </View>
+        {/* Rolling day selector */}
+        {!noGym && (
+          <View style={{ marginBottom: 20 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+              <CalendarDays size={14} color={colors.primaryAccent} />
+              <Text style={{ fontSize: 11, fontWeight: '900', color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                Selecciona una fecha
+              </Text>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                {Array.from({ length: 14 }).map((_, i) => {
+                  const d = new Date(now);
+                  d.setDate(d.getDate() + i);
+                  const dateStr = d.toISOString().split('T')[0];
+                  const isSelected = selectedDate === dateStr;
+                  const dayName = capitalize(d.toLocaleDateString('es-ES', { weekday: 'short' }).replace('.', ''));
+                  const monthName = capitalize(d.toLocaleDateString('es-ES', { month: 'short' }).replace('.', ''));
 
-                    <View
-                      style={{
-                        paddingHorizontal: 10,
-                        paddingVertical: 4,
-                        borderRadius: 12,
-                        backgroundColor: isFull ? 'rgba(244, 63, 94, 0.15)' : 'rgba(16, 185, 129, 0.15)',
-                      }}
-                    >
-                      <Text
-                        style={{
-                          fontSize: 11,
-                          fontWeight: 'bold',
-                          color: isFull ? '#f43f5e' : '#10b981',
-                        }}
-                      >
-                        {isFull ? 'COMPLETA' : `${item.spotsTotal - item.spotsBooked} plazas libre`}
-                      </Text>
-                    </View>
-                  </View>
-
-                  <View
-                    style={{
-                      flexDirection: 'row',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      marginTop: 12,
-                      paddingTop: 12,
-                      borderTopWidth: 1,
-                      borderTopColor: '#334155',
-                    }}
-                  >
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Clock size={14} color="#64748b" />
-                      <Text style={{ fontSize: 12, color: '#ffffff', fontWeight: 'bold' }}>{item.time}</Text>
-                    </View>
-
+                  return (
                     <TouchableOpacity
-                      onPress={() => toggleBooking(item.id)}
-                      disabled={isFull}
+                      key={dateStr}
+                      onPress={() => setSelectedDate(dateStr)}
                       style={{
-                        paddingHorizontal: 16,
-                        paddingVertical: 8,
-                        borderRadius: 12,
-                        backgroundColor: item.bookedByMe ? '#10b981' : isFull ? '#334155' : '#06b6d4',
-                        flexDirection: 'row',
+                        minWidth: 62,
+                        paddingVertical: 12,
+                        borderRadius: 16,
                         alignItems: 'center',
-                        gap: 6,
+                        backgroundColor: isSelected ? colors.primary : colors.surface,
+                        borderWidth: 1,
+                        borderColor: isSelected ? colors.primary : colors.border,
                       }}
                     >
-                      {item.bookedByMe && <Check size={14} color="#ffffff" />}
-                      <Text style={{ fontSize: 12, fontWeight: 'bold', color: isFull ? '#94a3b8' : '#ffffff' }}>
-                        {item.bookedByMe ? 'Reservado' : isFull ? 'Sin Plazas' : 'Reservar Plaza'}
+                      <Text style={{ fontSize: 9, fontWeight: '900', color: isSelected ? 'rgba(255,255,255,0.85)' : colors.textMuted, textTransform: 'uppercase' }}>
+                        {dayName}
+                      </Text>
+                      <Text style={{ fontSize: 18, fontWeight: '900', color: isSelected ? '#fff' : colors.textPrimary, marginTop: 2 }}>{d.getDate()}</Text>
+                      <Text style={{ fontSize: 9, fontWeight: 'bold', color: isSelected ? 'rgba(255,255,255,0.85)' : colors.textMuted, marginTop: 2 }}>
+                        {monthName}
                       </Text>
                     </TouchableOpacity>
-                  </View>
-                </View>
-              );
-            })}
+                  );
+                })}
+              </View>
+            </ScrollView>
           </View>
+        )}
+
+        {/* Content */}
+        {isLoading ? (
+          <View style={{ height: 160, alignItems: 'center', justifyContent: 'center' }}>
+            <ActivityIndicator color={colors.primary} size="large" />
+          </View>
+        ) : noGym ? (
+          <EmptyState
+            colors={colors}
+            title="Sin gimnasio asignado"
+            subtitle="Tu cuenta no está vinculada a ningún gimnasio. Contacta con tu centro deportivo."
+          />
+        ) : Object.keys(grouped).length === 0 ? (
+          <EmptyState colors={colors} title="No hay clases para este día" subtitle="No hay ninguna actividad programada para la fecha seleccionada." />
         ) : (
-          <View style={{ paddingVertical: 40, alignItems: 'center' }}>
-            <CalendarIcon size={36} color="#64748b" style={{ marginBottom: 8 }} />
-            <Text style={{ fontSize: 14, color: '#94a3b8', textAlign: 'center' }}>
-              No hay clases colectivas programadas en esta categoría.
-            </Text>
+          <View style={{ gap: 24 }}>
+            {Object.entries(grouped).map(([date, items]) => (
+              <View key={date}>
+                <Text style={{ fontSize: 11, fontWeight: '900', color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>
+                  {date}
+                </Text>
+                <View style={{ gap: 12 }}>
+                  {items.map((c) => {
+                    const timeStart = new Date(c.startTime).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                    const timeEnd = new Date(c.endTime).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                    const accentColor = c.isBooked ? colors.primary : !c.isOpen ? colors.textMuted : c.isFull ? Palette.red500 : Palette.violet600;
+
+                    return (
+                      <View
+                        key={c.id}
+                        style={{
+                          borderRadius: 20,
+                          padding: 16,
+                          paddingLeft: 18,
+                          backgroundColor: colors.surface,
+                          borderWidth: 1,
+                          borderColor: c.isBooked ? colors.primary : colors.border,
+                          overflow: 'hidden',
+                        }}
+                      >
+                        <View style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 5, backgroundColor: accentColor }} />
+
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                          <Text style={{ fontSize: 16, fontWeight: '900', color: colors.textPrimary, flexShrink: 1 }}>{c.name}</Text>
+                          {c.isBooked && (
+                            <View style={{ backgroundColor: colors.primarySoft, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2 }}>
+                              <Text style={{ fontSize: 9, fontWeight: '900', color: colors.primaryAccent, textTransform: 'uppercase' }}>Reservada</Text>
+                            </View>
+                          )}
+                        </View>
+
+                        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
+                          <MetaPill colors={colors} icon={<Clock size={12} color={colors.primaryAccent} />} text={`${timeStart} - ${timeEnd}`} />
+                          <MetaPill colors={colors} icon={<UserIcon size={12} color={Palette.violet600} />} text={c.instructor} />
+                          <MetaPill colors={colors} icon={<Users size={12} color={Palette.emerald500} />} text={`${c.spotsLeft} plaza${c.spotsLeft !== 1 ? 's' : ''} libre${c.spotsLeft !== 1 ? 's' : ''}`} />
+                        </View>
+
+                        <View style={{ marginTop: 14 }}>
+                          {c.isBooked ? (
+                            <TouchableOpacity
+                              onPress={() => handleCancel(c.userBookingId!)}
+                              disabled={actionId === c.userBookingId || !isSubscriptionActive}
+                              style={{
+                                alignSelf: 'flex-start',
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                gap: 6,
+                                paddingHorizontal: 16,
+                                paddingVertical: 9,
+                                borderRadius: 999,
+                                backgroundColor: 'rgba(239,68,68,0.1)',
+                                borderWidth: 1,
+                                borderColor: 'rgba(239,68,68,0.3)',
+                                opacity: actionId === c.userBookingId ? 0.6 : 1,
+                              }}
+                            >
+                              {actionId === c.userBookingId ? <ActivityIndicator size="small" color={Palette.red500} /> : <X size={13} color={Palette.red500} />}
+                              <Text style={{ fontSize: 11, fontWeight: '900', color: Palette.red500, textTransform: 'uppercase' }}>Cancelar</Text>
+                            </TouchableOpacity>
+                          ) : !c.isOpen ? (
+                            <View
+                              style={{
+                                alignSelf: 'flex-start',
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                gap: 6,
+                                paddingHorizontal: 16,
+                                paddingVertical: 9,
+                                borderRadius: 999,
+                                backgroundColor: colors.surfaceAlt,
+                                borderWidth: 1,
+                                borderColor: colors.border,
+                              }}
+                            >
+                              <Lock size={12} color={colors.textMuted} />
+                              <Text style={{ fontSize: 11, fontWeight: '900', color: colors.textMuted, textTransform: 'uppercase' }}>
+                                Abre en {timeUntil(c.opensAt!, now)}
+                              </Text>
+                            </View>
+                          ) : c.isFull ? (
+                            <View
+                              style={{
+                                alignSelf: 'flex-start',
+                                paddingHorizontal: 16,
+                                paddingVertical: 9,
+                                borderRadius: 999,
+                                backgroundColor: 'rgba(239,68,68,0.1)',
+                                borderWidth: 1,
+                                borderColor: 'rgba(239,68,68,0.25)',
+                              }}
+                            >
+                              <Text style={{ fontSize: 11, fontWeight: '900', color: Palette.red500, textTransform: 'uppercase' }}>Completa</Text>
+                            </View>
+                          ) : (
+                            <TouchableOpacity
+                              onPress={() => handleBook(c.id)}
+                              disabled={actionId === c.id || !isSubscriptionActive}
+                              style={{
+                                alignSelf: 'flex-start',
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                gap: 6,
+                                paddingHorizontal: 18,
+                                paddingVertical: 10,
+                                borderRadius: 999,
+                                backgroundColor: colors.primary,
+                                opacity: actionId === c.id ? 0.6 : 1,
+                              }}
+                            >
+                              {actionId === c.id ? <ActivityIndicator size="small" color="#fff" /> : <CheckCircle2 size={13} color="#fff" />}
+                              <Text style={{ fontSize: 11, fontWeight: '900', color: '#fff', textTransform: 'uppercase' }}>Reservar</Text>
+                            </TouchableOpacity>
+                          )}
+                        </View>
+                      </View>
+                    );
+                  })}
+                </View>
+              </View>
+            ))}
           </View>
         )}
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+function MetaPill({ colors, icon, text }: { colors: any; icon: React.ReactNode; text: string }) {
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: colors.surfaceAlt, borderRadius: 10, paddingHorizontal: 9, paddingVertical: 5 }}>
+      {icon}
+      <Text style={{ fontSize: 11, fontWeight: '600', color: colors.textSecondary }}>{text}</Text>
+    </View>
+  );
+}
+
+function EmptyState({ colors, title, subtitle }: { colors: any; title: string; subtitle: string }) {
+  return (
+    <View
+      style={{
+        alignItems: 'center',
+        paddingVertical: 48,
+        paddingHorizontal: 20,
+        borderRadius: 20,
+        borderWidth: 2,
+        borderStyle: 'dashed',
+        borderColor: colors.border,
+      }}
+    >
+      <Calendar size={36} color={colors.textMuted} style={{ marginBottom: 14 }} />
+      <Text style={{ fontSize: 15, fontWeight: 'bold', color: colors.textPrimary, textAlign: 'center' }}>{title}</Text>
+      <Text style={{ fontSize: 12, color: colors.textMuted, textAlign: 'center', marginTop: 6 }}>{subtitle}</Text>
+    </View>
   );
 }

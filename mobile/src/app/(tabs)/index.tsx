@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -10,27 +10,36 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
+import { useAppTheme } from '../../context/ThemeContext';
+import { usePreferences } from '../../context/PreferencesContext';
+import { Palette } from '../../constants/theme';
 import QRCode from 'react-native-qrcode-svg';
 import {
-  Sparkles,
   QrCode,
   Flame,
+  Trophy,
+  Zap,
   Dumbbell,
+  Apple,
   Calendar,
   ChevronRight,
-  ShieldCheck,
   RefreshCw,
   X,
-  TrendingUp,
+  Maximize2,
+  Lock,
   Clock,
   Building2,
-  Utensils,
-  Plus,
+  TrendingUp,
+  ArrowRight,
+  CalendarDays,
+  Activity,
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { api } from '../../lib/apiClient';
 
 const { width } = Dimensions.get('window');
+const QR_LIFETIME_SECONDS = 20;
+const GOAL_CALORIES = 2500;
 
 interface WeeklyChartEntry {
   day: string;
@@ -48,409 +57,524 @@ interface RecentSession {
 }
 
 interface DashboardData {
-  routinesCount: number;
+  streak: number;
+  totalSessions: number;
   weeklySessionsCount: number;
   weeklyVolume: number;
   weeklyMinutes: number;
   weeklyChart: WeeklyChartEntry[];
-  streak: number;
-  totalSessions: number;
   recentSessions: RecentSession[];
 }
 
 export default function HomeScreen() {
   const { user } = useAuth();
+  const { colors, theme } = useAppTheme();
+  const { weightUnit } = usePreferences();
   const router = useRouter();
 
-  const [qrToken, setQrToken] = useState('');
-  const [timeLeft, setTimeLeft] = useState(15);
-  const [showQrModal, setShowQrModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-
-  const [dashData, setDashData] = useState<DashboardData | null>(null);
+  const [data, setData] = useState<DashboardData | null>(null);
   const [caloriesToday, setCaloriesToday] = useState(0);
 
-  useEffect(() => {
-    fetchDashboardData();
-    generateDynamicQR();
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string>('INACTIVE');
+  const [subscriptionEndDate, setSubscriptionEndDate] = useState<string | null>(null);
+  const [serverNow, setServerNow] = useState<string | null>(null);
+  const [weeklyStreak, setWeeklyStreak] = useState<number | null>(null);
 
-    const interval = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          generateDynamicQR();
-          return 15;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+  const [qrToken, setQrToken] = useState<string | null>(null);
+  const [isQrLoading, setIsQrLoading] = useState(false);
+  const [qrTimeLeft, setQrTimeLeft] = useState(QR_LIFETIME_SECONDS);
+  const [isZoomed, setIsZoomed] = useState(false);
 
-    return () => clearInterval(interval);
-  }, [user]);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  async function fetchDashboardData() {
-    setIsLoading(true);
+  const nowRef = serverNow ? new Date(serverNow) : new Date();
+  const isSubscriptionExpired = subscriptionEndDate ? new Date(subscriptionEndDate) < nowRef : false;
+  const isSubscriptionInactive = subscriptionStatus !== 'ACTIVE' || isSubscriptionExpired;
+
+  async function fetchQrToken() {
+    setIsQrLoading(true);
     try {
-      const res = await api.get('/api/dashboard');
-      if (res) {
-        setDashData(res);
+      const res = await api.get('/api/user/access-token');
+      setQrToken(res.token);
+      setQrTimeLeft(QR_LIFETIME_SECONDS);
+    } catch {
+      setQrToken(null);
+    } finally {
+      setIsQrLoading(false);
+    }
+  }
+
+  async function fetchAll() {
+    try {
+      const sub = await api.get('/api/user/subscription-status');
+      setSubscriptionStatus(sub.subscriptionStatus);
+      setSubscriptionEndDate(sub.subscriptionEndDate);
+      setServerNow(sub.serverNow);
+
+      const isExpiredNow = sub.subscriptionEndDate ? new Date(sub.subscriptionEndDate) < new Date(sub.serverNow) : false;
+      const isInactiveNow = sub.subscriptionStatus !== 'ACTIVE' || isExpiredNow;
+
+      const today = new Date(sub.serverNow).toISOString().split('T')[0];
+
+      try {
+        const nutrition = await api.get(`/api/nutrition?date=${today}`);
+        setCaloriesToday((nutrition.entries || []).reduce((sum: number, entry: { calories: number }) => sum + entry.calories, 0));
+      } catch {}
+
+      try {
+        setData(await api.get('/api/dashboard'));
+      } catch {}
+
+      try {
+        const attendance = await api.get('/api/user/stats/attendance');
+        setWeeklyStreak(attendance.streak);
+      } catch {}
+
+      if (!isInactiveNow) {
+        await fetchQrToken();
+      } else {
+        setQrToken(null);
       }
     } catch (e) {
-      console.error('Error al cargar datos reales del dashboard:', e);
-      setDashData(null);
+      console.error('Error al cargar el dashboard:', e);
     } finally {
       setIsLoading(false);
     }
   }
 
-  function generateDynamicQR() {
-    if (!user) return;
-    const timestamp = Date.now();
-    const payload = JSON.stringify({
-      userId: user.id,
-      gymId: user.gymId || 'default-gym',
-      timestamp,
-      signature: `sig_${user.id.slice(0, 6)}_${timestamp}`,
-    });
-    setQrToken(payload);
-  }
+  useEffect(() => {
+    fetchAll();
+  }, []);
 
-  const maxMinutesInChart = Math.max(
-    ...(dashData?.weeklyChart?.map((c) => c.minutos) || [60]),
-    60
-  );
+  useEffect(() => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    if (!qrToken) return;
+
+    timerRef.current = setInterval(() => {
+      setQrTimeLeft((prev) => {
+        if (prev <= 1) {
+          fetchQrToken();
+          return QR_LIFETIME_SECONDS;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [qrToken]);
+
+  const weekHours = data ? Math.floor(data.weeklyMinutes / 60) : 0;
+  const weekMins = data ? (data.weeklyMinutes % 60) : 0;
+  const calPct = Math.min(Math.round((caloriesToday / GOAL_CALORIES) * 100), 100);
+  const maxMinutesInChart = Math.max(...(data?.weeklyChart?.map((c) => c.minutos) || [0]), 1);
+  const streakValue = weeklyStreak !== null ? weeklyStreak : (data?.streak ?? 0);
+  const streakLabel = weeklyStreak !== null ? `semana${weeklyStreak !== 1 ? 's' : ''} de racha` : `día${(data?.streak ?? 0) !== 1 ? 's' : ''} de racha`;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#0f172a' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
         {/* Hero Header */}
-        <View style={{ marginBottom: 20 }}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <View>
-              <Text style={{ fontSize: 11, fontWeight: 'bold', color: '#06b6d4', textTransform: 'uppercase', letterSpacing: 1 }}>
-                Dashboard
-              </Text>
-              <Text style={{ fontSize: 26, fontWeight: '900', color: '#ffffff', marginTop: 2 }}>
-                ¡Hola, <Text style={{ color: '#06b6d4' }}>{user?.name?.split(' ')[0] || 'Deportista'}</Text>!
-              </Text>
-            </View>
-
-            <View
-              style={{
-                backgroundColor: 'rgba(6, 182, 212, 0.15)',
-                borderColor: 'rgba(6, 182, 212, 0.3)',
-                borderWidth: 1,
-                borderRadius: 16,
-                paddingHorizontal: 12,
-                paddingVertical: 6,
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 6,
-              }}
-            >
-              <Building2 size={14} color="#06b6d4" />
-              <Text style={{ fontSize: 11, fontWeight: 'bold', color: '#06b6d4' }}>
-                {user?.gymName || 'FitWe Gym'}
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        {/* QR Access Pass Card */}
         <View
           style={{
-            backgroundColor: '#1e293b',
             borderRadius: 24,
             padding: 20,
             borderWidth: 1,
-            borderColor: '#334155',
-            marginBottom: 24,
+            borderColor: colors.border,
+            backgroundColor: colors.surface,
+            marginBottom: 20,
           }}
         >
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-              <View style={{ padding: 10, backgroundColor: 'rgba(6, 182, 212, 0.2)', borderRadius: 14 }}>
-                <QrCode size={22} color="#06b6d4" />
-              </View>
-              <View>
-                <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#ffffff' }}>Pase de Torno Digital</Text>
-                <Text style={{ fontSize: 11, color: user?.subscriptionStatus === 'ACTIVE' ? '#10b981' : '#f43f5e', fontWeight: 'bold' }}>
-                  {user?.subscriptionStatus === 'ACTIVE' ? '✓ Cuota Activa' : '✕ Cuota Inactiva / Vencida'}
-                </Text>
-              </View>
-            </View>
-
-            <View
-              style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                paddingHorizontal: 10,
-                paddingVertical: 4,
-                borderRadius: 12,
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 4,
-              }}
-            >
-              <RefreshCw size={12} color="#94a3b8" />
-              <Text style={{ fontSize: 11, color: '#94a3b8', fontWeight: 'bold' }}>{timeLeft}s</Text>
-            </View>
-          </View>
-
-          {/* QR Display */}
-          <TouchableOpacity
-            onPress={() => setShowQrModal(true)}
-            activeOpacity={0.88}
-            style={{
-              backgroundColor: '#ffffff',
-              borderRadius: 20,
-              padding: 16,
-              alignItems: 'center',
-              justifyContent: 'center',
-              alignSelf: 'center',
-              marginVertical: 4,
-            }}
-          >
-            {qrToken ? (
-              <QRCode value={qrToken} size={160} color="#0f172a" backgroundColor="#ffffff" />
-            ) : (
-              <ActivityIndicator color="#06b6d4" />
-            )}
-          </TouchableOpacity>
-
-          <Text style={{ fontSize: 11, color: '#94a3b8', textAlign: 'center', marginTop: 12 }}>
-            Toca el código para ampliar al tamaño completo del lector
+          <Text style={{ fontSize: 11, fontWeight: 'bold', color: colors.primaryAccent, textTransform: 'uppercase', letterSpacing: 1 }}>
+            Dashboard
           </Text>
-        </View>
+          <Text style={{ fontSize: 26, fontWeight: '900', color: colors.textPrimary, marginTop: 4 }}>
+            ¡Hola, <Text style={{ color: colors.primaryAccent }}>{user?.name?.split(' ')[0] || 'Deportista'}</Text>!
+          </Text>
+          <Text style={{ fontSize: 13, color: colors.textSecondary, marginTop: 4, fontWeight: '500' }}>
+            Aquí tienes tu resumen de hoy.
+          </Text>
 
-        {/* Streak & Weekly Stats Row */}
-        <View style={{ flexDirection: 'row', gap: 12, marginBottom: 20 }}>
-          {/* Streak Card */}
-          <View
-            style={{
-              flex: 1,
-              backgroundColor: '#1e293b',
-              borderRadius: 20,
-              padding: 16,
-              borderWidth: 1,
-              borderColor: '#334155',
-            }}
-          >
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-              <Flame size={18} color="#f59e0b" />
-              <Text style={{ fontSize: 12, fontWeight: '700', color: '#f59e0b' }}>Racha Actual</Text>
-            </View>
-            <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 4 }}>
-              <Text style={{ fontSize: 26, fontWeight: '900', color: '#ffffff' }}>
-                {dashData?.streak ?? 0}
-              </Text>
-              <Text style={{ fontSize: 12, fontWeight: '700', color: '#94a3b8' }}>días seguidos</Text>
-            </View>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 14 }}>
+            {user?.gymName && (
+              <Pill icon={<Building2 size={13} color={colors.primaryAccent} />} textColor={colors.primaryAccent} bg={colors.primarySoft}>
+                {user.gymName}
+              </Pill>
+            )}
+            {!isSubscriptionInactive ? (
+              <Pill icon={<Clock size={13} color={Palette.emerald500} />} textColor={Palette.emerald500} bg={theme === 'dark' ? 'rgba(16,185,129,0.12)' : Palette.emerald50}>
+                Cuota activa {subscriptionEndDate ? `hasta ${new Date(subscriptionEndDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}` : ''}
+              </Pill>
+            ) : (
+              <Pill icon={<Clock size={13} color={Palette.rose500} />} textColor={Palette.rose500} bg={theme === 'dark' ? 'rgba(244,63,94,0.12)' : Palette.rose50}>
+                Cuota inactiva / expirada
+              </Pill>
+            )}
           </View>
 
-          {/* Volume Card */}
-          <View
-            style={{
-              flex: 1,
-              backgroundColor: '#1e293b',
-              borderRadius: 20,
-              padding: 16,
-              borderWidth: 1,
-              borderColor: '#334155',
-            }}
-          >
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-              <TrendingUp size={18} color="#a855f7" />
-              <Text style={{ fontSize: 12, fontWeight: '700', color: '#a855f7' }}>Volumen Semanal</Text>
-            </View>
-            <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 4 }}>
-              <Text style={{ fontSize: 24, fontWeight: '900', color: '#ffffff' }}>
-                {(dashData?.weeklyVolume ?? 0).toLocaleString()}
-              </Text>
-              <Text style={{ fontSize: 12, fontWeight: '700', color: '#94a3b8' }}>kg</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Weekly Activity Bar Chart */}
-        <View
-          style={{
-            backgroundColor: '#1e293b',
-            borderRadius: 24,
-            padding: 20,
-            borderWidth: 1,
-            borderColor: '#334155',
-            marginBottom: 24,
-          }}
-        >
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <View>
-              <Text style={{ fontSize: 15, fontWeight: 'bold', color: '#ffffff' }}>Actividad Semanal</Text>
-              <Text style={{ fontSize: 12, color: '#94a3b8' }}>
-                {dashData?.weeklyMinutes ?? 0} minutos entrenados esta semana
-              </Text>
-            </View>
-
-            <View style={{ padding: 8, borderRadius: 12, backgroundColor: 'rgba(6, 182, 212, 0.15)' }}>
-              <Clock size={18} color="#06b6d4" />
-            </View>
-          </View>
-
-          {/* Custom Native Bar Chart */}
-          {dashData?.weeklyChart && dashData.weeklyChart.length > 0 ? (
-            <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', height: 110, paddingTop: 10 }}>
-              {dashData.weeklyChart.map((item, idx) => {
-                const barHeightPct = item.minutos > 0 ? (item.minutos / maxMinutesInChart) * 100 : 8;
-                const hasTrained = item.minutos > 0;
-                return (
-                  <View key={idx} style={{ alignItems: 'center', flex: 1 }}>
-                    <Text style={{ fontSize: 9, fontWeight: 'bold', color: hasTrained ? '#06b6d4' : 'transparent', marginBottom: 4 }}>
-                      {item.minutos > 0 ? `${item.minutos}m` : ''}
-                    </Text>
-                    <View
-                      style={{
-                        width: 22,
-                        height: `${barHeightPct}%`,
-                        backgroundColor: hasTrained ? '#06b6d4' : '#334155',
-                        borderRadius: 6,
-                      }}
-                    />
-                    <Text style={{ fontSize: 11, fontWeight: 'bold', color: hasTrained ? '#ffffff' : '#64748b', marginTop: 6 }}>
-                      {item.day}
-                    </Text>
-                  </View>
-                );
-              })}
-            </View>
-          ) : (
-            <View style={{ paddingVertical: 20, alignItems: 'center' }}>
-              <Text style={{ fontSize: 13, color: '#94a3b8' }}>Sin registros de actividad esta semana</Text>
+          {data && (
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
+              <Pill icon={<Flame size={14} color={Palette.orange500} />} textColor={colors.textPrimary} bg={colors.surfaceAlt}>
+                <Text style={{ fontWeight: '900', color: colors.textPrimary }}>{streakValue}</Text> {streakLabel}
+              </Pill>
+              <Pill icon={<Trophy size={14} color={Palette.amber500} />} textColor={colors.textPrimary} bg={colors.surfaceAlt}>
+                <Text style={{ fontWeight: '900', color: colors.textPrimary }}>{data.totalSessions}</Text> entrenos totales
+              </Pill>
+              <Pill icon={<Zap size={14} color={colors.primaryAccent} />} textColor={colors.textPrimary} bg={colors.surfaceAlt}>
+                <Text style={{ fontWeight: '900', color: colors.textPrimary }}>{data.weeklySessionsCount}</Text> esta semana
+              </Pill>
             </View>
           )}
         </View>
 
-        {/* Recent Workout Sessions */}
-        <Text style={{ fontSize: 13, fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 12, letterSpacing: 0.5 }}>
-          Últimos Entrenamientos Registrados
-        </Text>
-
-        {dashData?.recentSessions && dashData.recentSessions.length > 0 ? (
-          <View style={{ gap: 12, marginBottom: 24 }}>
-            {dashData.recentSessions.map((session) => (
-              <View
-                key={session.id}
-                style={{
-                  backgroundColor: '#1e293b',
-                  borderRadius: 18,
-                  padding: 16,
-                  borderWidth: 1,
-                  borderColor: '#334155',
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                }}
-              >
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                  <View style={{ padding: 10, borderRadius: 12, backgroundColor: 'rgba(168, 85, 247, 0.15)' }}>
-                    <Dumbbell size={20} color="#a855f7" />
-                  </View>
-                  <View>
-                    <Text style={{ fontSize: 15, fontWeight: 'bold', color: '#ffffff' }}>{session.routineName}</Text>
-                    <Text style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>
-                      {session.date} • {session.durationMinutes} min
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={{ alignItems: 'flex-end' }}>
-                  <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#a855f7' }}>
-                    {session.volume.toLocaleString()} kg
-                  </Text>
-                  <Text style={{ fontSize: 11, color: '#64748b' }}>{session.setsCount} series</Text>
-                </View>
-              </View>
-            ))}
+        {isLoading ? (
+          <View style={{ height: 220, alignItems: 'center', justifyContent: 'center' }}>
+            <ActivityIndicator color={colors.primary} size="large" />
           </View>
         ) : (
-          <View
-            style={{
-              backgroundColor: '#1e293b',
-              borderRadius: 20,
-              padding: 20,
-              alignItems: 'center',
-              borderWidth: 1,
-              borderColor: '#334155',
-              marginBottom: 24,
-            }}
-          >
-            <Dumbbell size={32} color="#64748b" style={{ marginBottom: 8 }} />
-            <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#ffffff', textAlign: 'center' }}>
-              No has registrado ninguna sesión aún
+          <>
+            {/* QR Access Pass Card */}
+            <Card colors={colors} style={{ marginBottom: 16 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
+                  <IconBadge bg={colors.primarySoft}>
+                    <QrCode size={20} color={colors.primaryAccent} />
+                  </IconBadge>
+                  <View>
+                    <Text style={{ fontSize: 11, fontWeight: '900', color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                      Pase de Acceso QR
+                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 3 }}>
+                      <View style={{ height: 6, width: 6, borderRadius: 3, backgroundColor: !isSubscriptionInactive && qrToken ? Palette.emerald500 : Palette.red500 }} />
+                      <Text style={{ fontSize: 10, fontWeight: 'bold', color: !isSubscriptionInactive && qrToken ? Palette.emerald500 : Palette.red500, textTransform: 'uppercase' }}>
+                        {!isSubscriptionInactive && qrToken ? 'Activo' : 'Restringido'}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+
+                {!isSubscriptionInactive && qrToken && !isQrLoading && (
+                  <TouchableOpacity
+                    onPress={fetchQrToken}
+                    style={{ height: 32, width: 32, borderRadius: 12, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    <RefreshCw size={15} color={colors.textMuted} />
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              <View style={{ backgroundColor: colors.surfaceSunken, borderRadius: 16, padding: 16, borderWidth: 1, borderColor: colors.borderLight, alignItems: 'center', justifyContent: 'center', minHeight: 200 }}>
+                {isSubscriptionInactive ? (
+                  <View style={{ alignItems: 'center', paddingVertical: 12 }}>
+                    <IconBadge bg={theme === 'dark' ? 'rgba(244,63,94,0.12)' : Palette.rose50}>
+                      <Lock size={20} color={Palette.rose500} />
+                    </IconBadge>
+                    <Text style={{ fontSize: 14, fontWeight: 'bold', color: colors.textPrimary, marginTop: 10 }}>Acceso Restringido</Text>
+                    <Text style={{ fontSize: 11, color: colors.textSecondary, textAlign: 'center', marginTop: 4, maxWidth: 220 }}>
+                      Tu cuota ha expirado o está inactiva en el centro. Renuévala para activar tu código QR de acceso.
+                    </Text>
+                    <TouchableOpacity
+                      onPress={() => router.push('/profile')}
+                      style={{ marginTop: 14, backgroundColor: colors.primary, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 999 }}
+                    >
+                      <Text style={{ color: '#fff', fontSize: 12, fontWeight: 'bold', textTransform: 'uppercase' }}>Pagar Cuota</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : isQrLoading || !qrToken ? (
+                  <View style={{ alignItems: 'center', gap: 8, paddingVertical: 20 }}>
+                    <ActivityIndicator color={colors.primary} />
+                    <Text style={{ fontSize: 12, fontWeight: 'bold', color: colors.textMuted }}>Generando pase...</Text>
+                  </View>
+                ) : (
+                  <>
+                    <TouchableOpacity
+                      onPress={() => setIsZoomed(true)}
+                      activeOpacity={0.85}
+                      style={{ backgroundColor: '#ffffff', padding: 10, borderRadius: 14 }}
+                    >
+                      <QRCode value={qrToken} size={160} color="#0f172a" backgroundColor="#ffffff" />
+                    </TouchableOpacity>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12 }}>
+                      <Clock size={13} color={colors.primaryAccent} />
+                      <Text style={{ fontSize: 12, fontWeight: 'bold', color: colors.textSecondary }}>
+                        Expira en {Math.floor(qrTimeLeft / 60)}:{(qrTimeLeft % 60).toString().padStart(2, '0')}
+                      </Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 }}>
+                      <Maximize2 size={12} color={colors.textMuted} />
+                      <Text style={{ fontSize: 11, color: colors.textMuted }}>Toca para ampliar</Text>
+                    </View>
+                  </>
+                )}
+              </View>
+            </Card>
+
+            {/* Weekly Activity Chart */}
+            <Card colors={colors} style={{ marginBottom: 16 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+                <View>
+                  <Text style={{ fontSize: 11, fontWeight: '900', color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                    Actividad Semanal
+                  </Text>
+                  <Text style={{ fontSize: 22, fontWeight: '900', color: colors.textPrimary, marginTop: 4 }}>
+                    {weekHours > 0 ? `${weekHours}h ` : ''}{weekMins}min
+                  </Text>
+                </View>
+                <View style={{ alignItems: 'flex-end' }}>
+                  <Text style={{ fontSize: 9, fontWeight: '900', color: colors.textMuted, textTransform: 'uppercase' }}>Volumen</Text>
+                  <Text style={{ fontSize: 15, fontWeight: '900', color: colors.textPrimary }}>
+                    {(data?.weeklyVolume ?? 0).toLocaleString()}<Text style={{ fontSize: 11, color: colors.textMuted }}> {weightUnit}</Text>
+                  </Text>
+                </View>
+              </View>
+
+              {data?.weeklyChart && data.weeklyChart.length > 0 ? (
+                <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', height: 110 }}>
+                  {data.weeklyChart.map((item, idx) => {
+                    const hasTrained = item.minutos > 0;
+                    const barHeightPct = hasTrained ? Math.max((item.minutos / maxMinutesInChart) * 100, 8) : 8;
+                    return (
+                      <View key={idx} style={{ alignItems: 'center', flex: 1 }}>
+                        <Text style={{ fontSize: 9, fontWeight: 'bold', color: hasTrained ? colors.primaryAccent : 'transparent', marginBottom: 4 }}>
+                          {hasTrained ? `${item.minutos}m` : ''}
+                        </Text>
+                        <View
+                          style={{
+                            width: 20,
+                            height: `${barHeightPct}%`,
+                            backgroundColor: hasTrained ? colors.primary : colors.surfaceAlt,
+                            borderRadius: 6,
+                          }}
+                        />
+                        <Text style={{ fontSize: 11, fontWeight: 'bold', color: hasTrained ? colors.textPrimary : colors.textMuted, marginTop: 6 }}>
+                          {item.day}
+                        </Text>
+                      </View>
+                    );
+                  })}
+                </View>
+              ) : (
+                <Text style={{ fontSize: 13, color: colors.textMuted, textAlign: 'center', paddingVertical: 20 }}>
+                  Sin registros de actividad esta semana
+                </Text>
+              )}
+            </Card>
+
+            {/* Nutrition Card */}
+            <Card colors={colors} style={{ marginBottom: 20 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+                <IconBadge bg={theme === 'dark' ? 'rgba(249,115,22,0.12)' : Palette.orange50}>
+                  <Apple size={18} color={Palette.orange500} />
+                </IconBadge>
+                <Text style={{ fontSize: 11, fontWeight: '900', color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                  Nutrición Hoy
+                </Text>
+              </View>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 10 }}>
+                <Text style={{ fontSize: 26, fontWeight: '900', color: colors.textPrimary }}>
+                  {caloriesToday}<Text style={{ fontSize: 13, fontWeight: 'bold', color: colors.textMuted }}> kcal</Text>
+                </Text>
+                <Text style={{ fontSize: 13, fontWeight: 'bold', color: colors.textMuted }}>/ {GOAL_CALORIES}</Text>
+              </View>
+              <View style={{ height: 10, borderRadius: 999, backgroundColor: colors.surfaceAlt, overflow: 'hidden' }}>
+                <View style={{ height: '100%', width: `${calPct}%`, borderRadius: 999, backgroundColor: calPct > 100 ? Palette.red500 : Palette.orange500 }} />
+              </View>
+              <Text style={{ fontSize: 11, fontWeight: '600', color: colors.textMuted, textAlign: 'right', marginTop: 6 }}>
+                {calPct}% del objetivo
+              </Text>
+            </Card>
+
+            {/* Recent Activity */}
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <Text style={{ fontSize: 11, fontWeight: '900', color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                Actividad Reciente
+              </Text>
+              <TouchableOpacity onPress={() => router.push('/profile')}>
+                <Text style={{ fontSize: 12, fontWeight: 'bold', color: colors.primaryAccent }}>Ver todo →</Text>
+              </TouchableOpacity>
+            </View>
+
+            {data?.recentSessions && data.recentSessions.length > 0 ? (
+              <View style={{ gap: 10, marginBottom: 24 }}>
+                {data.recentSessions.slice(0, 4).map((session) => (
+                  <Card key={session.id} colors={colors} padding={14}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <View style={{ flex: 1, marginRight: 8 }}>
+                        <Text style={{ fontSize: 14, fontWeight: '900', color: colors.textPrimary }}>{session.routineName}</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 4 }}>
+                          <Calendar size={11} color={colors.textMuted} />
+                          <Text style={{ fontSize: 11, fontWeight: '600', color: colors.textMuted, textTransform: 'capitalize' }}>
+                            {new Date(session.date).toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' })}
+                          </Text>
+                        </View>
+                      </View>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        <StatPill colors={colors} label="DURACIÓN" value={`${session.durationMinutes}m`} icon={<Clock size={11} color={colors.primaryAccent} />} />
+                        <StatPill colors={colors} label="VOLUMEN" value={`${session.volume.toLocaleString()}${weightUnit}`} icon={<TrendingUp size={11} color={Palette.emerald500} />} />
+                        <ChevronRight size={16} color={colors.textMuted} />
+                      </View>
+                    </View>
+                  </Card>
+                ))}
+              </View>
+            ) : (
+              <Card colors={colors} style={{ marginBottom: 24, alignItems: 'center', paddingVertical: 28 }}>
+                <Dumbbell size={28} color={colors.textMuted} />
+                <Text style={{ fontSize: 13, color: colors.textMuted, marginTop: 10, fontWeight: '600' }}>
+                  Aún no hay entrenamientos registrados.
+                </Text>
+              </Card>
+            )}
+
+            {/* Quick Actions */}
+            <Text style={{ fontSize: 11, fontWeight: '900', color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 }}>
+              Accesos Rápidos
             </Text>
-            <Text style={{ fontSize: 12, color: '#94a3b8', textAlign: 'center', marginTop: 2, marginBottom: 12 }}>
-              Comienza un entrenamiento para ver aquí tu volumen e historial.
-            </Text>
-            <TouchableOpacity
-              onPress={() => router.push('/workout')}
-              style={{
-                backgroundColor: '#a855f7',
-                paddingHorizontal: 16,
-                paddingVertical: 10,
-                borderRadius: 12,
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 6,
-              }}
-            >
-              <Plus size={16} color="#ffffff" />
-              <Text style={{ color: '#ffffff', fontWeight: 'bold', fontSize: 13 }}>Iniciar Entreno</Text>
-            </TouchableOpacity>
-          </View>
+            <View style={{ gap: 10 }}>
+              <QuickAction
+                colors={colors}
+                onPress={() => router.push('/nutrition')}
+                iconBg={theme === 'dark' ? 'rgba(249,115,22,0.12)' : Palette.orange50}
+                icon={<Apple size={18} color={Palette.orange500} />}
+                title="Registrar Comida"
+                subtitle="Diario nutricional"
+              />
+              <QuickAction
+                colors={colors}
+                onPress={() => router.push('/workout')}
+                iconBg={theme === 'dark' ? 'rgba(16,185,129,0.12)' : Palette.emerald50}
+                icon={<Activity size={18} color={Palette.emerald500} />}
+                title="Mis Rutinas"
+                subtitle="Entrenar ahora"
+              />
+              <QuickAction
+                colors={colors}
+                onPress={() => router.push('/classes')}
+                iconBg={theme === 'dark' ? 'rgba(124,58,237,0.12)' : Palette.violet50}
+                icon={<CalendarDays size={18} color={Palette.violet600} />}
+                title="Clases"
+                subtitle="Reservar plaza"
+              />
+            </View>
+          </>
         )}
       </ScrollView>
 
-      {/* Fullscreen QR Modal */}
-      <Modal visible={showQrModal} animationType="fade" transparent>
-        <View
-          style={{
-            flex: 1,
-            backgroundColor: 'rgba(15, 23, 42, 0.96)',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: 24,
-          }}
-        >
-          <TouchableOpacity
-            onPress={() => setShowQrModal(false)}
-            style={{ position: 'absolute', top: 50, right: 24, padding: 8 }}
-          >
-            <X size={28} color="#ffffff" />
-          </TouchableOpacity>
-
-          <Text style={{ fontSize: 22, fontWeight: 'bold', color: '#ffffff', marginBottom: 6, textAlign: 'center' }}>
-            Pase de Torno Digital
-          </Text>
-          <Text style={{ fontSize: 13, color: '#94a3b8', marginBottom: 32, textAlign: 'center' }}>
-            Acerca la pantalla al lector óptico del torno del gimnasio
-          </Text>
-
-          <View
-            style={{
-              backgroundColor: '#ffffff',
-              borderRadius: 24,
-              padding: 24,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            {qrToken ? (
-              <QRCode value={qrToken} size={width * 0.7} color="#0f172a" backgroundColor="#ffffff" />
-            ) : null}
+      {/* Zoomed QR Modal */}
+      <Modal visible={isZoomed} animationType="fade" transparent>
+        <View style={{ flex: 1, backgroundColor: 'rgba(2,6,23,0.9)', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <View style={{ backgroundColor: colors.surface, borderRadius: 28, padding: 24, alignItems: 'center', width: '100%', maxWidth: 340, borderWidth: 1, borderColor: colors.border }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: 16 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <QrCode size={18} color={colors.primaryAccent} />
+                <Text style={{ fontSize: 16, fontWeight: '900', color: colors.textPrimary }}>Ampliar Pase QR</Text>
+              </View>
+              <TouchableOpacity onPress={() => setIsZoomed(false)} style={{ height: 30, width: 30, borderRadius: 15, backgroundColor: colors.surfaceAlt, alignItems: 'center', justifyContent: 'center' }}>
+                <X size={16} color={colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+            <Text style={{ fontSize: 12, color: colors.textSecondary, textAlign: 'center', marginBottom: 20 }}>
+              Muestra este código QR ampliado en el lector del gimnasio para autorizar tu acceso.
+            </Text>
+            {qrToken && (
+              <View style={{ backgroundColor: '#ffffff', padding: 16, borderRadius: 20 }}>
+                <QRCode value={qrToken} size={width * 0.55} color="#0f172a" backgroundColor="#ffffff" />
+              </View>
+            )}
+            {qrTimeLeft > 0 ? (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 18 }}>
+                <Clock size={13} color={colors.primaryAccent} />
+                <Text style={{ fontSize: 12, fontWeight: '600', color: colors.textSecondary }}>
+                  Expira en {Math.floor(qrTimeLeft / 60)}:{(qrTimeLeft % 60).toString().padStart(2, '0')}
+                </Text>
+              </View>
+            ) : (
+              <Text style={{ fontSize: 12, fontWeight: 'bold', color: Palette.red500, marginTop: 18 }}>Código Expirado. Cierra para regenerar.</Text>
+            )}
           </View>
-
-          <Text style={{ fontSize: 12, color: '#10b981', marginTop: 24, fontWeight: 'bold' }}>
-            ✓ Código seguro que rota cada {timeLeft}s
-          </Text>
         </View>
       </Modal>
     </SafeAreaView>
+  );
+}
+
+function Card({ colors, children, style, padding = 18 }: { colors: any; children: React.ReactNode; style?: any; padding?: number }) {
+  return (
+    <View style={[{ backgroundColor: colors.surface, borderRadius: 20, padding, borderWidth: 1, borderColor: colors.border }, style]}>
+      {children}
+    </View>
+  );
+}
+
+function IconBadge({ bg, children }: { bg: string; children: React.ReactNode }) {
+  return (
+    <View style={{ height: 38, width: 38, borderRadius: 14, backgroundColor: bg, alignItems: 'center', justifyContent: 'center' }}>
+      {children}
+    </View>
+  );
+}
+
+function Pill({ icon, children, textColor, bg }: { icon: React.ReactNode; children: React.ReactNode; textColor: string; bg: string }) {
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: bg, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 7 }}>
+      {icon}
+      <Text style={{ fontSize: 11, fontWeight: 'bold', color: textColor }}>{children}</Text>
+    </View>
+  );
+}
+
+function StatPill({ colors, label, value, icon }: { colors: any; label: string; value: string; icon: React.ReactNode }) {
+  return (
+    <View style={{ backgroundColor: colors.surfaceSunken, borderWidth: 1, borderColor: colors.borderLight, borderRadius: 14, paddingHorizontal: 10, paddingVertical: 6, alignItems: 'center', minWidth: 66 }}>
+      <Text style={{ fontSize: 7, fontWeight: '900', color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.4 }}>{label}</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 3 }}>
+        {icon}
+        <Text style={{ fontSize: 11, fontWeight: '900', color: colors.textPrimary }}>{value}</Text>
+      </View>
+    </View>
+  );
+}
+
+function QuickAction({
+  colors,
+  onPress,
+  iconBg,
+  icon,
+  title,
+  subtitle,
+}: {
+  colors: any;
+  onPress: () => void;
+  iconBg: string;
+  icon: React.ReactNode;
+  title: string;
+  subtitle: string;
+}) {
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.8}
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: colors.surface,
+        borderWidth: 1,
+        borderColor: colors.border,
+        borderRadius: 18,
+        padding: 16,
+      }}
+    >
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+        <IconBadge bg={iconBg}>{icon}</IconBadge>
+        <View>
+          <Text style={{ fontSize: 14, fontWeight: 'bold', color: colors.textPrimary }}>{title}</Text>
+          <Text style={{ fontSize: 11, color: colors.textMuted, fontWeight: '500' }}>{subtitle}</Text>
+        </View>
+      </View>
+      <ArrowRight size={18} color={colors.textMuted} />
+    </TouchableOpacity>
   );
 }

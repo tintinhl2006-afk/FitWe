@@ -1,14 +1,13 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { cloudinary, isConfigured } from "@/lib/cloudinary";
+import { getRequestUserId } from "@/lib/apiAuth";
 
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const userId = await getRequestUserId(req);
 
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
@@ -46,7 +45,7 @@ export async function POST(req: Request) {
     }
 
     const updatedUser = await prisma.user.update({
-      where: { id: session.user.id },
+      where: { id: userId },
       data: { image: finalImageUrl },
       select: { image: true },
     });

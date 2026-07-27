@@ -1,23 +1,22 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getRequestUserId } from "@/lib/apiAuth";
 
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ sessionId: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    const userId = await getRequestUserId(req);
 
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
     const { sessionId } = await params;
 
     const workoutSession = await prisma.workoutSession.findUnique({
-      where: { id: sessionId, userId: session.user.id },
+      where: { id: sessionId, userId },
       include: {
         workoutSets: {
           include: {
@@ -55,7 +54,7 @@ export async function GET(
             exerciseId,
             isCompleted: true,
             sessionId: { not: sessionId }, // Excluir la actual
-            session: { userId: session.user.id }
+            session: { userId }
           },
           orderBy: { session: { startTime: 'desc' } },
           select: { sessionId: true }
@@ -83,7 +82,7 @@ export async function GET(
             exerciseId,
             isCompleted: true,
             sessionId: { not: sessionId },
-            session: { userId: session.user.id }
+            session: { userId }
           },
           select: { weight: true, reps: true }
         });
@@ -125,9 +124,9 @@ export async function PATCH(
   { params }: { params: Promise<{ sessionId: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    const userId = await getRequestUserId(req);
 
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
@@ -136,7 +135,7 @@ export async function PATCH(
     const { endTime } = body;
 
     const workoutSession = await prisma.workoutSession.findUnique({
-      where: { id: sessionId, userId: session.user.id },
+      where: { id: sessionId, userId },
     });
 
     if (!workoutSession) {

@@ -1,18 +1,15 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getNow } from "@/lib/timeUtils";
+import { getRequestUserId } from "@/lib/apiAuth";
 
 export async function GET(request: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const userId = await getRequestUserId(request);
 
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
-
-    const userId = session.user.id;
     const { searchParams } = new URL(request.url);
     const dateParam = searchParams.get("date");
 

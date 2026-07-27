@@ -77,9 +77,27 @@ export async function fetchApi(endpoint: string, options: RequestInit = {}) {
   return responseData;
 }
 
+export async function fetchApiText(endpoint: string, options: RequestInit = {}): Promise<string> {
+  const token = await getAuthToken();
+  const headers: Record<string, string> = { ...(options.headers as Record<string, string>) };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`;
+  const response = await fetch(url, { ...options, headers });
+
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => ({}));
+    throw new Error(errorBody.message || errorBody.error || `HTTP error ${response.status}`);
+  }
+
+  return response.text();
+}
+
 export const api = {
   get: (endpoint: string) => fetchApi(endpoint, { method: 'GET' }),
+  getText: (endpoint: string) => fetchApiText(endpoint, { method: 'GET' }),
   post: (endpoint: string, body?: any) => fetchApi(endpoint, { method: 'POST', body: JSON.stringify(body) }),
   put: (endpoint: string, body?: any) => fetchApi(endpoint, { method: 'PUT', body: JSON.stringify(body) }),
+  patch: (endpoint: string, body?: any) => fetchApi(endpoint, { method: 'PATCH', body: JSON.stringify(body) }),
   delete: (endpoint: string) => fetchApi(endpoint, { method: 'DELETE' }),
 };

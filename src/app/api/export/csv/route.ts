@@ -1,17 +1,14 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getRequestUserId } from "@/lib/apiAuth";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const userId = await getRequestUserId(req);
 
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
-
-    const userId = session.user.id;
 
     // Obtener todas las sesiones del usuario con sus series y ejercicios
     const workoutSessions = await prisma.workoutSession.findMany({

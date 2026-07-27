@@ -1,18 +1,15 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getNow } from "@/lib/timeUtils";
+import { getRequestUserId } from "@/lib/apiAuth";
 
 export async function GET(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const userId = await getRequestUserId(req);
 
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
-
-    const userId = session.user.id;
     const now = await getNow();
 
     // 1. Total visits

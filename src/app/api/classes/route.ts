@@ -1,23 +1,22 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getNow } from "@/lib/timeUtils";
 import { generateClassesFromTemplate } from "@/lib/classUtils";
+import { getRequestUserId } from "@/lib/apiAuth";
 
 const BOOKING_WINDOW_MS = 48 * 60 * 60 * 1000; // 48 hours
 
 // GET: List upcoming classes for the user's gym
 export async function GET(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const userId = await getRequestUserId(req);
+    if (!userId) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
     // Find user's gym
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: userId },
       select: { gymId: true },
     });
 
@@ -63,7 +62,7 @@ export async function GET(req: Request) {
       include: {
         _count: { select: { bookings: true } },
         bookings: {
-          where: { userId: session.user.id },
+          where: { userId },
           select: { id: true, status: true },
         },
       },
@@ -103,8 +102,8 @@ export async function GET(req: Request) {
 // POST: Book a class (with 48h server-side validation)
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const userId = await getRequestUserId(req);
+    if (!userId) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
@@ -115,7 +114,7 @@ export async function POST(req: Request) {
 
     // Find user's gym and check subscription
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: userId },
       select: { 
         gymId: true,
         subscriptionStatus: true,
@@ -170,7 +169,7 @@ export async function POST(req: Request) {
     // Check duplicate booking
     const existingBooking = await prisma.classBooking.findUnique({
       where: {
-        userId_classId: { userId: session.user.id, classId },
+        userId_classId: { userId, classId },
       },
     });
 
@@ -180,7 +179,7 @@ export async function POST(req: Request) {
 
     const booking = await prisma.classBooking.create({
       data: {
-        userId: session.user.id,
+        userId,
         classId,
       },
     });
@@ -195,8 +194,8 @@ export async function POST(req: Request) {
 // DELETE: Cancel a booking
 export async function DELETE(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const userId = await getRequestUserId(req);
+    if (!userId) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
@@ -208,7 +207,7 @@ export async function DELETE(req: Request) {
     }
 
     const booking = await prisma.classBooking.findFirst({
-      where: { id: bookingId, userId: session.user.id },
+      where: { id: bookingId, userId },
     });
 
     if (!booking) {

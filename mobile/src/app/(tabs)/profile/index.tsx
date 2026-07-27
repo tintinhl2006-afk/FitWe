@@ -1,485 +1,431 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  SafeAreaView,
-  Modal,
-  TextInput,
-  ActivityIndicator,
-  Alert,
-} from 'react-native';
-import { useAuth } from '../../../context/AuthContext';
+import React, { useEffect, useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, Modal, ActivityIndicator, Dimensions } from 'react-native';
 import { useRouter } from 'expo-router';
+import QRCode from 'react-native-qrcode-svg';
 import {
   User,
-  ShieldCheck,
-  CreditCard,
-  Bell,
-  Lock,
-  LogOut,
-  ChevronRight,
-  Sparkles,
   Settings,
-  Scale,
-  Ruler,
-  Download,
+  QrCode,
+  Clock,
+  Calendar,
+  Activity,
+  Dumbbell,
   X,
-  Check,
-  Globe,
+  Eye,
+  RefreshCw,
 } from 'lucide-react-native';
+import { useAppTheme } from '../../../context/ThemeContext';
+import { usePreferences } from '../../../context/PreferencesContext';
+import { Palette } from '../../../constants/theme';
 import { api } from '../../../lib/apiClient';
 
+const { width } = Dimensions.get('window');
+const QR_LIFETIME_SECONDS = 20;
+
+interface SetEntry {
+  weight: number;
+  reps: number;
+  isCompleted: boolean;
+  exercise: { name: string; muscleGroup: string; equipment: string | null };
+}
+
+interface SessionEntry {
+  id: string;
+  name: string;
+  date: string;
+  durationMinutes: number;
+  totalVolume: number;
+  sets: SetEntry[];
+}
+
+interface ProfileData {
+  user: { name: string; email: string; image: string | null };
+  stats: { totalWeeklyMinutes: number; weeklySessionsCount: number; weeklyChartData: { day: string; minutos: number }[] };
+  monthlyDates: string[];
+  recentSessions: SessionEntry[];
+}
+
 export default function ProfileScreen() {
-  const { user, logout, refreshUser } = useAuth();
   const router = useRouter();
+  const { colors } = useAppTheme();
+  const { weightUnit } = usePreferences();
 
-  // Modals State
-  const [showEditProfileModal, setShowEditProfileModal] = useState(false);
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [showUnitsModal, setShowUnitsModal] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [data, setData] = useState<ProfileData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [expandedSession, setExpandedSession] = useState<SessionEntry | null>(null);
 
-  // Edit Profile Form
-  const [weight, setWeight] = useState('82.5');
-  const [height, setHeight] = useState('178');
-  const [bio, setBio] = useState('');
+  const [isQrOpen, setIsQrOpen] = useState(false);
+  const [qrToken, setQrToken] = useState<string | null>(null);
+  const [isQrLoading, setIsQrLoading] = useState(false);
+  const [qrTimeLeft, setQrTimeLeft] = useState(QR_LIFETIME_SECONDS);
 
-  // Units State
-  const [weightUnit, setWeightUnit] = useState<'kg' | 'lbs'>('kg');
-  const [distanceUnit, setDistanceUnit] = useState<'km' | 'mi'>('km');
-
-  // Password Change Form
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-
-  async function handleUpdateProfile() {
-    setIsSubmitting(true);
+  async function fetchProfile() {
     try {
-      await api.put('/api/settings/profile', {
-        weight: Number(weight),
-        height: Number(height),
-        bio,
-      });
-
-      Alert.alert('Perfil Actualizado', 'Tus datos antropométricos se han guardado con éxito.');
-      setShowEditProfileModal(false);
-      await refreshUser();
-    } catch (error: any) {
-      Alert.alert('Error', error.message || 'No se pudieron guardar las modificaciones.');
+      setData(await api.get('/api/profile'));
+    } catch (e) {
+      console.error('Error al cargar el perfil:', e);
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   }
 
-  async function handleChangePassword() {
-    if (!currentPassword || !newPassword) {
-      Alert.alert('Campos requeridos', 'Introduce tu contraseña actual y la nueva.');
+  async function fetchQrToken() {
+    setIsQrLoading(true);
+    try {
+      const res = await api.get('/api/user/access-token');
+      setQrToken(res.token);
+      setQrTimeLeft(QR_LIFETIME_SECONDS);
+    } catch {
+      setQrToken(null);
+    } finally {
+      setIsQrLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  useEffect(() => {
+    if (!isQrOpen) {
+      setQrToken(null);
       return;
     }
+    fetchQrToken();
+  }, [isQrOpen]);
 
-    if (newPassword !== confirmPassword) {
-      Alert.alert('Error', 'Las contraseñas nuevas no coinciden.');
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      await api.put('/api/settings/password', {
-        currentPassword,
-        newPassword,
+  useEffect(() => {
+    if (!isQrOpen || !qrToken) return;
+    const timer = setInterval(() => {
+      setQrTimeLeft((prev) => {
+        if (prev <= 1) {
+          fetchQrToken();
+          return QR_LIFETIME_SECONDS;
+        }
+        return prev - 1;
       });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [isQrOpen, qrToken]);
 
-      Alert.alert('Contraseña Cambiada', 'Tu contraseña se ha actualizado correctamente.');
-      setShowPasswordModal(false);
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-    } catch (error: any) {
-      Alert.alert('Error', error.message || 'La contraseña actual no es correcta.');
-    } finally {
-      setIsSubmitting(false);
-    }
+  if (isLoading || !data) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator color={colors.primary} size="large" />
+      </SafeAreaView>
+    );
   }
 
-  async function handleExportData() {
-    try {
-      Alert.alert('Exportar Datos', 'Se ha solicitado la exportación de tus datos de entrenamiento y nutrición.');
-    } catch (error) {
-      console.error(error);
-    }
-  }
+  const now = new Date();
+  const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const startOffset = (firstDayOfMonth.getDay() + 6) % 7;
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const calendarDays = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+  const activeDays = new Set(data.monthlyDates.map((d) => new Date(d).getDate()));
 
-  async function handleLogout() {
-    Alert.alert('Cerrar Sesión', '¿Estás seguro de que deseas cerrar sesión?', [
-      { text: 'Cancelar', style: 'cancel' },
-      {
-        text: 'Cerrar Sesión',
-        style: 'destructive',
-        onPress: async () => {
-          await logout();
-          router.replace('/(auth)/login');
-        },
-      },
-    ]);
-  }
+  const hoursTrained = Math.floor(data.stats.totalWeeklyMinutes / 60);
+  const minsTrained = data.stats.totalWeeklyMinutes % 60;
+  const maxMinutes = Math.max(...data.stats.weeklyChartData.map((d) => d.minutos), 1);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#0f172a' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
-        {/* Profile Card Header */}
-        <View
-          style={{
-            backgroundColor: '#1e293b',
-            borderRadius: 24,
-            padding: 22,
-            borderWidth: 1,
-            borderColor: '#334155',
-            alignItems: 'center',
-            marginBottom: 24,
-          }}
-        >
+        {/* Header row */}
+        <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginBottom: 4 }}>
+          <TouchableOpacity
+            onPress={() => router.push('/profile/settings')}
+            style={{ height: 38, width: 38, borderRadius: 14, backgroundColor: colors.surfaceAlt, alignItems: 'center', justifyContent: 'center' }}
+          >
+            <Settings size={18} color={colors.textSecondary} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Avatar */}
+        <View style={{ alignItems: 'center', marginBottom: 24 }}>
           <View
             style={{
-              width: 80,
-              height: 80,
-              borderRadius: 40,
-              backgroundColor: 'rgba(6, 182, 212, 0.2)',
+              height: 96,
+              width: 96,
+              borderRadius: 48,
+              backgroundColor: colors.surfaceAlt,
+              borderWidth: 3,
+              borderColor: colors.surface,
               alignItems: 'center',
               justifyContent: 'center',
-              marginBottom: 14,
-              borderWidth: 2,
-              borderColor: '#06b6d4',
+              overflow: 'hidden',
             }}
           >
-            <User size={40} color="#06b6d4" />
+            <User size={44} color={colors.textMuted} />
           </View>
+          <Text style={{ fontSize: 22, fontWeight: '900', color: colors.textPrimary, marginTop: 12 }}>{data.user.name}</Text>
+          <Text style={{ fontSize: 13, color: colors.textSecondary, marginTop: 2 }}>{data.user.email}</Text>
 
-          <Text style={{ fontSize: 22, fontWeight: '900', color: '#ffffff' }}>
-            {user?.name || 'Martin Herrero'}
-          </Text>
-          <Text style={{ fontSize: 13, color: '#94a3b8', marginTop: 2 }}>{user?.email}</Text>
-
-          <View
+          <TouchableOpacity
+            onPress={() => setIsQrOpen(true)}
             style={{
-              marginTop: 12,
-              paddingHorizontal: 14,
-              paddingVertical: 6,
-              borderRadius: 20,
-              backgroundColor: 'rgba(6, 182, 212, 0.15)',
-              borderWidth: 1,
-              borderColor: 'rgba(6, 182, 212, 0.3)',
+              marginTop: 16,
+              backgroundColor: colors.primary,
+              paddingHorizontal: 20,
+              paddingVertical: 12,
+              borderRadius: 999,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 8,
             }}
           >
-            <Text style={{ fontSize: 11, fontWeight: 'bold', color: '#06b6d4' }}>
-              Socio • {user?.gymName || 'Iron Temple Fitness'}
+            <QrCode size={15} color="#fff" />
+            <Text style={{ color: '#fff', fontSize: 11, fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              Mi Código QR de Acceso
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Weekly Time Chart */}
+        <Card colors={colors} style={{ marginBottom: 16 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+            <Clock size={14} color={colors.primaryAccent} />
+            <Text style={{ fontSize: 11, fontWeight: '900', color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              Tiempo esta semana
             </Text>
           </View>
-        </View>
-
-        {/* Subscription Info Card */}
-        <View style={{ marginBottom: 24 }}>
-          <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 10, letterSpacing: 0.5 }}>
-            Suscripción & Centro
+          <Text style={{ fontSize: 28, fontWeight: '900', color: colors.textPrimary, marginBottom: 14 }}>
+            {hoursTrained}<Text style={{ fontSize: 15, color: colors.textMuted }}>h </Text>
+            {minsTrained}<Text style={{ fontSize: 15, color: colors.textMuted }}>m</Text>
           </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', height: 90 }}>
+            {data.stats.weeklyChartData.map((entry, idx) => {
+              const hasTrained = entry.minutos > 0;
+              const heightPct = hasTrained ? Math.max((entry.minutos / maxMinutes) * 100, 10) : 10;
+              return (
+                <View key={idx} style={{ alignItems: 'center', flex: 1 }}>
+                  <View style={{ width: 18, height: `${heightPct}%`, borderRadius: 5, backgroundColor: hasTrained ? colors.primary : colors.surfaceAlt }} />
+                  <Text style={{ fontSize: 10, fontWeight: 'bold', color: hasTrained ? colors.textPrimary : colors.textMuted, marginTop: 6, textTransform: 'capitalize' }}>
+                    {entry.day}
+                  </Text>
+                </View>
+              );
+            })}
+          </View>
+        </Card>
 
-          <View
-            style={{
-              backgroundColor: '#1e293b',
-              borderRadius: 20,
-              padding: 16,
-              borderWidth: 1,
-              borderColor: '#334155',
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-          >
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-              <View style={{ padding: 10, borderRadius: 12, backgroundColor: 'rgba(16, 185, 129, 0.15)' }}>
-                <CreditCard size={20} color="#10b981" />
-              </View>
-              <View>
-                <Text style={{ fontSize: 15, fontWeight: 'bold', color: '#ffffff' }}>
-                  {user?.gymName || 'Iron Temple Fitness'}
-                </Text>
-                <Text style={{ fontSize: 12, color: user?.subscriptionStatus === 'ACTIVE' ? '#10b981' : '#f43f5e', fontWeight: 'bold' }}>
-                  {user?.subscriptionStatus === 'ACTIVE' ? '✓ Cuota Activa' : '✕ Cuota Inactiva / Vencida'}
-                </Text>
-              </View>
+        {/* Activity Calendar */}
+        <Card colors={colors} style={{ marginBottom: 20 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Calendar size={14} color={colors.primaryAccent} />
+              <Text style={{ fontSize: 11, fontWeight: '900', color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                Actividad del Mes
+              </Text>
+            </View>
+            <View style={{ backgroundColor: colors.primarySoft, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3 }}>
+              <Text style={{ fontSize: 10, fontWeight: 'bold', color: colors.primaryAccent, textTransform: 'uppercase' }}>
+                {activeDays.size} sesiones
+              </Text>
             </View>
           </View>
+
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+            {['L', 'M', 'X', 'J', 'V', 'S', 'D'].map((d) => (
+              <Text key={d} style={{ width: `${100 / 7}%`, textAlign: 'center', fontSize: 10, fontWeight: '900', color: colors.textMuted, marginBottom: 6 }}>
+                {d}
+              </Text>
+            ))}
+            {Array.from({ length: startOffset }).map((_, i) => (
+              <View key={`empty-${i}`} style={{ width: `${100 / 7}%`, aspectRatio: 1 }} />
+            ))}
+            {calendarDays.map((day) => (
+              <View key={day} style={{ width: `${100 / 7}%`, aspectRatio: 1, padding: 2 }}>
+                <View
+                  style={{
+                    flex: 1,
+                    borderRadius: 12,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: activeDays.has(day) ? colors.primary : colors.surfaceAlt,
+                  }}
+                >
+                  <Text style={{ fontSize: 11, fontWeight: 'bold', color: activeDays.has(day) ? '#fff' : colors.textMuted }}>{day}</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        </Card>
+
+        {/* History */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+          <Activity size={14} color={colors.primaryAccent} />
+          <Text style={{ fontSize: 11, fontWeight: '900', color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            Historial de Entrenamientos
+          </Text>
         </View>
 
-        {/* Settings Subpages Menu */}
-        <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 10, letterSpacing: 0.5 }}>
-          Configuración de la Cuenta
-        </Text>
-
-        <View
-          style={{
-            backgroundColor: '#1e293b',
-            borderRadius: 20,
-            borderWidth: 1,
-            borderColor: '#334155',
-            overflow: 'hidden',
-            marginBottom: 24,
-          }}
-        >
-          {/* Edit Profile */}
-          <TouchableOpacity
-            onPress={() => setShowEditProfileModal(true)}
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              padding: 16,
-              borderBottomWidth: 1,
-              borderBottomColor: '#334155',
-            }}
-          >
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-              <Scale size={20} color="#06b6d4" />
-              <Text style={{ fontSize: 15, color: '#ffffff', fontWeight: '600' }}>Perfil Antropométrico (Peso/Altura)</Text>
-            </View>
-            <ChevronRight size={20} color="#64748b" />
-          </TouchableOpacity>
-
-          {/* Unit Preferences */}
-          <TouchableOpacity
-            onPress={() => setShowUnitsModal(true)}
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              padding: 16,
-              borderBottomWidth: 1,
-              borderBottomColor: '#334155',
-            }}
-          >
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-              <Ruler size={20} color="#a855f7" />
-              <Text style={{ fontSize: 15, color: '#ffffff', fontWeight: '600' }}>Unidades de Medida ({weightUnit} / {distanceUnit})</Text>
-            </View>
-            <ChevronRight size={20} color="#64748b" />
-          </TouchableOpacity>
-
-          {/* Password & Security */}
-          <TouchableOpacity
-            onPress={() => setShowPasswordModal(true)}
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              padding: 16,
-              borderBottomWidth: 1,
-              borderBottomColor: '#334155',
-            }}
-          >
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-              <Lock size={20} color="#f59e0b" />
-              <Text style={{ fontSize: 15, color: '#ffffff', fontWeight: '600' }}>Cambiar Contraseña</Text>
-            </View>
-            <ChevronRight size={20} color="#64748b" />
-          </TouchableOpacity>
-
-          {/* Data Export */}
-          <TouchableOpacity
-            onPress={handleExportData}
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              padding: 16,
-            }}
-          >
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-              <Download size={20} color="#10b981" />
-              <Text style={{ fontSize: 15, color: '#ffffff', fontWeight: '600' }}>Exportar Mis Datos (CSV)</Text>
-            </View>
-            <ChevronRight size={20} color="#64748b" />
-          </TouchableOpacity>
-        </View>
-
-        {/* Logout Button */}
-        <TouchableOpacity
-          onPress={handleLogout}
-          style={{
-            backgroundColor: 'rgba(239, 68, 68, 0.15)',
-            borderWidth: 1,
-            borderColor: 'rgba(239, 68, 68, 0.3)',
-            borderRadius: 18,
-            height: 52,
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexDirection: 'row',
-            gap: 10,
-          }}
-        >
-          <LogOut size={20} color="#ef4444" />
-          <Text style={{ color: '#ef4444', fontSize: 15, fontWeight: 'bold' }}>Cerrar Sesión Segura</Text>
-        </TouchableOpacity>
+        {data.recentSessions.length === 0 ? (
+          <Card colors={colors} style={{ alignItems: 'center', paddingVertical: 28 }}>
+            <Dumbbell size={28} color={colors.textMuted} />
+            <Text style={{ fontSize: 13, color: colors.textMuted, marginTop: 10, fontWeight: '600' }}>
+              Aún no hay registros de entrenamiento.
+            </Text>
+          </Card>
+        ) : (
+          <View style={{ gap: 10 }}>
+            {data.recentSessions.map((session) => (
+              <TouchableOpacity key={session.id} activeOpacity={0.8} onPress={() => setExpandedSession(session)}>
+                <Card colors={colors} padding={16}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <View style={{ flex: 1, marginRight: 10 }}>
+                      <Text style={{ fontSize: 16, fontWeight: '900', color: colors.textPrimary }}>{session.name}</Text>
+                      <Text style={{ fontSize: 12, color: colors.textMuted, fontWeight: '600', marginTop: 3, textTransform: 'capitalize' }}>
+                        {new Date(session.date).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' })}
+                      </Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+                      <View>
+                        <Text style={{ fontSize: 9, fontWeight: '900', color: colors.textMuted, textTransform: 'uppercase' }}>Duración</Text>
+                        <Text style={{ fontSize: 13, fontWeight: 'bold', color: colors.textPrimary, marginTop: 2 }}>{session.durationMinutes} min</Text>
+                      </View>
+                      <View>
+                        <Text style={{ fontSize: 9, fontWeight: '900', color: colors.textMuted, textTransform: 'uppercase' }}>Volumen</Text>
+                        <Text style={{ fontSize: 13, fontWeight: 'bold', color: colors.textPrimary, marginTop: 2 }}>{session.totalVolume} {weightUnit}</Text>
+                      </View>
+                      <Eye size={16} color={colors.textMuted} />
+                    </View>
+                  </View>
+                </Card>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
       </ScrollView>
 
-      {/* Edit Profile Modal */}
-      <Modal visible={showEditProfileModal} animationType="slide" transparent>
-        <SafeAreaView style={{ flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.98)', padding: 20 }}>
-          <View style={{ flex: 1, backgroundColor: '#1e293b', borderRadius: 24, padding: 20, borderWidth: 1, borderColor: '#334155' }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#ffffff' }}>Editar Perfil Antropométrico</Text>
-              <TouchableOpacity onPress={() => setShowEditProfileModal(false)} style={{ padding: 6 }}>
-                <X size={22} color="#94a3b8" />
+      {/* Session Detail Modal */}
+      <Modal visible={!!expandedSession} animationType="slide" transparent>
+        <View style={{ flex: 1, backgroundColor: 'rgba(2,6,23,0.6)', justifyContent: 'flex-end' }}>
+          <View style={{ backgroundColor: colors.surface, borderTopLeftRadius: 28, borderTopRightRadius: 28, maxHeight: '80%', borderWidth: 1, borderColor: colors.border }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, borderBottomWidth: 1, borderBottomColor: colors.border }}>
+              <View>
+                <Text style={{ fontSize: 18, fontWeight: '900', color: colors.textPrimary }}>{expandedSession?.name}</Text>
+                {expandedSession && (
+                  <Text style={{ fontSize: 11, fontWeight: 'bold', color: colors.primaryAccent, textTransform: 'uppercase', marginTop: 2 }}>
+                    {new Date(expandedSession.date).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
+                  </Text>
+                )}
+              </View>
+              <TouchableOpacity
+                onPress={() => setExpandedSession(null)}
+                style={{ height: 34, width: 34, borderRadius: 17, backgroundColor: colors.surfaceAlt, alignItems: 'center', justifyContent: 'center' }}
+              >
+                <X size={16} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={{ flex: 1 }}>
-              <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 6 }}>
-                Peso Corporal ({weightUnit})
-              </Text>
-              <TextInput
-                value={weight}
-                onChangeText={setWeight}
-                keyboardType="numeric"
-                style={{ backgroundColor: '#0f172a', color: '#ffffff', borderRadius: 12, paddingHorizontal: 14, height: 46, marginBottom: 16 }}
-              />
-
-              <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 6 }}>
-                Altura (cm)
-              </Text>
-              <TextInput
-                value={height}
-                onChangeText={setHeight}
-                keyboardType="numeric"
-                style={{ backgroundColor: '#0f172a', color: '#ffffff', borderRadius: 12, paddingHorizontal: 14, height: 46, marginBottom: 20 }}
-              />
-
-              <TouchableOpacity
-                onPress={handleUpdateProfile}
-                disabled={isSubmitting}
-                style={{ backgroundColor: '#06b6d4', height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center' }}
-              >
-                {isSubmitting ? <ActivityIndicator color="#ffffff" /> : <Text style={{ color: '#ffffff', fontWeight: 'bold', fontSize: 15 }}>Guardar Cambios</Text>}
-              </TouchableOpacity>
+            <ScrollView style={{ padding: 20 }}>
+              {expandedSession &&
+                Object.entries(
+                  expandedSession.sets.reduce<Record<string, SetEntry[]>>((acc, set) => {
+                    if (!acc[set.exercise.name]) acc[set.exercise.name] = [];
+                    acc[set.exercise.name].push(set);
+                    return acc;
+                  }, {})
+                ).map(([exerciseName, sets]) => (
+                  <View key={exerciseName} style={{ backgroundColor: colors.surfaceSunken, borderRadius: 16, padding: 14, marginBottom: 12, borderWidth: 1, borderColor: colors.borderLight }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                      <View style={{ height: 6, width: 6, borderRadius: 3, backgroundColor: colors.primary }} />
+                      <Text style={{ fontSize: 13, fontWeight: '900', color: colors.textPrimary }}>{exerciseName}</Text>
+                    </View>
+                    {sets.map((set, idx) => {
+                      const isCardio = set.exercise.muscleGroup.toLowerCase() === 'cardio';
+                      const isBodyweight = set.exercise.equipment?.toLowerCase() === 'peso corporal';
+                      const details = isCardio ? `${set.reps} min` : isBodyweight ? `${set.reps} reps` : `${set.weight} ${weightUnit} x ${set.reps}`;
+                      return (
+                        <View
+                          key={idx}
+                          style={{
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            paddingVertical: 8,
+                            paddingHorizontal: 10,
+                            backgroundColor: colors.surface,
+                            borderRadius: 12,
+                            marginBottom: 6,
+                            borderWidth: 1,
+                            borderColor: colors.border,
+                          }}
+                        >
+                          <Text style={{ fontSize: 12, fontWeight: 'bold', color: colors.textMuted }}>Set {idx + 1}</Text>
+                          <Text style={{ fontSize: 12, fontWeight: '900', color: colors.textPrimary }}>{details}</Text>
+                        </View>
+                      );
+                    })}
+                  </View>
+                ))}
             </ScrollView>
           </View>
-        </SafeAreaView>
+        </View>
       </Modal>
 
-      {/* Password Change Modal */}
-      <Modal visible={showPasswordModal} animationType="slide" transparent>
-        <SafeAreaView style={{ flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.98)', padding: 20 }}>
-          <View style={{ flex: 1, backgroundColor: '#1e293b', borderRadius: 24, padding: 20, borderWidth: 1, borderColor: '#334155' }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#ffffff' }}>Cambiar Contraseña</Text>
-              <TouchableOpacity onPress={() => setShowPasswordModal(false)} style={{ padding: 6 }}>
-                <X size={22} color="#94a3b8" />
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView style={{ flex: 1 }}>
-              <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 6 }}>
-                Contraseña Actual
-              </Text>
-              <TextInput
-                value={currentPassword}
-                onChangeText={setCurrentPassword}
-                secureTextEntry
-                style={{ backgroundColor: '#0f172a', color: '#ffffff', borderRadius: 12, paddingHorizontal: 14, height: 46, marginBottom: 14 }}
-              />
-
-              <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 6 }}>
-                Nueva Contraseña
-              </Text>
-              <TextInput
-                value={newPassword}
-                onChangeText={setNewPassword}
-                secureTextEntry
-                style={{ backgroundColor: '#0f172a', color: '#ffffff', borderRadius: 12, paddingHorizontal: 14, height: 46, marginBottom: 14 }}
-              />
-
-              <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 6 }}>
-                Confirmar Nueva Contraseña
-              </Text>
-              <TextInput
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                secureTextEntry
-                style={{ backgroundColor: '#0f172a', color: '#ffffff', borderRadius: 12, paddingHorizontal: 14, height: 46, marginBottom: 20 }}
-              />
-
+      {/* QR Modal */}
+      <Modal visible={isQrOpen} animationType="fade" transparent>
+        <View style={{ flex: 1, backgroundColor: 'rgba(2,6,23,0.9)', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <View style={{ backgroundColor: colors.surface, borderRadius: 28, padding: 24, alignItems: 'center', width: '100%', maxWidth: 340, borderWidth: 1, borderColor: colors.border }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: 16 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <QrCode size={18} color={colors.primaryAccent} />
+                <Text style={{ fontSize: 16, fontWeight: '900', color: colors.textPrimary }}>Acceso QR</Text>
+              </View>
               <TouchableOpacity
-                onPress={handleChangePassword}
-                disabled={isSubmitting}
-                style={{ backgroundColor: '#06b6d4', height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center' }}
+                onPress={() => setIsQrOpen(false)}
+                style={{ height: 30, width: 30, borderRadius: 15, backgroundColor: colors.surfaceAlt, alignItems: 'center', justifyContent: 'center' }}
               >
-                {isSubmitting ? <ActivityIndicator color="#ffffff" /> : <Text style={{ color: '#ffffff', fontWeight: 'bold', fontSize: 15 }}>Actualizar Contraseña</Text>}
-              </TouchableOpacity>
-            </ScrollView>
-          </View>
-        </SafeAreaView>
-      </Modal>
-
-      {/* Units Preferences Modal */}
-      <Modal visible={showUnitsModal} animationType="slide" transparent>
-        <SafeAreaView style={{ flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.98)', padding: 20 }}>
-          <View style={{ backgroundColor: '#1e293b', borderRadius: 24, padding: 20, borderWidth: 1, borderColor: '#334155' }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#ffffff' }}>Unidades de Medida</Text>
-              <TouchableOpacity onPress={() => setShowUnitsModal(false)} style={{ padding: 6 }}>
-                <X size={22} color="#94a3b8" />
+                <X size={16} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
-
-            <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 8 }}>
-              Unidad de Peso
+            <Text style={{ fontSize: 12, color: colors.textSecondary, textAlign: 'center', marginBottom: 20 }}>
+              Muestra este código QR en el lector del gimnasio para autorizar tu acceso.
             </Text>
-            <View style={{ flexDirection: 'row', gap: 10, marginBottom: 16 }}>
-              <TouchableOpacity
-                onPress={() => setWeightUnit('kg')}
-                style={{
-                  flex: 1,
-                  paddingVertical: 12,
-                  borderRadius: 12,
-                  borderWidth: 1,
-                  borderColor: weightUnit === 'kg' ? '#06b6d4' : '#334155',
-                  backgroundColor: weightUnit === 'kg' ? 'rgba(6, 182, 212, 0.2)' : '#0f172a',
-                  alignItems: 'center',
-                }}
-              >
-                <Text style={{ fontSize: 14, fontWeight: 'bold', color: weightUnit === 'kg' ? '#06b6d4' : '#ffffff' }}>
-                  Kilogramos (kg)
-                </Text>
-              </TouchableOpacity>
 
-              <TouchableOpacity
-                onPress={() => setWeightUnit('lbs')}
-                style={{
-                  flex: 1,
-                  paddingVertical: 12,
-                  borderRadius: 12,
-                  borderWidth: 1,
-                  borderColor: weightUnit === 'lbs' ? '#06b6d4' : '#334155',
-                  backgroundColor: weightUnit === 'lbs' ? 'rgba(6, 182, 212, 0.2)' : '#0f172a',
-                  alignItems: 'center',
-                }}
-              >
-                <Text style={{ fontSize: 14, fontWeight: 'bold', color: weightUnit === 'lbs' ? '#06b6d4' : '#ffffff' }}>
-                  Libras (lbs)
-                </Text>
-              </TouchableOpacity>
+            <View style={{ backgroundColor: colors.surfaceSunken, borderRadius: 20, padding: 16, alignItems: 'center', justifyContent: 'center', minHeight: 220, width: '100%' }}>
+              {isQrLoading || !qrToken ? (
+                <ActivityIndicator color={colors.primary} />
+              ) : qrTimeLeft <= 0 ? (
+                <View style={{ alignItems: 'center' }}>
+                  <Text style={{ fontSize: 13, fontWeight: 'bold', color: Palette.red500, marginBottom: 6 }}>Código Expirado</Text>
+                  <Text style={{ fontSize: 11, color: colors.textMuted, textAlign: 'center', marginBottom: 12 }}>
+                    Por seguridad, el código QR expira en 20 segundos.
+                  </Text>
+                  <TouchableOpacity
+                    onPress={fetchQrToken}
+                    style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.primary, paddingHorizontal: 16, paddingVertical: 9, borderRadius: 999 }}
+                  >
+                    <RefreshCw size={13} color="#fff" />
+                    <Text style={{ color: '#fff', fontSize: 11, fontWeight: 'bold', textTransform: 'uppercase' }}>Regenerar</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <View style={{ backgroundColor: '#fff', padding: 14, borderRadius: 18 }}>
+                  <QRCode value={qrToken} size={Math.min(width * 0.55, 220)} color="#0f172a" backgroundColor="#ffffff" />
+                </View>
+              )}
             </View>
 
-            <TouchableOpacity
-              onPress={() => setShowUnitsModal(false)}
-              style={{ backgroundColor: '#06b6d4', height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginTop: 8 }}
-            >
-              <Text style={{ color: '#ffffff', fontWeight: 'bold', fontSize: 15 }}>Aceptar</Text>
-            </TouchableOpacity>
+            {qrToken && qrTimeLeft > 0 && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 16 }}>
+                <Clock size={13} color={colors.primaryAccent} />
+                <Text style={{ fontSize: 12, fontWeight: '600', color: colors.textSecondary }}>
+                  Expira en {Math.floor(qrTimeLeft / 60)}:{(qrTimeLeft % 60).toString().padStart(2, '0')}
+                </Text>
+              </View>
+            )}
           </View>
-        </SafeAreaView>
+        </View>
       </Modal>
     </SafeAreaView>
+  );
+}
+
+function Card({ colors, children, style, padding = 18 }: { colors: any; children: React.ReactNode; style?: any; padding?: number }) {
+  return (
+    <View style={[{ backgroundColor: colors.surface, borderRadius: 20, padding, borderWidth: 1, borderColor: colors.border }, style]}>
+      {children}
+    </View>
   );
 }

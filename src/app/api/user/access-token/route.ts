@@ -1,14 +1,13 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { generateAccessCode } from "@/lib/cryptoUtils";
+import { getRequestUserId } from "@/lib/apiAuth";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const userId = await getRequestUserId(req);
 
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json(
         { message: "No autorizado" },
         { status: 401 }
@@ -17,7 +16,7 @@ export async function GET() {
 
     // 1. Obtener estado real del usuario en base de datos
     const dbUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: userId },
       select: { subscriptionStatus: true, subscriptionEndDate: true },
     });
 
@@ -40,7 +39,7 @@ export async function GET() {
     }
 
     // Generar código firmado con HMAC
-    const token = generateAccessCode(session.user.id);
+    const token = generateAccessCode(userId);
 
     return NextResponse.json({ token });
   } catch (error) {

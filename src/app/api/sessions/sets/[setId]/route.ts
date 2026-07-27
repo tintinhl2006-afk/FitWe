@@ -1,16 +1,15 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getRequestUserId } from "@/lib/apiAuth";
 
 export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ setId: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    const userId = await getRequestUserId(req);
 
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
@@ -24,7 +23,7 @@ export async function PATCH(
       include: { session: true },
     });
 
-    if (!workoutSet || workoutSet.session.userId !== session.user.id) {
+    if (!workoutSet || workoutSet.session.userId !== userId) {
       return NextResponse.json(
         { message: "Set no encontrado o no autorizado" },
         { status: 404 }

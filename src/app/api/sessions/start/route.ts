@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getRequestUserId } from "@/lib/apiAuth";
 
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const userId = await getRequestUserId(req);
 
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
@@ -23,7 +22,7 @@ export async function POST(req: Request) {
 
     // Obtener la rutina con sus ejercicios
     const routine = await prisma.routine.findUnique({
-      where: { id: routineId, userId: session.user.id },
+      where: { id: routineId, userId },
       include: { exercises: true },
     });
 
@@ -37,7 +36,7 @@ export async function POST(req: Request) {
     // Crear la sesión de entrenamiento
     const workoutSession = await prisma.workoutSession.create({
       data: {
-        userId: session.user.id,
+        userId,
         routineId: routine.id,
         // startTime se asigna por defecto a now()
       },
