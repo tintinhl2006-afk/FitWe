@@ -1,20 +1,19 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { generateDietPlan, STANDARD_FOODS, filterFoodsForUser, solveMealGrams } from "@/lib/dietEngine";
 import { getFoodCategory } from "@/lib/nutritionUtils";
+import { getRequestUserId } from "@/lib/apiAuth";
 
 // GET: Generate a customized diet plan based on the user's active nutrition profile and custom overrides
 export async function GET(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const userId = await getRequestUserId(req);
+    if (!userId) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
     const profile = await prisma.nutritionProfile.findUnique({
-      where: { userId: session.user.id },
+      where: { userId },
     });
 
     if (!profile) {
@@ -99,8 +98,8 @@ export async function GET(req: Request) {
 // POST: Save/Register the customized diet plan into the user's daily meal entries
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const userId = await getRequestUserId(req);
+    if (!userId) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
@@ -122,7 +121,7 @@ export async function POST(req: Request) {
       // 1. Clean up existing meal entries for the selected day
       await tx.mealEntry.deleteMany({
         where: {
-          userId: session.user.id,
+          userId,
           date: {
             gte: startDate,
             lte: endDate,
@@ -137,7 +136,7 @@ export async function POST(req: Request) {
           where: {
             name: item.foodName,
             OR: [
-              { userId: session.user.id },
+              { userId },
               { userId: null }
             ]
           }
@@ -162,7 +161,7 @@ export async function POST(req: Request) {
         // 3. Create the MealEntry log
         await tx.mealEntry.create({
           data: {
-            userId: session.user.id,
+            userId,
             foodItemId: foodItem.id,
             mealType: item.mealType, // BREAKFAST, LUNCH, DINNER, SNACK
             quantityGrams: Number(item.quantityGrams),

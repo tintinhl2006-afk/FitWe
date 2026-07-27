@@ -13,7 +13,9 @@ import {
   Search,
   Target,
   BarChart3,
+  Sparkles,
 } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
 import { useAppTheme } from '../../../context/ThemeContext';
 import { Palette } from '../../../constants/theme';
 import { api } from '../../../lib/apiClient';
@@ -91,6 +93,7 @@ function formatDateLabel(dateStr: string) {
 
 export default function NutritionScreen() {
   const { colors } = useAppTheme();
+  const router = useRouter();
 
   const [selectedDate, setSelectedDate] = useState(todayISO());
   const [profile, setProfile] = useState<NutritionProfile | null>(null);
@@ -344,6 +347,23 @@ export default function NutritionScreen() {
                 <Text style={{ color: colors.textSecondary, fontWeight: 'bold', fontSize: 12 }}>Objetivos</Text>
               </TouchableOpacity>
             </View>
+
+            <TouchableOpacity
+              onPress={() => router.push({ pathname: '/nutrition/generate-diet', params: { date: selectedDate } })}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                height: 46,
+                borderRadius: 14,
+                backgroundColor: colors.primary,
+                marginBottom: 20,
+              }}
+            >
+              <Sparkles size={16} color="#fff" />
+              <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 13 }}>Generar Menú Diario con IA</Text>
+            </TouchableOpacity>
 
             {/* Macro cards */}
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 20 }}>
