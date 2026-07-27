@@ -10,6 +10,7 @@ export default function ProfileStackLayout() {
       <Stack.Screen name="settings/units" />
       <Stack.Screen name="settings/password" />
       <Stack.Screen name="settings/appearance" />
+      <Stack.Screen name="settings/gym" />
     </Stack>
   );
 }

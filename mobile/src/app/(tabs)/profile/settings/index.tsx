@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, Alert, Share, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
-import { User, Ruler, Lock, Palette as PaletteIcon, Download, LogOut, ChevronRight } from 'lucide-react-native';
+import { User, Ruler, Lock, Palette as PaletteIcon, Download, LogOut, ChevronRight, Building2, Trash2 } from 'lucide-react-native';
 import { useAppTheme } from '../../../../context/ThemeContext';
 import { useAuth } from '../../../../context/AuthContext';
 import { SettingsHeader } from '../../../../components/SettingsHeader';
@@ -12,6 +12,7 @@ export default function SettingsMenuScreen() {
   const { colors } = useAppTheme();
   const { logout } = useAuth();
   const [isExporting, setIsExporting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   async function handleExport() {
     setIsExporting(true);
@@ -39,6 +40,41 @@ export default function SettingsMenuScreen() {
     ]);
   }
 
+  function handleDeleteAccount() {
+    Alert.alert(
+      'ADVERTENCIA EXTREMA',
+      '¿Estás absolutamente seguro de querer eliminar tu cuenta? Se borrarán TODOS tus entrenamientos, rutinas e historial para siempre.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Continuar',
+          style: 'destructive',
+          onPress: () => {
+            Alert.alert('Última confirmación', 'Esta acción NO se puede deshacer.', [
+              { text: 'Cancelar', style: 'cancel' },
+              {
+                text: 'Eliminar Cuenta',
+                style: 'destructive',
+                onPress: async () => {
+                  setIsDeleting(true);
+                  try {
+                    await api.post('/api/settings/delete-account');
+                    await logout();
+                    router.replace('/(auth)/login');
+                  } catch (e) {
+                    Alert.alert('Error', e instanceof Error ? e.message : 'No se pudo eliminar la cuenta.');
+                  } finally {
+                    setIsDeleting(false);
+                  }
+                },
+              },
+            ]);
+          },
+        },
+      ]
+    );
+  }
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <SettingsHeader title="Configuración" colors={colors} />
@@ -48,6 +84,7 @@ export default function SettingsMenuScreen() {
           <MenuRow colors={colors} icon={<Ruler size={18} color={colors.primary} />} label="Unidades de Medida" onPress={() => router.push('/profile/settings/units')} />
           <MenuRow colors={colors} icon={<PaletteIcon size={18} color={colors.primary} />} label="Apariencia" onPress={() => router.push('/profile/settings/appearance')} />
           <MenuRow colors={colors} icon={<Lock size={18} color={colors.primary} />} label="Cambiar Contraseña" onPress={() => router.push('/profile/settings/password')} />
+          <MenuRow colors={colors} icon={<Building2 size={18} color={colors.primary} />} label="Mi Gimnasio" onPress={() => router.push('/profile/settings/gym')} />
           <MenuRow
             colors={colors}
             icon={isExporting ? <ActivityIndicator size="small" color={colors.primary} /> : <Download size={18} color={colors.primary} />}
@@ -73,6 +110,24 @@ export default function SettingsMenuScreen() {
         >
           <LogOut size={18} color="#ef4444" />
           <Text style={{ color: '#ef4444', fontSize: 14, fontWeight: 'bold' }}>Cerrar Sesión</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={handleDeleteAccount}
+          disabled={isDeleting}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 10,
+            height: 46,
+            borderRadius: 18,
+            marginTop: 10,
+            opacity: isDeleting ? 0.6 : 1,
+          }}
+        >
+          {isDeleting ? <ActivityIndicator size="small" color={colors.textMuted} /> : <Trash2 size={14} color={colors.textMuted} />}
+          <Text style={{ color: colors.textMuted, fontSize: 12, fontWeight: '600' }}>Eliminar mi cuenta permanentemente</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

@@ -1,18 +1,17 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { logger } from "@/lib/logger";
 import { z } from "zod";
+import { getRequestAuth } from "@/lib/apiAuth";
 
 const linkGymSchema = z.object({
   gymCode: z.string().length(6, "El código de gimnasio debe tener exactamente 6 caracteres."),
 });
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id || session.user.role !== "USER") {
+    const auth = await getRequestAuth(req);
+    if (!auth || auth.role !== "USER") {
       return NextResponse.json(
         { message: "No autorizado" },
         { status: 401 }
@@ -20,7 +19,7 @@ export async function GET() {
     }
 
     const client = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: auth.id },
       select: {
         gym: {
           select: {
@@ -46,8 +45,8 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id || session.user.role !== "USER") {
+    const auth = await getRequestAuth(req);
+    if (!auth || auth.role !== "USER") {
       return NextResponse.json(
         { message: "No autorizado" },
         { status: 401 }
@@ -82,7 +81,7 @@ export async function POST(req: Request) {
 
     // Get current client state
     const client = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: auth.id },
       select: { id: true, gymId: true, name: true },
     });
 
