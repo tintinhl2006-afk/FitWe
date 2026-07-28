@@ -65,7 +65,9 @@ export async function GET(req: Request) {
     let cardBrand = "Visa / Connect";
 
     // ─── CASO 1: VERIFICACIÓN STRIPE REAL ───
-    if (sessionId) {
+    // (nunca para pagos simulados: la página stripe-mock también genera un session_id falso
+    // para poder reutilizar este mismo flujo de verificación, por eso se comprueba `mock` aquí)
+    if (sessionId && !mock) {
       let stripe: Stripe;
       let stripeSession: Stripe.Checkout.Session;
 
