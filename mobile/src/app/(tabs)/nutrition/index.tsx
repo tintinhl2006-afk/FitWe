@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, TextInput, ActivityIndicator, Alert, Modal } from 'react-native';
 import {
   Plus,
@@ -127,17 +127,23 @@ export default function NutritionScreen() {
   const [setupFatPct, setSetupFatPct] = useState(30);
   const [isSavingSetup, setIsSavingSetup] = useState(false);
 
+  const nutritionRequestIdRef = useRef(0);
+  const foodSearchRequestIdRef = useRef(0);
+
   async function fetchNutritionData(date: string) {
+    const requestId = ++nutritionRequestIdRef.current;
     setIsLoading(true);
     try {
       const data = await api.get(`/api/user/nutrition?date=${date}`);
+      if (requestId !== nutritionRequestIdRef.current) return;
       setProfile(data.profile || null);
       setMeals(data.meals || []);
     } catch {
+      if (requestId !== nutritionRequestIdRef.current) return;
       setProfile(null);
       setMeals([]);
     } finally {
-      setIsLoading(false);
+      if (requestId === nutritionRequestIdRef.current) setIsLoading(false);
     }
   }
 
@@ -148,12 +154,21 @@ export default function NutritionScreen() {
   useEffect(() => {
     if (!isModalOpen || activeTab !== 'search') return;
     const t = setTimeout(() => {
+      const requestId = ++foodSearchRequestIdRef.current;
       setIsSearching(true);
       api
         .get(`/api/user/foods?query=${encodeURIComponent(searchQuery)}`)
-        .then((data) => setFoods(Array.isArray(data) ? data : []))
-        .catch(() => setFoods([]))
-        .finally(() => setIsSearching(false));
+        .then((data) => {
+          if (requestId !== foodSearchRequestIdRef.current) return;
+          setFoods(Array.isArray(data) ? data : []);
+        })
+        .catch(() => {
+          if (requestId !== foodSearchRequestIdRef.current) return;
+          setFoods([]);
+        })
+        .finally(() => {
+          if (requestId === foodSearchRequestIdRef.current) setIsSearching(false);
+        });
     }, 300);
     return () => clearTimeout(t);
   }, [searchQuery, isModalOpen, activeTab]);
@@ -198,7 +213,7 @@ export default function NutritionScreen() {
   }
 
   async function handleLogMeal() {
-    if (!selectedFood || !quantityGrams) return;
+    if (!selectedFood || !quantityGrams || Number(quantityGrams) <= 0) return;
     setIsLoggingMeal(true);
     try {
       const entryDate = new Date(`${selectedDate}T12:00:00`);
@@ -245,7 +260,13 @@ export default function NutritionScreen() {
     }
     setIsCreatingFood(true);
     try {
-      await api.post('/api/user/foods', newFood);
+      await api.post('/api/user/foods', {
+        ...newFood,
+        calories: Number(newFood.calories),
+        protein: Number(newFood.protein),
+        carbs: Number(newFood.carbs),
+        fat: Number(newFood.fat),
+      });
       setNewFood({ name: '', brand: '', calories: '', protein: '', carbs: '', fat: '' });
       setActiveTab('search');
       setSearchQuery(newFood.name);
@@ -264,7 +285,8 @@ export default function NutritionScreen() {
     }
     setIsSavingSetup(true);
     try {
-      const cal = Number(setupCalories) || 2000;
+      const parsedCal = Number(setupCalories);
+      const cal = setupCalories.trim() !== '' && !Number.isNaN(parsedCal) ? parsedCal : 2000;
       const protein = Math.round((cal * (setupProteinPct / 100)) / 4);
       const carbs = Math.round((cal * (setupCarbsPct / 100)) / 4);
       const fat = Math.round((cal * (setupFatPct / 100)) / 9);
@@ -353,7 +375,7 @@ export default function NutritionScreen() {
                   setSetupCalories(cal.toString());
                   setSetupProteinPct(pPct);
                   setSetupFatPct(fPct);
-                  setSetupCarbsPct(100 - pPct - fPct);
+                  setSetupCarbsPct(Math.max(0, 100 - pPct - fPct));
                   setIsSetupOpen(true);
                 }}
                 style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, height: 42, borderRadius: 14, borderWidth: 1, borderColor: colors.border }}
@@ -528,8 +550,8 @@ export default function NutritionScreen() {
                             />
                             <TouchableOpacity
                               onPress={handleLogMeal}
-                              disabled={isLoggingMeal || !quantityGrams}
-                              style={{ backgroundColor: colors.primary, paddingHorizontal: 16, borderRadius: 10, alignItems: 'center', justifyContent: 'center', opacity: isLoggingMeal || !quantityGrams ? 0.6 : 1 }}
+                              disabled={isLoggingMeal || !quantityGrams || Number(quantityGrams) <= 0}
+                              style={{ backgroundColor: colors.primary, paddingHorizontal: 16, borderRadius: 10, alignItems: 'center', justifyContent: 'center', opacity: isLoggingMeal || !quantityGrams || Number(quantityGrams) <= 0 ? 0.6 : 1 }}
                             >
                               {isLoggingMeal ? <ActivityIndicator size="small" color="#fff" /> : <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 12 }}>Guardar</Text>}
                             </TouchableOpacity>

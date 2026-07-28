@@ -5511,8 +5511,10 @@ export function solveMealGrams(
     totalSolvedCals += item.calories;
   });
 
-  // If solved calories exceed target by more than 20 kcal, scale down dynamic items
-  if (totalSolvedCals > targetCalories + 20) {
+  // If solved calories deviate from target by more than 20 kcal (over from maxGrams
+  // caps, or under from minGrams floors in addDynamicItem), rescale dynamic items to
+  // compensate in either direction.
+  if (Math.abs(totalSolvedCals - targetCalories) > 20) {
     const fixedCals = fixedCalories;
     const targetDynCals = Math.max(50, targetCalories - fixedCals);
     const actualDynCals = Math.max(50, totalSolvedCals - fixedCals);
@@ -5571,92 +5573,86 @@ export function formatHumanFraction(value: number, nounSingle: string, nounPlura
 export function getPortionEquivalent(food: DietFood, grams: number): string {
   if (grams <= 0) return "0g";
 
+  // IDs below must match the Spanish slugs used in STANDARD_FOODS — the catalog has
+  // no English-slug entries, so mismatched cases here silently never match and fall
+  // through to the generic "Xg" text below.
   switch (food.id) {
-    case "std-oats":
+    case "std-avena":
       if (grams < 30) return "3 cucharadas soperas";
       if (grams <= 60) return "1 taza mediana";
       return formatHumanFraction(grams / 50, "taza de avena en copos", "tazas de avena en copos", "f");
-    case "std-chicken":
+    case "std-pechuga-pollo":
       return formatHumanFraction(grams / 150, "pechuga mediana", "pechugas medianas", "f");
-    case "std-brown-rice":
-    case "std-white-rice":
+    case "std-arroz-integral":
+    case "std-arroz-blanco":
       return formatHumanFraction(grams / 150, "taza de arroz cocido", "tazas de arroz cocido", "f");
-    case "std-whole-egg":
+    case "std-huevo-entero":
       return formatHumanFraction(grams / 60, "huevo entero", "huevos enteros", "m");
-    case "std-egg-white":
+    case "std-clara-huevo":
       return formatHumanFraction(grams / 33, "clara de huevo", "claras de huevo", "f");
     case "std-salmon":
       return formatHumanFraction(grams / 150, "filete de salmón", "filetes de salmón", "m");
-    case "std-tuna":
+    case "std-atun":
       return formatHumanFraction(grams / 80, "lata de atún", "latas de atún", "f");
     case "std-tofu":
       return `${grams}g de tofu`;
-    case "std-whole-wheat-bread":
-      return formatHumanFraction(grams / 35, "rebanada de pan de centeno", "rebanadas de pan de centeno", "f");
-    case "std-potato":
+    case "std-pan-integral":
+      return formatHumanFraction(grams / 35, "rebanada de pan integral", "rebanadas de pan integral", "f");
+    case "std-patata":
       return formatHumanFraction(grams / 200, "patata mediana", "patatas medianas", "f");
-    case "std-avocado":
+    case "std-aguacate":
       return formatHumanFraction(grams / 200, "aguacate", "aguacates", "m");
-    case "std-olive-oil":
+    case "std-aceite-oliva":
       if (grams < 8) return "1 cucharadita de café";
       if (grams <= 15) return "1 cucharada sopera";
       return formatHumanFraction(grams / 10, "cucharada sopera de aceite de oliva", "cucharadas soperas de aceite de oliva", "f");
-    case "std-walnuts":
+    case "std-nueces":
       return formatHumanFraction(grams / 3, "nuez", "nueces", "f");
-    case "std-peanut-butter":
+    case "std-crema-cacahuete":
       if (grams < 12) return "1 cucharadita pequeña";
       return formatHumanFraction(grams / 15, "cucharada colmada de crema de cacahuete", "cucharadas colmadas de crema de cacahuete", "f");
-    case "std-skim-milk":
-    case "std-almond-milk":
+    case "std-leche-desnatada":
+    case "std-bebida-almendra":
       return formatHumanFraction(grams / 200, "vaso de leche", "vasos de leche", "m");
-    case "std-greek-yogurt":
+    case "std-yogur-griego":
       return formatHumanFraction(grams / 125, "vaso de yogur griego", "vasos de yogur griego", "m");
-    case "std-whipped-cheese":
+    case "std-queso-batido":
       return formatHumanFraction(grams / 250, "tarrina de queso fresco batido", "tarrinas de queso fresco batido", "f");
-    case "std-banana":
+    case "std-platano":
       return formatHumanFraction(grams / 100, "plátano", "plátanos", "m");
-    case "std-apple":
+    case "std-manzana":
       return formatHumanFraction(grams / 150, "manzana", "manzanas", "f");
-    case "std-broccoli":
+    case "std-brocoli":
       return `${grams}g de brócoli`;
-    case "std-spinach":
+    case "std-espinacas":
       return formatHumanFraction(grams / 50, "taza de hojas de espinaca", "tazas de hojas de espinaca", "f");
-    case "std-whey-protein":
-    case "std-vegan-protein":
+    case "std-proteina-suero":
+    case "std-proteina-vegana":
       return formatHumanFraction(grams / 30, "cazo de proteína", "cazos de proteína", "m");
-    case "std-whole-pasta":
+    case "std-pasta":
       return formatHumanFraction(grams / 150, "plato hondo de pasta cocida", "platos hondos de pasta cocida", "m");
-    case "std-turkey-breast":
+    case "std-pechuga-pavo":
       return formatHumanFraction(grams / 150, "filete de pavo", "filetes de pavo", "m");
-    case "std-lean-beef":
+    case "std-ternera":
       return `${grams}g de ternera magra`;
-    case "std-hake":
+    case "std-merluza":
       return `${grams}g de lomo de merluza`;
-    case "std-sweet-potato":
+    case "std-boniato":
       return formatHumanFraction(grams / 150, "boniato mediano", "boniatos medianos", "m");
     case "std-quinoa":
       return formatHumanFraction(grams / 150, "taza de quinoa cocida", "tazas de quinoa cocida", "f");
-    case "std-lentils":
+    case "std-lentejas":
       return formatHumanFraction(grams / 150, "plato de lentejas cocidas", "platos de lentejas cocidas", "m");
-    case "std-almonds":
+    case "std-almendras":
       return formatHumanFraction(grams / 1.3, "almendra", "almendras", "f");
-    case "std-strawberries":
+    case "std-fresa":
       return formatHumanFraction(grams / 8, "fresa grande", "fresas grandes", "f");
-    case "std-blueberries":
+    case "std-arandanos":
       return `${grams}g de arándanos`;
-    case "std-zucchini":
+    case "std-calabacin":
       return `${grams}g de calabacín`;
-    case "std-cottage-cheese":
+    case "std-queso-cottage":
       return formatHumanFraction(grams / 150, "taza de queso cottage", "tazas de queso cottage", "f");
-    case "std-brown-rice-dry":
-    case "std-white-rice-dry":
-      return formatHumanFraction(grams / 50, "ración de arroz en seco", "raciones de arroz en seco", "f");
-    case "std-whole-pasta-dry":
-      return formatHumanFraction(grams / 70, "ración de pasta en seco", "raciones de pasta en seco", "f");
-    case "std-lentils-dry":
-      return formatHumanFraction(grams / 60, "ración de lentejas en seco", "raciones de lentejas en seco", "f");
-    case "std-quinoa-dry":
-      return formatHumanFraction(grams / 50, "ración de quinoa en seco", "raciones de quinoa en seco", "f");
     default:
       return `${grams}g`;
   }
