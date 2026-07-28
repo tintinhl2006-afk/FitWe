@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -20,8 +20,14 @@ export default function RegisterScreen() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const { register } = useAuth();
+  const { register, user } = useAuth();
   const router = useRouter();
+
+  useEffect(() => {
+    if (user) {
+      router.replace('/(tabs)');
+    }
+  }, [user]);
 
   async function handleRegister() {
     if (!name || !email || !password) {

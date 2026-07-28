@@ -5321,8 +5321,10 @@ export function filterFoodsForUser(
     // 1. Check Diet Type constraints
     if (dietType === "VEGAN" && !food.isVegan) return false;
     if (dietType === "VEGETARIAN" && !food.isVegetarian) return false;
-    if (dietType === "KETO" && !food.isKeto && food.group === "CARB") {
-      // In Keto, restrict heavy carb items (grains/pasta/potatoes)
+    if (dietType === "KETO" && !food.isKeto) {
+      // In Keto, restrict any food not marked keto-friendly — not just the CARB group.
+      // High-carb vegetables (onion, carrot, garlic...) and fruit are flagged isKeto: false
+      // in the catalog for exactly this reason; scoping the check to CARB let them through.
       return false;
     }
 
@@ -5686,8 +5688,9 @@ export function getMealTemplate(
     // Filter only available (not excluded) foods that are in our curated pool
     let pool = availableFoods.filter((f) => ids.includes(f.id));
     if (pool.length === 0) {
-      // Hard fallback: search the whole STANDARD_FOODS catalog
-      return STANDARD_FOODS.find((f) => f.id === fallbackId);
+      // Fall back within the already allergy/diet-filtered `availableFoods`, never the raw
+      // STANDARD_FOODS catalog — that would bypass the caller's safety filtering entirely.
+      return availableFoods.find((f) => f.id === fallbackId) ?? availableFoods[Math.floor(Math.random() * availableFoods.length)];
     }
 
     // Prefer foods the user has marked as favourite
@@ -5714,7 +5717,8 @@ export function getMealTemplate(
     if (pool.length === 0) pool = availableFoods.filter((f) => f.group === "VEG" && !rawOnlyIds.includes(f.id));
     const freshPool = pool.filter((f) => !usedFoodIds.includes(f.id));
     if (freshPool.length > 0) pool = freshPool;
-    if (pool.length === 0) return STANDARD_FOODS.find((f) => f.id === fallbackId);
+    // Fall back within `availableFoods` (already allergy/diet filtered), never the raw catalog.
+    if (pool.length === 0) return availableFoods.find((f) => f.id === fallbackId);
     return pool[Math.floor(Math.random() * pool.length)];
   };
 
@@ -5733,7 +5737,8 @@ export function getMealTemplate(
     if (pool.length === 0) pool = availableFoods.filter((f) => f.group === "FRUIT");
     const freshPool = pool.filter((f) => !usedFoodIds.includes(f.id));
     if (freshPool.length > 0) pool = freshPool;
-    if (pool.length === 0) return STANDARD_FOODS.find((f) => f.id === fallbackId);
+    // Fall back within `availableFoods` (already allergy/diet filtered), never the raw catalog.
+    if (pool.length === 0) return availableFoods.find((f) => f.id === fallbackId);
     return pool[Math.floor(Math.random() * pool.length)];
   };
 

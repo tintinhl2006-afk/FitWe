@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, SafeAreaView, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { Save } from 'lucide-react-native';
 import { useAppTheme } from '../../../../context/ThemeContext';
@@ -17,6 +17,15 @@ export default function UnitsSettingsScreen() {
   const [weightUnit, setWeightUnit] = useState<WeightUnit>(prefs.weightUnit);
   const [distanceUnit, setDistanceUnit] = useState<DistanceUnit>(prefs.distanceUnit);
   const [measurementUnit, setMeasurementUnit] = useState<MeasurementUnit>(prefs.measurementUnit);
+  const hasSyncedRef = useRef(false);
+
+  useEffect(() => {
+    if (prefs.isLoading || hasSyncedRef.current) return;
+    hasSyncedRef.current = true;
+    setWeightUnit(prefs.weightUnit);
+    setDistanceUnit(prefs.distanceUnit);
+    setMeasurementUnit(prefs.measurementUnit);
+  }, [prefs.isLoading, prefs.weightUnit, prefs.distanceUnit, prefs.measurementUnit]);
 
   async function handleSave() {
     setIsSaving(true);

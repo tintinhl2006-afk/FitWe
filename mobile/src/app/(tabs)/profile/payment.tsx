@@ -42,6 +42,13 @@ function escapeHtmlAttr(value: string) {
   return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
+/** Extracts the query string from a URL, tolerant of a `#fragment` after it (unlike a plain split('?')[1]). */
+function extractQueryString(url: string) {
+  const withoutFragment = url.split('#')[0];
+  const queryIndex = withoutFragment.indexOf('?');
+  return queryIndex === -1 ? '' : withoutFragment.slice(queryIndex + 1);
+}
+
 export default function PaymentScreen() {
   const router = useRouter();
   const { colors } = useAppTheme();
@@ -60,18 +67,20 @@ export default function PaymentScreen() {
   const [webviewSource, setWebviewSource] = useState<{ uri: string } | { html: string } | null>(null);
   const [injectedAuthScript, setInjectedAuthScript] = useState('');
   const [paymentDetails, setPaymentDetails] = useState<PaymentDetails | null>(null);
+  const [pendingVerifyUrl, setPendingVerifyUrl] = useState<string | null>(null);
   const handledResultRef = React.useRef(false);
 
   async function fetchPlans() {
     try {
       const data = await api.get('/api/user/plans');
-      setPlans(data.plans || []);
+      const planList: Plan[] = data.plans || [];
+      setPlans(planList);
       const redsysActive = !!data.hasRedsys;
       const stripeActive = !!data.hasStripe && !redsysActive;
       setHasRedsys(redsysActive);
       setHasStripe(stripeActive);
       setGateway(redsysActive ? 'redsys' : 'stripe');
-      setSelectedPlanId(data.currentPlanId || (data.plans[0] && data.plans[0].id) || null);
+      setSelectedPlanId(data.currentPlanId || planList[0]?.id || null);
       setStep('plans');
     } catch (e) {
       setErrorMsg(e instanceof Error ? e.message : 'No se pudieron cargar las tarifas de tu gimnasio.');
@@ -81,31 +90,37 @@ export default function PaymentScreen() {
 
   useEffect(() => {
     fetchPlans();
-    getAuthToken().then((token) => {
-      if (!token) return;
-      // The web pages this WebView loads (mock checkout pages) call our own authenticated API
-      // routes via cookie-based fetch, which the WebView has no session for. Patch fetch so
-      // those calls carry the mobile Bearer token instead.
-      setInjectedAuthScript(`
-        (function() {
-          var originalFetch = window.fetch;
-          window.fetch = function(input, init) {
-            init = init || {};
-            var headers = new Headers(init.headers || {});
-            headers.set('Authorization', 'Bearer ${token}');
-            init.headers = headers;
-            return originalFetch(input, init);
-          };
-        })();
-        true;
-      `);
-    });
   }, []);
+
+  function buildAuthInjectionScript(token: string) {
+    // The web pages this WebView loads (mock checkout pages) call our own authenticated API
+    // routes via cookie-based fetch, which the WebView has no session for. Patch fetch so
+    // those calls carry the mobile Bearer token instead.
+    return `
+      (function() {
+        var originalFetch = window.fetch;
+        window.fetch = function(input, init) {
+          init = init || {};
+          var headers = new Headers(init.headers || {});
+          headers.set('Authorization', 'Bearer ${token}');
+          init.headers = headers;
+          return originalFetch(input, init);
+        };
+      })();
+      true;
+    `;
+  }
 
   async function handlePay() {
     if (!selectedPlanId) return;
     setIsSubmitting(true);
     try {
+      // Fetch the token and build the injection script here, synchronously before the WebView
+      // ever mounts — doing it in a separate effect risked the WebView loading (and the mock
+      // page's checkout fetch firing) before the async token lookup resolved.
+      const token = await getAuthToken();
+      setInjectedAuthScript(token ? buildAuthInjectionScript(token) : '');
+
       const data = await api.post('/api/user/payment', { planId: selectedPlanId, gateway });
 
       if (data.isRedsysForm) {
@@ -132,17 +147,32 @@ export default function PaymentScreen() {
   async function handleVerify(url: string) {
     if (handledResultRef.current) return;
     handledResultRef.current = true;
+    setPendingVerifyUrl(url);
     setStep('verifying');
     try {
-      const query = url.split('?')[1] || '';
+      const query = extractQueryString(url);
       const data = await api.get(`/api/user/payment/verify?${query}`);
       setPaymentDetails(data.payment);
       await refreshUser();
+      setPendingVerifyUrl(null);
       setStep('result');
     } catch (e) {
+      // The gateway may have already charged the card even if this verification call failed
+      // (e.g. a transient network drop right after payment) — keep the URL so "Reintentar
+      // Verificación" re-checks the SAME transaction instead of sending the user back to pay
+      // again, which would risk a double charge.
       setErrorMsg(e instanceof Error ? e.message : 'No se pudo verificar el pago.');
       setStep('error');
     }
+  }
+
+  function retryVerification() {
+    if (!pendingVerifyUrl) {
+      fetchPlans();
+      return;
+    }
+    handledResultRef.current = false;
+    handleVerify(pendingVerifyUrl);
   }
 
   function handleNavigationChange(navState: WebViewNavigation) {
@@ -215,9 +245,24 @@ export default function PaymentScreen() {
           <View style={{ alignItems: 'center', paddingVertical: 40, gap: 14 }}>
             <AlertCircle size={36} color={Palette.red500} />
             <Text style={{ fontSize: 14, fontWeight: 'bold', color: colors.textPrimary, textAlign: 'center' }}>{errorMsg}</Text>
-            <TouchableOpacity onPress={fetchPlans} style={{ backgroundColor: colors.primary, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 14 }}>
-              <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 13 }}>Reintentar</Text>
+            {pendingVerifyUrl && (
+              <Text style={{ fontSize: 12, color: colors.textMuted, textAlign: 'center', paddingHorizontal: 16 }}>
+                Si la pasarela ya te cobró, no vuelvas a pagar: pulsa "Reintentar Verificación" para confirmar ese mismo cobro.
+              </Text>
+            )}
+            <TouchableOpacity onPress={retryVerification} style={{ backgroundColor: colors.primary, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 14 }}>
+              <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 13 }}>{pendingVerifyUrl ? 'Reintentar Verificación' : 'Reintentar'}</Text>
             </TouchableOpacity>
+            {pendingVerifyUrl && (
+              <TouchableOpacity
+                onPress={() => {
+                  setPendingVerifyUrl(null);
+                  fetchPlans();
+                }}
+              >
+                <Text style={{ fontSize: 12, color: colors.textMuted, textDecorationLine: 'underline' }}>Volver a la selección de tarifas</Text>
+              </TouchableOpacity>
+            )}
           </View>
         )}
 
@@ -229,7 +274,7 @@ export default function PaymentScreen() {
             <Text style={{ fontSize: 17, fontWeight: '900', color: colors.textPrimary, textAlign: 'center' }}>¡Pago Confirmado!</Text>
             <Card style={{ width: '100%', gap: 10 }}>
               <SummaryRow label="Plan" value={paymentDetails.planName} colors={colors} />
-              <SummaryRow label="Importe" value={`${paymentDetails.amount.toFixed(2)} €`} colors={colors} />
+              <SummaryRow label="Importe" value={`${Number(paymentDetails.amount).toFixed(2)} €`} colors={colors} />
               <SummaryRow label="Tarjeta" value={`${paymentDetails.cardBrand} •••• ${paymentDetails.cardLast4}`} colors={colors} />
               <SummaryRow label="Gimnasio" value={paymentDetails.gymName} colors={colors} />
               <SummaryRow label="Cuota activa hasta" value={new Date(paymentDetails.endDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })} colors={colors} />

@@ -40,6 +40,9 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
     if (user) {
       refreshPreferences();
     } else {
+      setWeightUnit('kg');
+      setDistanceUnit('km');
+      setMeasurementUnit('cm');
       setIsLoading(false);
     }
   }, [user]);

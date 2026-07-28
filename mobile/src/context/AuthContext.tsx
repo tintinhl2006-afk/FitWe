@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { api, getAuthToken, getUserData, saveAuthToken, saveUserData, removeAuthToken } from '../lib/apiClient';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { router } from 'expo-router';
+import { api, getAuthToken, getUserData, saveAuthToken, saveUserData, removeAuthToken, setUnauthorizedHandler } from '../lib/apiClient';
 
 interface User {
   id: string;
@@ -29,8 +30,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const isHandlingExpiryRef = useRef(false);
+
   useEffect(() => {
     loadStoredSession();
+  }, []);
+
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      if (isHandlingExpiryRef.current) return;
+      isHandlingExpiryRef.current = true;
+      (async () => {
+        await removeAuthToken();
+        setToken(null);
+        setUser(null);
+        router.replace('/(auth)/login');
+        isHandlingExpiryRef.current = false;
+      })();
+    });
+    return () => setUnauthorizedHandler(null);
   }, []);
 
   async function loadStoredSession() {
@@ -53,9 +71,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
     try {
       const data = await api.post('/api/auth/mobile-login', { email, password });
-      
+
       const authToken = data.token;
       const userData = data.user;
+
+      if (typeof authToken !== 'string' || !authToken || !userData?.id) {
+        throw new Error('Respuesta de inicio de sesión inválida del servidor.');
+      }
 
       await saveAuthToken(authToken);
       await saveUserData(userData);
@@ -73,9 +95,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
     try {
       const data = await api.post('/api/auth/mobile-register', registerData);
-      
+
       const authToken = data.token;
       const userData = data.user;
+
+      if (typeof authToken !== 'string' || !authToken || !userData?.id) {
+        throw new Error('Respuesta de registro inválida del servidor.');
+      }
 
       await saveAuthToken(authToken);
       await saveUserData(userData);
