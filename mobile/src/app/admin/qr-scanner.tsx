@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, SafeAreaView, StyleSheet, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, SafeAreaView, StyleSheet, Linking } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, CheckCircle2, XCircle, RefreshCw } from 'lucide-react-native';
@@ -23,13 +23,15 @@ export default function AdminQRScannerScreen() {
           Permiso de Cámara Requerido
         </Text>
         <Text style={{ fontSize: 14, color: '#94a3b8', textAlign: 'center', marginBottom: 24 }}>
-          Necesitamos acceso a la cámara para escanear los pases QR de los socios.
+          {permission.canAskAgain
+            ? 'Necesitamos acceso a la cámara para escanear los pases QR de los socios.'
+            : 'Has denegado el acceso a la cámara permanentemente. Actívalo desde los ajustes del sistema para poder escanear pases QR.'}
         </Text>
         <TouchableOpacity
-          onPress={requestPermission}
+          onPress={permission.canAskAgain ? requestPermission : () => Linking.openSettings()}
           style={{ backgroundColor: '#06b6d4', paddingHorizontal: 24, paddingVertical: 14, borderRadius: 14 }}
         >
-          <Text style={{ color: '#ffffff', fontWeight: 'bold' }}>Conceder Permiso</Text>
+          <Text style={{ color: '#ffffff', fontWeight: 'bold' }}>{permission.canAskAgain ? 'Conceder Permiso' : 'Abrir Ajustes'}</Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
@@ -42,6 +44,9 @@ export default function AdminQRScannerScreen() {
     try {
       // Decode QR token JSON payload
       const payload = JSON.parse(data);
+      if (typeof payload?.userId !== 'string' || !payload.userId) {
+        throw new Error('Payload QR con forma inválida');
+      }
       const res = await api.post('/api/access/verify', {
         token: data,
         memberId: payload.userId,

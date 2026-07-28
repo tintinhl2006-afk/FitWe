@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, ActivityIndicator } from 'react-native';
+import { useFocusEffect } from 'expo-router';
 import {
   Calendar,
   CalendarDays,
@@ -58,17 +59,21 @@ export default function ClassesScreen() {
   const [actionId, setActionId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ msg: string; type: 'ok' | 'err' } | null>(null);
   const [noGym, setNoGym] = useState(false);
-  const [isSubscriptionActive, setIsSubscriptionActive] = useState(true);
+  const [isSubscriptionActive, setIsSubscriptionActive] = useState(false);
 
-  useEffect(() => {
-    api
-      .get('/api/user/subscription-status')
-      .then((sub) => {
-        const expired = sub.subscriptionEndDate ? new Date(sub.subscriptionEndDate) < new Date(sub.serverNow) : false;
-        setIsSubscriptionActive(sub.subscriptionStatus === 'ACTIVE' && !expired);
-      })
-      .catch(() => {});
-  }, []);
+  // Re-check on every focus (not just mount) so renewing the subscription on the
+  // payment screen and returning here reflects the new status immediately.
+  useFocusEffect(
+    useCallback(() => {
+      api
+        .get('/api/user/subscription-status')
+        .then((sub) => {
+          const expired = sub.subscriptionEndDate ? new Date(sub.subscriptionEndDate) < new Date(sub.serverNow) : false;
+          setIsSubscriptionActive(sub.subscriptionStatus === 'ACTIVE' && !expired);
+        })
+        .catch(() => setIsSubscriptionActive(false));
+    }, [])
+  );
 
   async function fetchClasses(date: string) {
     setIsLoading(true);

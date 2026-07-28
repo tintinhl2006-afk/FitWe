@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -34,7 +34,7 @@ import {
   CalendarDays,
   Activity,
 } from 'lucide-react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { api } from '../../lib/apiClient';
 
 const { width } = Dimensions.get('window');
@@ -143,9 +143,14 @@ export default function HomeScreen() {
     }
   }
 
-  useEffect(() => {
-    fetchAll();
-  }, []);
+  // Re-check subscription/QR status whenever the tab gains focus — including on
+  // first mount, and again after returning here right after completing a payment
+  // on the profile tab (Expo Router keeps sibling tabs mounted).
+  useFocusEffect(
+    useCallback(() => {
+      fetchAll();
+    }, [])
+  );
 
   useEffect(() => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -282,10 +287,23 @@ export default function HomeScreen() {
                       <Text style={{ color: '#fff', fontSize: 12, fontWeight: 'bold', textTransform: 'uppercase' }}>Pagar Cuota</Text>
                     </TouchableOpacity>
                   </View>
-                ) : isQrLoading || !qrToken ? (
+                ) : isQrLoading ? (
                   <View style={{ alignItems: 'center', gap: 8, paddingVertical: 20 }}>
                     <ActivityIndicator color={colors.primary} />
                     <Text style={{ fontSize: 12, fontWeight: 'bold', color: colors.textMuted }}>Generando pase...</Text>
+                  </View>
+                ) : !qrToken ? (
+                  <View style={{ alignItems: 'center', gap: 8, paddingVertical: 20 }}>
+                    <Text style={{ fontSize: 12, fontWeight: 'bold', color: colors.textMuted, textAlign: 'center' }}>
+                      No se pudo generar el pase de acceso.
+                    </Text>
+                    <TouchableOpacity
+                      onPress={fetchQrToken}
+                      style={{ marginTop: 4, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.primary, paddingHorizontal: 16, paddingVertical: 9, borderRadius: 999 }}
+                    >
+                      <RefreshCw size={13} color="#fff" />
+                      <Text style={{ color: '#fff', fontSize: 12, fontWeight: 'bold' }}>Reintentar</Text>
+                    </TouchableOpacity>
                   </View>
                 ) : (
                   <>

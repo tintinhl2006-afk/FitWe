@@ -2,12 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, SafeAreaView, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { Building2, MapPin, Save } from 'lucide-react-native';
 import { useAppTheme } from '../../../../context/ThemeContext';
+import { useAuth } from '../../../../context/AuthContext';
 import { SettingsHeader } from '../../../../components/SettingsHeader';
 import { Card, Field, TextField } from '../../../../components/ui';
 import { api } from '../../../../lib/apiClient';
 
 export default function GymSettingsScreen() {
   const { colors } = useAppTheme();
+  const { refreshUser } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [gymName, setGymName] = useState<string | null>(null);
@@ -51,6 +53,7 @@ export default function GymSettingsScreen() {
               Alert.alert('Listo', data.message || 'Vinculación realizada correctamente.');
               setGymCode('');
               await fetchGym();
+              await refreshUser();
             } catch (e) {
               Alert.alert('Error', e instanceof Error ? e.message : 'No se pudo vincular el gimnasio.');
             } finally {
