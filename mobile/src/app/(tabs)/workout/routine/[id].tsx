@@ -54,8 +54,13 @@ interface Routine {
 const MUSCLE_GROUPS = ['', 'Pecho', 'Espalda', 'Pierna', 'Brazo', 'Hombro', 'Core', 'Cardio'];
 const EQUIPMENT_TYPES = ['', 'Barra', 'Mancuernas', 'Máquina', 'Peso Corporal'];
 
+function parseRepsValue(v: string, fallback: number): number {
+  const parsed = parseInt(v.trim(), 10);
+  return Number.isNaN(parsed) ? fallback : parsed;
+}
+
 function getRepsArray(re: RoutineExercise): number[] {
-  if (re.repsList) return re.repsList.split(',').map((v) => parseInt(v.trim(), 10) || re.reps);
+  if (re.repsList) return re.repsList.split(',').map((v) => parseRepsValue(v, re.reps));
   return Array(re.sets).fill(re.reps || 10);
 }
 
@@ -220,7 +225,7 @@ export default function RoutineDetailScreen() {
     const newSets = re.sets + delta;
     if (newSets < 1 || newSets > 9) return;
 
-    const currentRepsArray = re.repsList ? re.repsList.split(',').map((v) => parseInt(v.trim(), 10) || re.reps) : Array(re.sets).fill(re.reps);
+    const currentRepsArray = re.repsList ? re.repsList.split(',').map((v) => parseRepsValue(v, re.reps)) : Array(re.sets).fill(re.reps);
     while (currentRepsArray.length < newSets) currentRepsArray.push(re.reps || 10);
     currentRepsArray.length = newSets;
     const updatedRepsList = re.repsList ? currentRepsArray.join(',') : undefined;
@@ -762,7 +767,11 @@ function DraggableExerciseRow({
         setIsDragging(true);
       },
       onPanResponderMove: (_evt, gesture) => {
-        dragY.setValue(gesture.dy);
+        // indexRef.current reflects how many slots this row has already shifted
+        // from prior reorders — the raw finger delta must be reduced by that
+        // amount, or the row visually jumps ahead of the finger as it reorders.
+        const alreadyShifted = (indexRef.current - startIndexRef.current) * REORDER_ROW_HEIGHT;
+        dragY.setValue(gesture.dy - alreadyShifted);
         const targetIndex = Math.round((startIndexRef.current * REORDER_ROW_HEIGHT + gesture.dy) / REORDER_ROW_HEIGHT);
         onMove(item.id, targetIndex);
       },

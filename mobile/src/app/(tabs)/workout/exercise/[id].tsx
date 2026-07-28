@@ -129,7 +129,7 @@ export default function ExerciseDetailScreen() {
                         <Text style={{ fontSize: 12, fontWeight: '900', color: colors.textPrimary }}>
                           {isCardio ? `${set.reps} min` : `${set.weight} ${weightUnit} x ${set.reps}`}
                         </Text>
-                        <Text style={{ fontSize: 11, color: colors.textMuted }}>{Math.round(set.weight * set.reps)} vol.</Text>
+                        {!isCardio && <Text style={{ fontSize: 11, color: colors.textMuted }}>{Math.round(set.weight * set.reps)} vol.</Text>}
                       </View>
                     ))}
                   </View>

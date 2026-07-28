@@ -191,6 +191,13 @@ export function generateWorkoutPlan(
     selectedSplit = pref.split;
   }
 
+  // PPL needs a dedicated leg day; with fewer than 3 days it can only fit
+  // empuje/tirón and would silently skip leg training. Fall back to full_body,
+  // which trains every muscle group in every session, instead.
+  if (selectedSplit === "ppl" && pref.days < 3) {
+    selectedSplit = "full_body";
+  }
+
   // 2. Resolve target sets/reps parameters
   let targetSets = 3;
   if (pref.level === "principiante") targetSets = 3;
@@ -240,9 +247,12 @@ export function generateWorkoutPlan(
     });
 
     if (candidates.length === 0) {
-      // If all used, clear used for this muscle group
+      // Fall back to any exercise in this muscle group not covered by the exclude-word
+      // list, but still respect usedIds — otherwise a small catalog (e.g. Core with only
+      // 2 backups) can hand back an exercise already placed elsewhere in the same day.
       const backupCandidates = catalog.filter(ex => {
         if (ex.muscleGroup !== muscleGroup) return false;
+        if (usedIds.has(ex.id)) return false;
         if (strictExcludedNames.some(name => ex.name.toLowerCase().includes(name.toLowerCase()))) return false;
         return true;
       });

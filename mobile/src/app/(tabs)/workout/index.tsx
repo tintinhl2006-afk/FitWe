@@ -19,7 +19,7 @@ export default function WorkoutScreen() {
 
   const [routines, setRoutines] = useState<Routine[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSubscriptionActive, setIsSubscriptionActive] = useState(true);
+  const [isSubscriptionActive, setIsSubscriptionActive] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [newRoutineName, setNewRoutineName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -47,7 +47,10 @@ export default function WorkoutScreen() {
         if (active) fetchRoutines();
         else setIsLoading(false);
       })
-      .catch(() => fetchRoutines());
+      .catch(() => {
+        setIsSubscriptionActive(false);
+        setIsLoading(false);
+      });
   }, []);
 
   async function handleCreateRoutine() {

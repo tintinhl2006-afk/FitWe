@@ -159,3 +159,40 @@ export async function PATCH(
     );
   }
 }
+
+export async function DELETE(
+  req: Request,
+  { params }: { params: Promise<{ sessionId: string }> }
+) {
+  try {
+    const userId = await getRequestUserId(req);
+
+    if (!userId) {
+      return NextResponse.json({ message: "No autorizado" }, { status: 401 });
+    }
+
+    const { sessionId } = await params;
+
+    const workoutSession = await prisma.workoutSession.findUnique({
+      where: { id: sessionId, userId },
+    });
+
+    if (!workoutSession) {
+      return NextResponse.json(
+        { message: "Sesión no encontrada" },
+        { status: 404 }
+      );
+    }
+
+    await prisma.workoutSet.deleteMany({ where: { sessionId } });
+    await prisma.workoutSession.delete({ where: { id: sessionId } });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Error discarding session:", error);
+    return NextResponse.json(
+      { error: "Error interno del servidor" },
+      { status: 500 }
+    );
+  }
+}

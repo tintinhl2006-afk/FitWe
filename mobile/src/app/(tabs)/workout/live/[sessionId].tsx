@@ -122,7 +122,18 @@ export default function LiveWorkoutScreen() {
   function handleDiscardWorkout() {
     Alert.alert('Descartar Entrenamiento', '¿Estás seguro? No se guardará ninguna serie en tu historial.', [
       { text: 'Cancelar', style: 'cancel' },
-      { text: 'Descartar', style: 'destructive', onPress: () => router.replace('/') },
+      {
+        text: 'Descartar',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await api.delete(`/api/sessions/${sessionId}`);
+          } catch {
+            // Best-effort: navigate away regardless so the user isn't stuck.
+          }
+          router.replace('/');
+        },
+      },
     ]);
   }
 
@@ -134,7 +145,9 @@ export default function LiveWorkoutScreen() {
     );
   }
 
-  const completedSets = session.workoutSets.filter((s) => s.isCompleted);
+  // Matches handleSaveWorkout: any uncompleted set with a logged reps/weight gets
+  // auto-completed and persisted on save, so the summary must count it too.
+  const completedSets = session.workoutSets.filter((s) => s.isCompleted || s.reps > 0 || s.weight > 0);
   const totalVolume = completedSets.reduce((sum, s) => sum + s.weight * s.reps, 0);
 
   const recordsBroken: { exerciseName: string; type: string; value: number }[] = [];
@@ -359,6 +372,11 @@ function SetRow({
 }) {
   const [reps, setReps] = useState(set.reps === 0 ? '' : set.reps.toString());
   const [weight, setWeight] = useState(set.weight === 0 ? '' : set.weight.toString());
+
+  useEffect(() => {
+    setReps(set.reps === 0 ? '' : set.reps.toString());
+    setWeight(set.weight === 0 ? '' : set.weight.toString());
+  }, [set.reps, set.weight]);
 
   function commit(isCompleted: boolean) {
     onUpdate(set.id, Number(reps) || 0, Number(weight) || 0, isCompleted);
