@@ -5,6 +5,15 @@ import type { NextRequest } from "next/server";
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Payment gateway redirect targets (Stripe Checkout / Redsys TPV / mock fallback pages) are
+  // reached by the gateway's own server-issued redirect and by the mobile app's WebView —
+  // neither carries the NextAuth session cookie. The actual payment operations are already
+  // protected at the API layer (Bearer-token aware via getRequestUserId), so these pages don't
+  // need the cookie-based gate here; gating them just breaks the return trip from the gateway.
+  if (pathname.startsWith("/dashboard/pago")) {
+    return NextResponse.next();
+  }
+
   const token = await getToken({ req: request });
 
   // ── Forzar cambio de contraseña provisional ──
