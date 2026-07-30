@@ -4,6 +4,15 @@ import { Image } from 'expo-image';
 import { Activity, Dumbbell, Accessibility, Target, BicepsFlexed } from 'lucide-react-native';
 import { useAppTheme } from '../../context/ThemeContext';
 import { Palette } from '../../constants/theme';
+import { API_BASE_URL } from '../../lib/apiClient';
+
+// Exercise images in the catalog are seeded as paths relative to the web app's own
+// domain (e.g. "/abducciones_maquina.jpeg", served from its public/ folder) — resolvable
+// by a browser on web, but not a bare path on a native device with no origin to resolve against.
+function resolveImageUrl(imageUrl: string): string {
+  if (/^https?:\/\//i.test(imageUrl)) return imageUrl;
+  return `${API_BASE_URL}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
+}
 
 interface ExerciseAvatarProps {
   imageUrl?: string | null;
@@ -34,7 +43,7 @@ export function ExerciseAvatar({ imageUrl, equipment, muscleGroup, size = 40 }: 
       }}
     >
       {imageUrl ? (
-        <Image source={{ uri: imageUrl }} style={{ width: size, height: size }} contentFit="cover" transition={150} alt="" />
+        <Image source={{ uri: resolveImageUrl(imageUrl) }} style={{ width: size, height: size }} contentFit="cover" transition={150} alt="" />
       ) : (
         getFallbackIcon(equipment, muscleGroup, iconSize, colors.textMuted)
       )}
