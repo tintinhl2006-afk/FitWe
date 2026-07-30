@@ -233,9 +233,19 @@ export async function GET(req: Request) {
 
     // ─── CASO 2: VERIFICACIÓN SIMULADA (MOCK) ───
     if (mock) {
-      // Restringir verificación simulada en producción con pasarelas de pago configuradas
-      const hasRealStripe = !!gym.stripeEnabled && !!gym.stripeConnected && !!gym.stripeAccountId;
-      const hasRealRedsys = !!(gym.redsysEnabled && gym.redsysFuc?.trim() && gym.redsysClave?.trim());
+      // Restringir verificación simulada en producción con pasarelas de pago configuradas.
+      // Estas condiciones deben reflejar exactamente las que usa POST /api/user/payment para
+      // decidir si generar una sesión real o caer al checkout simulado — si no coinciden, un
+      // gimnasio "conectado" pero sin STRIPE_SECRET_KEY en el servidor (o con clave Redsys de
+      // prueba) queda atrapado: la creación cae a mock, pero la verificación lo rechaza.
+      const hasRealStripe =
+        !!gym.stripeEnabled && !!gym.stripeConnected && !!gym.stripeAccountId && !!process.env.STRIPE_SECRET_KEY;
+      const hasRealRedsys = !!(
+        gym.redsysEnabled &&
+        gym.redsysFuc?.trim() &&
+        gym.redsysClave?.trim() &&
+        gym.redsysClave.trim().toLowerCase() !== "mock"
+      );
       const hasRealCredentials = hasRealStripe || hasRealRedsys;
 
       if (process.env.NODE_ENV === "production" && hasRealCredentials) {
