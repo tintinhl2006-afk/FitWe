@@ -19,6 +19,7 @@ import {
   Tag,
   QrCode,
   UserCheck,
+  Receipt,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -28,6 +29,7 @@ const gymNavItems = [
   { title: "Clientes", href: "/admin-gym/clientes", icon: Users, role: "GYM" },
   { title: "Empleados", href: "/admin-gym/empleados", icon: UserCheck, role: "GYM" },
   { title: "Tarifas", href: "/admin-gym/tarifas", icon: Tag, role: "GYM" },
+  { title: "Facturación", href: "/admin-gym/facturacion", icon: Receipt, role: "GYM" },
   { title: "Clases", href: "/admin-gym/clases", icon: Calendar }, // Visible para todos
   { title: "Estadísticas", href: "/admin-gym/estadisticas", icon: BarChart3, role: "GYM" },
   { title: "Configuración", href: "/admin-gym/configuracion", icon: Settings, role: "GYM" },

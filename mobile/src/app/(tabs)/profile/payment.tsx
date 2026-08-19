@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView, WebViewNavigation } from 'react-native-webview';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, X, CreditCard, Check, ShieldCheck, CheckCircle2, AlertCircle } from 'lucide-react-native';
+import { ArrowLeft, X, CreditCard, Check, ShieldCheck, CheckCircle2, AlertCircle, Receipt, Download } from 'lucide-react-native';
 import { useAppTheme } from '../../../context/ThemeContext';
 import { useAuth } from '../../../context/AuthContext';
 import { Card, EmptyState } from '../../../components/ui';
 import { Palette } from '../../../constants/theme';
 import { api, API_BASE_URL, getAuthToken } from '../../../lib/apiClient';
+import { downloadAndShareInvoice, type InvoiceClient, type InvoiceGym, type InvoicePayment } from '../../../lib/generateInvoicePdf';
 
 interface Plan {
   id: string;
@@ -70,6 +72,34 @@ export default function PaymentScreen() {
   const [pendingVerifyUrl, setPendingVerifyUrl] = useState<string | null>(null);
   const handledResultRef = React.useRef(false);
 
+  const [invoices, setInvoices] = useState<InvoicePayment[]>([]);
+  const [invoiceClient, setInvoiceClient] = useState<InvoiceClient | null>(null);
+  const [invoiceGym, setInvoiceGym] = useState<InvoiceGym | null>(null);
+  const [downloadingInvoiceId, setDownloadingInvoiceId] = useState<string | null>(null);
+
+  async function fetchInvoiceHistory() {
+    try {
+      const data = await api.get('/api/user/payments');
+      setInvoices(data.payments || []);
+      setInvoiceClient(data.client || null);
+      setInvoiceGym(data.gym || null);
+    } catch (e) {
+      console.error('Error fetching payment history:', e);
+    }
+  }
+
+  async function handleDownloadInvoice(payment: InvoicePayment) {
+    if (!invoiceClient) return;
+    setDownloadingInvoiceId(payment.id);
+    try {
+      await downloadAndShareInvoice(payment, invoiceClient, invoiceGym);
+    } catch (e) {
+      Alert.alert('Error', 'No se pudo generar la factura.');
+    } finally {
+      setDownloadingInvoiceId(null);
+    }
+  }
+
   async function fetchPlans() {
     try {
       const data = await api.get('/api/user/plans');
@@ -90,6 +120,7 @@ export default function PaymentScreen() {
 
   useEffect(() => {
     fetchPlans();
+    fetchInvoiceHistory();
   }, []);
 
   function buildAuthInjectionScript(token: string) {
@@ -360,6 +391,51 @@ export default function PaymentScreen() {
                 </TouchableOpacity>
               </>
             )}
+
+            <View style={{ marginTop: 32 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                <Receipt size={14} color={colors.textMuted} />
+                <Text style={{ fontSize: 12, fontWeight: '900', color: colors.textMuted, textTransform: 'uppercase' }}>
+                  Historial de Facturas
+                </Text>
+              </View>
+
+              {invoices.length === 0 ? (
+                <Text style={{ fontSize: 12, color: colors.textMuted }}>No se han registrado pagos todavía.</Text>
+              ) : (
+                <View style={{ gap: 10 }}>
+                  {invoices.map((inv) => (
+                    <Card key={inv.id} padding={14}>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <View style={{ flex: 1 }}>
+                          <Text style={{ fontSize: 13, fontWeight: 'bold', color: colors.textPrimary }}>{inv.description}</Text>
+                          <Text style={{ fontSize: 11, color: colors.textMuted, marginTop: 2 }}>
+                            {new Date(inv.date).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}
+                            {'  ·  '}
+                            {inv.invoiceNumber || `F-${inv.id.slice(0, 8).toUpperCase()}`}
+                          </Text>
+                        </View>
+                        <View style={{ alignItems: 'flex-end', gap: 6 }}>
+                          <Text style={{ fontSize: 14, fontWeight: '900', color: colors.textPrimary }}>{inv.amount.toFixed(2)} €</Text>
+                          <TouchableOpacity
+                            onPress={() => handleDownloadInvoice(inv)}
+                            disabled={downloadingInvoiceId === inv.id}
+                            style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
+                          >
+                            {downloadingInvoiceId === inv.id ? (
+                              <ActivityIndicator size="small" color={colors.primaryAccent} />
+                            ) : (
+                              <Download size={12} color={colors.primaryAccent} />
+                            )}
+                            <Text style={{ fontSize: 11, fontWeight: 'bold', color: colors.primaryAccent }}>Factura</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    </Card>
+                  ))}
+                </View>
+              )}
+            </View>
           </>
         )}
       </ScrollView>
