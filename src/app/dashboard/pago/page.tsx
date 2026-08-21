@@ -178,7 +178,7 @@ export default function PaymentPage() {
         </div>
 
           {session?.user?.subscriptionEndDate && session.user.subscriptionStatus === "ACTIVE" ? (
-            <div className="mt-5 rounded-2xl bg-emerald-500/5 border border-emerald-500/10 dark:border-emerald-500/20 p-4 flex items-center gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="mt-5 mb-8 rounded-2xl bg-emerald-500/5 border border-emerald-500/10 dark:border-emerald-500/20 p-4 flex items-center gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 shrink-0">
                 <CheckCircle2 className="h-6 w-6" />
               </div>
@@ -190,7 +190,7 @@ export default function PaymentPage() {
               </div>
             </div>
           ) : (
-            <div className="mt-5 rounded-2xl bg-rose-500/5 border border-rose-500/10 dark:border-rose-500/20 p-4 flex items-center gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="mt-5 mb-8 rounded-2xl bg-rose-500/5 border border-rose-500/10 dark:border-rose-500/20 p-4 flex items-center gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-500/10 text-rose-500 dark:text-rose-450 shrink-0">
                 <AlertCircle className="h-6 w-6" />
               </div>
@@ -303,15 +303,15 @@ export default function PaymentPage() {
 
                 {/* Resumen del Pedido */}
                 <div className="rounded-xl bg-slate-50 dark:bg-slate-950 p-4 border border-slate-100 dark:border-slate-850 space-y-2.5 text-sm">
-                  <div className="flex justify-between text-slate-500 dark:text-slate-455">
-                    <span>Membresía:</span>
-                    <span className="font-semibold text-slate-800 dark:text-slate-200">
+                  <div className="flex justify-between gap-4 text-slate-500 dark:text-slate-455">
+                    <span className="shrink-0">Membresía:</span>
+                    <span className="font-semibold text-slate-800 dark:text-slate-200 text-right">
                       {displayPlanName}
                     </span>
                   </div>
-                  <div className="flex justify-between text-slate-500 dark:text-slate-455">
-                    <span>Duración:</span>
-                    <span className="font-semibold text-slate-800 dark:text-slate-200">
+                  <div className="flex justify-between gap-4 text-slate-500 dark:text-slate-455">
+                    <span className="shrink-0">Duración:</span>
+                    <span className="font-semibold text-slate-800 dark:text-slate-200 text-right">
                       {formatDuration(displayDuration)}
                     </span>
                   </div>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { Loader2, CreditCard, Calendar, Receipt, Download } from "lucide-react";
+import { Loader2, CreditCard, Calendar, Receipt, Download, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   generateInvoicePdf,
@@ -40,17 +40,32 @@ export default function PagosPage() {
     fetchPayments();
   }, []);
 
-  const handleDownloadInvoice = async (payment: PaymentWithGym) => {
+  const buildInvoiceBlobUrl = async (payment: PaymentWithGym) => {
     if (!client) {
       alert("Error: Datos de cliente no disponibles para la factura.");
-      return;
+      return null;
     }
+    const pdfBytes = await generateInvoicePdf(payment, client, payment.gym);
+    const blob = new Blob([pdfBytes as any], { type: "application/pdf" });
+    return URL.createObjectURL(blob);
+  };
 
+  const handleViewInvoice = async (payment: PaymentWithGym) => {
     try {
-      const pdfBytes = await generateInvoicePdf(payment, client, payment.gym);
-      const blob = new Blob([pdfBytes as any], { type: "application/pdf" });
+      const url = await buildInvoiceBlobUrl(payment);
+      if (url) window.open(url, "_blank");
+    } catch (err) {
+      console.error("Error generating invoice PDF:", err);
+      alert("Error al generar el PDF de la factura");
+    }
+  };
+
+  const handleDownloadInvoice = async (payment: PaymentWithGym) => {
+    try {
+      const url = await buildInvoiceBlobUrl(payment);
+      if (!url) return;
       const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
+      link.href = url;
       link.download = `factura_${payment.id}.pdf`;
       link.click();
     } catch (err) {
@@ -168,13 +183,22 @@ export default function PagosPage() {
                       {p.amount.toFixed(2)} €
                     </td>
                     <td className="px-6 py-4 text-sm text-right whitespace-nowrap">
-                      <button
-                        onClick={() => handleDownloadInvoice(p)}
-                        className="inline-flex items-center gap-1.5 text-xs font-bold text-primary dark:text-cyan-400 hover:underline hover:text-cyan-600 cursor-pointer"
-                      >
-                        <Download className="h-3.5 w-3.5" />
-                        <span>Descargar PDF</span>
-                      </button>
+                      <div className="inline-flex items-center gap-4">
+                        <button
+                          onClick={() => handleViewInvoice(p)}
+                          className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400 hover:underline hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                          <span>Ver</span>
+                        </button>
+                        <button
+                          onClick={() => handleDownloadInvoice(p)}
+                          className="inline-flex items-center gap-1.5 text-xs font-bold text-primary dark:text-cyan-400 hover:underline hover:text-cyan-600 cursor-pointer"
+                        >
+                          <Download className="h-3.5 w-3.5" />
+                          <span>Descargar</span>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))

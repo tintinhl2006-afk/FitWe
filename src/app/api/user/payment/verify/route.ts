@@ -4,6 +4,7 @@ import Stripe from "stripe";
 import { logger } from "@/lib/logger";
 import { getRequestUserId } from "@/lib/apiAuth";
 import { getActiveGymPaymentMethod } from "@/lib/invoiceUtils";
+import { isRedsysTestMerchant } from "@/lib/redsys";
 
 export async function GET(req: Request) {
   try {
@@ -253,7 +254,8 @@ export async function GET(req: Request) {
         activeMethod?.gateway === "REDSYS" &&
         activeMethod.redsysFuc?.trim() &&
         activeMethod.redsysClave?.trim() &&
-        activeMethod.redsysClave.trim().toLowerCase() !== "mock"
+        activeMethod.redsysClave.trim().toLowerCase() !== "mock" &&
+        !isRedsysTestMerchant(activeMethod.redsysFuc)
       );
       const hasRealCredentials = hasRealStripe || hasRealRedsys;
 

@@ -1,6 +1,18 @@
 import crypto from "crypto";
 
 /**
+ * FUC público del comercio de pruebas oficial de Redsys (entorno sandbox
+ * sis-t.redsys.es), el mismo que se documenta en cualquier guía de integración.
+ * No mueve dinero real, así que no debe tratarse como una pasarela "real" a
+ * efectos de bloquear los pagos simulados internos de la app.
+ */
+export const REDSYS_TEST_MERCHANT_CODE = "999008881";
+
+export function isRedsysTestMerchant(fuc: string | null | undefined): boolean {
+  return (fuc || "").trim() === REDSYS_TEST_MERCHANT_CODE;
+}
+
+/**
  * Genera la clave de encriptación Triple DES (3DES) para Redsys
  * en base al número de orden y la clave del comercio.
  */
