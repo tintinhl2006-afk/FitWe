@@ -8,6 +8,7 @@ export interface InvoicePayment {
   date: string;
   invoiceNumber?: string | null;
   vatRate?: number | null;
+  source?: 'ONLINE' | 'CASH' | null;
 }
 
 export interface InvoiceClient {
@@ -71,6 +72,7 @@ function buildInvoiceHtml(payment: InvoicePayment, client: InvoiceClient, gym: I
     ? `Nº Factura: ${escapeHtml(payment.invoiceNumber)}`
     : `Nº Factura: F-${payment.id.slice(0, 8).toUpperCase()}`;
   const invDate = `Fecha: ${new Date(payment.date).toLocaleDateString('es-ES')}`;
+  const invPayMethod = `Método de Pago: ${payment.source === 'CASH' ? 'Efectivo' : 'Tarjeta / Pago Online'}`;
 
   const totalAmount = payment.amount;
   const vatRate = payment.vatRate ?? 21;
@@ -110,6 +112,7 @@ function buildInvoiceHtml(payment: InvoicePayment, client: InvoiceClient, gym: I
           <div class="meta">
             <div><strong>${invNumber}</strong></div>
             <div>${invDate}</div>
+            <div>${invPayMethod}</div>
           </div>
         </div>
         <div class="wrap">

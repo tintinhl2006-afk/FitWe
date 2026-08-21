@@ -152,6 +152,7 @@ export async function POST(req: Request) {
           description: `${finalPlanName} - TPV Virtual Redsys (Pedido: ${order})`,
           planId: resolvedPlanId,
           vatRate: finalVatRate,
+          source: "ONLINE",
           date: new Date(),
           invoiceNumber,
           paymentMethodId: gymPaymentMethod.id,

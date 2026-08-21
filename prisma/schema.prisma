@@ -114,12 +114,18 @@ model SubscriptionPlan {
   @@index([gymId])
 }
 
+enum PaymentSource {
+  ONLINE
+  CASH
+}
+
 model PaymentRecord {
   id              String            @id @default(cuid())
   userId          String            @db.Uuid
   amount          Float             @default(0)
   description     String
   vatRate         Float             @default(21)
+  source          PaymentSource     @default(ONLINE)
   date            DateTime          @default(now())
   planId          String?           @db.Uuid
   invoiceNumber   String?

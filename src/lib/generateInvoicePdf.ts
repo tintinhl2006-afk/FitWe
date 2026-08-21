@@ -80,6 +80,7 @@ export interface InvoicePayment {
   date: string | Date;
   invoiceNumber?: string | null;
   vatRate?: number | null;
+  source?: "ONLINE" | "CASH" | null;
 }
 
 export interface InvoiceClient {
@@ -153,7 +154,7 @@ export async function generateInvoicePdf(
     ? `Nº Factura: ${payment.invoiceNumber}`
     : `Nº Factura: F-${payment.id.slice(0, 8).toUpperCase()}`;
   const invDate = `Fecha: ${new Date(payment.date).toLocaleDateString("es-ES")}`;
-  const invPayMethod = "Método de Pago: Tarjeta Bancaria";
+  const invPayMethod = `Método de Pago: ${payment.source === "CASH" ? "Efectivo" : "Tarjeta / Pago Online"}`;
 
   const metaColWidth = width - 40 - 380;
   page.drawText(truncateToWidth(invNumber, fontBold, 10, metaColWidth), { x: 380, y: height - 50, size: 10, font: fontBold, color: rgb(1, 1, 1) });

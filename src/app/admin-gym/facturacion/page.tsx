@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { Loader2, Receipt, Download, Search, Eye } from "lucide-react";
+import { cn } from "@/lib/utils";
 import {
   generateInvoicePdf,
   type InvoiceGym as GymProfile,
@@ -25,6 +26,7 @@ interface Invoice {
   amount: number;
   description: string;
   vatRate: number | null;
+  source: "ONLINE" | "CASH" | null;
   date: string;
   invoiceNumber: string | null;
   user: InvoiceClient;
@@ -155,6 +157,7 @@ export default function FacturacionPage() {
                 <th className="px-6 py-3.5 text-xs font-bold text-slate-400 uppercase tracking-wider">Nº Factura</th>
                 <th className="px-6 py-3.5 text-xs font-bold text-slate-400 uppercase tracking-wider">Cliente</th>
                 <th className="px-6 py-3.5 text-xs font-bold text-slate-400 uppercase tracking-wider">Concepto</th>
+                <th className="px-6 py-3.5 text-xs font-bold text-slate-400 uppercase tracking-wider">Pago</th>
                 <th className="px-6 py-3.5 text-xs font-bold text-slate-400 uppercase tracking-wider">Total</th>
                 <th className="px-6 py-3.5 text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Factura</th>
               </tr>
@@ -177,6 +180,18 @@ export default function FacturacionPage() {
                       {inv.user.name} {inv.user.lastName || ""}
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">{inv.description}</td>
+                    <td className="px-6 py-4 text-sm whitespace-nowrap">
+                      <span
+                        className={cn(
+                          "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full",
+                          inv.source === "CASH"
+                            ? "bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400"
+                            : "bg-cyan-50 dark:bg-cyan-950/30 text-primary dark:text-cyan-400"
+                        )}
+                      >
+                        {inv.source === "CASH" ? "Efectivo" : "Online"}
+                      </span>
+                    </td>
                     <td className="px-6 py-4 text-sm font-bold text-slate-950 dark:text-white">
                       {inv.amount.toFixed(2)} €
                     </td>
@@ -202,7 +217,7 @@ export default function FacturacionPage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="px-6 py-14 text-center text-sm text-slate-405">
+                  <td colSpan={7} className="px-6 py-14 text-center text-sm text-slate-405">
                     No se han registrado facturas todavía.
                   </td>
                 </tr>

@@ -30,6 +30,7 @@ export async function GET() {
           amount: true,
           description: true,
           vatRate: true,
+          source: true,
           date: true,
           invoiceNumber: true,
           user: {
