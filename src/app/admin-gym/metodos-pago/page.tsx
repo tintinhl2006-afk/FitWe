@@ -358,8 +358,8 @@ export default function MetodosPagoPage() {
 
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-lg rounded-3xl bg-white dark:bg-slate-900 shadow-xl border border-slate-200 dark:border-slate-800 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800">
+          <div className="w-full max-w-lg rounded-3xl bg-white dark:bg-slate-900 shadow-xl border border-slate-200 dark:border-slate-800 max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800 shrink-0">
               <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">
                 {modalStep === "choose" ? "Añadir método de pago" : selectedGateway === "STRIPE" ? "Nueva cuenta Stripe Connect" : "Nuevo TPV Redsys"}
               </h3>
@@ -369,7 +369,7 @@ export default function MetodosPagoPage() {
             </div>
 
             {modalStep === "choose" ? (
-              <div className="p-5 space-y-3">
+              <div className="p-5 space-y-3 overflow-y-auto">
                 <button
                   type="button"
                   onClick={() => handleChooseGateway("STRIPE")}
@@ -398,7 +398,8 @@ export default function MetodosPagoPage() {
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleCreateMethod} className="p-5 space-y-4">
+              <form onSubmit={handleCreateMethod} className="flex flex-col flex-1 min-h-0">
+              <div className="p-5 space-y-4 overflow-y-auto min-h-0">
                 <div>
                   <h4 className="text-xs font-bold text-slate-500 dark:text-slate-450 uppercase tracking-wider mb-3">
                     Datos fiscales de facturación
@@ -547,9 +548,6 @@ export default function MetodosPagoPage() {
                             className="w-full rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 py-2 pl-9 pr-3 text-sm font-mono text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary/20"
                           />
                         </div>
-                        <p className="mt-1 text-[10px] text-slate-405 dark:text-slate-500">
-                          En local para simulador, introduce `mock`.
-                        </p>
                       </div>
                     </div>
                   </div>
@@ -560,8 +558,9 @@ export default function MetodosPagoPage() {
                     Tras crear el método podrás conectar tu cuenta bancaria de Stripe desde su tarjeta en el listado.
                   </p>
                 )}
+              </div>
 
-                <div className="flex justify-end gap-2 pt-2">
+                <div className="flex justify-end gap-2 p-5 pt-4 border-t border-slate-100 dark:border-slate-800 shrink-0">
                   <button
                     type="button"
                     onClick={() => setModalStep("choose")}
