@@ -54,7 +54,19 @@ export async function PATCH(
 
     const { planId } = await params;
     const body = await req.json();
-    const { name, price, durationDays, description, isActive } = body;
+    const {
+      name,
+      price,
+      durationDays,
+      description,
+      isActive,
+      vatRate,
+      billingType,
+      creditsPerCycle,
+      creditRechargeMode,
+      rechargeIntervalDays,
+      creditsNeverExpire,
+    } = body;
 
     const plan = await prisma.subscriptionPlan.findUnique({ where: { id: planId } });
     if (!plan || plan.gymId !== session.user.id) {
@@ -67,6 +79,20 @@ export async function PATCH(
     if (durationDays !== undefined && Number(durationDays) < 1) {
       return NextResponse.json({ message: "La duración debe ser al menos 1 día" }, { status: 400 });
     }
+    if (vatRate !== undefined && (Number(vatRate) < 0 || Number(vatRate) > 100)) {
+      return NextResponse.json({ message: "El IVA debe estar entre 0 y 100" }, { status: 400 });
+    }
+    if (billingType === "CREDITS") {
+      if (!creditsPerCycle || Number(creditsPerCycle) < 1) {
+        return NextResponse.json({ message: "El número de créditos debe ser al menos 1" }, { status: 400 });
+      }
+      if (creditRechargeMode !== "PER_PAYMENT" && creditRechargeMode !== "PERIODIC") {
+        return NextResponse.json({ message: "Selecciona el modo de recarga de créditos" }, { status: 400 });
+      }
+      if (creditRechargeMode === "PERIODIC" && (!rechargeIntervalDays || Number(rechargeIntervalDays) < 1)) {
+        return NextResponse.json({ message: "El intervalo de recarga debe ser al menos 1 día" }, { status: 400 });
+      }
+    }
 
     const updated = await prisma.subscriptionPlan.update({
       where: { id: planId },
@@ -76,6 +102,14 @@ export async function PATCH(
         ...(durationDays !== undefined && { durationDays: Number(durationDays) }),
         ...(description !== undefined && { description: description?.trim() || null }),
         ...(isActive !== undefined && { isActive: Boolean(isActive) }),
+        ...(vatRate !== undefined && { vatRate: Number(vatRate) }),
+        ...(billingType !== undefined && {
+          billingType: billingType === "CREDITS" ? "CREDITS" : "DURATION",
+          creditsPerCycle: billingType === "CREDITS" ? Number(creditsPerCycle) : null,
+          creditRechargeMode: billingType === "CREDITS" ? creditRechargeMode : null,
+          rechargeIntervalDays: billingType === "CREDITS" && creditRechargeMode === "PERIODIC" ? Number(rechargeIntervalDays) : null,
+          creditsNeverExpire: billingType === "CREDITS" && creditRechargeMode === "PER_PAYMENT" ? !!creditsNeverExpire : false,
+        }),
       },
     });
 

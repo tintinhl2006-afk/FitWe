@@ -79,6 +79,7 @@ export interface InvoicePayment {
   description: string;
   date: string | Date;
   invoiceNumber?: string | null;
+  vatRate?: number | null;
 }
 
 export interface InvoiceClient {
@@ -253,13 +254,14 @@ export async function generateInvoicePdf(
 
   // ── TOTALS ──
   const totalAmount = payment.amount;
-  const baseImponible = totalAmount / 1.21;
+  const vatRate = payment.vatRate ?? 21;
+  const baseImponible = vatRate > 0 ? totalAmount / (1 + vatRate / 100) : totalAmount;
   const ivaAmount = totalAmount - baseImponible;
 
   page.drawText("Base Imponible:", { x: 350, y: yPos, size: 10, font: fontRegular, color: rgb(0.4, 0.4, 0.4) });
   page.drawText(`${baseImponible.toFixed(2)} €`, { x: 480, y: yPos, size: 10, font: fontRegular, color: rgb(0.2, 0.2, 0.2) });
 
-  page.drawText("I.V.A. (21%):", { x: 350, y: yPos - 20, size: 10, font: fontRegular, color: rgb(0.4, 0.4, 0.4) });
+  page.drawText(`I.V.A. (${vatRate}%):`, { x: 350, y: yPos - 20, size: 10, font: fontRegular, color: rgb(0.4, 0.4, 0.4) });
   page.drawText(`${ivaAmount.toFixed(2)} €`, { x: 480, y: yPos - 20, size: 10, font: fontRegular, color: rgb(0.2, 0.2, 0.2) });
 
   page.drawLine({

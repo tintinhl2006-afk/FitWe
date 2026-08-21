@@ -19,7 +19,8 @@ export async function POST(req: Request) {
       );
     }
 
-    const { token, manualInput } = await req.json();
+    const { token, manualInput, type } = await req.json();
+    const direction: "ENTRY" | "EXIT" = type === "exit" ? "EXIT" : "ENTRY";
 
     let targetUserId: string | null = null;
 
@@ -74,7 +75,7 @@ export async function POST(req: Request) {
       where: { id: targetUserId },
       include: {
         plan: {
-          select: { name: true, price: true },
+          select: { name: true, price: true, billingType: true },
         },
       },
     });
@@ -97,6 +98,7 @@ export async function POST(req: Request) {
           gymId: session.user.id,
           status: "DENIED",
           reason: "WRONG_GYM",
+          direction,
         },
       });
 
@@ -123,6 +125,7 @@ export async function POST(req: Request) {
             gymId: session.user.id,
             status: "DENIED",
             reason: "EXPIRED",
+            direction,
           },
         });
 
@@ -136,6 +139,32 @@ export async function POST(req: Request) {
           message: debugMsg,
         });
       }
+    }
+
+    // La salida no comprueba suscripción ni créditos — se asume que el cliente ya estaba
+    // dentro; solo queda constancia de que salió (aforo/duración de visita a futuro).
+    if (direction === "EXIT") {
+      logger.info(`Salida registrada para cliente ${client.id} en gimnasio ${session.user.id}`);
+      await prisma.accessLog.create({
+        data: {
+          userId: client.id,
+          gymId: session.user.id,
+          status: "GRANTED",
+          direction: "EXIT",
+        },
+      });
+
+      return NextResponse.json({
+        status: "GRANTED",
+        message: "Salida Registrada",
+        client: {
+          id: client.id,
+          name: client.name,
+          email: client.email,
+          image: client.image,
+          planName: client.plan?.name || "Tarifa Estándar",
+        },
+      });
     }
 
     // Check subscription status
@@ -168,12 +197,80 @@ export async function POST(req: Request) {
       });
     }
 
+    // Tarifas de bono: sin créditos no hay acceso, aunque la fecha de vigencia siga activa.
+    const isCreditsPlan = client.plan?.billingType === "CREDITS";
+    if (isCreditsPlan && (!client.creditsRemaining || client.creditsRemaining <= 0)) {
+      logger.warn(`Intento de acceso denegado: sin créditos para cliente ${client.id} (gimnasio ${session.user.id})`);
+      await prisma.accessLog.create({
+        data: {
+          userId: client.id,
+          gymId: session.user.id,
+          status: "DENIED",
+          reason: "NO_CREDITS",
+        },
+      });
+
+      return NextResponse.json({
+        status: "DENIED",
+        reason: "NO_CREDITS",
+        message: "El cliente no tiene créditos disponibles en su bono.",
+        client: {
+          name: client.name,
+          email: client.email,
+          image: client.image,
+          planName: client.plan?.name || "Sin tarifa asignada",
+          creditsRemaining: client.creditsRemaining ?? 0,
+        },
+      });
+    }
+
+    let updatedCredits: number | null = null;
+
+    if (isCreditsPlan) {
+      // Descuento atómico: la condición `creditsRemaining > 0` se evalúa en el propio UPDATE,
+      // así que dos escaneos casi simultáneos con 1 crédito no pueden conceder acceso los dos
+      // (uno de los dos pierde la carrera: count === 0 y no se le concede nada).
+      const decremented = await prisma.user.updateMany({
+        where: { id: client.id, creditsRemaining: { gt: 0 } },
+        data: { creditsRemaining: { decrement: 1 } },
+      });
+
+      if (decremented.count === 0) {
+        logger.warn(`Intento de acceso denegado: sin créditos (carrera perdida) para cliente ${client.id} (gimnasio ${session.user.id})`);
+        await prisma.accessLog.create({
+          data: {
+            userId: client.id,
+            gymId: session.user.id,
+            status: "DENIED",
+            reason: "NO_CREDITS",
+          },
+        });
+
+        return NextResponse.json({
+          status: "DENIED",
+          reason: "NO_CREDITS",
+          message: "El cliente no tiene créditos disponibles en su bono.",
+          client: {
+            name: client.name,
+            email: client.email,
+            image: client.image,
+            planName: client.plan?.name || "Sin tarifa asignada",
+            creditsRemaining: 0,
+          },
+        });
+      }
+
+      const refreshed = await prisma.user.findUnique({ where: { id: client.id }, select: { creditsRemaining: true } });
+      updatedCredits = refreshed?.creditsRemaining ?? 0;
+    }
+
     logger.info(`Acceso PERMITIDO para cliente ${client.id} en gimnasio ${session.user.id}`);
     await prisma.accessLog.create({
       data: {
         userId: client.id,
         gymId: session.user.id,
         status: "GRANTED",
+        direction: "ENTRY",
       },
     });
 
@@ -187,6 +284,7 @@ export async function POST(req: Request) {
         image: client.image,
         planName: client.plan?.name || "Tarifa Estándar",
         subscriptionEndDate: client.subscriptionEndDate ? client.subscriptionEndDate.toISOString() : null,
+        creditsRemaining: updatedCredits,
       },
     });
   } catch (error: any) {

@@ -26,6 +26,7 @@ interface ValidationResult {
     image: string | null;
     planName: string;
     subscriptionEndDate?: string | null;
+    creditsRemaining?: number | null;
   };
 }
 
@@ -47,6 +48,9 @@ export default function AccessControlPage() {
   const [history, setHistory] = useState<ScanLogItem[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [cameraActive, setCameraActive] = useState(true);
+  const [scanMode, setScanMode] = useState<"entry" | "exit">("entry");
+  const scanModeRef = useRef(scanMode);
+  scanModeRef.current = scanMode;
 
   const scannerRef = useRef<any>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -113,7 +117,7 @@ export default function AccessControlPage() {
       const res = await fetch("/api/admin-gym/access", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ ...payload, type: scanModeRef.current }),
       });
 
       if (!res.ok) {
@@ -250,14 +254,42 @@ export default function AccessControlPage() {
     <div className="space-y-6 max-w-6xl mx-auto animate-in fade-in duration-300">
       
       {/* Encabezado */}
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
-          <QrCode className="h-7 w-7 text-primary dark:text-cyan-400" />
-          Control de Acceso
-        </h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-1">
-          Valide los accesos de clientes mediante escaneo de código QR o búsqueda manual.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
+            <QrCode className="h-7 w-7 text-primary dark:text-cyan-400" />
+            Control de Acceso
+          </h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-1">
+            Valide los accesos de clientes mediante escaneo de código QR o búsqueda manual.
+          </p>
+        </div>
+
+        {/* Selector Entrada/Salida — aplica tanto a la cámara como a la búsqueda manual */}
+        <div className="inline-flex rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-1 shrink-0 shadow-sm">
+          <button
+            onClick={() => setScanMode("entry")}
+            className={cn(
+              "px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer",
+              scanMode === "entry"
+                ? "bg-emerald-500 text-white shadow-sm"
+                : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
+            )}
+          >
+            Entrada
+          </button>
+          <button
+            onClick={() => setScanMode("exit")}
+            className={cn(
+              "px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer",
+              scanMode === "exit"
+                ? "bg-amber-500 text-white shadow-sm"
+                : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
+            )}
+          >
+            Salida
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -451,6 +483,11 @@ export default function AccessControlPage() {
                             Vence: {new Date(result.client.subscriptionEndDate).toLocaleDateString("es-ES")}
                           </span>
                         )}
+                        {result.client?.creditsRemaining !== undefined && result.client?.creditsRemaining !== null && (
+                          <span className="text-[9px] font-black uppercase tracking-wider bg-cyan-100 dark:bg-cyan-900/30 text-primary dark:text-cyan-400 px-2 py-0.5 rounded-md">
+                            {result.client.creditsRemaining} créditos restantes
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -489,10 +526,15 @@ export default function AccessControlPage() {
                       <div>
                         <h4 className="font-bold text-slate-900 dark:text-white text-lg tracking-tight leading-snug">{result.client.name}</h4>
                         <p className="text-xs text-slate-500 dark:text-slate-400">{result.client.email}</p>
-                        <div className="mt-1.5">
+                        <div className="mt-1.5 flex flex-wrap gap-1.5">
                           <span className="text-[9px] font-black uppercase tracking-wider bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-0.5 rounded-md">
                             Plan: {result.client.planName}
                           </span>
+                          {result.client.creditsRemaining !== undefined && result.client.creditsRemaining !== null && (
+                            <span className="text-[9px] font-black uppercase tracking-wider bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-0.5 rounded-md">
+                              {result.client.creditsRemaining} créditos restantes
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>

@@ -31,7 +31,18 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { name, price, durationDays, description } = body;
+    const {
+      name,
+      price,
+      durationDays,
+      description,
+      vatRate,
+      billingType,
+      creditsPerCycle,
+      creditRechargeMode,
+      rechargeIntervalDays,
+      creditsNeverExpire,
+    } = body;
 
     if (!name || price === undefined || !durationDays) {
       return NextResponse.json({ message: "Nombre, precio y duración son obligatorios" }, { status: 400 });
@@ -42,6 +53,20 @@ export async function POST(req: Request) {
     if (Number(durationDays) < 1) {
       return NextResponse.json({ message: "La duración debe ser al menos 1 día" }, { status: 400 });
     }
+    if (vatRate !== undefined && (Number(vatRate) < 0 || Number(vatRate) > 100)) {
+      return NextResponse.json({ message: "El IVA debe estar entre 0 y 100" }, { status: 400 });
+    }
+    if (billingType === "CREDITS") {
+      if (!creditsPerCycle || Number(creditsPerCycle) < 1) {
+        return NextResponse.json({ message: "El número de créditos debe ser al menos 1" }, { status: 400 });
+      }
+      if (creditRechargeMode !== "PER_PAYMENT" && creditRechargeMode !== "PERIODIC") {
+        return NextResponse.json({ message: "Selecciona el modo de recarga de créditos" }, { status: 400 });
+      }
+      if (creditRechargeMode === "PERIODIC" && (!rechargeIntervalDays || Number(rechargeIntervalDays) < 1)) {
+        return NextResponse.json({ message: "El intervalo de recarga debe ser al menos 1 día" }, { status: 400 });
+      }
+    }
 
     const plan = await prisma.subscriptionPlan.create({
       data: {
@@ -50,6 +75,14 @@ export async function POST(req: Request) {
         price: Number(price),
         durationDays: Number(durationDays),
         description: description?.trim() || null,
+        vatRate: vatRate !== undefined ? Number(vatRate) : 21,
+        billingType: billingType === "CREDITS" ? "CREDITS" : "DURATION",
+        ...(billingType === "CREDITS" && {
+          creditsPerCycle: Number(creditsPerCycle),
+          creditRechargeMode,
+          rechargeIntervalDays: creditRechargeMode === "PERIODIC" ? Number(rechargeIntervalDays) : null,
+          creditsNeverExpire: creditRechargeMode === "PER_PAYMENT" ? !!creditsNeverExpire : false,
+        }),
       },
     });
 

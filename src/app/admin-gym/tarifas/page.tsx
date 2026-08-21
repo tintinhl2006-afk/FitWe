@@ -13,19 +13,39 @@ import {
   CheckCircle2,
   X,
   Edit,
+  CreditCard,
+  RefreshCw,
+  Infinity as InfinityIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCustomAlert } from "@/components/providers/CustomAlertProvider";
+
+type BillingType = "DURATION" | "CREDITS";
+type CreditRechargeMode = "PER_PAYMENT" | "PERIODIC";
 
 interface Plan {
   id: string;
   name: string;
   price: number;
+  vatRate: number;
   durationDays: number;
+  billingType: BillingType;
+  creditsPerCycle: number | null;
+  creditRechargeMode: CreditRechargeMode | null;
+  rechargeIntervalDays: number | null;
+  creditsNeverExpire: boolean;
   description: string | null;
   isActive: boolean;
   _count: { users: number };
 }
+
+const DURATION_SHORTCUTS = [
+  { label: "1 semana", days: 7 },
+  { label: "1 mes", days: 30 },
+  { label: "3 meses", days: 90 },
+  { label: "6 meses", days: 180 },
+  { label: "1 año", days: 365 },
+];
 
 export default function GymPlansPage() {
   const { showConfirm, showAlert } = useCustomAlert();
@@ -37,22 +57,55 @@ export default function GymPlansPage() {
   const [success, setSuccess] = useState("");
   const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
 
-  const [formData, setFormData] = useState({
+  const emptyFormData = {
     name: "",
     price: "",
+    vatRate: "21",
+    priceIncludesVat: true,
     durationDays: "30",
     description: "",
     isActive: true,
-  });
+    billingType: "DURATION" as BillingType,
+    creditsPerCycle: "10",
+    creditRechargeMode: "PER_PAYMENT" as CreditRechargeMode,
+    rechargeIntervalDays: "30",
+    creditsNeverExpire: false,
+  };
+
+  const [formData, setFormData] = useState(emptyFormData);
+
+  // Datos siempre se guardan como precio final (con IVA) + tipo de IVA aplicado; el
+  // interruptor solo cambia cómo se interpreta el número que el gimnasio ha escrito.
+  const vatRateNum = parseFloat(formData.vatRate) || 0;
+  const priceNum = parseFloat(formData.price) || 0;
+  const basePrice = formData.priceIncludesVat ? priceNum / (1 + vatRateNum / 100) : priceNum;
+  const finalPrice = formData.priceIncludesVat ? priceNum : priceNum * (1 + vatRateNum / 100);
+  const vatAmount = finalPrice - basePrice;
+
+  const isCredits = formData.billingType === "CREDITS";
+  const isPeriodic = isCredits && formData.creditRechargeMode === "PERIODIC";
+  const durationHidden = isCredits && !isPeriodic && formData.creditsNeverExpire;
+  const durationLabel = !isCredits
+    ? "Duración *"
+    : isPeriodic
+    ? "Vigencia total del bono (días) *"
+    : "Caducidad de los créditos (días) *";
 
   const handleEditClick = (plan: Plan) => {
     setEditingPlan(plan);
     setFormData({
       name: plan.name,
       price: plan.price.toString(),
+      vatRate: plan.vatRate.toString(),
+      priceIncludesVat: true,
       durationDays: plan.durationDays.toString(),
       description: plan.description || "",
       isActive: plan.isActive,
+      billingType: plan.billingType,
+      creditsPerCycle: (plan.creditsPerCycle ?? 10).toString(),
+      creditRechargeMode: plan.creditRechargeMode ?? "PER_PAYMENT",
+      rechargeIntervalDays: (plan.rechargeIntervalDays ?? 30).toString(),
+      creditsNeverExpire: plan.creditsNeverExpire,
     });
     setError("");
     setIsModalOpen(true);
@@ -87,14 +140,28 @@ export default function GymPlansPage() {
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          name: formData.name,
+          price: finalPrice,
+          vatRate: vatRateNum,
+          durationDays: formData.durationDays,
+          description: formData.description,
+          isActive: formData.isActive,
+          billingType: formData.billingType,
+          ...(isCredits && {
+            creditsPerCycle: formData.creditsPerCycle,
+            creditRechargeMode: formData.creditRechargeMode,
+            rechargeIntervalDays: formData.rechargeIntervalDays,
+            creditsNeverExpire: formData.creditsNeverExpire,
+          }),
+        }),
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || `Error al ${editingPlan ? 'actualizar' : 'crear'} la tarifa`);
 
       setIsModalOpen(false);
-      setFormData({ name: "", price: "", durationDays: "30", description: "", isActive: true });
+      setFormData(emptyFormData);
       setEditingPlan(null);
       setSuccess(editingPlan ? "Tarifa actualizada correctamente" : "Tarifa creada correctamente");
       setTimeout(() => setSuccess(""), 3000);
@@ -154,7 +221,7 @@ export default function GymPlansPage() {
           <button
             onClick={() => {
               setEditingPlan(null);
-              setFormData({ name: "", price: "", durationDays: "30", description: "", isActive: true });
+              setFormData(emptyFormData);
               setIsModalOpen(true);
               setError("");
             }}
@@ -225,10 +292,40 @@ export default function GymPlansPage() {
                 </div>
 
                 <div className="space-y-2 mb-4">
-                  <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-                    <Clock className="h-4 w-4 text-slate-400" />
-                    {formatDuration(plan.durationDays)}
-                  </div>
+                  {plan.billingType === "CREDITS" ? (
+                    <>
+                      <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+                        <CreditCard className="h-4 w-4 text-slate-400" />
+                        {plan.creditsPerCycle} créditos
+                        {plan.creditRechargeMode === "PERIODIC"
+                          ? ` cada ${plan.rechargeIntervalDays} días`
+                          : " por pago"}
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+                        {plan.creditRechargeMode === "PERIODIC" ? (
+                          <>
+                            <RefreshCw className="h-4 w-4 text-slate-400" />
+                            Bono vigente {formatDuration(plan.durationDays)}
+                          </>
+                        ) : plan.creditsNeverExpire ? (
+                          <>
+                            <InfinityIcon className="h-4 w-4 text-slate-400" />
+                            Los créditos no caducan
+                          </>
+                        ) : (
+                          <>
+                            <Clock className="h-4 w-4 text-slate-400" />
+                            Caducan a los {plan.durationDays} días
+                          </>
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+                      <Clock className="h-4 w-4 text-slate-400" />
+                      {formatDuration(plan.durationDays)}
+                    </div>
+                  )}
                   <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
                     <Users className="h-4 w-4 text-slate-400" />
                     {plan._count.users}{" "}
@@ -261,8 +358,8 @@ export default function GymPlansPage() {
         {/* Create/Edit Plan Modal */}
         {isModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 backdrop-blur-sm p-4">
-            <div className="w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl">
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 px-6 py-4">
+            <div className="w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 px-6 py-4 shrink-0">
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white">
                   {editingPlan ? "Editar Tarifa" : "Nueva Tarifa"}
                 </h3>
@@ -277,7 +374,8 @@ export default function GymPlansPage() {
                 </button>
               </div>
 
-              <form onSubmit={handleCreate} className="p-6 space-y-4">
+              <form onSubmit={handleCreate} className="flex flex-col flex-1 min-h-0">
+              <div className="p-6 space-y-4 overflow-y-auto min-h-0">
                 {error && (
                   <div className="flex items-center gap-2 rounded-2xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 px-4 py-3 text-sm font-medium text-red-700 dark:text-red-400">
                     <AlertCircle className="h-4 w-4 shrink-0" />
@@ -322,25 +420,203 @@ export default function GymPlansPage() {
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                      Duración *
+                      IVA (%) *
                     </label>
-                    <select
-                      value={formData.durationDays}
+                    <input
+                      required
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.01"
+                      value={formData.vatRate}
                       onChange={(e) =>
-                        setFormData({ ...formData, durationDays: e.target.value })
+                        setFormData({ ...formData, vatRate: e.target.value })
                       }
                       className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-2.5 px-4 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none transition-all"
-                    >
-                      <option value="7">1 Semana</option>
-                      <option value="14">2 Semanas</option>
-                      <option value="30">1 Mes</option>
-                      <option value="60">2 Meses</option>
-                      <option value="90">3 Meses</option>
-                      <option value="180">6 Meses</option>
-                      <option value="365">1 Año</option>
-                    </select>
+                    />
                   </div>
                 </div>
+
+                <div className="flex items-center gap-2">
+                  <input
+                    id="plan-price-includes-vat"
+                    type="checkbox"
+                    checked={formData.priceIncludesVat}
+                    onChange={(e) =>
+                      setFormData({ ...formData, priceIncludesVat: e.target.checked })
+                    }
+                    className="h-4 w-4 rounded border-slate-305 dark:border-slate-705 text-primary focus:ring-primary focus:ring-offset-0 bg-transparent outline-none cursor-pointer"
+                  />
+                  <label
+                    htmlFor="plan-price-includes-vat"
+                    className="text-sm font-medium text-slate-700 dark:text-slate-300 select-none cursor-pointer"
+                  >
+                    El precio introducido ya incluye el IVA
+                  </label>
+                </div>
+
+                {priceNum > 0 && (
+                  <div className="rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-850 p-3.5 text-xs space-y-1.5">
+                    <div className="flex justify-between text-slate-500 dark:text-slate-400">
+                      <span>Base imponible:</span>
+                      <span className="font-semibold text-slate-700 dark:text-slate-200">{basePrice.toFixed(2)} €</span>
+                    </div>
+                    <div className="flex justify-between text-slate-500 dark:text-slate-400">
+                      <span>IVA ({vatRateNum || 0}%):</span>
+                      <span className="font-semibold text-slate-700 dark:text-slate-200">{vatAmount.toFixed(2)} €</span>
+                    </div>
+                    <div className="flex justify-between pt-1.5 border-t border-slate-200 dark:border-slate-800 font-bold text-slate-900 dark:text-white">
+                      <span>Precio final al cliente:</span>
+                      <span>{finalPrice.toFixed(2)} €</span>
+                    </div>
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                    Tipo de tarifa *
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, billingType: "DURATION" })}
+                      className={cn(
+                        "flex items-center justify-center gap-2 rounded-2xl border-2 py-2.5 text-sm font-semibold transition-all",
+                        !isCredits
+                          ? "border-primary bg-cyan-50/50 dark:bg-cyan-950/20 text-primary dark:text-cyan-400"
+                          : "border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-300"
+                      )}
+                    >
+                      <Clock className="h-4 w-4" />
+                      Por duración
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, billingType: "CREDITS" })}
+                      className={cn(
+                        "flex items-center justify-center gap-2 rounded-2xl border-2 py-2.5 text-sm font-semibold transition-all",
+                        isCredits
+                          ? "border-primary bg-cyan-50/50 dark:bg-cyan-950/20 text-primary dark:text-cyan-400"
+                          : "border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-300"
+                      )}
+                    >
+                      <CreditCard className="h-4 w-4" />
+                      Por créditos (bono)
+                    </button>
+                  </div>
+                </div>
+
+                {isCredits && (
+                  <div className="rounded-2xl border border-slate-200 dark:border-slate-800 p-4 space-y-4 bg-slate-50/50 dark:bg-slate-950/20">
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                        Créditos por {formData.creditRechargeMode === "PERIODIC" ? "ciclo" : "pago"} *
+                      </label>
+                      <input
+                        required
+                        type="number"
+                        min="1"
+                        value={formData.creditsPerCycle}
+                        onChange={(e) => setFormData({ ...formData, creditsPerCycle: e.target.value })}
+                        className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-2.5 px-4 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none transition-all"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                        Recarga de créditos *
+                      </label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setFormData({ ...formData, creditRechargeMode: "PER_PAYMENT" })}
+                          className={cn(
+                            "rounded-2xl border-2 py-2 px-3 text-xs font-semibold text-left transition-all",
+                            formData.creditRechargeMode === "PER_PAYMENT"
+                              ? "border-primary bg-cyan-50/50 dark:bg-cyan-950/20 text-primary dark:text-cyan-400"
+                              : "border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400"
+                          )}
+                        >
+                          Al pagar/renovar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setFormData({ ...formData, creditRechargeMode: "PERIODIC" })}
+                          className={cn(
+                            "rounded-2xl border-2 py-2 px-3 text-xs font-semibold text-left transition-all",
+                            isPeriodic
+                              ? "border-primary bg-cyan-50/50 dark:bg-cyan-950/20 text-primary dark:text-cyan-400"
+                              : "border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400"
+                          )}
+                        >
+                          Automática cada X días
+                        </button>
+                      </div>
+                    </div>
+
+                    {isPeriodic && (
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                          Recargar cada (días) *
+                        </label>
+                        <input
+                          required
+                          type="number"
+                          min="1"
+                          value={formData.rechargeIntervalDays}
+                          onChange={(e) => setFormData({ ...formData, rechargeIntervalDays: e.target.value })}
+                          className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-2.5 px-4 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none transition-all"
+                        />
+                      </div>
+                    )}
+
+                    {!isPeriodic && (
+                      <div className="flex items-center gap-2">
+                        <input
+                          id="plan-credits-never-expire"
+                          type="checkbox"
+                          checked={formData.creditsNeverExpire}
+                          onChange={(e) => setFormData({ ...formData, creditsNeverExpire: e.target.checked })}
+                          className="h-4 w-4 rounded border-slate-305 dark:border-slate-705 text-primary focus:ring-primary focus:ring-offset-0 bg-transparent outline-none cursor-pointer"
+                        />
+                        <label
+                          htmlFor="plan-credits-never-expire"
+                          className="text-sm font-medium text-slate-700 dark:text-slate-300 select-none cursor-pointer"
+                        >
+                          Los créditos no caducan
+                        </label>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {!durationHidden && (
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                      {durationLabel}
+                    </label>
+                    <input
+                      required
+                      type="number"
+                      min="1"
+                      value={formData.durationDays}
+                      onChange={(e) => setFormData({ ...formData, durationDays: e.target.value })}
+                      className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-2.5 px-4 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none transition-all"
+                    />
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                      {DURATION_SHORTCUTS.map((s) => (
+                        <button
+                          key={s.days}
+                          type="button"
+                          onClick={() => setFormData({ ...formData, durationDays: s.days.toString() })}
+                          className="rounded-full border border-slate-200 dark:border-slate-700 px-2.5 py-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400 hover:border-primary hover:text-primary transition-colors"
+                        >
+                          {s.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
@@ -375,8 +651,9 @@ export default function GymPlansPage() {
                     </label>
                   </div>
                 )}
+              </div>
 
-                <div className="flex gap-3 pt-2">
+                <div className="flex gap-3 p-6 pt-4 border-t border-slate-100 dark:border-slate-800 shrink-0">
                   <button
                     type="button"
                     onClick={() => {

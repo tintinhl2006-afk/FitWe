@@ -17,6 +17,10 @@ interface Plan {
   price: number;
   durationDays: number;
   description: string | null;
+  billingType: 'DURATION' | 'CREDITS';
+  creditsPerCycle: number | null;
+  creditRechargeMode: 'PER_PAYMENT' | 'PERIODIC' | null;
+  rechargeIntervalDays: number | null;
 }
 
 interface PaymentDetails {
@@ -63,6 +67,8 @@ export default function PaymentScreen() {
   const [paymentGateway, setPaymentGateway] = useState<'stripe' | 'redsys' | null>(null);
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [creditsRemaining, setCreditsRemaining] = useState<number | null>(null);
+  const [currentBillingType, setCurrentBillingType] = useState<'DURATION' | 'CREDITS' | null>(null);
 
   const [webviewSource, setWebviewSource] = useState<{ uri: string } | { html: string } | null>(null);
   const [injectedAuthScript, setInjectedAuthScript] = useState('');
@@ -102,6 +108,8 @@ export default function PaymentScreen() {
       const planList: Plan[] = data.plans || [];
       setPlans(planList);
       setPaymentGateway(data.paymentGateway || null);
+      setCreditsRemaining(data.creditsRemaining ?? null);
+      setCurrentBillingType(data.billingType || null);
       setSelectedPlanId(data.currentPlanId || planList[0]?.id || null);
       setStep('plans');
     } catch (e) {
@@ -310,6 +318,20 @@ export default function PaymentScreen() {
 
         {step === 'plans' && (
           <>
+            {currentBillingType === 'CREDITS' && (
+              <Card style={{ marginBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }} padding={14}>
+                <View style={{ height: 40, width: 40, borderRadius: 12, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center' }}>
+                  <CreditCard size={18} color={colors.primaryAccent} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 11, fontWeight: '900', color: colors.primaryAccent, textTransform: 'uppercase' }}>Bono de Créditos</Text>
+                  <Text style={{ fontSize: 12, color: colors.textMuted, marginTop: 2 }}>
+                    Te quedan <Text style={{ fontWeight: '900', color: colors.textPrimary }}>{creditsRemaining ?? 0} créditos</Text> disponibles
+                  </Text>
+                </View>
+              </Card>
+            )}
+
             {plans.length === 0 ? (
               <EmptyState icon={<CreditCard size={28} color={colors.textMuted} />} title="Sin tarifas disponibles" subtitle="Tu gimnasio no tiene tarifas activas configuradas." />
             ) : (
@@ -324,7 +346,11 @@ export default function PaymentScreen() {
                           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                             <View style={{ flex: 1 }}>
                               <Text style={{ fontSize: 14, fontWeight: '900', color: colors.textPrimary }}>{plan.name}</Text>
-                              <Text style={{ fontSize: 11, color: colors.textMuted, marginTop: 2 }}>{formatDuration(plan.durationDays)}</Text>
+                              <Text style={{ fontSize: 11, color: colors.textMuted, marginTop: 2 }}>
+                                {plan.billingType === 'CREDITS'
+                                  ? `${plan.creditsPerCycle} créditos${plan.creditRechargeMode === 'PERIODIC' ? ` cada ${plan.rechargeIntervalDays}d` : ''}`
+                                  : formatDuration(plan.durationDays)}
+                              </Text>
                               {plan.description && (
                                 <Text style={{ fontSize: 11, color: colors.textMuted, marginTop: 4 }} numberOfLines={2}>
                                   {plan.description}

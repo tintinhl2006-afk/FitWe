@@ -29,6 +29,7 @@ export async function GET() {
           id: true,
           amount: true,
           description: true,
+          vatRate: true,
           date: true,
           invoiceNumber: true,
           user: {

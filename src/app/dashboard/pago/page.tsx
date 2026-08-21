@@ -27,6 +27,10 @@ interface Plan {
   price: number;
   durationDays: number;
   description: string | null;
+  billingType: "DURATION" | "CREDITS";
+  creditsPerCycle: number | null;
+  creditRechargeMode: "PER_PAYMENT" | "PERIODIC" | null;
+  rechargeIntervalDays: number | null;
 }
 
 export default function PaymentPage() {
@@ -39,6 +43,8 @@ export default function PaymentPage() {
   const [paymentGateway, setPaymentGateway] = useState<"stripe" | "redsys" | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState("");
+  const [creditsRemaining, setCreditsRemaining] = useState<number | null>(null);
+  const [currentBillingType, setCurrentBillingType] = useState<"DURATION" | "CREDITS" | null>(null);
 
   const gymName = session?.user?.gymName || "Tu Gimnasio";
 
@@ -51,6 +57,8 @@ export default function PaymentPage() {
           const data = await res.json();
           setPlans(data.plans);
           setPaymentGateway(data.paymentGateway || null);
+          setCreditsRemaining(data.creditsRemaining ?? null);
+          setCurrentBillingType(data.billingType || null);
 
           // Auto-select current plan or first plan
           if (data.currentPlanId) {
@@ -202,7 +210,20 @@ export default function PaymentPage() {
               </div>
             </div>
           )}
-        
+
+          {currentBillingType === "CREDITS" && (
+            <div className="mt-5 mb-8 rounded-2xl bg-cyan-500/5 border border-cyan-500/10 dark:border-cyan-500/20 p-4 flex items-center gap-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-500/10 text-primary dark:text-cyan-400 shrink-0">
+                <CreditCard className="h-6 w-6" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-primary dark:text-cyan-400 uppercase tracking-wider">Bono de Créditos</p>
+                <p className="text-sm text-slate-600 dark:text-slate-355 mt-0.5">
+                  Te quedan <span className="font-bold text-slate-900 dark:text-white">{creditsRemaining ?? 0} créditos</span> disponibles para acceder al gimnasio.
+                </p>
+              </div>
+            </div>
+          )}
 
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
           {/* Plan Selection */}
@@ -245,8 +266,18 @@ export default function PaymentPage() {
                           {plan.name}
                         </h3>
                         <span className="flex items-center gap-1 text-xs font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
-                          <Clock className="h-3.5 w-3.5 text-slate-400" />
-                          {formatDuration(plan.durationDays)}
+                          {plan.billingType === "CREDITS" ? (
+                            <>
+                              <CreditCard className="h-3.5 w-3.5 text-slate-400" />
+                              {plan.creditsPerCycle} créditos
+                              {plan.creditRechargeMode === "PERIODIC" ? ` cada ${plan.rechargeIntervalDays}d` : ""}
+                            </>
+                          ) : (
+                            <>
+                              <Clock className="h-3.5 w-3.5 text-slate-400" />
+                              {formatDuration(plan.durationDays)}
+                            </>
+                          )}
                         </span>
                       </div>
                       {plan.description && (

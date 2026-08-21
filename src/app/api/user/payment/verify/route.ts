@@ -5,6 +5,7 @@ import { logger } from "@/lib/logger";
 import { getRequestUserId } from "@/lib/apiAuth";
 import { getActiveGymPaymentMethod } from "@/lib/invoiceUtils";
 import { isRedsysTestMerchant } from "@/lib/redsys";
+import { computePlanGrant } from "@/lib/planUtils";
 
 export async function GET(req: Request) {
   try {
@@ -29,6 +30,7 @@ export async function GET(req: Request) {
         gymId: true,
         subscriptionStatus: true,
         subscriptionEndDate: true,
+        creditsRemaining: true,
       },
     });
 
@@ -55,6 +57,7 @@ export async function GET(req: Request) {
     let finalAmount = 49.99;
     let finalPlanName = "Cuota mensual";
     let finalDurationDays = 30;
+    let finalVatRate = 21;
     let resolvedPlanId: string | null = null;
     let cardLast4 = "9999";
     let cardBrand = "Visa / Connect";
@@ -144,6 +147,7 @@ export async function GET(req: Request) {
             cardBrand: "Tarjeta",
             gymName: gym.name,
             endDate: user.subscriptionEndDate?.toISOString(),
+            creditsRemaining: user.creditsRemaining,
           },
         });
       }
@@ -155,6 +159,10 @@ export async function GET(req: Request) {
         ? parseInt(stripeSession.metadata.durationDays, 10)
         : finalDurationDays;
       resolvedPlanId = stripeSession.metadata?.planId || null;
+      let resolvedPlan = resolvedPlanId
+        ? await prisma.subscriptionPlan.findUnique({ where: { id: resolvedPlanId } })
+        : null;
+      if (resolvedPlan) finalVatRate = resolvedPlan.vatRate;
 
       // Intentar obtener detalles de la tarjeta usada
       const paymentIntent = stripeSession.payment_intent as Stripe.PaymentIntent | null;
@@ -174,18 +182,11 @@ export async function GET(req: Request) {
         }
       }
 
-      // Calcular nueva fecha de fin de suscripción extendiéndola elegantemente
-      const now = new Date();
-      let baseDate = new Date();
-      if (
-        user.subscriptionEndDate &&
-        user.subscriptionEndDate > now &&
-        user.subscriptionStatus === "ACTIVE"
-      ) {
-        baseDate = new Date(user.subscriptionEndDate);
-      }
-      const newEndDate = new Date(baseDate);
-      newEndDate.setDate(newEndDate.getDate() + finalDurationDays);
+      // Calcular la concesión (fecha o créditos, según el tipo de tarifa)
+      const grant = computePlanGrant(
+        resolvedPlan ?? { billingType: "DURATION", durationDays: finalDurationDays },
+        user
+      );
 
       // Guardar registro de pago y activar la suscripción en una transacción atómica
       const payment = await prisma.$transaction(async (tx) => {
@@ -201,6 +202,7 @@ export async function GET(req: Request) {
             amount: finalAmount,
             description: `${finalPlanName} - Stripe Connect (Ref: ${sessionId})`,
             planId: resolvedPlanId,
+            vatRate: finalVatRate,
             date: new Date(),
             invoiceNumber,
             paymentMethodId: gymPaymentMethod.id,
@@ -211,7 +213,7 @@ export async function GET(req: Request) {
           where: { id: user.id },
           data: {
             subscriptionStatus: "ACTIVE",
-            subscriptionEndDate: newEndDate,
+            ...grant,
             ...(resolvedPlanId && { planId: resolvedPlanId }),
           },
         });
@@ -229,7 +231,8 @@ export async function GET(req: Request) {
           cardLast4,
           cardBrand,
           gymName: gym.name,
-          endDate: newEndDate.toISOString(),
+          endDate: grant.subscriptionEndDate?.toISOString() ?? null,
+          creditsRemaining: grant.creditsRemaining,
           invoiceNumber: payment.invoiceNumber,
         },
       });
@@ -297,11 +300,13 @@ export async function GET(req: Request) {
               cardBrand: "Visa / Test Connect",
               gymName: gym.name,
               endDate: user.subscriptionEndDate?.toISOString(),
+              creditsRemaining: user.creditsRemaining,
             },
           });
         }
       }
 
+      let resolvedPlan: Awaited<ReturnType<typeof prisma.subscriptionPlan.findUnique>> = null;
       if (queryPlanId) {
         const plan = await prisma.subscriptionPlan.findUnique({
           where: { id: queryPlanId },
@@ -311,22 +316,17 @@ export async function GET(req: Request) {
           finalAmount = plan.price;
           finalPlanName = plan.name;
           finalDurationDays = plan.durationDays;
+          finalVatRate = plan.vatRate;
           resolvedPlanId = plan.id;
+          resolvedPlan = plan;
         }
       }
 
-      // Calcular nueva fecha de fin de suscripción
-      const now = new Date();
-      let baseDate = new Date();
-      if (
-        user.subscriptionEndDate &&
-        user.subscriptionEndDate > now &&
-        user.subscriptionStatus === "ACTIVE"
-      ) {
-        baseDate = new Date(user.subscriptionEndDate);
-      }
-      const newEndDate = new Date(baseDate);
-      newEndDate.setDate(newEndDate.getDate() + finalDurationDays);
+      // Calcular la concesión (fecha o créditos, según el tipo de tarifa)
+      const grant = computePlanGrant(
+        resolvedPlan ?? { billingType: "DURATION", durationDays: finalDurationDays },
+        user
+      );
 
       // Guardar transacción mock con identificador único
       const payment = await prisma.$transaction(async (tx) => {
@@ -342,6 +342,7 @@ export async function GET(req: Request) {
             amount: finalAmount,
             description: `${finalPlanName} - Pago Simulado en Cuenta Conectada${mockOrderId ? ` (Ref: ${mockOrderId})` : ""}`,
             planId: resolvedPlanId,
+            vatRate: finalVatRate,
             date: new Date(),
             invoiceNumber,
             paymentMethodId: activeMethod?.id,
@@ -352,7 +353,7 @@ export async function GET(req: Request) {
           where: { id: user.id },
           data: {
             subscriptionStatus: "ACTIVE",
-            subscriptionEndDate: newEndDate,
+            ...grant,
             ...(resolvedPlanId && { planId: resolvedPlanId }),
           },
         });
@@ -370,7 +371,8 @@ export async function GET(req: Request) {
           cardLast4: "4242",
           cardBrand: "Visa / Test Connect",
           gymName: gym.name,
-          endDate: newEndDate.toISOString(),
+          endDate: grant.subscriptionEndDate?.toISOString() ?? null,
+          creditsRemaining: grant.creditsRemaining,
           invoiceNumber: payment.invoiceNumber,
         },
       });

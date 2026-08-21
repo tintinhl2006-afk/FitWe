@@ -24,6 +24,7 @@ interface Invoice {
   id: string;
   amount: number;
   description: string;
+  vatRate: number | null;
   date: string;
   invoiceNumber: string | null;
   user: InvoiceClient;

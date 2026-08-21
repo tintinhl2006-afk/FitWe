@@ -7,6 +7,7 @@ export interface InvoicePayment {
   description: string;
   date: string;
   invoiceNumber?: string | null;
+  vatRate?: number | null;
 }
 
 export interface InvoiceClient {
@@ -72,7 +73,8 @@ function buildInvoiceHtml(payment: InvoicePayment, client: InvoiceClient, gym: I
   const invDate = `Fecha: ${new Date(payment.date).toLocaleDateString('es-ES')}`;
 
   const totalAmount = payment.amount;
-  const baseImponible = totalAmount / 1.21;
+  const vatRate = payment.vatRate ?? 21;
+  const baseImponible = vatRate > 0 ? totalAmount / (1 + vatRate / 100) : totalAmount;
   const ivaAmount = totalAmount - baseImponible;
 
   return `
@@ -145,7 +147,7 @@ function buildInvoiceHtml(payment: InvoicePayment, client: InvoiceClient, gym: I
 
           <div class="totals">
             <div class="row"><span>Base Imponible:</span><span>${baseImponible.toFixed(2)} €</span></div>
-            <div class="row"><span>I.V.A. (21%):</span><span>${ivaAmount.toFixed(2)} €</span></div>
+            <div class="row"><span>I.V.A. (${vatRate}%):</span><span>${ivaAmount.toFixed(2)} €</span></div>
             <div class="row total"><span>Total Factura:</span><span>${totalAmount.toFixed(2)} €</span></div>
           </div>
 

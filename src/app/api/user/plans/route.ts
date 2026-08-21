@@ -16,7 +16,12 @@ export async function GET(req: Request) {
     // Get user's gymId
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { gymId: true, planId: true },
+      select: {
+        gymId: true,
+        planId: true,
+        creditsRemaining: true,
+        plan: { select: { billingType: true } },
+      },
     });
     console.log("[API PLANS GET] DB User:", user);
 
@@ -51,6 +56,8 @@ export async function GET(req: Request) {
       plans,
       currentPlanId: user.planId,
       paymentGateway,
+      billingType: user.plan?.billingType ?? null,
+      creditsRemaining: user.creditsRemaining,
     });
   } catch (error: any) {
     console.error("Error fetching gym plans:", error);

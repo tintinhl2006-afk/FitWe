@@ -32,6 +32,19 @@ interface PaymentRecord {
   date: string;
 }
 
+interface GymPlan {
+  id: string;
+  name: string;
+  price: number;
+  vatRate: number;
+  isActive: boolean;
+  billingType: "DURATION" | "CREDITS";
+  creditsPerCycle: number | null;
+  creditRechargeMode: "PER_PAYMENT" | "PERIODIC" | null;
+  rechargeIntervalDays: number | null;
+  durationDays: number;
+}
+
 interface SessionData {
   id: string;
   routineName: string;
@@ -104,8 +117,11 @@ export default function ClientDetailPage({
   const [isUpdating, setIsUpdating] = useState(false);
   const [notFound, setNotFound] = useState(false);
 
-  const [isDateModalOpen, setIsDateModalOpen] = useState(false);
-  const [exactDate, setExactDate] = useState("");
+  const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
+  const [gymPlans, setGymPlans] = useState<GymPlan[]>([]);
+  const [selectedPlanId, setSelectedPlanId] = useState("");
+  const [planModalError, setPlanModalError] = useState("");
+  const selectedPlan = gymPlans.find((p) => p.id === selectedPlanId) || null;
 
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [newPassword, setNewPassword] = useState("");
@@ -321,9 +337,6 @@ export default function ClientDetailPage({
       if (res.ok) {
         const data = await res.json();
         setClient(data);
-        if (data.subscriptionEndDate) {
-          setExactDate(new Date(data.subscriptionEndDate).toISOString().split('T')[0]);
-        }
       } else {
         setNotFound(true);
       }
@@ -346,36 +359,68 @@ export default function ClientDetailPage({
     }
   };
 
+  const fetchGymPlans = async () => {
+    try {
+      const res = await fetch("/api/admin-gym/plans");
+      if (res.ok) {
+        const data: GymPlan[] = await res.json();
+        setGymPlans(data.filter((p) => p.isActive));
+      }
+    } catch (e) {
+      console.error("Error fetching plans:", e);
+    }
+  };
+
   useEffect(() => {
     fetchClient();
     fetchPayments();
+    fetchGymPlans();
   }, [clientId]);
 
-  const handleSubscriptionUpdate = async (status?: string, addDays?: number, exactEndDate?: string) => {
-    if (addDays) {
-      showConfirm(`¿Seguro que quieres extender la suscripción de ${client?.name} por ${addDays} días?`, () => {
-        executeSubscriptionUpdate(status, addDays, exactEndDate);
-      });
-      return;
-    }
-    executeSubscriptionUpdate(status, addDays, exactEndDate);
+  const handleDeactivate = () => {
+    showConfirm(`¿Seguro que quieres desactivar el acceso de ${client?.name}?`, async () => {
+      setIsUpdating(true);
+      try {
+        const res = await fetch(`/api/admin-gym/clients/${clientId}/subscription`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "deactivate" }),
+        });
+        if (res.ok) {
+          fetchClient();
+          fetchPayments();
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setIsUpdating(false);
+      }
+    });
   };
 
-  const executeSubscriptionUpdate = async (status?: string, addDays?: number, exactEndDate?: string) => {
+  const openPlanModal = () => {
+    setSelectedPlanId(gymPlans[0]?.id || "");
+    setPlanModalError("");
+    setIsPlanModalOpen(true);
+  };
+
+  const handleAssignPlan = async () => {
+    if (!selectedPlanId) return;
     setIsUpdating(true);
+    setPlanModalError("");
     try {
       const res = await fetch(`/api/admin-gym/clients/${clientId}/subscription`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status, addDays, exactEndDate }),
+        body: JSON.stringify({ planId: selectedPlanId }),
       });
-      if (res.ok) {
-        setIsDateModalOpen(false);
-        fetchClient();
-        fetchPayments();
-      }
-    } catch (e) {
-      console.error(e);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Error al asignar la tarifa");
+      setIsPlanModalOpen(false);
+      fetchClient();
+      fetchPayments();
+    } catch (e: any) {
+      setPlanModalError(e.message || "Error al asignar la tarifa");
     } finally {
       setIsUpdating(false);
     }
@@ -669,21 +714,23 @@ export default function ClientDetailPage({
           {/* Status Row */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
             <div className="flex flex-col sm:flex-row sm:items-center gap-4 w-full sm:w-auto">
-              <button
-                disabled={isUpdating}
-                onClick={() => {
-                  const hasActiveAccess = client.subscriptionStatus === "ACTIVE" && !isExpired;
-                  handleSubscriptionUpdate(hasActiveAccess ? "INACTIVE" : "ACTIVE");
-                }}
-                className={cn(
-                  "w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 rounded-3xl text-sm font-bold transition-all shadow-sm active:scale-95",
-                  (client.subscriptionStatus === "ACTIVE" && !isExpired)
-                    ? "bg-red-600 text-white hover:bg-red-700 shadow-red-200 dark:shadow-none"
-                    : "bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-200 dark:shadow-none"
-                )}
-              >
-                {(client.subscriptionStatus === "ACTIVE" && !isExpired) ? "Desactivar Acceso" : "Activar Acceso (+30 días)"}
-              </button>
+              {(client.subscriptionStatus === "ACTIVE" && !isExpired) ? (
+                <button
+                  disabled={isUpdating}
+                  onClick={handleDeactivate}
+                  className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 rounded-3xl text-sm font-bold transition-all shadow-sm active:scale-95 bg-red-600 text-white hover:bg-red-700 shadow-red-200 dark:shadow-none"
+                >
+                  Desactivar Acceso
+                </button>
+              ) : (
+                <button
+                  disabled={isUpdating || gymPlans.length === 0}
+                  onClick={openPlanModal}
+                  className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 rounded-3xl text-sm font-bold transition-all shadow-sm active:scale-95 bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-200 dark:shadow-none disabled:opacity-60"
+                >
+                  Asignar Tarifa
+                </button>
+              )}
               <div className="text-sm text-center sm:text-left w-full sm:w-auto">
                 <p className="font-bold dark:text-white flex items-center justify-center sm:justify-start gap-2">
                   {client.subscriptionStatus === "ACTIVE" && !isExpired ? (
@@ -699,13 +746,15 @@ export default function ClientDetailPage({
               </div>
             </div>
 
-            <button
-              disabled={isUpdating}
-              onClick={() => handleSubscriptionUpdate(undefined, 30)}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-3xl bg-cyan-50 dark:bg-cyan-950/40 text-primary dark:text-cyan-400 px-6 py-3 text-sm font-bold hover:bg-cyan-100 dark:hover:bg-cyan-900/50 transition-colors border border-cyan-100 dark:border-cyan-900/50"
-            >
-              Extender +30 Días
-            </button>
+            {(client.subscriptionStatus === "ACTIVE" && !isExpired) && (
+              <button
+                disabled={isUpdating || gymPlans.length === 0}
+                onClick={openPlanModal}
+                className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-3xl bg-cyan-50 dark:bg-cyan-950/40 text-primary dark:text-cyan-400 px-6 py-3 text-sm font-bold hover:bg-cyan-100 dark:hover:bg-cyan-900/50 transition-colors border border-cyan-100 dark:border-cyan-900/50 disabled:opacity-60"
+              >
+                Renovar / Registrar Pago
+              </button>
+            )}
           </div>
 
           {/* Dates Info Row */}
@@ -722,27 +771,19 @@ export default function ClientDetailPage({
               </div>
             </div>
 
-            <div className="flex items-center justify-between gap-4 p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-              <div className="flex items-center gap-4">
-                <div className={cn(
-                  "flex h-10 w-10 items-center justify-center rounded-3xl",
-                  isExpired ? "bg-red-50 dark:bg-red-950/30 text-red-500" : "bg-cyan-50 dark:bg-cyan-950/30 text-primary"
-                )}>
-                  <Clock className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Fin de Suscripción</p>
-                  <p className={cn("text-sm font-bold", isExpired ? "text-red-600" : "text-slate-900 dark:text-white")}>
-                    {subEndDate ? subEndDate.toLocaleDateString("es-ES", { day: '2-digit', month: 'long', year: 'numeric' }) : "Pendiente de activación"}
-                  </p>
-                </div>
+            <div className="flex items-center gap-4 p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+              <div className={cn(
+                "flex h-10 w-10 items-center justify-center rounded-3xl",
+                isExpired ? "bg-red-50 dark:bg-red-950/30 text-red-500" : "bg-cyan-50 dark:bg-cyan-950/30 text-primary"
+              )}>
+                <Clock className="h-5 w-5" />
               </div>
-              <button 
-                onClick={() => setIsDateModalOpen(true)}
-                className="p-2 text-slate-400 hover:text-primary transition-colors"
-              >
-                <Edit className="h-4 w-4" />
-              </button>
+              <div>
+                <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Fin de Suscripción</p>
+                <p className={cn("text-sm font-bold", isExpired ? "text-red-600" : "text-slate-900 dark:text-white")}>
+                  {subEndDate ? subEndDate.toLocaleDateString("es-ES", { day: '2-digit', month: 'long', year: 'numeric' }) : "Pendiente de activación"}
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -886,42 +927,69 @@ export default function ClientDetailPage({
         </div>
       </div>
 
-      {/* ── Date Edit Modal ── */}
-      {isDateModalOpen && (
+      {/* ── Assign Plan Modal (pago en efectivo/manual) ── */}
+      {isPlanModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
           <div className="w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-xl border border-slate-200 dark:border-slate-800">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white">Editar Fecha de Expiración</h3>
-              <button onClick={() => setIsDateModalOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white">Asignar Tarifa</h3>
+              <button onClick={() => setIsPlanModalOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
                 <X className="h-5 w-5" />
               </button>
             </div>
             <div className="space-y-4">
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                Elige la tarifa que ha pagado el cliente (por ejemplo, en efectivo). Se activará su acceso y se generará la factura correspondiente.
+              </p>
+
+              {planModalError && (
+                <div className="flex items-center gap-2 rounded-2xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 px-4 py-3 text-sm font-medium text-red-700 dark:text-red-400">
+                  <AlertTriangle className="h-4 w-4 shrink-0" />
+                  {planModalError}
+                </div>
+              )}
+
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Nueva Fecha de Caducidad
+                  Tarifa
                 </label>
-                <input
-                  type="date"
-                  value={exactDate}
-                  onChange={(e) => setExactDate(e.target.value)}
+                <select
+                  value={selectedPlanId}
+                  onChange={(e) => setSelectedPlanId(e.target.value)}
                   className="block w-full rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 py-2.5 px-3 text-slate-900 dark:text-white shadow-sm focus:border-primary focus:outline-none sm:text-sm"
-                />
+                >
+                  {gymPlans.map((plan) => (
+                    <option key={plan.id} value={plan.id}>
+                      {plan.name} — {plan.price.toFixed(2)}€
+                      {plan.billingType === "CREDITS" ? ` (${plan.creditsPerCycle} créditos)` : ""}
+                    </option>
+                  ))}
+                </select>
               </div>
+
+              {selectedPlan && (
+                <div className="rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-850 p-3.5 text-xs flex items-center gap-2.5 text-slate-500 dark:text-slate-400">
+                  <CreditCard className="h-4 w-4 shrink-0 text-primary" />
+                  {selectedPlan.billingType === "CREDITS"
+                    ? `Se le concederán ${selectedPlan.creditsPerCycle} créditos.`
+                    : `Se le activará el acceso por ${selectedPlan.durationDays} días.`}
+                </div>
+              )}
+
               <div className="mt-8 flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
                 <button
                   type="button"
-                  onClick={() => setIsDateModalOpen(false)}
+                  onClick={() => setIsPlanModalOpen(false)}
                   className="rounded-2xl px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
-                  onClick={() => handleSubscriptionUpdate(undefined, undefined, exactDate)}
-                  disabled={isUpdating || !exactDate}
+                  onClick={handleAssignPlan}
+                  disabled={isUpdating || !selectedPlanId}
                   className="inline-flex items-center justify-center rounded-2xl bg-primary px-6 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary disabled:opacity-70 transition-colors"
                 >
-                  {isUpdating ? <Loader2 className="h-4 w-4 animate-spin" /> : "Guardar Cambios"}
+                  {isUpdating ? <Loader2 className="h-4 w-4 animate-spin" /> : "Registrar Pago y Activar"}
                 </button>
               </div>
             </div>

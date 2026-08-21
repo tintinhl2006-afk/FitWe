@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyCallbackSignature } from "@/lib/redsys";
+import { computePlanGrant } from "@/lib/planUtils";
 
 export async function POST(req: Request) {
   try {
@@ -100,7 +101,7 @@ export async function POST(req: Request) {
     // Cargar datos de la suscripción del cliente
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { subscriptionEndDate: true, subscriptionStatus: true },
+      select: { subscriptionEndDate: true, subscriptionStatus: true, creditsRemaining: true },
     });
 
     if (!user) {
@@ -112,7 +113,9 @@ export async function POST(req: Request) {
     let finalAmount = parseFloat(amountCents) / 100;
     let finalPlanName = "Cuota mensual";
     let finalDurationDays = 30;
+    let finalVatRate = 21;
     let resolvedPlanId: string | null = null;
+    let resolvedPlan: Awaited<ReturnType<typeof prisma.subscriptionPlan.findUnique>> = null;
 
     if (planId) {
       const plan = await prisma.subscriptionPlan.findUnique({
@@ -122,22 +125,17 @@ export async function POST(req: Request) {
         finalAmount = plan.price;
         finalPlanName = plan.name;
         finalDurationDays = plan.durationDays;
+        finalVatRate = plan.vatRate;
         resolvedPlanId = plan.id;
+        resolvedPlan = plan;
       }
     }
 
-    // Calcular nueva fecha de fin de suscripción extendiéndola elegantemente
-    const now = new Date();
-    let baseDate = new Date();
-    if (
-      user.subscriptionEndDate &&
-      user.subscriptionEndDate > now &&
-      user.subscriptionStatus === "ACTIVE"
-    ) {
-      baseDate = new Date(user.subscriptionEndDate);
-    }
-    const newEndDate = new Date(baseDate);
-    newEndDate.setDate(newEndDate.getDate() + finalDurationDays);
+    // Calcular la concesión (fecha o créditos, según el tipo de tarifa)
+    const grant = computePlanGrant(
+      resolvedPlan ?? { billingType: "DURATION", durationDays: finalDurationDays },
+      user
+    );
 
     // Guardar transacción y activar en caliente la suscripción en Neon Postgres
     await prisma.$transaction(async (tx) => {
@@ -153,6 +151,7 @@ export async function POST(req: Request) {
           amount: finalAmount,
           description: `${finalPlanName} - TPV Virtual Redsys (Pedido: ${order})`,
           planId: resolvedPlanId,
+          vatRate: finalVatRate,
           date: new Date(),
           invoiceNumber,
           paymentMethodId: gymPaymentMethod.id,
@@ -163,7 +162,7 @@ export async function POST(req: Request) {
         where: { id: userId },
         data: {
           subscriptionStatus: "ACTIVE",
-          subscriptionEndDate: newEndDate,
+          ...grant,
           ...(resolvedPlanId && { planId: resolvedPlanId }),
         },
       });
