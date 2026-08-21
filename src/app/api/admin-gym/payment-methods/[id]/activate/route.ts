@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id || session.user.role !== "GYM") {
@@ -11,8 +11,9 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     }
 
     const gymId = session.user.id;
+    const { id } = await params;
 
-    const method = await prisma.gymPaymentMethod.findUnique({ where: { id: params.id } });
+    const method = await prisma.gymPaymentMethod.findUnique({ where: { id } });
     if (!method || method.gymId !== gymId) {
       return NextResponse.json({ message: "Método de pago no encontrado" }, { status: 404 });
     }

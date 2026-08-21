@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import Stripe from "stripe";
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id || session.user.role !== "GYM") {
@@ -13,8 +13,9 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
     const gymId = session.user.id;
     const origin = req.headers.get("origin") || "http://localhost:3000";
+    const { id } = await params;
 
-    const method = await prisma.gymPaymentMethod.findUnique({ where: { id: params.id } });
+    const method = await prisma.gymPaymentMethod.findUnique({ where: { id } });
     if (!method || method.gymId !== gymId || method.gateway !== "STRIPE") {
       return NextResponse.json({ message: "Método de pago no encontrado" }, { status: 404 });
     }

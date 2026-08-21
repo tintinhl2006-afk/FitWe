@@ -9,14 +9,15 @@ async function assertOwnedMethod(gymId: string, methodId: string) {
   return method;
 }
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id || session.user.role !== "GYM") {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
-    const method = await assertOwnedMethod(session.user.id, params.id);
+    const { id } = await params;
+    const method = await assertOwnedMethod(session.user.id, id);
     if (!method) {
       return NextResponse.json({ message: "Método de pago no encontrado" }, { status: 404 });
     }
@@ -70,14 +71,15 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   }
 }
 
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id || session.user.role !== "GYM") {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
-    const method = await assertOwnedMethod(session.user.id, params.id);
+    const { id } = await params;
+    const method = await assertOwnedMethod(session.user.id, id);
     if (!method) {
       return NextResponse.json({ message: "Método de pago no encontrado" }, { status: 404 });
     }
