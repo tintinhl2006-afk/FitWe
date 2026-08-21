@@ -42,6 +42,7 @@ interface PaymentMethod {
   billingProvince: string | null;
   billingLocality: string | null;
   billingPostalCode: string | null;
+  vatRate: number;
 }
 
 const emptyForm = {
@@ -55,6 +56,7 @@ const emptyForm = {
   billingProvince: "",
   billingLocality: "",
   billingPostalCode: "",
+  vatRate: "21",
   redsysFuc: "",
   redsysTerminal: "001",
   redsysClave: "",
@@ -153,6 +155,7 @@ export default function MetodosPagoPage() {
       billingProvince: method.billingProvince || "",
       billingLocality: method.billingLocality || "",
       billingPostalCode: method.billingPostalCode || "",
+      vatRate: method.vatRate.toString(),
       redsysFuc: method.redsysFuc || "",
       redsysTerminal: method.redsysTerminal || "001",
       redsysClave: "",
@@ -338,6 +341,7 @@ export default function MetodosPagoPage() {
 
                 <div className="text-xs text-slate-500 dark:text-slate-400 space-y-0.5">
                   <p className="font-semibold text-slate-700 dark:text-slate-300">{m.billingName}</p>
+                  <p>IVA: {m.vatRate}%</p>
                   {m.billingDocumentNumber && (
                     <p>{m.billingDocumentType || "NIF"}: {m.billingDocumentNumber}</p>
                   )}
@@ -460,6 +464,22 @@ export default function MetodosPagoPage() {
                         onChange={(e) => setForm({ ...form, billingName: e.target.value })}
                         className="w-full rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 py-2 px-3 text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary/20"
                       />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">IVA aplicado (%)</label>
+                      <input
+                        type="number"
+                        required
+                        min="0"
+                        max="100"
+                        step="0.01"
+                        value={form.vatRate}
+                        onChange={(e) => setForm({ ...form, vatRate: e.target.value })}
+                        className="w-full rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 py-2 px-3 text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary/20"
+                      />
+                      <p className="mt-1 text-[10px] text-slate-405 dark:text-slate-500">
+                        Se desglosa en las facturas de los pagos cobrados con este método (el precio de la tarifa ya incluye este IVA).
+                      </p>
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">Tipo de documento</label>

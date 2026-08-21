@@ -98,7 +98,6 @@ model SubscriptionPlan {
   price                Float
   durationDays         Int
   description          String?
-  vatRate              Float               @default(21)
   billingType          PlanBillingType     @default(DURATION)
   creditsPerCycle      Int?
   creditRechargeMode   CreditRechargeMode?
@@ -171,6 +170,10 @@ model GymPaymentMethod {
   billingProvince       String?
   billingLocality       String?
   billingPostalCode     String?
+
+  // IVA aplicado en las facturas emitidas con este método (el precio de la tarifa se
+  // entiende siempre con IVA incluido; este es el tipo que se desglosa en la factura)
+  vatRate Float @default(21)
 
   // Numeración de factura propia de este método (independiente de las demás)
   invoiceNextValue Int @default(1)

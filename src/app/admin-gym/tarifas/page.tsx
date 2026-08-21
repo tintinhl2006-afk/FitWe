@@ -27,7 +27,6 @@ interface Plan {
   id: string;
   name: string;
   price: number;
-  vatRate: number;
   durationDays: number;
   billingType: BillingType;
   creditsPerCycle: number | null;
@@ -60,8 +59,6 @@ export default function GymPlansPage() {
   const emptyFormData = {
     name: "",
     price: "",
-    vatRate: "21",
-    priceIncludesVat: true,
     durationDays: "30",
     description: "",
     isActive: true,
@@ -73,14 +70,6 @@ export default function GymPlansPage() {
   };
 
   const [formData, setFormData] = useState(emptyFormData);
-
-  // Datos siempre se guardan como precio final (con IVA) + tipo de IVA aplicado; el
-  // interruptor solo cambia cómo se interpreta el número que el gimnasio ha escrito.
-  const vatRateNum = parseFloat(formData.vatRate) || 0;
-  const priceNum = parseFloat(formData.price) || 0;
-  const basePrice = formData.priceIncludesVat ? priceNum / (1 + vatRateNum / 100) : priceNum;
-  const finalPrice = formData.priceIncludesVat ? priceNum : priceNum * (1 + vatRateNum / 100);
-  const vatAmount = finalPrice - basePrice;
 
   const isCredits = formData.billingType === "CREDITS";
   const isPeriodic = isCredits && formData.creditRechargeMode === "PERIODIC";
@@ -96,8 +85,6 @@ export default function GymPlansPage() {
     setFormData({
       name: plan.name,
       price: plan.price.toString(),
-      vatRate: plan.vatRate.toString(),
-      priceIncludesVat: true,
       durationDays: plan.durationDays.toString(),
       description: plan.description || "",
       isActive: plan.isActive,
@@ -142,8 +129,7 @@ export default function GymPlansPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: formData.name,
-          price: finalPrice,
-          vatRate: vatRateNum,
+          price: formData.price,
           durationDays: formData.durationDays,
           description: formData.description,
           isActive: formData.isActive,
@@ -398,79 +384,28 @@ export default function GymPlansPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                      Precio (€) *
-                    </label>
-                    <div className="relative">
-                      <Euro className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                      <input
-                        required
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={formData.price}
-                        onChange={(e) =>
-                          setFormData({ ...formData, price: e.target.value })
-                        }
-                        className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-2.5 pl-9 pr-4 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none transition-all"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                      IVA (%) *
-                    </label>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                    Precio (€) *
+                  </label>
+                  <div className="relative">
+                    <Euro className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                     <input
                       required
                       type="number"
                       min="0"
-                      max="100"
                       step="0.01"
-                      value={formData.vatRate}
+                      value={formData.price}
                       onChange={(e) =>
-                        setFormData({ ...formData, vatRate: e.target.value })
+                        setFormData({ ...formData, price: e.target.value })
                       }
-                      className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-2.5 px-4 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none transition-all"
+                      className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-2.5 pl-9 pr-4 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none transition-all"
                     />
                   </div>
+                  <p className="mt-1.5 text-xs text-slate-400 dark:text-slate-500">
+                    Precio final con IVA incluido. El tipo de IVA que se desglosa en la factura lo define el método de pago con el que se cobre.
+                  </p>
                 </div>
-
-                <div className="flex items-center gap-2">
-                  <input
-                    id="plan-price-includes-vat"
-                    type="checkbox"
-                    checked={formData.priceIncludesVat}
-                    onChange={(e) =>
-                      setFormData({ ...formData, priceIncludesVat: e.target.checked })
-                    }
-                    className="h-4 w-4 rounded border-slate-305 dark:border-slate-705 text-primary focus:ring-primary focus:ring-offset-0 bg-transparent outline-none cursor-pointer"
-                  />
-                  <label
-                    htmlFor="plan-price-includes-vat"
-                    className="text-sm font-medium text-slate-700 dark:text-slate-300 select-none cursor-pointer"
-                  >
-                    El precio introducido ya incluye el IVA
-                  </label>
-                </div>
-
-                {priceNum > 0 && (
-                  <div className="rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-850 p-3.5 text-xs space-y-1.5">
-                    <div className="flex justify-between text-slate-500 dark:text-slate-400">
-                      <span>Base imponible:</span>
-                      <span className="font-semibold text-slate-700 dark:text-slate-200">{basePrice.toFixed(2)} €</span>
-                    </div>
-                    <div className="flex justify-between text-slate-500 dark:text-slate-400">
-                      <span>IVA ({vatRateNum || 0}%):</span>
-                      <span className="font-semibold text-slate-700 dark:text-slate-200">{vatAmount.toFixed(2)} €</span>
-                    </div>
-                    <div className="flex justify-between pt-1.5 border-t border-slate-200 dark:border-slate-800 font-bold text-slate-900 dark:text-white">
-                      <span>Precio final al cliente:</span>
-                      <span>{finalPrice.toFixed(2)} €</span>
-                    </div>
-                  </div>
-                )}
 
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">

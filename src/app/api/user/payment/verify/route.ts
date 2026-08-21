@@ -162,7 +162,9 @@ export async function GET(req: Request) {
       let resolvedPlan = resolvedPlanId
         ? await prisma.subscriptionPlan.findUnique({ where: { id: resolvedPlanId } })
         : null;
-      if (resolvedPlan) finalVatRate = resolvedPlan.vatRate;
+      // El IVA de la factura lo determina el método de pago usado, no la tarifa (cuyo
+      // precio ya se entiende con IVA incluido).
+      finalVatRate = gymPaymentMethod.vatRate;
 
       // Intentar obtener detalles de la tarjeta usada
       const paymentIntent = stripeSession.payment_intent as Stripe.PaymentIntent | null;
@@ -317,11 +319,14 @@ export async function GET(req: Request) {
           finalAmount = plan.price;
           finalPlanName = plan.name;
           finalDurationDays = plan.durationDays;
-          finalVatRate = plan.vatRate;
           resolvedPlanId = plan.id;
           resolvedPlan = plan;
         }
       }
+
+      // El IVA de la factura lo determina el método de pago activo, no la tarifa (cuyo
+      // precio ya se entiende con IVA incluido).
+      finalVatRate = activeMethod?.vatRate ?? 21;
 
       // Calcular la concesión (fecha o créditos, según el tipo de tarifa)
       const grant = computePlanGrant(

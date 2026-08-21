@@ -113,7 +113,9 @@ export async function POST(req: Request) {
     let finalAmount = parseFloat(amountCents) / 100;
     let finalPlanName = "Cuota mensual";
     let finalDurationDays = 30;
-    let finalVatRate = 21;
+    // El IVA de la factura lo determina el método de pago usado, no la tarifa (cuyo precio
+    // ya se entiende con IVA incluido).
+    const finalVatRate = gymPaymentMethod.vatRate;
     let resolvedPlanId: string | null = null;
     let resolvedPlan: Awaited<ReturnType<typeof prisma.subscriptionPlan.findUnique>> = null;
 
@@ -125,7 +127,6 @@ export async function POST(req: Request) {
         finalAmount = plan.price;
         finalPlanName = plan.name;
         finalDurationDays = plan.durationDays;
-        finalVatRate = plan.vatRate;
         resolvedPlanId = plan.id;
         resolvedPlan = plan;
       }

@@ -36,7 +36,6 @@ interface GymPlan {
   id: string;
   name: string;
   price: number;
-  vatRate: number;
   isActive: boolean;
   billingType: "DURATION" | "CREDITS";
   creditsPerCycle: number | null;

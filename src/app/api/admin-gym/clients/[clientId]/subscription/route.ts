@@ -104,7 +104,7 @@ export async function PATCH(
           userId: clientId,
           amount: plan.price,
           description: `${plan.name} - Pago en Efectivo`,
-          vatRate: plan.vatRate,
+          vatRate: activeMethod?.vatRate ?? 21,
           source: "CASH",
           planId: plan.id,
           date: now,

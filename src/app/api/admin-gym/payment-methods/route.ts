@@ -43,6 +43,7 @@ export async function POST(req: Request) {
       billingProvince,
       billingLocality,
       billingPostalCode,
+      vatRate,
       redsysFuc,
       redsysTerminal,
       redsysClave,
@@ -54,6 +55,10 @@ export async function POST(req: Request) {
 
     if (!billingName || typeof billingName !== "string" || !billingName.trim()) {
       return NextResponse.json({ message: "El nombre de facturación es obligatorio" }, { status: 400 });
+    }
+
+    if (vatRate !== undefined && (Number(vatRate) < 0 || Number(vatRate) > 100)) {
+      return NextResponse.json({ message: "El IVA debe estar entre 0 y 100" }, { status: 400 });
     }
 
     if (gateway === "REDSYS") {
@@ -86,6 +91,7 @@ export async function POST(req: Request) {
           billingProvince: billingProvince || null,
           billingLocality: billingLocality || null,
           billingPostalCode: billingPostalCode || null,
+          vatRate: vatRate !== undefined ? Number(vatRate) : 21,
           ...(gateway === "REDSYS"
             ? {
                 redsysFuc: redsysFuc.trim(),

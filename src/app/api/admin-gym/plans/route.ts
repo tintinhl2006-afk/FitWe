@@ -36,7 +36,6 @@ export async function POST(req: Request) {
       price,
       durationDays,
       description,
-      vatRate,
       billingType,
       creditsPerCycle,
       creditRechargeMode,
@@ -52,9 +51,6 @@ export async function POST(req: Request) {
     }
     if (Number(durationDays) < 1) {
       return NextResponse.json({ message: "La duración debe ser al menos 1 día" }, { status: 400 });
-    }
-    if (vatRate !== undefined && (Number(vatRate) < 0 || Number(vatRate) > 100)) {
-      return NextResponse.json({ message: "El IVA debe estar entre 0 y 100" }, { status: 400 });
     }
     if (billingType === "CREDITS") {
       if (!creditsPerCycle || Number(creditsPerCycle) < 1) {
@@ -75,7 +71,6 @@ export async function POST(req: Request) {
         price: Number(price),
         durationDays: Number(durationDays),
         description: description?.trim() || null,
-        vatRate: vatRate !== undefined ? Number(vatRate) : 21,
         billingType: billingType === "CREDITS" ? "CREDITS" : "DURATION",
         ...(billingType === "CREDITS" && {
           creditsPerCycle: Number(creditsPerCycle),

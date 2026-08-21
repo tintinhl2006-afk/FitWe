@@ -35,13 +35,19 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       billingProvince,
       billingLocality,
       billingPostalCode,
+      vatRate,
       redsysFuc,
       redsysTerminal,
       redsysClave,
     } = body;
 
+    if (vatRate !== undefined && (Number(vatRate) < 0 || Number(vatRate) > 100)) {
+      return NextResponse.json({ message: "El IVA debe estar entre 0 y 100" }, { status: 400 });
+    }
+
     const updateData: Record<string, any> = {};
     if (billingName !== undefined) updateData.billingName = billingName.trim();
+    if (vatRate !== undefined) updateData.vatRate = Number(vatRate);
     if (billingDocumentType !== undefined) updateData.billingDocumentType = billingDocumentType || null;
     if (billingDocumentNumber !== undefined) updateData.billingDocumentNumber = billingDocumentNumber || null;
     if (billingDocumentLetter !== undefined) updateData.billingDocumentLetter = billingDocumentLetter || null;
