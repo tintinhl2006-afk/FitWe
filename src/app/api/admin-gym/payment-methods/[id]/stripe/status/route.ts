@@ -4,10 +4,9 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import Stripe from "stripe";
 
-export async function GET(req: Request) {
+export async function GET(req: Request, { params }: { params: { id: string } }) {
   try {
     const session = await getServerSession(authOptions);
-
     if (!session?.user?.id || session.user.role !== "GYM") {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
@@ -15,27 +14,20 @@ export async function GET(req: Request) {
     const gymId = session.user.id;
     const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 
-    // Obtener datos actuales del gimnasio
-    const gym = await prisma.user.findUnique({
-      where: { id: gymId },
-      select: { stripeAccountId: true, stripeConnected: true },
-    });
-
-    if (!gym) {
-      return NextResponse.json({ message: "Gimnasio no encontrado" }, { status: 404 });
+    const method = await prisma.gymPaymentMethod.findUnique({ where: { id: params.id } });
+    if (!method || method.gymId !== gymId || method.gateway !== "STRIPE") {
+      return NextResponse.json({ message: "Método de pago no encontrado" }, { status: 404 });
     }
 
     // ─── MODO SIMULADO / DEMO ───
     if (!stripeSecretKey) {
-      // Simular éxito y registrar de forma ficticia si se requiere
-      const mockAccountId = gym.stripeAccountId || "acct_mock123456789";
-      
-      await prisma.user.update({
-        where: { id: gymId },
+      const mockAccountId = method.stripeAccountId || "acct_mock123456789";
+
+      await prisma.gymPaymentMethod.update({
+        where: { id: method.id },
         data: {
           stripeConnected: true,
           stripeAccountId: mockAccountId,
-          stripeEnabled: true,
         },
       });
 
@@ -47,7 +39,7 @@ export async function GET(req: Request) {
     }
 
     // ─── MODO REAL CON STRIPE CONNECT ───
-    if (!gym.stripeAccountId) {
+    if (!method.stripeAccountId) {
       return NextResponse.json({
         stripeConnected: false,
         message: "No se ha iniciado la conexión con Stripe",
@@ -58,24 +50,20 @@ export async function GET(req: Request) {
       apiVersion: "2023-10-16" as any,
     });
 
-    // Recuperar la cuenta de Stripe para inspeccionar su onboarding
-    const account = await stripe.accounts.retrieve(gym.stripeAccountId);
+    const account = await stripe.accounts.retrieve(method.stripeAccountId);
 
     const isConnected = !!account.charges_enabled && !!account.details_submitted;
 
-    if (isConnected !== gym.stripeConnected) {
-      await prisma.user.update({
-        where: { id: gymId },
-        data: { 
-          stripeConnected: isConnected,
-          ...(isConnected && { stripeEnabled: true }),
-        },
+    if (isConnected !== method.stripeConnected) {
+      await prisma.gymPaymentMethod.update({
+        where: { id: method.id },
+        data: { stripeConnected: isConnected },
       });
     }
 
     return NextResponse.json({
       stripeConnected: isConnected,
-      stripeAccountId: gym.stripeAccountId,
+      stripeAccountId: method.stripeAccountId,
       isMock: false,
     });
   } catch (error) {

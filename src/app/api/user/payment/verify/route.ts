@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import Stripe from "stripe";
 import { logger } from "@/lib/logger";
 import { getRequestUserId } from "@/lib/apiAuth";
+import { getActiveGymPaymentMethod } from "@/lib/invoiceUtils";
 
 export async function GET(req: Request) {
   try {
@@ -17,6 +18,7 @@ export async function GET(req: Request) {
     const mock = searchParams.get("mock") === "true" || searchParams.get("mock_redsys") === "true";
     const queryPlanId = searchParams.get("planId");
     const isStripeConnect = searchParams.get("stripe_connect") === "true";
+    const queryMethodId = searchParams.get("methodId");
 
     // Obtener datos del cliente actual con su estado de suscripción
     const user = await prisma.user.findUnique({
@@ -39,15 +41,7 @@ export async function GET(req: Request) {
     // Obtener los datos del gimnasio
     const gym = await prisma.user.findUnique({
       where: { id: user.gymId },
-      select: {
-        name: true,
-        stripeAccountId: true,
-        stripeConnected: true,
-        stripeEnabled: true,
-        redsysFuc: true,
-        redsysClave: true,
-        redsysEnabled: true,
-      },
+      select: { name: true },
     });
 
     if (!gym) {
@@ -78,7 +72,15 @@ export async function GET(req: Request) {
           { status: 400 }
         );
       }
-      if (!gym.stripeAccountId) {
+      if (!queryMethodId) {
+        return NextResponse.json(
+          { message: "Falta el identificador del método de pago utilizado." },
+          { status: 400 }
+        );
+      }
+
+      const gymPaymentMethod = await prisma.gymPaymentMethod.findUnique({ where: { id: queryMethodId } });
+      if (!gymPaymentMethod || gymPaymentMethod.gymId !== user.gymId || gymPaymentMethod.gateway !== "STRIPE" || !gymPaymentMethod.stripeAccountId) {
         return NextResponse.json(
           { message: "El gimnasio no dispone de una cuenta de Stripe Connect asociada." },
           { status: 400 }
@@ -96,7 +98,7 @@ export async function GET(req: Request) {
           expand: ["payment_intent"],
         },
         {
-          stripeAccount: gym.stripeAccountId,
+          stripeAccount: gymPaymentMethod.stripeAccountId,
         }
       );
 
@@ -159,7 +161,7 @@ export async function GET(req: Request) {
         const paymentMethodId = paymentIntent.payment_method;
         if (typeof paymentMethodId === "string") {
           try {
-            const retrieveOptions = isStripeConnect ? { stripeAccount: gym.stripeAccountId! } : undefined;
+            const retrieveOptions = isStripeConnect ? { stripeAccount: gymPaymentMethod.stripeAccountId! } : undefined;
             const paymentMethod = await stripe.paymentMethods.retrieve(paymentMethodId, undefined, retrieveOptions);
             if (paymentMethod.card) {
               cardLast4 = paymentMethod.card.last4;
@@ -200,6 +202,7 @@ export async function GET(req: Request) {
             planId: resolvedPlanId,
             date: new Date(),
             invoiceNumber,
+            paymentMethodId: gymPaymentMethod.id,
           },
         });
 
@@ -236,15 +239,21 @@ export async function GET(req: Request) {
       // Restringir verificación simulada en producción con pasarelas de pago configuradas.
       // Estas condiciones deben reflejar exactamente las que usa POST /api/user/payment para
       // decidir si generar una sesión real o caer al checkout simulado — si no coinciden, un
-      // gimnasio "conectado" pero sin STRIPE_SECRET_KEY en el servidor (o con clave Redsys de
-      // prueba) queda atrapado: la creación cae a mock, pero la verificación lo rechaza.
+      // gimnasio con un método "activo" pero sin STRIPE_SECRET_KEY en el servidor (o con clave
+      // Redsys de prueba) queda atrapado: la creación cae a mock, pero la verificación lo rechaza.
+      const activeMethod = await prisma.gymPaymentMethod.findFirst({
+        where: { gymId: user.gymId, isActive: true },
+      });
       const hasRealStripe =
-        !!gym.stripeEnabled && !!gym.stripeConnected && !!gym.stripeAccountId && !!process.env.STRIPE_SECRET_KEY;
+        activeMethod?.gateway === "STRIPE" &&
+        !!activeMethod.stripeConnected &&
+        !!activeMethod.stripeAccountId &&
+        !!process.env.STRIPE_SECRET_KEY;
       const hasRealRedsys = !!(
-        gym.redsysEnabled &&
-        gym.redsysFuc?.trim() &&
-        gym.redsysClave?.trim() &&
-        gym.redsysClave.trim().toLowerCase() !== "mock"
+        activeMethod?.gateway === "REDSYS" &&
+        activeMethod.redsysFuc?.trim() &&
+        activeMethod.redsysClave?.trim() &&
+        activeMethod.redsysClave.trim().toLowerCase() !== "mock"
       );
       const hasRealCredentials = hasRealStripe || hasRealRedsys;
 
@@ -333,6 +342,7 @@ export async function GET(req: Request) {
             planId: resolvedPlanId,
             date: new Date(),
             invoiceNumber,
+            paymentMethodId: activeMethod?.id,
           },
         });
 

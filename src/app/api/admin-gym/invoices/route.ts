@@ -17,22 +17,10 @@ export async function GET() {
 
     const gymId = session.user.id;
 
-    const [gym, payments] = await Promise.all([
+    const [gym, rawPayments] = await Promise.all([
       prisma.user.findUnique({
         where: { id: gymId },
-        select: {
-          name: true,
-          email: true,
-          documentType: true,
-          documentNumber: true,
-          documentLetter: true,
-          phone: true,
-          address: true,
-          country: true,
-          province: true,
-          locality: true,
-          postalCode: true,
-        },
+        select: { name: true, email: true },
       }),
       prisma.paymentRecord.findMany({
         where: { user: { gymId } },
@@ -57,6 +45,7 @@ export async function GET() {
               locality: true,
             },
           },
+          paymentMethod: true,
         },
       }),
     ]);
@@ -65,7 +54,40 @@ export async function GET() {
       return NextResponse.json({ message: "Gimnasio no encontrado" }, { status: 404 });
     }
 
-    return NextResponse.json({ gym, payments });
+    // Cada factura usa los datos fiscales del método de pago con el que se cobró, no los
+    // del perfil general del gimnasio, ya que ahora son independientes por método.
+    const payments = rawPayments.map(({ paymentMethod, ...payment }) => ({
+      ...payment,
+      gym: paymentMethod
+        ? {
+            name: paymentMethod.billingName,
+            email: paymentMethod.billingEmail || "",
+            documentType: paymentMethod.billingDocumentType || "",
+            documentNumber: paymentMethod.billingDocumentNumber || "",
+            documentLetter: paymentMethod.billingDocumentLetter || "",
+            phone: paymentMethod.billingPhone || "",
+            address: paymentMethod.billingAddress || "",
+            country: paymentMethod.billingCountry || "",
+            province: paymentMethod.billingProvince || "",
+            locality: paymentMethod.billingLocality || "",
+            postalCode: paymentMethod.billingPostalCode || "",
+          }
+        : {
+            name: gym.name,
+            email: gym.email,
+            documentType: "",
+            documentNumber: "",
+            documentLetter: "",
+            phone: "",
+            address: "",
+            country: "",
+            province: "",
+            locality: "",
+            postalCode: "",
+          },
+    }));
+
+    return NextResponse.json({ payments });
   } catch (error) {
     console.error("Error fetching gym invoices:", error);
     return NextResponse.json({ message: "Error en el servidor" }, { status: 500 });

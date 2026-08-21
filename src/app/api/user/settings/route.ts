@@ -21,22 +21,6 @@ export async function GET() {
         email: true,
         role: true,
         monthlyFee: true,
-        stripeAccountId: true,
-        stripeConnected: true,
-        stripeEnabled: true,
-        redsysFuc: true,
-        redsysTerminal: true,
-        redsysClave: true,
-        redsysEnabled: true,
-        documentType: true,
-        documentNumber: true,
-        documentLetter: true,
-        phone: true,
-        address: true,
-        country: true,
-        province: true,
-        locality: true,
-        postalCode: true,
         gymCode: true,
       },
     });
@@ -91,26 +75,7 @@ export async function PATCH(req: Request) {
     }
 
     const body = await req.json();
-    const {
-      name,
-      newPassword,
-      monthlyFee,
-      stripeEnabled,
-      stripeDisconnect,
-      redsysFuc,
-      redsysTerminal,
-      redsysClave,
-      redsysEnabled,
-      documentType,
-      documentNumber,
-      documentLetter,
-      phone,
-      address,
-      country,
-      province,
-      locality,
-      postalCode,
-    } = body;
+    const { name, newPassword, monthlyFee } = body;
 
     // Build the update payload dynamically
     const updateData: any = {};
@@ -129,48 +94,11 @@ export async function PATCH(req: Request) {
       updateData.password = await bcrypt.hash(newPassword, 10);
     }
 
-    if (session.user.role === "GYM") {
-      if (monthlyFee !== undefined) {
-        const parsedFee = parseFloat(monthlyFee);
-        if (!isNaN(parsedFee) && parsedFee >= 0) {
-          updateData.monthlyFee = parsedFee;
-        }
+    if (session.user.role === "GYM" && monthlyFee !== undefined) {
+      const parsedFee = parseFloat(monthlyFee);
+      if (!isNaN(parsedFee) && parsedFee >= 0) {
+        updateData.monthlyFee = parsedFee;
       }
-
-      if (stripeEnabled !== undefined) {
-        updateData.stripeEnabled = !!stripeEnabled;
-      }
-
-      // Soporte para desconectar Stripe Connect
-      if (stripeDisconnect === true) {
-        updateData.stripeConnected = false;
-        updateData.stripeAccountId = null;
-      }
-
-      // Soporte para TPV Virtual Redsys
-      if (redsysFuc !== undefined) {
-        updateData.redsysFuc = redsysFuc.trim() || null;
-      }
-      if (redsysTerminal !== undefined) {
-        updateData.redsysTerminal = redsysTerminal.trim() || "001";
-      }
-      if (redsysClave !== undefined) {
-        updateData.redsysClave = redsysClave.trim() || null;
-      }
-      if (redsysEnabled !== undefined) {
-        updateData.redsysEnabled = !!redsysEnabled;
-      }
-
-      // Soporte para datos fiscales del gimnasio
-      if (documentType !== undefined) updateData.documentType = documentType || null;
-      if (documentNumber !== undefined) updateData.documentNumber = documentNumber || null;
-      if (documentLetter !== undefined) updateData.documentLetter = documentLetter || null;
-      if (phone !== undefined) updateData.phone = phone || null;
-      if (address !== undefined) updateData.address = address || null;
-      if (country !== undefined) updateData.country = country || "España";
-      if (province !== undefined) updateData.province = province || null;
-      if (locality !== undefined) updateData.locality = locality || null;
-      if (postalCode !== undefined) updateData.postalCode = postalCode || null;
     }
 
     if (Object.keys(updateData).length === 0) {

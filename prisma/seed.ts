@@ -125,7 +125,19 @@ async function main() {
       subscriptionStatus: 'ACTIVE',
       mustChangePassword: false,
       gymCode: 'FITWE1',
-      stripeEnabled: true,
+    }
+  });
+
+  console.log('💳 Creando método de pago Stripe (demo) para el gimnasio...');
+  const gymPaymentMethod = await prisma.gymPaymentMethod.create({
+    data: {
+      gymId: gym.id,
+      gateway: 'STRIPE',
+      isActive: true,
+      stripeConnected: true,
+      stripeAccountId: 'acct_mock_seed',
+      billingName: 'Iron Temple Fitness',
+      billingEmail: 'gimnasio@gmail.com',
     }
   });
 
@@ -333,6 +345,7 @@ async function main() {
         date: new Date(new Date().setDate(new Date().getDate() - (c.plan.durationDays - Math.max(0, c.daysRemaining)))),
         planId: c.plan.id,
         invoiceNumber,
+        paymentMethodId: gymPaymentMethod.id,
       }
     });
 
@@ -396,6 +409,7 @@ async function main() {
       date: new Date('2026-05-01T10:00:00Z'),
       planId: planStandard.id,
       invoiceNumber: mainClientInvoiceNumber,
+      paymentMethodId: gymPaymentMethod.id,
     }
   });
 

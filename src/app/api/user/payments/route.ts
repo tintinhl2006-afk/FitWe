@@ -29,21 +29,10 @@ export async function GET() {
         locality: true,
         payments: {
           orderBy: { date: "desc" },
+          include: { paymentMethod: true },
         },
         gym: {
-          select: {
-            name: true,
-            email: true,
-            documentType: true,
-            documentNumber: true,
-            documentLetter: true,
-            phone: true,
-            address: true,
-            country: true,
-            province: true,
-            locality: true,
-            postalCode: true,
-          },
+          select: { name: true, email: true },
         },
       },
     });
@@ -54,6 +43,40 @@ export async function GET() {
         { status: 404 }
       );
     }
+
+    // Cada factura usa los datos fiscales del método de pago con el que se cobró (no los
+    // del gimnasio en general), ya que ahora son independientes por método. Los pagos
+    // antiguos, o los registrados sin ningún método activo, solo tienen el nombre del gimnasio.
+    const payments = userWithGymAndPayments.payments.map(({ paymentMethod, ...payment }) => ({
+      ...payment,
+      gym: paymentMethod
+        ? {
+            name: paymentMethod.billingName,
+            email: paymentMethod.billingEmail || "",
+            documentType: paymentMethod.billingDocumentType || "",
+            documentNumber: paymentMethod.billingDocumentNumber || "",
+            documentLetter: paymentMethod.billingDocumentLetter || "",
+            phone: paymentMethod.billingPhone || "",
+            address: paymentMethod.billingAddress || "",
+            country: paymentMethod.billingCountry || "",
+            province: paymentMethod.billingProvince || "",
+            locality: paymentMethod.billingLocality || "",
+            postalCode: paymentMethod.billingPostalCode || "",
+          }
+        : {
+            name: userWithGymAndPayments.gym?.name || "",
+            email: userWithGymAndPayments.gym?.email || "",
+            documentType: "",
+            documentNumber: "",
+            documentLetter: "",
+            phone: "",
+            address: "",
+            country: "",
+            province: "",
+            locality: "",
+            postalCode: "",
+          },
+    }));
 
     return NextResponse.json({
       client: {
@@ -68,8 +91,7 @@ export async function GET() {
         province: userWithGymAndPayments.province || "",
         locality: userWithGymAndPayments.locality || "",
       },
-      gym: userWithGymAndPayments.gym || null,
-      payments: userWithGymAndPayments.payments,
+      payments,
     });
   } catch (error) {
     console.error("Error fetching client payments:", error);

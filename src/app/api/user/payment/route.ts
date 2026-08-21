@@ -21,7 +21,7 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { planId, gateway } = body;
+    const { planId } = body;
 
     // Detectar y resolver el origen de forma segura (forzando localhost en desarrollo).
     // Peticiones nativas (móvil) no envían cabecera Origin, así que reconstruimos la URL
@@ -52,21 +52,24 @@ export async function POST(req: Request) {
     // Obtener datos del gimnasio al que está vinculado el cliente
     const gym = await prisma.user.findUnique({
       where: { id: user.gymId },
-      select: {
-        name: true,
-        stripeAccountId: true,
-        stripeConnected: true,
-        stripeEnabled: true,
-        redsysFuc: true,
-        redsysTerminal: true,
-        redsysClave: true,
-        redsysEnabled: true,
-      },
+      select: { name: true },
     });
 
     if (!gym) {
       return NextResponse.json(
         { message: "El gimnasio al que estás vinculado no existe." },
+        { status: 400 }
+      );
+    }
+
+    // El cliente ya no elige pasarela: paga con el único método que el gimnasio tenga activo.
+    const activeMethod = await prisma.gymPaymentMethod.findFirst({
+      where: { gymId: user.gymId, isActive: true },
+    });
+
+    if (!activeMethod) {
+      return NextResponse.json(
+        { message: "Este centro deportivo no tiene un método de pago online configurado todavía." },
         { status: 400 }
       );
     }
@@ -113,24 +116,23 @@ export async function POST(req: Request) {
       );
     }
 
-    // ─── PASARELA SELECCIONADA: REDSYS (TPV Virtual) ───
-    if (gateway === "redsys") {
-      const isRedsysReal = 
-        !!gym.redsysEnabled && 
-        !!gym.redsysFuc && 
-        !!gym.redsysClave && 
-        gym.redsysClave.trim().toLowerCase() !== "mock";
+    // ─── MÉTODO ACTIVO: REDSYS (TPV Virtual) ───
+    if (activeMethod.gateway === "REDSYS") {
+      const isRedsysReal =
+        !!activeMethod.redsysFuc &&
+        !!activeMethod.redsysClave &&
+        activeMethod.redsysClave.trim().toLowerCase() !== "mock";
 
       if (isRedsysReal) {
         try {
           const order = `${Date.now().toString().slice(-10)}${Math.floor(10 + Math.random() * 90)}`;
-          
+
           const redsysParams = {
             Ds_Merchant_Amount: Math.round(amount * 100).toString(),
             Ds_Merchant_Order: order,
-            Ds_Merchant_MerchantCode: gym.redsysFuc!.trim(),
+            Ds_Merchant_MerchantCode: activeMethod.redsysFuc!.trim(),
             Ds_Merchant_Currency: "978",
-            Ds_Merchant_Terminal: gym.redsysTerminal?.trim() || "001",
+            Ds_Merchant_Terminal: activeMethod.redsysTerminal?.trim() || "001",
             Ds_Merchant_TransactionType: "0",
             Ds_Merchant_MerchantURL: `${origin}/api/user/payment/redsys-webhook`,
             Ds_Merchant_UrlOK: `${origin}/dashboard/pago/success?mock_redsys=true&planId=${resolvedPlanId || ""}&order=${order}&amount=${amount}`,
@@ -139,13 +141,14 @@ export async function POST(req: Request) {
               userId: auth.id,
               planId: resolvedPlanId || "",
               gymId: user.gymId,
+              paymentMethodId: activeMethod.id,
             }),
           };
 
           // @ts-ignore
           const redsys = new Redsys();
           const merchantParameters = redsys.createMerchantParameters(redsysParams);
-          const signature = redsys.createMerchantSignature(gym.redsysClave!.trim(), redsysParams);
+          const signature = redsys.createMerchantSignature(activeMethod.redsysClave!.trim(), redsysParams);
 
           const redsysUrl = "https://sis-t.redsys.es:25443/sis/realizarPago";
 
@@ -171,9 +174,9 @@ export async function POST(req: Request) {
       }
     }
 
-    // ─── PASARELA SELECCIONADA: STRIPE ───
-    if (gateway !== "redsys") {
-      if (!gym.stripeEnabled || !gym.stripeConnected || !gym.stripeAccountId) {
+    // ─── MÉTODO ACTIVO: STRIPE ───
+    if (activeMethod.gateway === "STRIPE") {
+      if (!activeMethod.stripeConnected || !activeMethod.stripeAccountId) {
         return NextResponse.json(
           { message: "La pasarela de pago de Stripe no está activa en este centro." },
           { status: 400 }
@@ -205,7 +208,7 @@ export async function POST(req: Request) {
                 },
               ],
               mode: "payment",
-              success_url: `${origin}/dashboard/pago/success?session_id={CHECKOUT_SESSION_ID}&stripe_connect=true${resolvedPlanId ? `&planId=${resolvedPlanId}` : ""}`,
+              success_url: `${origin}/dashboard/pago/success?session_id={CHECKOUT_SESSION_ID}&stripe_connect=true&methodId=${activeMethod.id}${resolvedPlanId ? `&planId=${resolvedPlanId}` : ""}`,
               cancel_url: `${origin}/dashboard/pago`,
               metadata: {
                 userId: auth.id,
@@ -215,10 +218,11 @@ export async function POST(req: Request) {
                 durationDays: durationDays.toString(),
                 planName: planName,
                 stripeConnect: "true",
+                paymentMethodId: activeMethod.id,
               },
             },
             {
-              stripeAccount: gym.stripeAccountId,
+              stripeAccount: activeMethod.stripeAccountId,
             }
           );
 
@@ -231,7 +235,7 @@ export async function POST(req: Request) {
           );
         }
       } else {
-        const mockStripeUrl = `/dashboard/pago/stripe-mock?amount=${amount}&planName=${encodeURIComponent(planName)}${resolvedPlanId ? `&planId=${resolvedPlanId}` : ""}`;
+        const mockStripeUrl = `/dashboard/pago/stripe-mock?amount=${amount}&planName=${encodeURIComponent(planName)}&methodId=${activeMethod.id}${resolvedPlanId ? `&planId=${resolvedPlanId}` : ""}`;
         return NextResponse.json({ url: mockStripeUrl }, { status: 200 });
       }
     }

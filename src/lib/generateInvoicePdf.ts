@@ -1,4 +1,77 @@
-import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
+import { PDFDocument, PDFFont, rgb, StandardFonts } from "pdf-lib";
+
+/** Greedily wraps text to fit within maxWidth, breaking oversized single words by character. */
+function wrapText(text: string, font: PDFFont, size: number, maxWidth: number, maxLines: number): string[] {
+  const words = text.split(/\s+/).filter(Boolean);
+  const lines: string[] = [];
+  let currentLine = "";
+
+  const pushLine = (line: string) => {
+    if (lines.length < maxLines) lines.push(line);
+  };
+
+  for (const word of words) {
+    if (lines.length >= maxLines) break;
+    const candidate = currentLine ? `${currentLine} ${word}` : word;
+    if (font.widthOfTextAtSize(candidate, size) <= maxWidth) {
+      currentLine = candidate;
+      continue;
+    }
+
+    if (currentLine) {
+      pushLine(currentLine);
+      currentLine = "";
+    }
+
+    if (font.widthOfTextAtSize(word, size) <= maxWidth) {
+      currentLine = word;
+      continue;
+    }
+
+    // Single word longer than the column: break it by character.
+    let chunk = "";
+    for (const char of word) {
+      const testChunk = chunk + char;
+      if (font.widthOfTextAtSize(testChunk, size) > maxWidth) {
+        pushLine(chunk);
+        chunk = char;
+        if (lines.length >= maxLines) {
+          chunk = "";
+          break;
+        }
+      } else {
+        chunk = testChunk;
+      }
+    }
+    currentLine = chunk;
+  }
+  if (currentLine && lines.length < maxLines) lines.push(currentLine);
+
+  // Add an ellipsis if content was cut off.
+  if (lines.length === maxLines) {
+    const lastWordsConsumed = lines.join(" ").length;
+    const fullTextLength = text.length;
+    if (lastWordsConsumed < fullTextLength - 1) {
+      let lastLine = lines[maxLines - 1];
+      while (lastLine.length > 0 && font.widthOfTextAtSize(`${lastLine}…`, size) > maxWidth) {
+        lastLine = lastLine.slice(0, -1);
+      }
+      lines[maxLines - 1] = `${lastLine}…`;
+    }
+  }
+
+  return lines.length ? lines : [""];
+}
+
+/** Truncates single-line text with an ellipsis so it never overflows past maxWidth. */
+function truncateToWidth(text: string, font: PDFFont, size: number, maxWidth: number): string {
+  if (font.widthOfTextAtSize(text, size) <= maxWidth) return text;
+  let truncated = text;
+  while (truncated.length > 0 && font.widthOfTextAtSize(`${truncated}…`, size) > maxWidth) {
+    truncated = truncated.slice(0, -1);
+  }
+  return `${truncated}…`;
+}
 
 export interface InvoicePayment {
   id: string;
@@ -81,49 +154,66 @@ export async function generateInvoicePdf(
   const invDate = `Fecha: ${new Date(payment.date).toLocaleDateString("es-ES")}`;
   const invPayMethod = "Método de Pago: Tarjeta Bancaria";
 
-  page.drawText(invNumber, { x: 380, y: height - 50, size: 10, font: fontBold, color: rgb(1, 1, 1) });
-  page.drawText(invDate, { x: 380, y: height - 70, size: 10, font: fontRegular, color: rgb(1, 1, 1) });
-  page.drawText(invPayMethod, { x: 380, y: height - 90, size: 10, font: fontRegular, color: rgb(1, 1, 1) });
+  const metaColWidth = width - 40 - 380;
+  page.drawText(truncateToWidth(invNumber, fontBold, 10, metaColWidth), { x: 380, y: height - 50, size: 10, font: fontBold, color: rgb(1, 1, 1) });
+  page.drawText(truncateToWidth(invDate, fontRegular, 10, metaColWidth), { x: 380, y: height - 70, size: 10, font: fontRegular, color: rgb(1, 1, 1) });
+  page.drawText(truncateToWidth(invPayMethod, fontRegular, 10, metaColWidth), { x: 380, y: height - 90, size: 10, font: fontRegular, color: rgb(1, 1, 1) });
 
   let yPos = height - 160;
 
   // ── EMITTER & RECIPIENT COLUMNS ──
+  // Each column is truncated to its own width so long business names, addresses or emails
+  // never bleed into the neighboring column or off the page edge.
+  const emitterColWidth = 260; // x=40 up to the recipient column at x=320
+  const recipientColWidth = width - 40 - 320; // x=320 up to the right page margin
+
   // Emitter (Gym) Info
   page.drawText("DATOS DEL EMISOR", { x: 40, y: yPos, size: 10, font: fontBold, color: rgb(0.03, 0.45, 0.54) });
-  page.drawText(gym?.name || "Gimnasio FitWe", { x: 40, y: yPos - 20, size: 11, font: fontBold, color: rgb(0.1, 0.1, 0.1) });
+  page.drawText(truncateToWidth(gym?.name || "Gimnasio FitWe", fontBold, 11, emitterColWidth), { x: 40, y: yPos - 20, size: 11, font: fontBold, color: rgb(0.1, 0.1, 0.1) });
 
   let gymDocStr = "";
   if (gym?.documentNumber) {
     gymDocStr = `${gym.documentType || "NIF"}: ${gym.documentNumber}${gym.documentLetter || ""}`;
   }
-  page.drawText(gymDocStr || "NIF: N/A", { x: 40, y: yPos - 35, size: 9, font: fontRegular, color: rgb(0.3, 0.3, 0.3) });
-  page.drawText(gym?.address || "Dirección no disponible", { x: 40, y: yPos - 50, size: 9, font: fontRegular, color: rgb(0.3, 0.3, 0.3) });
+  page.drawText(truncateToWidth(gymDocStr || "NIF: N/A", fontRegular, 9, emitterColWidth), { x: 40, y: yPos - 35, size: 9, font: fontRegular, color: rgb(0.3, 0.3, 0.3) });
+  page.drawText(truncateToWidth(gym?.address || "Dirección no disponible", fontRegular, 9, emitterColWidth), { x: 40, y: yPos - 50, size: 9, font: fontRegular, color: rgb(0.3, 0.3, 0.3) });
 
   let gymLocalityStr = "";
   if (gym?.postalCode || gym?.locality || gym?.province) {
     gymLocalityStr = `${gym.postalCode || ""} ${gym.locality || ""}, ${gym.province || ""}`;
   }
-  page.drawText(gymLocalityStr, { x: 40, y: yPos - 65, size: 9, font: fontRegular, color: rgb(0.3, 0.3, 0.3) });
-  page.drawText(`Tel: ${gym?.phone || "N/A"}`, { x: 40, y: yPos - 80, size: 9, font: fontRegular, color: rgb(0.3, 0.3, 0.3) });
-  page.drawText(`Email: ${gym?.email || "N/A"}`, { x: 40, y: yPos - 95, size: 9, font: fontRegular, color: rgb(0.3, 0.3, 0.3) });
+  page.drawText(truncateToWidth(gymLocalityStr, fontRegular, 9, emitterColWidth), { x: 40, y: yPos - 65, size: 9, font: fontRegular, color: rgb(0.3, 0.3, 0.3) });
+  page.drawText(truncateToWidth(`Tel: ${gym?.phone || "N/A"}`, fontRegular, 9, emitterColWidth), { x: 40, y: yPos - 80, size: 9, font: fontRegular, color: rgb(0.3, 0.3, 0.3) });
+  page.drawText(truncateToWidth(`Email: ${gym?.email || "N/A"}`, fontRegular, 9, emitterColWidth), { x: 40, y: yPos - 95, size: 9, font: fontRegular, color: rgb(0.3, 0.3, 0.3) });
 
-  // Recipient (Client) Info
+  // Recipient (Client) Info — a factura simplificada (RD 1619/2012, applicable here since gym
+  // membership fees are well under the 400€ threshold) only needs the client's fiscal
+  // identity (NIF, dirección) if the client actually has one registered, e.g. to deduct IVA.
+  // Otherwise we just show who it's for, without inventing/placeholder-ing missing data.
+  const clientHasFiscalData = !!client.documentNumber;
   page.drawText("DATOS DEL CLIENTE", { x: 320, y: yPos, size: 10, font: fontBold, color: rgb(0.03, 0.45, 0.54) });
-  page.drawText(`${client.name} ${client.lastName}`, { x: 320, y: yPos - 20, size: 11, font: fontBold, color: rgb(0.1, 0.1, 0.1) });
+  page.drawText(truncateToWidth(`${client.name} ${client.lastName}`, fontBold, 11, recipientColWidth), { x: 320, y: yPos - 20, size: 11, font: fontBold, color: rgb(0.1, 0.1, 0.1) });
 
-  let clientDocStr = "";
-  if (client.documentNumber) {
-    clientDocStr = `${client.documentType || "NIF"}: ${client.documentNumber}${client.documentLetter || ""}`;
-  }
-  page.drawText(clientDocStr || "NIF: N/A", { x: 320, y: yPos - 35, size: 9, font: fontRegular, color: rgb(0.3, 0.3, 0.3) });
-  page.drawText(client.address || "Dirección no indicada", { x: 320, y: yPos - 50, size: 9, font: fontRegular, color: rgb(0.3, 0.3, 0.3) });
+  if (clientHasFiscalData) {
+    const clientDocStr = `${client.documentType || "NIF"}: ${client.documentNumber}${client.documentLetter || ""}`;
+    page.drawText(truncateToWidth(clientDocStr, fontRegular, 9, recipientColWidth), { x: 320, y: yPos - 35, size: 9, font: fontRegular, color: rgb(0.3, 0.3, 0.3) });
 
-  let clientLocalityStr = "";
-  if (client.postalCode || client.locality || client.province) {
-    clientLocalityStr = `${client.postalCode || ""} ${client.locality || ""}, ${client.province || ""}`;
+    if (client.address) {
+      page.drawText(truncateToWidth(client.address, fontRegular, 9, recipientColWidth), { x: 320, y: yPos - 50, size: 9, font: fontRegular, color: rgb(0.3, 0.3, 0.3) });
+    }
+
+    let clientLocalityStr = "";
+    if (client.postalCode || client.locality || client.province) {
+      clientLocalityStr = `${client.postalCode || ""} ${client.locality || ""}, ${client.province || ""}`;
+    }
+    if (clientLocalityStr) {
+      page.drawText(truncateToWidth(clientLocalityStr, fontRegular, 9, recipientColWidth), { x: 320, y: yPos - 65, size: 9, font: fontRegular, color: rgb(0.3, 0.3, 0.3) });
+    }
+    page.drawText(truncateToWidth(`Email: ${client.email}`, fontRegular, 9, recipientColWidth), { x: 320, y: yPos - 80, size: 9, font: fontRegular, color: rgb(0.3, 0.3, 0.3) });
+  } else {
+    page.drawText("Consumidor final", { x: 320, y: yPos - 35, size: 9, font: fontRegular, color: rgb(0.3, 0.3, 0.3) });
+    page.drawText(truncateToWidth(`Email: ${client.email}`, fontRegular, 9, recipientColWidth), { x: 320, y: yPos - 50, size: 9, font: fontRegular, color: rgb(0.3, 0.3, 0.3) });
   }
-  page.drawText(clientLocalityStr, { x: 320, y: yPos - 65, size: 9, font: fontRegular, color: rgb(0.3, 0.3, 0.3) });
-  page.drawText(`Email: ${client.email}`, { x: 320, y: yPos - 80, size: 9, font: fontRegular, color: rgb(0.3, 0.3, 0.3) });
 
   yPos = yPos - 140;
 
@@ -139,20 +229,27 @@ export async function generateInvoicePdf(
   page.drawText("Concepto / Servicio", { x: 50, y: yPos + 7, size: 9, font: fontBold, color: rgb(0.2, 0.2, 0.2) });
   page.drawText("Importe", { x: 480, y: yPos + 7, size: 9, font: fontBold, color: rgb(0.2, 0.2, 0.2) });
 
-  // Table Row
+  // Table Row — description column ends well before the "Importe" column (x=480) so long
+  // descriptions (e.g. gateway refs) don't run into the amount text.
   yPos = yPos - 30;
-  page.drawText(payment.description || "Cuota de Suscripción", { x: 50, y: yPos + 5, size: 10, font: fontRegular, color: rgb(0.1, 0.1, 0.1) });
+  const descLineHeight = 13;
+  const descLines = wrapText(payment.description || "Cuota de Suscripción", fontRegular, 10, 400, 3);
+  descLines.forEach((line, i) => {
+    page.drawText(line, { x: 50, y: yPos + 5 - i * descLineHeight, size: 10, font: fontRegular, color: rgb(0.1, 0.1, 0.1) });
+  });
   page.drawText(`${payment.amount.toFixed(2)} €`, { x: 480, y: yPos + 5, size: 10, font: fontRegular, color: rgb(0.1, 0.1, 0.1) });
+
+  const rowExtraHeight = (descLines.length - 1) * descLineHeight;
 
   // Divider
   page.drawLine({
-    start: { x: 40, y: yPos - 10 },
-    end: { x: width - 40, y: yPos - 10 },
+    start: { x: 40, y: yPos - 10 - rowExtraHeight },
+    end: { x: width - 40, y: yPos - 10 - rowExtraHeight },
     thickness: 1,
     color: rgb(0.9, 0.9, 0.9),
   });
 
-  yPos = yPos - 40;
+  yPos = yPos - 40 - rowExtraHeight;
 
   // ── TOTALS ──
   const totalAmount = payment.amount;

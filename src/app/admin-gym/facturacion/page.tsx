@@ -27,11 +27,11 @@ interface Invoice {
   date: string;
   invoiceNumber: string | null;
   user: InvoiceClient;
+  gym: GymProfile;
 }
 
 export default function FacturacionPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [gym, setGym] = useState<GymProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
 
@@ -42,7 +42,6 @@ export default function FacturacionPage() {
         if (res.ok) {
           const data = await res.json();
           setInvoices(data.payments || []);
-          setGym(data.gym || null);
         }
       } catch (e) {
         console.error("Error fetching gym invoices:", e);
@@ -82,7 +81,7 @@ export default function FacturacionPage() {
           province: invoice.user.province || "",
           locality: invoice.user.locality || "",
         },
-        gym
+        invoice.gym
       );
       const blob = new Blob([pdfBytes as any], { type: "application/pdf" });
       const link = document.createElement("a");

@@ -96,11 +96,9 @@ export async function PATCH(
       });
 
       if (recordDescription) {
-        let invoiceNumber = null;
-        if (session.user.id) {
-          const { generateNextInvoiceNumber } = await import("@/lib/invoiceUtils");
-          invoiceNumber = await generateNextInvoiceNumber(tx, session.user.id);
-        }
+        const { generateNextInvoiceNumber, getActiveGymPaymentMethod } = await import("@/lib/invoiceUtils");
+        const invoiceNumber = await generateNextInvoiceNumber(tx, session.user.id);
+        const activeMethod = await getActiveGymPaymentMethod(tx, session.user.id);
 
         await tx.paymentRecord.create({
           data: {
@@ -109,6 +107,7 @@ export async function PATCH(
             description: recordDescription,
             date: now,
             invoiceNumber,
+            paymentMethodId: activeMethod?.id,
           }
         });
       }

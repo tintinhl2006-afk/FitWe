@@ -11,11 +11,14 @@ import {
   type InvoiceGym as GymProfile,
 } from "@/lib/generateInvoicePdf";
 
+interface PaymentWithGym extends PaymentRecord {
+  gym: GymProfile;
+}
+
 export default function PagosPage() {
   const { data: session } = useSession();
-  const [payments, setPayments] = useState<PaymentRecord[]>([]);
+  const [payments, setPayments] = useState<PaymentWithGym[]>([]);
   const [client, setClient] = useState<ClientProfile | null>(null);
-  const [gym, setGym] = useState<GymProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchPayments = async () => {
@@ -25,7 +28,6 @@ export default function PagosPage() {
         const data = await res.json();
         setPayments(data.payments || []);
         setClient(data.client || null);
-        setGym(data.gym || null);
       }
     } catch (e) {
       console.error("Error fetching payments:", e);
@@ -38,14 +40,14 @@ export default function PagosPage() {
     fetchPayments();
   }, []);
 
-  const handleDownloadInvoice = async (payment: PaymentRecord) => {
+  const handleDownloadInvoice = async (payment: PaymentWithGym) => {
     if (!client) {
       alert("Error: Datos de cliente no disponibles para la factura.");
       return;
     }
 
     try {
-      const pdfBytes = await generateInvoicePdf(payment, client, gym);
+      const pdfBytes = await generateInvoicePdf(payment, client, payment.gym);
       const blob = new Blob([pdfBytes as any], { type: "application/pdf" });
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);

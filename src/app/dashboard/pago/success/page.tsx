@@ -59,6 +59,8 @@ function SuccessContent() {
   const mock = searchParams.get("mock") === "true" || searchParams.get("mock_redsys") === "true";
   const planId = searchParams.get("planId");
   const stripeConnect = searchParams.get("stripe_connect") === "true";
+  const methodId = searchParams.get("methodId");
+  const order = searchParams.get("order");
 
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
   const [paymentDetails, setPaymentDetails] = useState<PaymentDetails | null>(null);
@@ -76,6 +78,8 @@ function SuccessContent() {
         if (mock) queryParams.set("mock", "true");
         if (planId) queryParams.set("planId", planId);
         if (stripeConnect) queryParams.set("stripe_connect", "true");
+        if (methodId) queryParams.set("methodId", methodId);
+        if (order) queryParams.set("order", order);
 
         const res = await fetch(`/api/user/payment/verify?${queryParams.toString()}`);
         const data = await res.json();
@@ -101,7 +105,7 @@ function SuccessContent() {
     };
 
     verifyPayment();
-  }, [sessionId, mock, planId, update]);
+  }, [sessionId, mock, planId, methodId, order, update]);
 
   // Pantalla de Cargando
   if (status === "loading") {

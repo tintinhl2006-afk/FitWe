@@ -50,6 +50,21 @@ function localityLine(entity: { postalCode?: string; locality?: string; province
   return `${escapeHtml(entity.postalCode || '')} ${escapeHtml(entity.locality || '')}, ${escapeHtml(entity.province || '')}`;
 }
 
+/**
+ * A factura simplificada (RD 1619/2012, applicable here since gym membership fees are well
+ * under the 400€ threshold) only needs the client's fiscal identity (NIF, dirección) when the
+ * client actually has one registered, e.g. to deduct IVA — only called in that case.
+ */
+function clientFiscalLines(client: InvoiceClient) {
+  const locality = localityLine(client);
+  return `
+    <p>${docLine(client)}</p>
+    ${client.address ? `<p>${escapeHtml(client.address)}</p>` : ''}
+    ${locality ? `<p>${locality}</p>` : ''}
+    <p>Email: ${escapeHtml(client.email)}</p>
+  `;
+}
+
 function buildInvoiceHtml(payment: InvoicePayment, client: InvoiceClient, gym: InvoiceGym | null) {
   const invNumber = payment.invoiceNumber
     ? `Nº Factura: ${escapeHtml(payment.invoiceNumber)}`
@@ -109,10 +124,7 @@ function buildInvoiceHtml(payment: InvoicePayment, client: InvoiceClient, gym: I
             <div class="col">
               <h4>DATOS DEL CLIENTE</h4>
               <p class="name">${escapeHtml(client.name)} ${escapeHtml(client.lastName)}</p>
-              <p>${docLine(client)}</p>
-              <p>${escapeHtml(client.address || 'Dirección no indicada')}</p>
-              <p>${localityLine(client)}</p>
-              <p>Email: ${escapeHtml(client.email)}</p>
+              ${client.documentNumber ? clientFiscalLines(client) : `<p>Consumidor final</p><p>Email: ${escapeHtml(client.email)}</p>`}
             </div>
           </div>
 

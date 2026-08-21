@@ -3,84 +3,78 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
-  id                  String             @id @default(uuid()) @db.Uuid
-  email               String             @unique
+  id                  String              @id @default(uuid()) @db.Uuid
+  email               String              @unique
   password            String
   name                String
-  role                Role               @default(USER)
+  role                Role                @default(USER)
   weight              Float?
   height              Float?
-  createdAt           DateTime           @default(now())
-  updatedAt           DateTime           @updatedAt
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
   image               String?
   bio                 String?
-  distanceUnit        String             @default("km")
-  isPrivate           Boolean            @default(false)
-  language            String             @default("es")
+  distanceUnit        String              @default("km")
+  isPrivate           Boolean             @default(false)
+  language            String              @default("es")
   link                String?
   location            String?
-  measurementUnit     String             @default("cm")
-  weightUnit          String             @default("kg")
+  measurementUnit     String              @default("cm")
+  weightUnit          String              @default("kg")
   documentType        String?
   documentNumber      String?
   documentLetter      String?
   lastName            String?
   phone               String?
   landline            String?
-  registrationDate    DateTime           @default(now())
+  registrationDate    DateTime            @default(now())
   address             String?
-  country             String?            @default("España")
+  country             String?             @default("España")
   province            String?
   locality            String?
   postalCode          String?
   birthDate           DateTime?
   civilStatus         String?
   gender              String?
-  isRegisteredCitizen Boolean            @default(false)
+  isRegisteredCitizen Boolean             @default(false)
   referralSource      String?
-  gdprConsent         Boolean            @default(true)
-  stripeAccountId     String?
-  stripeConnected     Boolean            @default(false)
-  stripeEnabled       Boolean            @default(false)
-  redsysFuc           String?
-  redsysTerminal      String?            @default("001")
-  redsysClave         String?
-  redsysEnabled       Boolean            @default(false)
-  gymId               String?            @db.Uuid
+  gdprConsent         Boolean             @default(true)
+  gymId               String?             @db.Uuid
   subscriptionEndDate DateTime?
-  subscriptionStatus  String             @default("ACTIVE")
-  monthlyFee          Float              @default(49.99)
-  planId              String?            @db.Uuid
+  subscriptionStatus  String              @default("ACTIVE")
+  monthlyFee          Float               @default(49.99)
+  planId              String?             @db.Uuid
   bookings            ClassBooking[]
-  classTemplates      ClassTemplate[]    @relation("GymTemplates")
+  classTemplates      ClassTemplate[]     @relation("GymTemplates")
   foodEntries         FoodEntry[]
-  classes             GymClass[]         @relation("GymClasses")
+  classes             GymClass[]          @relation("GymClasses")
   payments            PaymentRecord[]
   routines            Routine[]
-  gym                 User?              @relation("GymClients", fields: [gymId], references: [id])
-  clients             User[]             @relation("GymClients")
+  gym                 User?               @relation("GymClients", fields: [gymId], references: [id])
+  clients             User[]              @relation("GymClients")
   workoutSessions     WorkoutSession[]
   nutritionProfile    NutritionProfile?
   foodItems           FoodItem[]
   mealEntries         MealEntry[]
-  plan                SubscriptionPlan?  @relation("UserPlan", fields: [planId], references: [id])
-  gymPlans            SubscriptionPlan[] @relation("GymPlans")
-  accessLogs          AccessLog[]        @relation("UserAccessLogs")
-  gymAccessLogs       AccessLog[]        @relation("GymAccessLogs")
+  plan                SubscriptionPlan?   @relation("UserPlan", fields: [planId], references: [id])
+  gymPlans            SubscriptionPlan[]  @relation("GymPlans")
+  accessLogs          AccessLog[]         @relation("UserAccessLogs")
+  gymAccessLogs       AccessLog[]         @relation("GymAccessLogs")
   savedDiets          SavedDiet[]
-  instructorClasses   GymClass[]         @relation("InstructorClasses")
-  instructorTemplates ClassTemplate[]    @relation("InstructorTemplates")
+  instructorClasses   GymClass[]          @relation("InstructorClasses")
+  instructorTemplates ClassTemplate[]     @relation("InstructorTemplates")
   invoiceSequence     GymInvoiceSequence? @relation("GymInvoiceSequence")
-  mustChangePassword  Boolean            @default(true)
+  mustChangePassword  Boolean             @default(true)
   resetToken          String?
   resetTokenExpiry    DateTime?
-  gymCode             String?            @unique
-  sessionVersion      Int                @default(0)
+  gymCode             String?             @unique
+  sessionVersion      Int                 @default(0)
+  paymentMethods      GymPaymentMethod[]  @relation("GymPaymentMethods")
 
   @@index([gymId])
 }
@@ -103,33 +97,78 @@ model SubscriptionPlan {
 }
 
 model PaymentRecord {
-  id            String            @id @default(cuid())
-  userId        String            @db.Uuid
-  amount        Float             @default(0)
-  description   String
-  date          DateTime          @default(now())
-  planId        String?           @db.Uuid
-  invoiceNumber String?
-  user          User              @relation(fields: [userId], references: [id])
-  plan          SubscriptionPlan? @relation(fields: [planId], references: [id])
+  id              String            @id @default(cuid())
+  userId          String            @db.Uuid
+  amount          Float             @default(0)
+  description     String
+  date            DateTime          @default(now())
+  planId          String?           @db.Uuid
+  invoiceNumber   String?
+  paymentMethodId String?           @db.Uuid
+  user            User              @relation(fields: [userId], references: [id])
+  plan            SubscriptionPlan? @relation(fields: [planId], references: [id])
+  paymentMethod   GymPaymentMethod? @relation(fields: [paymentMethodId], references: [id])
 
   @@index([userId])
   @@index([planId])
+  @@index([paymentMethodId])
+}
+
+enum PaymentGatewayType {
+  STRIPE
+  REDSYS
+}
+
+model GymPaymentMethod {
+  id       String             @id @default(uuid()) @db.Uuid
+  gymId    String             @db.Uuid
+  gateway  PaymentGatewayType
+  isActive Boolean            @default(false)
+
+  // Stripe Connect (solo si gateway = STRIPE)
+  stripeAccountId String?
+  stripeConnected Boolean @default(false)
+
+  // TPV Redsys (solo si gateway = REDSYS)
+  redsysFuc      String?
+  redsysTerminal String? @default("001")
+  redsysClave    String?
+
+  // Datos fiscales/de facturación propios de este método (emisor en la factura)
+  billingName           String
+  billingDocumentType   String?
+  billingDocumentNumber String?
+  billingDocumentLetter String?
+  billingPhone          String?
+  billingEmail          String?
+  billingAddress        String?
+  billingCountry        String? @default("España")
+  billingProvince       String?
+  billingLocality       String?
+  billingPostalCode     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  gym      User            @relation("GymPaymentMethods", fields: [gymId], references: [id], onDelete: Cascade)
+  payments PaymentRecord[]
+
+  @@index([gymId])
 }
 
 model GymClass {
-  id          String         @id @default(uuid()) @db.Uuid
-  gymId       String         @db.Uuid
-  name        String
-  description String?
-  instructor  String
-  capacity    Int
-  startTime   DateTime
-  endTime     DateTime
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
-  templateId  String?        @db.Uuid
-  bookings    ClassBooking[]
+  id             String         @id @default(uuid()) @db.Uuid
+  gymId          String         @db.Uuid
+  name           String
+  description    String?
+  instructor     String
+  capacity       Int
+  startTime      DateTime
+  endTime        DateTime
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  templateId     String?        @db.Uuid
+  bookings       ClassBooking[]
   gym            User           @relation("GymClasses", fields: [gymId], references: [id])
   template       ClassTemplate? @relation(fields: [templateId], references: [id])
   instructorId   String?        @db.Uuid
@@ -235,6 +274,7 @@ model WorkoutSet {
   weight      Float
   reps        Int
   isCompleted Boolean        @default(false)
+  notes       String?
   exercise    Exercise       @relation(fields: [exerciseId], references: [id])
   session     WorkoutSession @relation(fields: [sessionId], references: [id])
 
@@ -263,28 +303,28 @@ enum Role {
 }
 
 model NutritionProfile {
-  id             String   @id @default(uuid()) @db.Uuid
-  userId         String   @unique @db.Uuid
-  gender         String
-  age            Int
-  weight         Float
-  height         Float
-  activityLevel  String
-  goal           String
-  aggressiveness String
-  targetCalories Int
-  targetProtein  Int
-  targetCarbs    Int
-  targetFat      Int
-  dietType       String   @default("STANDARD")
-  allergens      String   @default("")
-  culinaryStyle  String   @default("CLASSIC")
-  excludedFoods  String   @default("")
+  id               String   @id @default(uuid()) @db.Uuid
+  userId           String   @unique @db.Uuid
+  gender           String
+  age              Int
+  weight           Float
+  height           Float
+  activityLevel    String
+  goal             String
+  aggressiveness   String
+  targetCalories   Int
+  targetProtein    Int
+  targetCarbs      Int
+  targetFat        Int
+  dietType         String   @default("STANDARD")
+  allergens        String   @default("")
+  culinaryStyle    String   @default("CLASSIC")
+  excludedFoods    String   @default("")
   prioritizedFoods String   @default("")
   mealsConfig      String   @default("BREAKFAST,LUNCH,DINNER,SNACK")
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model FoodItem {
@@ -294,14 +334,14 @@ model FoodItem {
   brand     String?
   imageUrl  String?
   category  String?  @default("Otros")
-  calories  Float    // per 100g
-  protein   Float    // per 100g
-  carbs     Float    // per 100g
-  fat       Float    // per 100g
+  calories  Float // per 100g
+  protein   Float // per 100g
+  carbs     Float // per 100g
+  fat       Float // per 100g
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user       User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
   mealEntries MealEntry[]
 
   @@index([userId])
@@ -311,7 +351,7 @@ model MealEntry {
   id            String   @id @default(uuid()) @db.Uuid
   userId        String   @db.Uuid
   foodItemId    String   @db.Uuid
-  mealType      String   // BREAKFAST, LUNCH, DINNER, SNACK
+  mealType      String // BREAKFAST, LUNCH, DINNER, SNACK
   quantityGrams Float
   date          DateTime
   createdAt     DateTime @default(now())
@@ -328,8 +368,8 @@ model AccessLog {
   id        String   @id @default(uuid()) @db.Uuid
   userId    String   @db.Uuid
   gymId     String   @db.Uuid
-  status    String   // "GRANTED" or "DENIED"
-  reason    String?  // e.g. "EXPIRED", "INACTIVE_SUBSCRIPTION", etc.
+  status    String // "GRANTED" or "DENIED"
+  reason    String? // e.g. "EXPIRED", "INACTIVE_SUBSCRIPTION", etc.
   createdAt DateTime @default(now())
 
   user User @relation("UserAccessLogs", fields: [userId], references: [id], onDelete: Cascade)
@@ -352,9 +392,9 @@ model SavedDiet {
 }
 
 model GymInvoiceSequence {
-  gymId     String   @id @db.Uuid
-  nextValue Int      @default(1)
-  gym       User     @relation("GymInvoiceSequence", fields: [gymId], references: [id], onDelete: Cascade)
+  gymId     String @id @db.Uuid
+  nextValue Int    @default(1)
+  gym       User   @relation("GymInvoiceSequence", fields: [gymId], references: [id], onDelete: Cascade)
 }
 
 model SavedDietItem {
@@ -362,14 +402,13 @@ model SavedDietItem {
   savedDietId   String    @db.Uuid
   foodName      String
   brand         String?
-  calories      Float     // per 100g
-  protein       Float     // per 100g
-  carbs         Float     // per 100g
-  fat           Float     // per 100g
+  calories      Float // per 100g
+  protein       Float // per 100g
+  carbs         Float // per 100g
+  fat           Float // per 100g
   quantityGrams Float
-  mealType      String    // BREAKFAST, LUNCH, DINNER, SNACK
+  mealType      String // BREAKFAST, LUNCH, DINNER, SNACK
   savedDiet     SavedDiet @relation(fields: [savedDietId], references: [id], onDelete: Cascade)
 
   @@index([savedDietId])
 }
-

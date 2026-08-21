@@ -60,10 +60,8 @@ export default function PaymentScreen() {
   const [errorMsg, setErrorMsg] = useState('');
 
   const [plans, setPlans] = useState<Plan[]>([]);
-  const [hasStripe, setHasStripe] = useState(false);
-  const [hasRedsys, setHasRedsys] = useState(false);
+  const [paymentGateway, setPaymentGateway] = useState<'stripe' | 'redsys' | null>(null);
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
-  const [gateway, setGateway] = useState<'stripe' | 'redsys'>('stripe');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [webviewSource, setWebviewSource] = useState<{ uri: string } | { html: string } | null>(null);
@@ -72,9 +70,8 @@ export default function PaymentScreen() {
   const [pendingVerifyUrl, setPendingVerifyUrl] = useState<string | null>(null);
   const handledResultRef = React.useRef(false);
 
-  const [invoices, setInvoices] = useState<InvoicePayment[]>([]);
+  const [invoices, setInvoices] = useState<(InvoicePayment & { gym: InvoiceGym })[]>([]);
   const [invoiceClient, setInvoiceClient] = useState<InvoiceClient | null>(null);
-  const [invoiceGym, setInvoiceGym] = useState<InvoiceGym | null>(null);
   const [downloadingInvoiceId, setDownloadingInvoiceId] = useState<string | null>(null);
 
   async function fetchInvoiceHistory() {
@@ -82,17 +79,16 @@ export default function PaymentScreen() {
       const data = await api.get('/api/user/payments');
       setInvoices(data.payments || []);
       setInvoiceClient(data.client || null);
-      setInvoiceGym(data.gym || null);
     } catch (e) {
       console.error('Error fetching payment history:', e);
     }
   }
 
-  async function handleDownloadInvoice(payment: InvoicePayment) {
+  async function handleDownloadInvoice(payment: InvoicePayment & { gym: InvoiceGym }) {
     if (!invoiceClient) return;
     setDownloadingInvoiceId(payment.id);
     try {
-      await downloadAndShareInvoice(payment, invoiceClient, invoiceGym);
+      await downloadAndShareInvoice(payment, invoiceClient, payment.gym);
     } catch (e) {
       Alert.alert('Error', 'No se pudo generar la factura.');
     } finally {
@@ -105,11 +101,7 @@ export default function PaymentScreen() {
       const data = await api.get('/api/user/plans');
       const planList: Plan[] = data.plans || [];
       setPlans(planList);
-      const redsysActive = !!data.hasRedsys;
-      const stripeActive = !!data.hasStripe && !redsysActive;
-      setHasRedsys(redsysActive);
-      setHasStripe(stripeActive);
-      setGateway(redsysActive ? 'redsys' : 'stripe');
+      setPaymentGateway(data.paymentGateway || null);
       setSelectedPlanId(data.currentPlanId || planList[0]?.id || null);
       setStep('plans');
     } catch (e) {
@@ -152,7 +144,7 @@ export default function PaymentScreen() {
       const token = await getAuthToken();
       setInjectedAuthScript(token ? buildAuthInjectionScript(token) : '');
 
-      const data = await api.post('/api/user/payment', { planId: selectedPlanId, gateway });
+      const data = await api.post('/api/user/payment', { planId: selectedPlanId });
 
       if (data.isRedsysForm) {
         const inputs = Object.entries(data.params as Record<string, string>)
@@ -350,45 +342,38 @@ export default function PaymentScreen() {
                   })}
                 </View>
 
-                {hasStripe && hasRedsys && (
+                {paymentGateway ? (
                   <>
-                    <Text style={{ fontSize: 12, fontWeight: '900', color: colors.textMuted, textTransform: 'uppercase', marginBottom: 10 }}>Método de Pago</Text>
-                    <View style={{ flexDirection: 'row', gap: 10, marginBottom: 24 }}>
-                      {(['stripe', 'redsys'] as const).map((g) => (
-                        <TouchableOpacity
-                          key={g}
-                          onPress={() => setGateway(g)}
-                          style={{ flex: 1, paddingVertical: 14, borderRadius: 14, alignItems: 'center', borderWidth: 1, borderColor: gateway === g ? colors.primary : colors.border, backgroundColor: gateway === g ? colors.primarySoft : colors.surface }}
-                        >
-                          <Text style={{ fontSize: 13, fontWeight: 'bold', color: gateway === g ? colors.primaryAccent : colors.textPrimary }}>{g === 'stripe' ? 'Tarjeta (Stripe)' : 'TPV Redsys'}</Text>
-                        </TouchableOpacity>
-                      ))}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+                      <ShieldCheck size={14} color={colors.textMuted} />
+                      <Text style={{ fontSize: 11, color: colors.textMuted, flex: 1 }}>Pago procesado de forma segura y cifrada por tu centro deportivo.</Text>
                     </View>
+
+                    <TouchableOpacity
+                      onPress={handlePay}
+                      disabled={isSubmitting || !selectedPlanId}
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 8,
+                        height: 52,
+                        borderRadius: 14,
+                        backgroundColor: colors.primary,
+                        opacity: isSubmitting || !selectedPlanId ? 0.6 : 1,
+                      }}
+                    >
+                      {isSubmitting ? <ActivityIndicator color="#fff" /> : <CreditCard size={16} color="#fff" />}
+                      <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 14 }}>Pagar Ahora</Text>
+                    </TouchableOpacity>
                   </>
+                ) : (
+                  <EmptyState
+                    icon={<AlertCircle size={28} color={colors.textMuted} />}
+                    title="Pago online no disponible"
+                    subtitle="Tu gimnasio no tiene un método de pago online configurado todavía. Contacta con recepción para pagar tu cuota."
+                  />
                 )}
-
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-                  <ShieldCheck size={14} color={colors.textMuted} />
-                  <Text style={{ fontSize: 11, color: colors.textMuted, flex: 1 }}>Pago procesado de forma segura y cifrada por tu centro deportivo.</Text>
-                </View>
-
-                <TouchableOpacity
-                  onPress={handlePay}
-                  disabled={isSubmitting || !selectedPlanId}
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 8,
-                    height: 52,
-                    borderRadius: 14,
-                    backgroundColor: colors.primary,
-                    opacity: isSubmitting || !selectedPlanId ? 0.6 : 1,
-                  }}
-                >
-                  {isSubmitting ? <ActivityIndicator color="#fff" /> : <CreditCard size={16} color="#fff" />}
-                  <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 14 }}>Pagar Ahora</Text>
-                </TouchableOpacity>
               </>
             )}
 

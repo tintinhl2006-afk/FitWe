@@ -36,9 +36,7 @@ export default function PaymentPage() {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [isLoadingPlans, setIsLoadingPlans] = useState(true);
-  const [hasStripe, setHasStripe] = useState(false);
-  const [hasRedsys, setHasRedsys] = useState(false);
-  const [gateway, setGateway] = useState<"stripe" | "redsys">("stripe");
+  const [paymentGateway, setPaymentGateway] = useState<"stripe" | "redsys" | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState("");
 
@@ -52,20 +50,7 @@ export default function PaymentPage() {
         if (res.ok) {
           const data = await res.json();
           setPlans(data.plans);
-          
-          // Priorización: Si el gimnasio tiene TPV Redsys activo, ocultar Stripe y forzar Redsys
-          const redsysActive = !!data.hasRedsys;
-          const stripeActive = !!data.hasStripe && !redsysActive;
-
-          setHasRedsys(redsysActive);
-          setHasStripe(stripeActive);
-          
-          // Seleccionar pasarela activa
-          if (redsysActive) {
-            setGateway("redsys");
-          } else if (stripeActive) {
-            setGateway("stripe");
-          }
+          setPaymentGateway(data.paymentGateway || null);
 
           // Auto-select current plan or first plan
           if (data.currentPlanId) {
@@ -115,7 +100,6 @@ export default function PaymentPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           planId: selectedPlanId,
-          gateway,
         }),
       });
 
@@ -155,8 +139,6 @@ export default function PaymentPage() {
       setIsProcessing(false);
     }
   };
-
-  const showGatewaySelector = hasStripe && hasRedsys;
 
   return (
     <DashboardLayout>
@@ -345,102 +327,66 @@ export default function PaymentPage() {
                   </div>
                 </div>
 
-                {/* SELECTOR DE GATEWAYS (SI AMBOS ESTÁN DISPONIBLES) */}
-                {showGatewaySelector && (
-                  <div className="space-y-2">
-                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-450 uppercase tracking-wider mb-2">
-                      Elige el método de pago:
-                    </label>
-                    <div className="grid grid-cols-1 gap-2">
-                      {/* Gateway: Stripe */}
-                      <button
-                        type="button"
-                        onClick={() => setGateway("stripe")}
-                        className={cn(
-                          "flex items-center gap-3 p-3 rounded-xl border-2 text-left transition-all",
-                          gateway === "stripe"
-                            ? "border-primary bg-cyan-500/[0.03] dark:bg-cyan-400/[0.01]"
-                            : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-750"
-                        )}
-                      >
-                        <div className={cn("flex h-4 w-4 shrink-0 rounded-full border items-center justify-center", gateway === "stripe" ? "border-primary text-primary" : "border-slate-350")}>
-                          {gateway === "stripe" && <span className="h-2.5 w-2.5 rounded-full bg-primary" />}
+                {paymentGateway ? (
+                  <>
+                    {/* Explicación de seguridad para el cliente */}
+                    <div className="space-y-4">
+                      <div className="rounded-xl border border-emerald-500/10 dark:border-emerald-400/20 bg-emerald-500/[0.02] dark:bg-emerald-400/[0.01] p-4 text-xs space-y-2">
+                        <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-450 font-bold">
+                          <Check className="h-4 w-4" />
+                          <span>Pago 100% Seguro Encriptado</span>
                         </div>
-                        <div>
-                          <p className="text-xs font-bold text-slate-800 dark:text-slate-250">Tarjeta (Stripe Connect)</p>
-                          <p className="text-[10px] text-slate-400">Soporta Apple Pay, Google Pay y Visa/MC</p>
-                        </div>
-                      </button>
+                        <p className="text-slate-550 dark:text-slate-400 leading-relaxed">
+                          Serás redirigido de forma segura a la pasarela de pago bancaria oficial de **{gymName}** para completar tu transacción bajo el protocolo de cifrado seguro SSL.
+                        </p>
+                      </div>
 
-                      {/* Gateway: Redsys */}
-                      <button
-                        type="button"
-                        onClick={() => setGateway("redsys")}
-                        className={cn(
-                          "flex items-center gap-3 p-3 rounded-xl border-2 text-left transition-all",
-                          gateway === "redsys"
-                            ? "border-primary bg-cyan-500/[0.03] dark:bg-cyan-400/[0.01]"
-                            : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-750"
-                        )}
-                      >
-                        <div className={cn("flex h-4 w-4 shrink-0 rounded-full border items-center justify-center", gateway === "redsys" ? "border-primary text-primary" : "border-slate-350")}>
-                          {gateway === "redsys" && <span className="h-2.5 w-2.5 rounded-full bg-primary" />}
+                      {/* Trust Badges */}
+                      <div className="grid grid-cols-2 gap-2 text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider">
+                        <div className="flex items-center gap-1.5 p-2 rounded-xl bg-slate-50 dark:bg-slate-950 justify-center">
+                          <Lock className="h-3.5 w-3.5 text-emerald-500" />
+                          <span>SSL Encriptado</span>
                         </div>
-                        <div>
-                          <p className="text-xs font-bold text-slate-800 dark:text-slate-250">TPV Virtual Bancario (Redsys)</p>
-                          <p className="text-[10px] text-slate-400">Pago directo en la pasarela oficial de tu banco</p>
+                        <div className="flex items-center gap-1.5 p-2 rounded-xl bg-slate-50 dark:bg-slate-950 justify-center">
+                          <Shield className="h-3.5 w-3.5 text-cyan-500" />
+                          <span>PCI-DSS Compliant</span>
                         </div>
-                      </button>
+                      </div>
                     </div>
-                  </div>
-                )}
 
-                {/* Explicación de seguridad para el cliente */}
-                <div className="space-y-4">
-                  <div className="rounded-xl border border-emerald-500/10 dark:border-emerald-400/20 bg-emerald-500/[0.02] dark:bg-emerald-400/[0.01] p-4 text-xs space-y-2">
-                    <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-450 font-bold">
-                      <Check className="h-4 w-4" />
-                      <span>Pago 100% Seguro Encriptado</span>
-                    </div>
-                    <p className="text-slate-550 dark:text-slate-400 leading-relaxed">
-                      Serás redirigido de forma segura a la pasarela de pago bancaria oficial de **{gymName}** para completar tu transacción bajo el protocolo de cifrado seguro SSL.
+                    {/* Action Button */}
+                    <button
+                      type="submit"
+                      disabled={isProcessing}
+                      className={cn(
+                        "flex w-full items-center justify-center gap-2.5 rounded-2xl bg-primary py-4 px-6 text-sm font-bold text-white shadow-soft shadow-cyan-500/25 hover:shadow-cyan-500/35 hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 cursor-pointer",
+                        isProcessing && "opacity-75 cursor-not-allowed scale-100 shadow-none"
+                      )}
+                    >
+                      {isProcessing ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin text-white" />
+                          Conectando...
+                        </>
+                      ) : (
+                        <>
+                          <Lock className="h-4 w-4 text-white/90" />
+                          <span>Proceder al Pago Seguro</span>
+                        </>
+                      )}
+                    </button>
+                  </>
+                ) : (
+                  <div className="rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 p-6 text-center bg-white dark:bg-slate-900">
+                    <AlertCircle className="h-8 w-8 mx-auto text-slate-400 dark:text-slate-500 mb-2" />
+                    <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-1">
+                      Pago online no disponible
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                      Este centro no tiene un método de pago online configurado todavía. Ponte en contacto con recepción para renovar tu cuota.
                     </p>
                   </div>
-
-                  {/* Trust Badges */}
-                  <div className="grid grid-cols-2 gap-2 text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider">
-                    <div className="flex items-center gap-1.5 p-2 rounded-xl bg-slate-50 dark:bg-slate-950 justify-center">
-                      <Lock className="h-3.5 w-3.5 text-emerald-500" />
-                      <span>SSL Encriptado</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 p-2 rounded-xl bg-slate-50 dark:bg-slate-950 justify-center">
-                      <Shield className="h-3.5 w-3.5 text-cyan-500" />
-                      <span>PCI-DSS Compliant</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Action Button */}
-                <button
-                  type="submit"
-                  disabled={isProcessing}
-                  className={cn(
-                    "flex w-full items-center justify-center gap-2.5 rounded-2xl bg-primary py-4 px-6 text-sm font-bold text-white shadow-soft shadow-cyan-500/25 hover:shadow-cyan-500/35 hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 cursor-pointer",
-                    isProcessing && "opacity-75 cursor-not-allowed scale-100 shadow-none"
-                  )}
-                >
-                  {isProcessing ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin text-white" />
-                      Conectando...
-                    </>
-                  ) : (
-                    <>
-                      <Lock className="h-4 w-4 text-white/90" />
-                      <span>Proceder al Pago Seguro</span>
-                    </>
-                  )}
-                </button>
+                )}
               </form>
             </div>
           </div>

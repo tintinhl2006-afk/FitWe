@@ -33,3 +33,14 @@ export async function generateNextInvoiceNumber(tx: any, gymId: string): Promise
   const formattedSeq = String(currentValue).padStart(5, "0");
   return `F-${currentYear}-${formattedSeq}`;
 }
+
+/**
+ * Returns the gym's currently active payment method, or null if none is active.
+ * Used to stamp new PaymentRecords with the billing/fiscal data that should appear
+ * on their invoice, independently of the gym's general profile.
+ */
+export async function getActiveGymPaymentMethod(tx: any, gymId: string) {
+  return tx.gymPaymentMethod.findFirst({
+    where: { gymId, isActive: true },
+  });
+}

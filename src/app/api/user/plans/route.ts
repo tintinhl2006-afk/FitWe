@@ -34,32 +34,23 @@ export async function GET(req: Request) {
     });
     console.log(`[API PLANS GET] Found ${plans.length} active plans for gym ${user.gymId}`);
 
-    // Get gym's active payment gateways
-    const gym = await prisma.user.findUnique({
-      where: { id: user.gymId },
-      select: {
-        stripeAccountId: true,
-        stripeConnected: true,
-        stripeEnabled: true,
-        redsysEnabled: true,
-        redsysFuc: true,
-        redsysClave: true,
-      },
+    // Get the gym's active payment method (only one can be active at a time)
+    const activeMethod = await prisma.gymPaymentMethod.findFirst({
+      where: { gymId: user.gymId, isActive: true },
     });
 
-    const hasStripe = 
-      !!gym?.stripeEnabled && !!gym?.stripeConnected && !!gym?.stripeAccountId;
-      
-    const hasRedsys = 
-      !!gym?.redsysEnabled && 
-      !!gym?.redsysFuc && 
-      !!gym?.redsysClave;
+    const isMethodUsable =
+      !!activeMethod &&
+      (activeMethod.gateway === "STRIPE"
+        ? !!activeMethod.stripeConnected && !!activeMethod.stripeAccountId
+        : !!activeMethod.redsysFuc && !!activeMethod.redsysClave);
+
+    const paymentGateway = isMethodUsable ? (activeMethod!.gateway === "STRIPE" ? "stripe" : "redsys") : null;
 
     return NextResponse.json({
       plans,
       currentPlanId: user.planId,
-      hasStripe,
-      hasRedsys,
+      paymentGateway,
     });
   } catch (error: any) {
     console.error("Error fetching gym plans:", error);

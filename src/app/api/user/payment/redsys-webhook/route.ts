@@ -35,22 +35,27 @@ export async function POST(req: Request) {
     }
 
     // Extraer datos de vinculación
-    const { userId, planId, gymId } = JSON.parse(decodeURIComponent(merchantDataStr));
+    const { userId, planId, gymId, paymentMethodId } = JSON.parse(decodeURIComponent(merchantDataStr));
 
-    if (!userId || !gymId) {
-      console.error("❌ Datos de socio o gimnasio inválidos en merchant data.");
+    if (!userId || !gymId || !paymentMethodId) {
+      console.error("❌ Datos de socio, gimnasio o método de pago inválidos en merchant data.");
       return new Response("Invalid merchant data", { status: 400 });
     }
 
-    // Buscar la clave secreta de Redsys del gimnasio en la base de datos
-    const gym = await prisma.user.findUnique({
-      where: { id: gymId },
-      select: { redsysClave: true, name: true },
+    // Buscar el método de pago Redsys que se usó para iniciar este cobro
+    const gymPaymentMethod = await prisma.gymPaymentMethod.findUnique({
+      where: { id: paymentMethodId },
     });
 
-    if (!gym || !gym.redsysClave) {
-      console.error("❌ Gimnasio no encontrado o sin clave Redsys configurada.");
+    if (!gymPaymentMethod || gymPaymentMethod.gymId !== gymId || gymPaymentMethod.gateway !== "REDSYS" || !gymPaymentMethod.redsysClave) {
+      console.error("❌ Método de pago Redsys no encontrado o sin clave configurada.");
       return new Response("Gym payment credentials not found", { status: 400 });
+    }
+
+    const gym = await prisma.user.findUnique({ where: { id: gymId }, select: { name: true } });
+    if (!gym) {
+      console.error("❌ Gimnasio no encontrado.");
+      return new Response("Gym not found", { status: 400 });
     }
 
     // VERIFICACIÓN CRIPTOGRÁFICA DE LA FIRMA
@@ -58,7 +63,7 @@ export async function POST(req: Request) {
       merchantParametersB64,
       signatureReceived,
       order,
-      redsysClave: gym.redsysClave.trim(),
+      redsysClave: gymPaymentMethod.redsysClave.trim(),
     });
 
     if (!isSignatureValid) {
@@ -150,6 +155,7 @@ export async function POST(req: Request) {
           planId: resolvedPlanId,
           date: new Date(),
           invoiceNumber,
+          paymentMethodId: gymPaymentMethod.id,
         },
       });
 
