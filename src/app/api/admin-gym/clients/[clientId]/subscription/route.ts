@@ -96,8 +96,8 @@ export async function PATCH(
       });
 
       const { generateNextInvoiceNumber, getActiveGymPaymentMethod } = await import("@/lib/invoiceUtils");
-      const invoiceNumber = await generateNextInvoiceNumber(tx, session.user.id);
       const activeMethod = await getActiveGymPaymentMethod(tx, session.user.id);
+      const invoiceNumber = await generateNextInvoiceNumber(tx, session.user.id, activeMethod);
 
       await tx.paymentRecord.create({
         data: {

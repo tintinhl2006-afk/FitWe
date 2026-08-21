@@ -1,37 +1,67 @@
 import { prisma } from "@/lib/prisma";
 
+/** First 2 letters (A-Z only) of a name, uppercased — used as the invoice number prefix. */
+function invoicePrefixFromName(name: string | null | undefined): string {
+  const letters = (name || "").replace(/[^a-zA-Z]/g, "").toUpperCase();
+  return letters.length >= 2 ? letters.slice(0, 2) : (letters + "XX").slice(0, 2);
+}
+
 /**
- * Generates the next sequential invoice number for a given gym.
- * Must be executed inside a Prisma transaction to ensure consistency and avoid race conditions.
- * 
+ * Generates the next sequential invoice number for a payment method, formatted as
+ * `<2 letras del nombre>-<año>-00001`. Each payment method has its own independent
+ * sequence starting at 1, so switching or adding methods never skips/reuses numbers
+ * from another one. Must run inside a Prisma transaction to avoid race conditions.
+ *
  * @param tx The Prisma transaction client.
- * @param gymId The UUID of the gym user.
- * @returns A formatted invoice string, e.g. "F-2026-00001"
+ * @param gymId The UUID of the gym user (used only for the no-payment-method fallback).
+ * @param paymentMethod The payment method the invoice is being issued under, or null/undefined
+ *   if the gym has none (falls back to a gym-level sequence with an "FW" prefix).
  */
-export async function generateNextInvoiceNumber(tx: any, gymId: string): Promise<string> {
+export async function generateNextInvoiceNumber(
+  tx: any,
+  gymId: string,
+  paymentMethod?: { id: string; billingName: string } | null
+): Promise<string> {
   const currentYear = new Date().getFullYear();
-  
+
+  if (paymentMethod) {
+    const method = await tx.gymPaymentMethod.findUnique({
+      where: { id: paymentMethod.id },
+      select: { invoiceNextValue: true },
+    });
+    const currentValue = method?.invoiceNextValue ?? 1;
+
+    await tx.gymPaymentMethod.update({
+      where: { id: paymentMethod.id },
+      data: { invoiceNextValue: currentValue + 1 },
+    });
+
+    const prefix = invoicePrefixFromName(paymentMethod.billingName);
+    const formattedSeq = String(currentValue).padStart(5, "0");
+    return `${prefix}-${currentYear}-${formattedSeq}`;
+  }
+
+  // Sin ningún método de pago configurado: se mantiene una numeración de respaldo a nivel
+  // de gimnasio (p.ej. para un cobro en efectivo registrado antes de dar de alta ninguno).
   let sequence = await tx.gymInvoiceSequence.findUnique({
     where: { gymId },
   });
-  
+
   if (!sequence) {
     sequence = await tx.gymInvoiceSequence.create({
       data: { gymId, nextValue: 1 },
     });
   }
-  
+
   const currentValue = sequence.nextValue;
-  
-  // Increment for the next invocation
+
   await tx.gymInvoiceSequence.update({
     where: { gymId },
     data: { nextValue: currentValue + 1 },
   });
-  
-  // Format with leading zeroes, e.g., "00001"
+
   const formattedSeq = String(currentValue).padStart(5, "0");
-  return `F-${currentYear}-${formattedSeq}`;
+  return `FW-${currentYear}-${formattedSeq}`;
 }
 
 /**

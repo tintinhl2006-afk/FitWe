@@ -142,7 +142,7 @@ export async function POST(req: Request) {
       let invoiceNumber = null;
       if (gymId) {
         const { generateNextInvoiceNumber } = await import("@/lib/invoiceUtils");
-        invoiceNumber = await generateNextInvoiceNumber(tx, gymId);
+        invoiceNumber = await generateNextInvoiceNumber(tx, gymId, gymPaymentMethod);
       }
 
       await tx.paymentRecord.create({

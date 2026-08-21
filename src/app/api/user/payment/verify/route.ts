@@ -193,7 +193,7 @@ export async function GET(req: Request) {
         let invoiceNumber = null;
         if (user.gymId) {
           const { generateNextInvoiceNumber } = await import("@/lib/invoiceUtils");
-          invoiceNumber = await generateNextInvoiceNumber(tx, user.gymId);
+          invoiceNumber = await generateNextInvoiceNumber(tx, user.gymId, gymPaymentMethod);
         }
 
         const pRecord = await tx.paymentRecord.create({
@@ -334,7 +334,7 @@ export async function GET(req: Request) {
         let invoiceNumber = null;
         if (user.gymId) {
           const { generateNextInvoiceNumber } = await import("@/lib/invoiceUtils");
-          invoiceNumber = await generateNextInvoiceNumber(tx, user.gymId);
+          invoiceNumber = await generateNextInvoiceNumber(tx, user.gymId, activeMethod);
         }
 
         const pRecord = await tx.paymentRecord.create({
