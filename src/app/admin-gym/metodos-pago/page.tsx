@@ -15,6 +15,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Key,
+  Edit,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { provinces } from "@/lib/provinces";
@@ -34,7 +35,6 @@ interface PaymentMethod {
   billingName: string;
   billingDocumentType: string | null;
   billingDocumentNumber: string | null;
-  billingDocumentLetter: string | null;
   billingPhone: string | null;
   billingEmail: string | null;
   billingAddress: string | null;
@@ -48,7 +48,6 @@ const emptyForm = {
   billingName: "",
   billingDocumentType: "DNI",
   billingDocumentNumber: "",
-  billingDocumentLetter: "",
   billingPhone: "",
   billingEmail: "",
   billingAddress: "",
@@ -73,6 +72,7 @@ export default function MetodosPagoPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalStep, setModalStep] = useState<"choose" | "form">("choose");
   const [selectedGateway, setSelectedGateway] = useState<Gateway | null>(null);
+  const [editingMethod, setEditingMethod] = useState<PaymentMethod | null>(null);
   const [form, setForm] = useState({ ...emptyForm });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -132,9 +132,32 @@ export default function MetodosPagoPage() {
   }, [searchParams, router]);
 
   const openAddModal = () => {
+    setEditingMethod(null);
     setModalStep("choose");
     setSelectedGateway(null);
     setForm({ ...emptyForm });
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (method: PaymentMethod) => {
+    setEditingMethod(method);
+    setSelectedGateway(method.gateway);
+    setForm({
+      billingName: method.billingName,
+      billingDocumentType: method.billingDocumentType || "DNI",
+      billingDocumentNumber: method.billingDocumentNumber || "",
+      billingPhone: method.billingPhone || "",
+      billingEmail: method.billingEmail || "",
+      billingAddress: method.billingAddress || "",
+      billingCountry: method.billingCountry || "España",
+      billingProvince: method.billingProvince || "",
+      billingLocality: method.billingLocality || "",
+      billingPostalCode: method.billingPostalCode || "",
+      redsysFuc: method.redsysFuc || "",
+      redsysTerminal: method.redsysTerminal || "001",
+      redsysClave: "",
+    });
+    setModalStep("form");
     setIsModalOpen(true);
   };
 
@@ -143,25 +166,36 @@ export default function MetodosPagoPage() {
     setModalStep("form");
   };
 
-  const handleCreateMethod = async (e: React.FormEvent) => {
+  const handleSubmitMethod = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedGateway) return;
     setIsSubmitting(true);
     try {
-      const res = await fetch("/api/admin-gym/payment-methods", {
-        method: "POST",
+      const isEditing = !!editingMethod;
+      const url = isEditing
+        ? `/api/admin-gym/payment-methods/${editingMethod!.id}`
+        : "/api/admin-gym/payment-methods";
+
+      // En edición, la clave del TPV se deja en blanco para no cambiarla; solo se envía si
+      // el gestor ha escrito una nueva.
+      const body: Record<string, any> = isEditing
+        ? { ...form, ...(form.redsysClave ? {} : { redsysClave: undefined }) }
+        : { gateway: selectedGateway, ...form };
+
+      const res = await fetch(url, {
+        method: isEditing ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ gateway: selectedGateway, ...form }),
+        body: JSON.stringify(body),
       });
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.message || "Error al crear el método de pago");
+        throw new Error(data.message || `Error al ${isEditing ? "actualizar" : "crear"} el método de pago`);
       }
       setIsModalOpen(false);
-      showToast("success", "Método de pago añadido correctamente");
+      showToast("success", `Método de pago ${isEditing ? "actualizado" : "añadido"} correctamente`);
       fetchMethods();
     } catch (err: any) {
-      showToast("error", err.message || "Error al crear el método de pago");
+      showToast("error", err.message || "Error al guardar el método de pago");
     } finally {
       setIsSubmitting(false);
     }
@@ -305,7 +339,7 @@ export default function MetodosPagoPage() {
                 <div className="text-xs text-slate-500 dark:text-slate-400 space-y-0.5">
                   <p className="font-semibold text-slate-700 dark:text-slate-300">{m.billingName}</p>
                   {m.billingDocumentNumber && (
-                    <p>{m.billingDocumentType || "NIF"}: {m.billingDocumentNumber}{m.billingDocumentLetter || ""}</p>
+                    <p>{m.billingDocumentType || "NIF"}: {m.billingDocumentNumber}</p>
                   )}
                   {m.gateway === "REDSYS" && m.redsysFuc && <p className="font-mono">FUC: {m.redsysFuc}</p>}
                   {m.gateway === "STRIPE" && (
@@ -342,6 +376,14 @@ export default function MetodosPagoPage() {
                   )}
                   <button
                     type="button"
+                    onClick={() => openEditModal(m)}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-800 px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all cursor-pointer"
+                  >
+                    <Edit className="h-3.5 w-3.5" />
+                    Editar
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => handleDelete(m.id)}
                     disabled={busyId === m.id}
                     className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-all cursor-pointer disabled:opacity-60 ml-auto"
@@ -361,7 +403,11 @@ export default function MetodosPagoPage() {
           <div className="w-full max-w-lg rounded-3xl bg-white dark:bg-slate-900 shadow-xl border border-slate-200 dark:border-slate-800 max-h-[90vh] flex flex-col overflow-hidden">
             <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800 shrink-0">
               <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                {modalStep === "choose" ? "Añadir método de pago" : selectedGateway === "STRIPE" ? "Nueva cuenta Stripe Connect" : "Nuevo TPV Redsys"}
+                {modalStep === "choose"
+                  ? "Añadir método de pago"
+                  : editingMethod
+                  ? selectedGateway === "STRIPE" ? "Editar cuenta Stripe Connect" : "Editar TPV Redsys"
+                  : selectedGateway === "STRIPE" ? "Nueva cuenta Stripe Connect" : "Nuevo TPV Redsys"}
               </h3>
               <button type="button" onClick={() => setIsModalOpen(false)} className="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
                 <X className="h-4 w-4 text-slate-500" />
@@ -398,7 +444,7 @@ export default function MetodosPagoPage() {
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleCreateMethod} className="flex flex-col flex-1 min-h-0">
+              <form onSubmit={handleSubmitMethod} className="flex flex-col flex-1 min-h-0">
               <div className="p-5 space-y-4 overflow-y-auto min-h-0">
                 <div>
                   <h4 className="text-xs font-bold text-slate-500 dark:text-slate-450 uppercase tracking-wider mb-3">
@@ -422,27 +468,21 @@ export default function MetodosPagoPage() {
                         onChange={(e) => setForm({ ...form, billingDocumentType: e.target.value })}
                         className="w-full rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 py-2 px-3 text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary/20"
                       >
-                        <option value="DNI">NIF / CIF</option>
+                        <option value="DNI">DNI</option>
+                        <option value="CIF">CIF</option>
                         <option value="NIE">NIE</option>
                         <option value="Pasaporte">Pasaporte</option>
                         <option value="Otro">Otro</option>
                       </select>
                     </div>
-                    <div className="flex gap-2">
+                    <div>
+                      <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">Número de documento</label>
                       <input
                         type="text"
-                        placeholder="Nº documento"
+                        placeholder="Ej. 12345678Z o B12345678"
                         value={form.billingDocumentNumber}
-                        onChange={(e) => setForm({ ...form, billingDocumentNumber: e.target.value })}
-                        className="w-2/3 rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 py-2 px-3 text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary/20"
-                      />
-                      <input
-                        type="text"
-                        placeholder="Letra"
-                        maxLength={1}
-                        value={form.billingDocumentLetter}
-                        onChange={(e) => setForm({ ...form, billingDocumentLetter: e.target.value.toUpperCase() })}
-                        className="w-1/3 rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 py-2 px-3 text-sm text-center text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary/20"
+                        onChange={(e) => setForm({ ...form, billingDocumentNumber: e.target.value.toUpperCase() })}
+                        className="w-full rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 py-2 px-3 text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary/20"
                       />
                     </div>
                     <div>
@@ -541,10 +581,10 @@ export default function MetodosPagoPage() {
                           </div>
                           <input
                             type="password"
-                            required
+                            required={!editingMethod}
                             value={form.redsysClave}
                             onChange={(e) => setForm({ ...form, redsysClave: e.target.value })}
-                            placeholder="••••••••••••••••"
+                            placeholder={editingMethod ? "Dejar en blanco para no cambiarla" : "••••••••••••••••"}
                             className="w-full rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 py-2 pl-9 pr-3 text-sm font-mono text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary/20"
                           />
                         </div>
@@ -563,10 +603,10 @@ export default function MetodosPagoPage() {
                 <div className="flex justify-end gap-2 p-5 pt-4 border-t border-slate-100 dark:border-slate-800 shrink-0">
                   <button
                     type="button"
-                    onClick={() => setModalStep("choose")}
+                    onClick={() => (editingMethod ? setIsModalOpen(false) : setModalStep("choose"))}
                     className="rounded-2xl border border-slate-200 dark:border-slate-800 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
                   >
-                    Atrás
+                    {editingMethod ? "Cancelar" : "Atrás"}
                   </button>
                   <button
                     type="submit"
