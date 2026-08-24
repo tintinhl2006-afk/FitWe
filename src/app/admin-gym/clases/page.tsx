@@ -15,6 +15,8 @@ import {
   CalendarDays,
   AlertTriangle,
   Zap,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCustomAlert } from "@/components/providers/CustomAlertProvider";
@@ -80,6 +82,8 @@ export default function GymClassesPage() {
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [employees, setEmployees] = useState<{ id: string; name: string }[]>([]);
   const [showOnlyMine, setShowOnlyMine] = useState(true);
+  const [templatesPage, setTemplatesPage] = useState(1);
+  const TEMPLATES_PAGE_SIZE = 10;
 
   const [templateFormData, setTemplateFormData] = useState({
     name: "",
@@ -288,6 +292,17 @@ export default function GymClassesPage() {
     }
     return true;
   });
+
+  const templatesTotalPages = Math.max(1, Math.ceil(filteredTemplates.length / TEMPLATES_PAGE_SIZE));
+  const paginatedTemplates = filteredTemplates.slice(
+    (templatesPage - 1) * TEMPLATES_PAGE_SIZE,
+    templatesPage * TEMPLATES_PAGE_SIZE
+  );
+
+  // Reset to first page whenever the underlying template list/filter changes
+  useEffect(() => {
+    setTemplatesPage(1);
+  }, [templates.length, showOnlyMine]);
 
   const groupedUpcoming = filteredClasses.reduce<Record<string, GymClass[]>>((acc, c) => {
     const dateKey = new Date(c.startTime).toLocaleDateString("es-ES", {
@@ -606,7 +621,7 @@ export default function GymClassesPage() {
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {filteredTemplates.length === 0 ? (
                   <tr><td colSpan={6} className="p-12 text-center text-slate-500">No hay plantillas configuradas</td></tr>
-                ) : filteredTemplates.map((t) => (
+                ) : paginatedTemplates.map((t) => (
                   <tr key={t.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
                     <td className="px-6 py-4 text-sm font-bold text-primary dark:text-cyan-400">{DAYS[t.dayOfWeek - 1]}</td>
                     <td className="px-6 py-4 text-sm font-medium text-slate-900 dark:text-white">{t.name}</td>
@@ -628,6 +643,31 @@ export default function GymClassesPage() {
               </tbody>
             </table>
           </div>
+
+          {/* Pagination */}
+          {filteredTemplates.length > 0 && templatesTotalPages > 1 && (
+            <div className="flex items-center justify-between gap-4 px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20">
+              <button
+                onClick={() => setTemplatesPage((p) => Math.max(1, p - 1))}
+                disabled={templatesPage <= 1}
+                className="inline-flex items-center gap-1.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Anterior
+              </button>
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                Página {templatesPage} de {templatesTotalPages}
+              </span>
+              <button
+                onClick={() => setTemplatesPage((p) => Math.min(templatesTotalPages, p + 1))}
+                disabled={templatesPage >= templatesTotalPages}
+                className="inline-flex items-center gap-1.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                Siguiente
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          )}
         </div>
       )}
 

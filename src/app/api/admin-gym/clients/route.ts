@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions);
 
@@ -18,27 +18,52 @@ export async function GET() {
 
     const gymId = session.user.id;
 
-    const clients = await prisma.user.findMany({
-      where: { gymId },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        image: true,
-        createdAt: true,
-        subscriptionStatus: true,
-        subscriptionEndDate: true,
-        plan: { select: { id: true, name: true, price: true, durationDays: true } },
-        _count: {
-          select: {
-            workoutSessions: {
-              where: { endTime: { not: null } },
+    const { searchParams } = new URL(req.url);
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10) || 1);
+    const pageSize = Math.min(
+      100,
+      Math.max(1, parseInt(searchParams.get("pageSize") || "20", 10) || 20)
+    );
+    const search = (searchParams.get("search") || "").trim();
+
+    const where = {
+      gymId,
+      ...(search
+        ? {
+            OR: [
+              { name: { contains: search, mode: "insensitive" as const } },
+              { email: { contains: search, mode: "insensitive" as const } },
+            ],
+          }
+        : {}),
+    };
+
+    const [total, clients] = await Promise.all([
+      prisma.user.count({ where }),
+      prisma.user.findMany({
+        where,
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          image: true,
+          createdAt: true,
+          subscriptionStatus: true,
+          subscriptionEndDate: true,
+          plan: { select: { id: true, name: true, price: true, durationDays: true } },
+          _count: {
+            select: {
+              workoutSessions: {
+                where: { endTime: { not: null } },
+              },
             },
           },
         },
-      },
-      orderBy: { createdAt: "desc" },
-    });
+        orderBy: { createdAt: "desc" },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+    ]);
 
     const result = clients.map((c) => ({
       id: c.id,
@@ -52,7 +77,7 @@ export async function GET() {
       plan: c.plan,
     }));
 
-    return NextResponse.json(result);
+    return NextResponse.json({ clients: result, total, page, pageSize });
   } catch (error) {
     console.error("Error fetching gym clients:", error);
     return NextResponse.json(

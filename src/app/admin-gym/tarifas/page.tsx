@@ -16,6 +16,8 @@ import {
   CreditCard,
   RefreshCw,
   Infinity as InfinityIcon,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCustomAlert } from "@/components/providers/CustomAlertProvider";
@@ -55,6 +57,8 @@ export default function GymPlansPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 9;
 
   const emptyFormData = {
     name: "",
@@ -187,6 +191,14 @@ export default function GymPlansPage() {
     return `${days} días`;
   };
 
+  const totalPages = Math.max(1, Math.ceil(plans.length / PAGE_SIZE));
+  const paginatedPlans = plans.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  // Keep the current page within bounds if the plan list shrinks (e.g. after a delete)
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [totalPages, page]);
+
   return (
     <div className="space-y-6 max-w-4xl">
         {/* Header */}
@@ -243,7 +255,7 @@ export default function GymPlansPage() {
           </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {plans.map((plan) => (
+            {paginatedPlans.map((plan) => (
               <div
                 key={plan.id}
                 className={cn(
@@ -338,6 +350,31 @@ export default function GymPlansPage() {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Pagination */}
+        {!isLoading && plans.length > 0 && totalPages > 1 && (
+          <div className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 py-4 shadow-sm">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page <= 1}
+              className="inline-flex items-center gap-1.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Anterior
+            </button>
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+              Página {page} de {totalPages}
+            </span>
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page >= totalPages}
+              className="inline-flex items-center gap-1.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              Siguiente
+              <ChevronRight className="h-4 w-4" />
+            </button>
           </div>
         )}
 

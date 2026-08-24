@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions);
 
@@ -17,14 +17,42 @@ export async function GET() {
 
     const gymId = session.user.id;
 
-    const [gym, rawPayments] = await Promise.all([
+    const { searchParams } = new URL(req.url);
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10) || 1);
+    const pageSize = Math.min(
+      100,
+      Math.max(1, parseInt(searchParams.get("pageSize") || "20", 10) || 20)
+    );
+    const search = (searchParams.get("search") || "").trim();
+    const paymentMethodId = (searchParams.get("paymentMethodId") || "").trim();
+
+    const andConditions: any[] = [{ user: { gymId } }];
+    if (search) {
+      andConditions.push({
+        OR: [
+          { invoiceNumber: { contains: search, mode: "insensitive" as const } },
+          { user: { name: { contains: search, mode: "insensitive" as const } } },
+          { user: { lastName: { contains: search, mode: "insensitive" as const } } },
+          { user: { email: { contains: search, mode: "insensitive" as const } } },
+        ],
+      });
+    }
+    if (paymentMethodId) {
+      andConditions.push({ paymentMethodId });
+    }
+    const where = { AND: andConditions };
+
+    const [gym, total, rawPayments, paymentMethods] = await Promise.all([
       prisma.user.findUnique({
         where: { id: gymId },
         select: { name: true, email: true },
       }),
+      prisma.paymentRecord.count({ where }),
       prisma.paymentRecord.findMany({
-        where: { user: { gymId } },
+        where,
         orderBy: { date: "desc" },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
         select: {
           id: true,
           amount: true,
@@ -33,6 +61,7 @@ export async function GET() {
           source: true,
           date: true,
           invoiceNumber: true,
+          paymentMethodId: true,
           user: {
             select: {
               name: true,
@@ -50,6 +79,11 @@ export async function GET() {
           paymentMethod: true,
         },
       }),
+      prisma.gymPaymentMethod.findMany({
+        where: { gymId },
+        select: { id: true, billingName: true, gateway: true, isActive: true },
+        orderBy: { createdAt: "asc" },
+      }),
     ]);
 
     if (!gym) {
@@ -60,6 +94,7 @@ export async function GET() {
     // del perfil general del gimnasio, ya que ahora son independientes por método.
     const payments = rawPayments.map(({ paymentMethod, ...payment }) => ({
       ...payment,
+      paymentMethodName: paymentMethod?.billingName || null,
       gym: paymentMethod
         ? {
             name: paymentMethod.billingName,
@@ -89,7 +124,7 @@ export async function GET() {
           },
     }));
 
-    return NextResponse.json({ payments });
+    return NextResponse.json({ payments, total, page, pageSize, paymentMethods });
   } catch (error) {
     console.error("Error fetching gym invoices:", error);
     return NextResponse.json({ message: "Error en el servidor" }, { status: 500 });

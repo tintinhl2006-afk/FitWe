@@ -15,6 +15,8 @@ import {
   Lock,
   CheckCircle2,
   AlertCircle,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -44,6 +46,10 @@ export default function ClientesPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const pageSize = 20;
 
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -97,9 +103,18 @@ export default function ClientesPage() {
     }
   }, [formData.birthDay, formData.birthMonth, formData.birthYear]);
 
+  // Debounce search input before hitting the server
   useEffect(() => {
-    fetchClients();
-  }, []);
+    const t = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(t);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    fetchClients(page, debouncedSearch);
+  }, [page, debouncedSearch]);
 
   // Auto-dismiss toast
   useEffect(() => {
@@ -109,12 +124,19 @@ export default function ClientesPage() {
     }
   }, [toast]);
 
-  const fetchClients = async () => {
+  const fetchClients = async (pageToFetch = page, search = debouncedSearch) => {
+    setIsLoading(true);
     try {
-      const res = await fetch("/api/admin-gym/clients");
+      const params = new URLSearchParams({
+        page: String(pageToFetch),
+        pageSize: String(pageSize),
+      });
+      if (search) params.set("search", search);
+      const res = await fetch(`/api/admin-gym/clients?${params.toString()}`);
       if (res.ok) {
         const data = await res.json();
-        setClients(data);
+        setClients(data.clients ?? []);
+        setTotal(data.total ?? 0);
       }
     } catch (error) {
       console.error("Error fetching clients:", error);
@@ -183,10 +205,17 @@ export default function ClientesPage() {
 
       if (res.status === 201) {
         const newClient = await res.json();
-        // Add to local state instantly
-        setClients((prev) => [newClient, ...prev]);
         setIsModalOpen(false);
         setToast({ message: `Cliente "${newClient.name}" creado correctamente`, type: "success" });
+        // Volver a la primera página (los clientes se ordenan por fecha de alta desc)
+        // y sin búsqueda activa para asegurar que el nuevo cliente sea visible.
+        setSearchQuery("");
+        setDebouncedSearch("");
+        if (page === 1) {
+          fetchClients(1, "");
+        } else {
+          setPage(1);
+        }
       } else {
         const data = await res.json();
         setFormError(data.message || "Error al crear el cliente");
@@ -229,18 +258,9 @@ export default function ClientesPage() {
     setIsModalOpen(true);
   };
 
-  const normalizeText = (str: string) =>
-    str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
-  const filtered = clients.filter((c) => {
-    const normalizedQuery = normalizeText(searchQuery);
-    return (
-      normalizeText(c.name).includes(normalizedQuery) ||
-      normalizeText(c.email).includes(normalizedQuery)
-    );
-  });
-
-  if (isLoading) {
+  if (isLoading && clients.length === 0) {
     return (
       <div className="flex h-64 items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -280,8 +300,8 @@ export default function ClientesPage() {
             Gestión de Clientes
           </h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            {clients.length} cliente{clients.length !== 1 && "s"} registrado
-            {clients.length !== 1 && "s"} en tu gimnasio
+            {total} cliente{total !== 1 && "s"} registrado
+            {total !== 1 && "s"} en tu gimnasio
           </p>
         </div>
 
@@ -307,7 +327,7 @@ export default function ClientesPage() {
       </div>
 
       {/* Client Table / List */}
-      {filtered.length > 0 ? (
+      {clients.length > 0 ? (
         <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
           {/* Table Header */}
           <div className="hidden sm:grid sm:grid-cols-12 gap-4 px-6 py-3 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
@@ -320,7 +340,7 @@ export default function ClientesPage() {
 
           {/* Rows */}
           <div className="divide-y divide-slate-100 dark:divide-slate-800">
-            {filtered.map((client) => (
+            {clients.map((client) => (
               <div
                 key={client.id}
                 onClick={() => router.push(`/admin-gym/clientes/${client.id}`)}
@@ -402,19 +422,44 @@ export default function ClientesPage() {
               </div>
             ))}
           </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between gap-4 px-6 py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20">
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page <= 1 || isLoading}
+                className="inline-flex items-center gap-1.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Anterior
+              </button>
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                Página {page} de {totalPages}
+              </span>
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page >= totalPages || isLoading}
+                className="inline-flex items-center gap-1.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                Siguiente
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          )}
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center py-20 text-center rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
           <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-800 mb-4">
             <Users className="h-8 w-8 text-slate-300 dark:text-slate-700" />
           </div>
-          {searchQuery ? (
+          {debouncedSearch ? (
             <>
               <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">
                 Sin resultados
               </h3>
               <p className="text-slate-500 max-w-sm">
-                No se encontraron clientes que coincidan con &quot;{searchQuery}&quot;.
+                No se encontraron clientes que coincidan con &quot;{debouncedSearch}&quot;.
               </p>
             </>
           ) : (

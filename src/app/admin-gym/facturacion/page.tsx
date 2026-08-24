@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import { Loader2, Receipt, Download, Search, Eye } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Loader2, Receipt, Download, Search, Eye, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   generateInvoicePdf,
@@ -29,22 +29,56 @@ interface Invoice {
   source: "ONLINE" | "CASH" | null;
   date: string;
   invoiceNumber: string | null;
+  paymentMethodId: string | null;
+  paymentMethodName: string | null;
   user: InvoiceClient;
   gym: GymProfile;
 }
+
+interface PaymentMethodOption {
+  id: string;
+  billingName: string;
+  gateway: "STRIPE" | "REDSYS";
+  isActive: boolean;
+}
+
+const PAGE_SIZE = 20;
 
 export default function FacturacionPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethodOption[]>([]);
+  const [paymentMethodFilter, setPaymentMethodFilter] = useState("");
+
+  // Debounce search input before hitting the server
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(t);
+  }, [search]);
 
   useEffect(() => {
     const fetchInvoices = async () => {
+      setIsLoading(true);
       try {
-        const res = await fetch("/api/admin-gym/invoices");
+        const params = new URLSearchParams({
+          page: String(page),
+          pageSize: String(PAGE_SIZE),
+        });
+        if (debouncedSearch) params.set("search", debouncedSearch);
+        if (paymentMethodFilter) params.set("paymentMethodId", paymentMethodFilter);
+        const res = await fetch(`/api/admin-gym/invoices?${params.toString()}`);
         if (res.ok) {
           const data = await res.json();
           setInvoices(data.payments || []);
+          setTotal(data.total ?? 0);
+          if (data.paymentMethods) setPaymentMethods(data.paymentMethods);
         }
       } catch (e) {
         console.error("Error fetching gym invoices:", e);
@@ -53,20 +87,9 @@ export default function FacturacionPage() {
       }
     };
     fetchInvoices();
-  }, []);
+  }, [page, debouncedSearch, paymentMethodFilter]);
 
-  const filteredInvoices = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    if (!term) return invoices;
-    return invoices.filter((inv) => {
-      const fullName = `${inv.user.name} ${inv.user.lastName || ""}`.toLowerCase();
-      return (
-        fullName.includes(term) ||
-        inv.user.email.toLowerCase().includes(term) ||
-        (inv.invoiceNumber || "").toLowerCase().includes(term)
-      );
-    });
-  }, [invoices, search]);
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   const buildInvoiceBlobUrl = async (invoice: Invoice) => {
     const pdfBytes = await generateInvoicePdf(
@@ -112,7 +135,7 @@ export default function FacturacionPage() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading && invoices.length === 0) {
     return (
       <div className="py-24 flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -137,15 +160,33 @@ export default function FacturacionPage() {
               Facturas Emitidas
             </h3>
           </div>
-          <div className="relative w-full sm:w-72">
-            <Search className="h-4 w-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar por cliente, email o nº factura..."
-              className="w-full pl-9 pr-3 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50"
-            />
+          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+            <select
+              value={paymentMethodFilter}
+              onChange={(e) => {
+                setPaymentMethodFilter(e.target.value);
+                setPage(1);
+              }}
+              className="w-full sm:w-56 py-2 px-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
+            >
+              <option value="">Todos los métodos de pago</option>
+              {paymentMethods.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.billingName}
+                  {m.isActive ? " (activo)" : ""}
+                </option>
+              ))}
+            </select>
+            <div className="relative w-full sm:w-72">
+              <Search className="h-4 w-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Buscar por cliente, email o nº factura..."
+                className="w-full pl-9 pr-3 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50"
+              />
+            </div>
           </div>
         </div>
 
@@ -158,13 +199,14 @@ export default function FacturacionPage() {
                 <th className="px-6 py-3.5 text-xs font-bold text-slate-400 uppercase tracking-wider">Cliente</th>
                 <th className="px-6 py-3.5 text-xs font-bold text-slate-400 uppercase tracking-wider">Concepto</th>
                 <th className="px-6 py-3.5 text-xs font-bold text-slate-400 uppercase tracking-wider">Pago</th>
+                <th className="px-6 py-3.5 text-xs font-bold text-slate-400 uppercase tracking-wider">Método de Pago</th>
                 <th className="px-6 py-3.5 text-xs font-bold text-slate-400 uppercase tracking-wider">Total</th>
                 <th className="px-6 py-3.5 text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Factura</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
-              {filteredInvoices.length > 0 ? (
-                filteredInvoices.map((inv) => (
+              {invoices.length > 0 ? (
+                invoices.map((inv) => (
                   <tr key={inv.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
                     <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400 whitespace-nowrap">
                       {new Date(inv.date).toLocaleDateString("es-ES", {
@@ -192,6 +234,9 @@ export default function FacturacionPage() {
                         {inv.source === "CASH" ? "Efectivo" : "Online"}
                       </span>
                     </td>
+                    <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                      {inv.paymentMethodName || "—"}
+                    </td>
                     <td className="px-6 py-4 text-sm font-bold text-slate-950 dark:text-white">
                       {inv.amount.toFixed(2)} €
                     </td>
@@ -217,14 +262,41 @@ export default function FacturacionPage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={7} className="px-6 py-14 text-center text-sm text-slate-405">
-                    No se han registrado facturas todavía.
+                  <td colSpan={8} className="px-6 py-14 text-center text-sm text-slate-405">
+                    {debouncedSearch || paymentMethodFilter
+                      ? "No se encontraron facturas que coincidan con los filtros aplicados."
+                      : "No se han registrado facturas todavía."}
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between gap-4 px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page <= 1 || isLoading}
+              className="inline-flex items-center gap-1.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Anterior
+            </button>
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+              Página {page} de {totalPages}
+            </span>
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page >= totalPages || isLoading}
+              className="inline-flex items-center gap-1.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              Siguiente
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
