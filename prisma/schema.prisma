@@ -78,6 +78,12 @@ model User {
   creditsRemaining      Int?
   creditsNextRechargeAt DateTime?
 
+  // Aforo en vivo: solo relevante en filas de gimnasio (role = GYM). Si el centro no tiene
+  // escáner de salida, occupancyAutoExitMinutes actúa como temporizador de "salida automática"
+  // para dar de baja a un cliente del recuento aunque nunca haga check-out explícito.
+  occupancyTrackingEnabled Boolean @default(false)
+  occupancyAutoExitMinutes Int     @default(90)
+
   @@index([gymId])
 }
 
@@ -414,6 +420,7 @@ model AccessLog {
 
   @@index([gymId])
   @@index([userId])
+  @@index([gymId, userId, createdAt])
 }
 
 model SavedDiet {

@@ -1,17 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { 
-  Loader2, 
-  DollarSign, 
-  Users, 
-  Activity, 
-  TrendingUp, 
-  Clock, 
-  AlertTriangle, 
-  ShieldCheck, 
-  Calendar, 
-  BarChart3 
+import {
+  Loader2,
+  DollarSign,
+  Users,
+  Activity,
+  TrendingUp,
+  Clock,
+  AlertTriangle,
+  ShieldCheck,
+  Calendar,
+  BarChart3,
+  UsersRound
 } from "lucide-react";
 import {
   AreaChart,
@@ -29,6 +30,7 @@ export default function GymStatsPage() {
   const [data, setData] = useState<any>(null);
   const [attendanceData, setAttendanceData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [occupancyData, setOccupancyData] = useState<{ enabled: boolean; count?: number; autoExitMinutes?: number } | null>(null);
 
   useEffect(() => {
     async function fetchAllStats() {
@@ -51,6 +53,22 @@ export default function GymStatsPage() {
       }
     }
     fetchAllStats();
+  }, []);
+
+  useEffect(() => {
+    async function fetchOccupancy() {
+      try {
+        const res = await fetch("/api/admin-gym/stats/occupancy");
+        if (res.ok) {
+          setOccupancyData(await res.json());
+        }
+      } catch (error) {
+        console.error("Error fetching occupancy:", error);
+      }
+    }
+    fetchOccupancy();
+    const interval = setInterval(fetchOccupancy, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   if (isLoading) {
@@ -180,6 +198,29 @@ export default function GymStatsPage() {
             Visitas registradas mediante código QR
           </p>
         </div>
+
+        {/* Aforo Actual */}
+        {occupancyData?.enabled && (
+          <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm relative overflow-hidden group hover:shadow-md transition-all duration-300">
+            <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
+              <UsersRound className="h-16 w-16 text-teal-500" />
+            </div>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-teal-50 dark:bg-teal-950/30 rounded-2xl">
+                <UsersRound className="h-5 w-5 text-teal-600 dark:text-teal-400" />
+              </div>
+              <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-300">
+                Aforo Actual
+              </h3>
+            </div>
+            <div className="text-3xl font-black text-teal-600 dark:text-teal-400">
+              {occupancyData.count}
+            </div>
+            <p className="text-xs text-slate-500 mt-1 font-semibold">
+              Personas dentro del centro ahora mismo
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Main Charts: Revenue vs Weekly attendance */}

@@ -4,11 +4,11 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
   Modal,
   Dimensions,
   ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import { useAppTheme } from '../../context/ThemeContext';
 import { usePreferences } from '../../context/PreferencesContext';
@@ -85,6 +85,7 @@ export default function HomeScreen() {
   const [isQrLoading, setIsQrLoading] = useState(false);
   const [qrTimeLeft, setQrTimeLeft] = useState(QR_LIFETIME_SECONDS);
   const [isZoomed, setIsZoomed] = useState(false);
+  const [occupancy, setOccupancy] = useState<{ enabled: boolean; count?: number } | null>(null);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -102,6 +103,15 @@ export default function HomeScreen() {
       setQrToken(null);
     } finally {
       setIsQrLoading(false);
+    }
+  }
+
+  async function fetchOccupancy() {
+    try {
+      const res = await api.get('/api/user/gym-occupancy');
+      setOccupancy(res);
+    } catch (e) {
+      console.error('Error al consultar el aforo del gimnasio:', e);
     }
   }
 
@@ -136,6 +146,8 @@ export default function HomeScreen() {
       } else {
         setQrToken(null);
       }
+
+      await fetchOccupancy();
     } catch (e) {
       console.error('Error al cargar el dashboard:', e);
     } finally {
@@ -170,6 +182,11 @@ export default function HomeScreen() {
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [qrToken]);
+
+  useEffect(() => {
+    const occInterval = setInterval(fetchOccupancy, 60000);
+    return () => clearInterval(occInterval);
+  }, []);
 
   const weekHours = data ? Math.floor(data.weeklyMinutes / 60) : 0;
   const weekMins = data ? (data.weeklyMinutes % 60) : 0;
@@ -269,6 +286,15 @@ export default function HomeScreen() {
                   </TouchableOpacity>
                 )}
               </View>
+
+              {occupancy?.enabled && (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+                  <View style={{ height: 6, width: 6, borderRadius: 3, backgroundColor: Palette.emerald500 }} />
+                  <Text style={{ fontSize: 11, fontWeight: '500', color: colors.textMuted }}>
+                    ~{occupancy.count} persona{occupancy.count === 1 ? '' : 's'} en el gimnasio ahora
+                  </Text>
+                </View>
+              )}
 
               <View style={{ backgroundColor: colors.surfaceSunken, borderRadius: 16, padding: 16, borderWidth: 1, borderColor: colors.borderLight, alignItems: 'center', justifyContent: 'center', minHeight: 200 }}>
                 {isSubscriptionInactive ? (

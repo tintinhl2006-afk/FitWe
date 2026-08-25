@@ -74,6 +74,7 @@ export default function DashboardPage() {
     setMounted(true);
   }, []);
   const [attendanceStats, setAttendanceStats] = useState<any>(null);
+  const [occupancy, setOccupancy] = useState<{ enabled: boolean; count?: number } | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const zoomedCanvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -170,6 +171,24 @@ export default function DashboardPage() {
   }, [qrToken, isZoomed]);
 
   const GOAL_CALORIES = 2500;
+
+  const fetchOccupancy = async () => {
+    try {
+      const res = await fetch("/api/user/gym-occupancy");
+      if (res.ok) {
+        setOccupancy(await res.json());
+      }
+    } catch (e) {
+      console.error("[Dashboard] Error al consultar el aforo del gimnasio:", e);
+    }
+  };
+
+  useEffect(() => {
+    if (!session?.user) return;
+    fetchOccupancy();
+    const interval = setInterval(fetchOccupancy, 60000);
+    return () => clearInterval(interval);
+  }, [session]);
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -409,6 +428,13 @@ export default function DashboardPage() {
                     </button>
                   )}
                 </div>
+
+                {occupancy?.enabled && (
+                  <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium flex items-center gap-1.5 mb-3">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                    ~{occupancy.count} persona{occupancy.count === 1 ? "" : "s"} en el gimnasio ahora
+                  </p>
+                )}
 
                 <div className="flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950/40 rounded-2xl p-4 border border-slate-100 dark:border-slate-900/40 relative min-h-[200px]">
                   {isSubscriptionInactive ? (

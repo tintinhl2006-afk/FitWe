@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useTheme } from "next-themes";
-import { Loader2, Settings, Globe, Moon, Sun, Laptop, Check, Save } from "lucide-react";
+import { Loader2, Settings, Globe, Moon, Sun, Laptop, Check, Save, Users } from "lucide-react";
 import { SettingsForm } from "@/components/profile/SettingsForm";
 import { cn } from "@/lib/utils";
 
@@ -34,8 +34,8 @@ function saveLangCookie(langCode: string) {
 
 export default function GymSettingsPage() {
   const { data: session, status } = useSession();
-  const [activeTab, setActiveTab] = useState<"general" | "idioma" | "tema">("general");
-  
+  const [activeTab, setActiveTab] = useState<"general" | "idioma" | "tema" | "aforo">("general");
+
   // Theme state
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -45,6 +45,15 @@ export default function GymSettingsPage() {
   const [isLangSaving, setIsLangSaving] = useState(false);
   const [selectedLang, setSelectedLang] = useState("es");
   const [currentLang, setCurrentLang] = useState("es");
+
+  // Occupancy (aforo) state
+  const [isOccLoading, setIsOccLoading] = useState(true);
+  const [isOccSaving, setIsOccSaving] = useState(false);
+  const [occEnabled, setOccEnabled] = useState(false);
+  const [occMinutes, setOccMinutes] = useState(90);
+  const [savedOccEnabled, setSavedOccEnabled] = useState(false);
+  const [savedOccMinutes, setSavedOccMinutes] = useState(90);
+  const [occError, setOccError] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -56,6 +65,62 @@ export default function GymSettingsPage() {
     }
     setIsLangLoading(false);
   }, []);
+
+  useEffect(() => {
+    async function fetchOccupancySettings() {
+      try {
+        const res = await fetch("/api/admin-gym/occupancy-settings");
+        if (res.ok) {
+          const json = await res.json();
+          setOccEnabled(json.occupancyTrackingEnabled);
+          setOccMinutes(json.occupancyAutoExitMinutes);
+          setSavedOccEnabled(json.occupancyTrackingEnabled);
+          setSavedOccMinutes(json.occupancyAutoExitMinutes);
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setIsOccLoading(false);
+      }
+    }
+    fetchOccupancySettings();
+  }, []);
+
+  const isOccMinutesValid = Number.isInteger(occMinutes) && occMinutes >= 5 && occMinutes <= 1440;
+  const isOccUnchanged = occEnabled === savedOccEnabled && occMinutes === savedOccMinutes;
+
+  const handleOccSave = async () => {
+    if (occEnabled && !isOccMinutesValid) {
+      setOccError("El tiempo debe estar entre 5 y 1440 minutos.");
+      return;
+    }
+    setOccError(null);
+    setIsOccSaving(true);
+    try {
+      const res = await fetch("/api/admin-gym/occupancy-settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          occupancyTrackingEnabled: occEnabled,
+          occupancyAutoExitMinutes: occMinutes,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setOccError(json.message || "Error al guardar la configuración de aforo.");
+        return;
+      }
+      setOccEnabled(json.occupancyTrackingEnabled);
+      setOccMinutes(json.occupancyAutoExitMinutes);
+      setSavedOccEnabled(json.occupancyTrackingEnabled);
+      setSavedOccMinutes(json.occupancyAutoExitMinutes);
+    } catch (e) {
+      console.error(e);
+      setOccError("Error al guardar la configuración de aforo.");
+    } finally {
+      setIsOccSaving(false);
+    }
+  };
 
   const handleLangSave = async () => {
     setIsLangSaving(true);
@@ -144,6 +209,17 @@ export default function GymSettingsPage() {
           )}
         >
           Tema
+        </button>
+        <button
+          onClick={() => setActiveTab("aforo")}
+          className={cn(
+            "px-6 py-3 text-sm font-semibold transition-all border-b-2",
+            activeTab === "aforo"
+              ? "border-primary text-primary dark:text-cyan-400"
+              : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+          )}
+        >
+          Aforo
         </button>
       </div>
 
@@ -281,6 +357,101 @@ export default function GymSettingsPage() {
                 <span className="font-bold text-slate-900 dark:text-white text-sm">Sistema</span>
               </button>
             </div>
+          </div>
+        )}
+
+        {/* Tab 4: Occupancy (Aforo) Settings */}
+        {activeTab === "aforo" && (
+          <div>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Aforo en Vivo</h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+              Activa un conteo aproximado de clientes que están dentro de tu centro ahora mismo, visible tanto para el
+              personal como para los propios clientes en su panel.
+            </p>
+
+            {isOccLoading ? (
+              <div className="py-8 flex justify-center">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-between gap-4 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-cyan-50 dark:bg-cyan-950/30 shrink-0">
+                      <Users className="h-5 w-5 text-primary dark:text-cyan-400" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-semibold text-slate-900 dark:text-white text-sm">
+                        Activar conteo de aforo en vivo
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                        Muestra un número aproximado de personas dentro del gimnasio, calculado a partir de los
+                        accesos por QR.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={occEnabled}
+                    onClick={() => setOccEnabled((v) => !v)}
+                    className={cn(
+                      "relative shrink-0 h-7 w-12 rounded-full transition-colors cursor-pointer",
+                      occEnabled ? "bg-primary" : "bg-slate-300 dark:bg-slate-700"
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "absolute top-0.5 h-6 w-6 rounded-full bg-white shadow-sm transition-transform",
+                        occEnabled ? "translate-x-5" : "translate-x-0.5"
+                      )}
+                    />
+                  </button>
+                </div>
+
+                {occEnabled && (
+                  <div className="mt-4 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                    <label htmlFor="occ-minutes" className="font-semibold text-slate-900 dark:text-white text-sm">
+                      Cerrar sesión automáticamente tras (minutos)
+                    </label>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 mb-3">
+                      Si un cliente entra pero nunca escanea su salida, se le contará como fuera del gimnasio
+                      automáticamente pasado este tiempo. Es una red de seguridad para evitar aforos incorrectos, y el
+                      único mecanismo de salida en centros que solo tienen escáner de entrada.
+                    </p>
+                    <input
+                      id="occ-minutes"
+                      type="number"
+                      min={5}
+                      max={1440}
+                      value={occMinutes}
+                      onChange={(e) => setOccMinutes(Number(e.target.value))}
+                      className="w-32 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-2.5 px-4 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none transition-all"
+                    />
+                    {!isOccMinutesValid && (
+                      <p className="text-xs text-red-500 mt-2">Debe estar entre 5 y 1440 minutos.</p>
+                    )}
+                  </div>
+                )}
+
+                {occError && (
+                  <p className="text-xs text-red-500 mt-4">{occError}</p>
+                )}
+
+                <div className="pt-6 mt-6 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end">
+                  <button
+                    onClick={handleOccSave}
+                    disabled={isOccSaving || isOccUnchanged || (occEnabled && !isOccMinutesValid)}
+                    className="flex items-center gap-2 bg-primary hover:bg-primary disabled:opacity-50 text-white px-5 py-2.5 rounded-2xl font-bold transition-all active:scale-95 shadow-sm"
+                  >
+                    <span className="flex items-center justify-center w-4 h-4">
+                      {isOccSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                    </span>
+                    <span>Guardar cambios</span>
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         )}
 
