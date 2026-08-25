@@ -393,6 +393,7 @@ export default function GymSettingsPage() {
                   <button
                     type="button"
                     role="switch"
+                    dir="ltr"
                     aria-checked={occEnabled}
                     onClick={() => setOccEnabled((v) => !v)}
                     className={cn(
@@ -402,8 +403,8 @@ export default function GymSettingsPage() {
                   >
                     <span
                       className={cn(
-                        "absolute top-0.5 h-6 w-6 rounded-full bg-white shadow-sm transition-transform",
-                        occEnabled ? "translate-x-5" : "translate-x-0.5"
+                        "absolute left-0.5 top-0.5 h-6 w-6 rounded-full bg-white shadow-sm transition-transform",
+                        occEnabled ? "translate-x-5" : "translate-x-0"
                       )}
                     />
                   </button>

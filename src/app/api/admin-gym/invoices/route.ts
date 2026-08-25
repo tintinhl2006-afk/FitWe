@@ -3,6 +3,15 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+function csvEscape(value: string): string {
+  if (/[",\n]/.test(value)) {
+    return `"${value.replace(/"/g, '""')}"`;
+  }
+  return value;
+}
+
+const MAX_EXPORT_ROWS = 20000;
+
 export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -25,6 +34,9 @@ export async function GET(req: Request) {
     );
     const search = (searchParams.get("search") || "").trim();
     const paymentMethodId = (searchParams.get("paymentMethodId") || "").trim();
+    const dateFrom = (searchParams.get("dateFrom") || "").trim();
+    const dateTo = (searchParams.get("dateTo") || "").trim();
+    const format = (searchParams.get("format") || "").trim();
 
     const andConditions: any[] = [{ user: { gymId } }];
     if (search) {
@@ -40,7 +52,77 @@ export async function GET(req: Request) {
     if (paymentMethodId) {
       andConditions.push({ paymentMethodId });
     }
+    if (dateFrom) {
+      const from = new Date(dateFrom);
+      if (!isNaN(from.getTime())) {
+        from.setHours(0, 0, 0, 0);
+        andConditions.push({ date: { gte: from } });
+      }
+    }
+    if (dateTo) {
+      const to = new Date(dateTo);
+      if (!isNaN(to.getTime())) {
+        to.setHours(23, 59, 59, 999);
+        andConditions.push({ date: { lte: to } });
+      }
+    }
     const where = { AND: andConditions };
+
+    if (format === "csv") {
+      const rows = await prisma.paymentRecord.findMany({
+        where,
+        orderBy: { date: "desc" },
+        take: MAX_EXPORT_ROWS,
+        select: {
+          date: true,
+          invoiceNumber: true,
+          amount: true,
+          vatRate: true,
+          source: true,
+          description: true,
+          user: { select: { name: true, lastName: true, email: true } },
+          paymentMethod: { select: { billingName: true } },
+        },
+      });
+
+      const header = [
+        "Fecha",
+        "Nº Factura",
+        "Cliente",
+        "Email",
+        "Concepto",
+        "Método de Pago",
+        "Forma de Pago",
+        "IVA (%)",
+        "Total (€)",
+      ];
+      const lines = [header.map(csvEscape).join(",")];
+      for (const r of rows) {
+        lines.push(
+          [
+            r.date.toISOString().slice(0, 10),
+            r.invoiceNumber || "",
+            `${r.user.name} ${r.user.lastName || ""}`.trim(),
+            r.user.email,
+            r.description,
+            r.paymentMethod?.billingName || "",
+            r.source === "CASH" ? "Efectivo" : "Online",
+            String(r.vatRate ?? ""),
+            r.amount.toFixed(2),
+          ]
+            .map((v) => csvEscape(String(v)))
+            .join(",")
+        );
+      }
+      const csv = "﻿" + lines.join("\r\n");
+
+      return new NextResponse(csv, {
+        headers: {
+          "Content-Type": "text/csv; charset=utf-8",
+          "Content-Disposition": `attachment; filename="facturas_${new Date().toISOString().slice(0, 10)}.csv"`,
+        },
+      });
+    }
 
     const [gym, total, rawPayments, paymentMethods] = await Promise.all([
       prisma.user.findUnique({

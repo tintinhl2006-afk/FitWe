@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Loader2, Receipt, Download, Search, Eye, ChevronLeft, ChevronRight } from "lucide-react";
+import { Loader2, Receipt, Download, Search, Eye, ChevronLeft, ChevronRight, FileSpreadsheet } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   generateInvoicePdf,
@@ -53,6 +53,9 @@ export default function FacturacionPage() {
   const [total, setTotal] = useState(0);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethodOption[]>([]);
   const [paymentMethodFilter, setPaymentMethodFilter] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [isExporting, setIsExporting] = useState(false);
 
   // Debounce search input before hitting the server
   useEffect(() => {
@@ -73,6 +76,8 @@ export default function FacturacionPage() {
         });
         if (debouncedSearch) params.set("search", debouncedSearch);
         if (paymentMethodFilter) params.set("paymentMethodId", paymentMethodFilter);
+        if (dateFrom) params.set("dateFrom", dateFrom);
+        if (dateTo) params.set("dateTo", dateTo);
         const res = await fetch(`/api/admin-gym/invoices?${params.toString()}`);
         if (res.ok) {
           const data = await res.json();
@@ -87,9 +92,34 @@ export default function FacturacionPage() {
       }
     };
     fetchInvoices();
-  }, [page, debouncedSearch, paymentMethodFilter]);
+  }, [page, debouncedSearch, paymentMethodFilter, dateFrom, dateTo]);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  const handleExportCsv = async () => {
+    setIsExporting(true);
+    try {
+      const params = new URLSearchParams({ format: "csv" });
+      if (debouncedSearch) params.set("search", debouncedSearch);
+      if (paymentMethodFilter) params.set("paymentMethodId", paymentMethodFilter);
+      if (dateFrom) params.set("dateFrom", dateFrom);
+      if (dateTo) params.set("dateTo", dateTo);
+      const res = await fetch(`/api/admin-gym/invoices?${params.toString()}`);
+      if (!res.ok) throw new Error("Export failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `facturas_${new Date().toISOString().slice(0, 10)}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Error exporting invoices to CSV:", err);
+      alert("Error al exportar las facturas");
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const buildInvoiceBlobUrl = async (invoice: Invoice) => {
     const pdfBytes = await generateInvoicePdf(
@@ -153,14 +183,29 @@ export default function FacturacionPage() {
       </div>
 
       <div className="rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden bg-white dark:bg-slate-900 shadow-sm">
-        <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <Receipt className="h-4 w-4 text-primary" />
-            <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-              Facturas Emitidas
-            </h3>
+        <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <Receipt className="h-4 w-4 text-primary" />
+              <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                Facturas Emitidas
+              </h3>
+            </div>
+            <button
+              onClick={handleExportCsv}
+              disabled={isExporting}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3.5 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {isExporting ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <FileSpreadsheet className="h-3.5 w-3.5" />
+              )}
+              Exportar CSV
+            </button>
           </div>
-          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+
+          <div className="flex flex-col sm:flex-row gap-3 w-full">
             <select
               value={paymentMethodFilter}
               onChange={(e) => {
@@ -177,7 +222,30 @@ export default function FacturacionPage() {
                 </option>
               ))}
             </select>
-            <div className="relative w-full sm:w-72">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <input
+                type="date"
+                value={dateFrom}
+                max={dateTo || undefined}
+                onChange={(e) => {
+                  setDateFrom(e.target.value);
+                  setPage(1);
+                }}
+                className="w-full sm:w-40 py-2 px-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
+              />
+              <span className="text-xs text-slate-400 shrink-0">a</span>
+              <input
+                type="date"
+                value={dateTo}
+                min={dateFrom || undefined}
+                onChange={(e) => {
+                  setDateTo(e.target.value);
+                  setPage(1);
+                }}
+                className="w-full sm:w-40 py-2 px-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
+              />
+            </div>
+            <div className="relative w-full sm:flex-1">
               <Search className="h-4 w-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
