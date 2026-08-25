@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert, Modal } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, Search, Plus, BicepsFlexed } from 'lucide-react-native';
+import { ArrowLeft, Search, Plus, BicepsFlexed, ChevronDown, Check, X } from 'lucide-react-native';
 import { useAppTheme } from '../../../context/ThemeContext';
 import { Card, Field, TextField, Chip, EmptyState } from '../../../components/ui';
 import { ExerciseAvatar } from '../../../components/workout/ExerciseAvatar';
@@ -28,6 +29,7 @@ export default function ExerciseLibraryScreen() {
   const [search, setSearch] = useState('');
   const [filterMuscle, setFilterMuscle] = useState('');
   const [filterEquipment, setFilterEquipment] = useState('');
+  const [openFilter, setOpenFilter] = useState<'muscle' | 'equipment' | null>(null);
 
   const [isCreating, setIsCreating] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -131,22 +133,29 @@ export default function ExerciseLibraryScreen() {
           <TextField value={search} onChangeText={setSearch} placeholder="Buscar por nombre..." style={{ flex: 1, backgroundColor: 'transparent', paddingHorizontal: 0 }} />
         </View>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 8 }}>
-          <View style={{ flexDirection: 'row', gap: 6 }}>
-            <Chip label="Todos" active={!filterMuscle} onPress={() => setFilterMuscle('')} />
-            {MUSCLE_GROUPS.map((g) => (
-              <Chip key={g} label={g} active={filterMuscle === g} onPress={() => setFilterMuscle(filterMuscle === g ? '' : g)} />
-            ))}
-          </View>
-        </ScrollView>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
-          <View style={{ flexDirection: 'row', gap: 6 }}>
-            <Chip label="Todos" active={!filterEquipment} onPress={() => setFilterEquipment('')} />
-            {EQUIPMENT_TYPES.map((eq) => (
-              <Chip key={eq} label={eq} active={filterEquipment === eq} onPress={() => setFilterEquipment(filterEquipment === eq ? '' : eq)} />
-            ))}
-          </View>
-        </ScrollView>
+        <View style={{ flexDirection: 'row', gap: 8, marginBottom: 16 }}>
+          <FilterSelectButton label="Grupo Muscular" value={filterMuscle || 'Todos'} colors={colors} onPress={() => setOpenFilter('muscle')} />
+          <FilterSelectButton label="Equipamiento" value={filterEquipment || 'Todos'} colors={colors} onPress={() => setOpenFilter('equipment')} />
+        </View>
+
+        <FilterPickerModal
+          visible={openFilter === 'muscle'}
+          title="Grupo Muscular"
+          options={MUSCLE_GROUPS}
+          value={filterMuscle}
+          onSelect={setFilterMuscle}
+          onClose={() => setOpenFilter(null)}
+          colors={colors}
+        />
+        <FilterPickerModal
+          visible={openFilter === 'equipment'}
+          title="Equipamiento"
+          options={EQUIPMENT_TYPES}
+          value={filterEquipment}
+          onSelect={setFilterEquipment}
+          onClose={() => setOpenFilter(null)}
+          colors={colors}
+        />
 
         {isLoading ? (
           <View style={{ height: 160, alignItems: 'center', justifyContent: 'center' }}>
@@ -184,5 +193,73 @@ export default function ExerciseLibraryScreen() {
         )}
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+function FilterSelectButton({ label, value, colors, onPress }: { label: string; value: string; colors: any; onPress: () => void }) {
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 10 }}
+    >
+      <View style={{ flex: 1 }}>
+        <Text style={{ fontSize: 9, fontWeight: '900', color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</Text>
+        <Text style={{ fontSize: 13, fontWeight: 'bold', color: colors.textPrimary, marginTop: 1 }} numberOfLines={1}>
+          {value}
+        </Text>
+      </View>
+      <ChevronDown size={16} color={colors.textMuted} />
+    </TouchableOpacity>
+  );
+}
+
+function FilterPickerModal({
+  visible,
+  title,
+  options,
+  value,
+  onSelect,
+  onClose,
+  colors,
+}: {
+  visible: boolean;
+  title: string;
+  options: string[];
+  value: string;
+  onSelect: (v: string) => void;
+  onClose: () => void;
+  colors: any;
+}) {
+  return (
+    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+      <View style={{ flex: 1, backgroundColor: 'rgba(2,6,23,0.6)', justifyContent: 'flex-end' }}>
+        <View style={{ backgroundColor: colors.surface, borderTopLeftRadius: 28, borderTopRightRadius: 28, borderWidth: 1, borderColor: colors.border, maxHeight: '70%' }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 18, borderBottomWidth: 1, borderBottomColor: colors.border }}>
+            <Text style={{ fontSize: 15, fontWeight: '900', color: colors.textPrimary }}>{title}</Text>
+            <TouchableOpacity onPress={onClose} style={{ padding: 6, backgroundColor: colors.surfaceAlt, borderRadius: 999 }}>
+              <X size={16} color={colors.textSecondary} />
+            </TouchableOpacity>
+          </View>
+          <ScrollView contentContainerStyle={{ padding: 12, paddingBottom: 24 }}>
+            <PickerRow label="Todos" selected={!value} colors={colors} onPress={() => { onSelect(''); onClose(); }} />
+            {options.map((opt) => (
+              <PickerRow key={opt} label={opt} selected={value === opt} colors={colors} onPress={() => { onSelect(opt); onClose(); }} />
+            ))}
+          </ScrollView>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+function PickerRow({ label, selected, colors, onPress }: { label: string; selected: boolean; colors: any; onPress: () => void }) {
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 14, paddingHorizontal: 10, borderRadius: 12, backgroundColor: selected ? colors.primarySoft : 'transparent' }}
+    >
+      <Text style={{ fontSize: 14, fontWeight: selected ? '900' : '600', color: selected ? colors.primaryAccent : colors.textPrimary }}>{label}</Text>
+      {selected && <Check size={16} color={colors.primaryAccent} />}
+    </TouchableOpacity>
   );
 }

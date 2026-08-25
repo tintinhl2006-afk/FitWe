@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, TextInput, ActivityIndicator, Alert, Modal, PanResponder, Animated } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Alert, Modal, PanResponder, Animated } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -20,6 +21,7 @@ import {
   Download,
 } from 'lucide-react-native';
 import { useAppTheme } from '../../../../context/ThemeContext';
+import { useLiveWorkout } from '../../../../context/LiveWorkoutContext';
 import { Palette } from '../../../../constants/theme';
 import { api } from '../../../../lib/apiClient';
 import { ExerciseAvatar } from '../../../../components/workout/ExerciseAvatar';
@@ -68,6 +70,7 @@ export default function RoutineDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { colors } = useAppTheme();
+  const { startSession } = useLiveWorkout();
 
   const [routine, setRoutine] = useState<Routine | null>(null);
   const [exerciseCatalog, setExerciseCatalog] = useState<Exercise[]>([]);
@@ -359,7 +362,7 @@ export default function RoutineDetailScreen() {
     setIsStarting(true);
     try {
       const session = await api.post('/api/sessions/start', { routineId: routine.id });
-      router.push({ pathname: '/workout/live/[sessionId]', params: { sessionId: session.id } });
+      startSession(session.id);
     } catch {
       Alert.alert('Error', 'No se pudo iniciar el entrenamiento.');
     } finally {

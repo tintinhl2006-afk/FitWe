@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, ActivityIndicator, Alert, Modal } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert, Modal } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { X, Sparkles, ArrowLeft, ArrowRight, Check, Trash2, RefreshCcw, Save } from 'lucide-react-native';
 import { useAppTheme } from '../../../context/ThemeContext';

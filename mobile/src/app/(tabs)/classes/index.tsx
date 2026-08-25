@@ -1,5 +1,6 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, ActivityIndicator } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from 'expo-router';
 import {
   Calendar,
@@ -11,6 +12,8 @@ import {
   AlertCircle,
   Lock,
   User as UserIcon,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react-native';
 import { useAppTheme } from '../../../context/ThemeContext';
 import { Palette } from '../../../constants/theme';
@@ -60,6 +63,22 @@ export default function ClassesScreen() {
   const [toast, setToast] = useState<{ msg: string; type: 'ok' | 'err' } | null>(null);
   const [noGym, setNoGym] = useState(false);
   const [isSubscriptionActive, setIsSubscriptionActive] = useState(false);
+
+  const daysScrollRef = useRef<ScrollView>(null);
+  const daysScrollXRef = useRef(0);
+  const [canScrollDaysLeft, setCanScrollDaysLeft] = useState(false);
+  const DAYS_SCROLL_STEP = 220;
+
+  function handleDaysScroll(e: NativeSyntheticEvent<NativeScrollEvent>) {
+    const x = e.nativeEvent.contentOffset.x;
+    daysScrollXRef.current = x;
+    setCanScrollDaysLeft(x > 5);
+  }
+
+  function scrollDays(direction: 1 | -1) {
+    const nextX = Math.max(0, daysScrollXRef.current + direction * DAYS_SCROLL_STEP);
+    daysScrollRef.current?.scrollTo({ x: nextX, animated: true });
+  }
 
   // Re-check on every focus (not just mount) so renewing the subscription on the
   // payment screen and returning here reflects the new status immediately.
@@ -203,7 +222,23 @@ export default function ClassesScreen() {
                 Selecciona una fecha
               </Text>
             </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              {canScrollDaysLeft && (
+                <TouchableOpacity
+                  onPress={() => scrollDays(-1)}
+                  style={{ height: 32, width: 32, borderRadius: 12, backgroundColor: colors.surfaceAlt, alignItems: 'center', justifyContent: 'center' }}
+                >
+                  <ChevronLeft size={16} color={colors.textPrimary} />
+                </TouchableOpacity>
+              )}
+              <ScrollView
+                ref={daysScrollRef}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                onScroll={handleDaysScroll}
+                scrollEventThrottle={16}
+                style={{ flex: 1 }}
+              >
               <View style={{ flexDirection: 'row', gap: 8 }}>
                 {Array.from({ length: 14 }).map((_, i) => {
                   const d = new Date(now);
@@ -238,7 +273,14 @@ export default function ClassesScreen() {
                   );
                 })}
               </View>
-            </ScrollView>
+              </ScrollView>
+              <TouchableOpacity
+                onPress={() => scrollDays(1)}
+                style={{ height: 32, width: 32, borderRadius: 12, backgroundColor: colors.surfaceAlt, alignItems: 'center', justifyContent: 'center' }}
+              >
+                <ChevronRight size={16} color={colors.textPrimary} />
+              </TouchableOpacity>
+            </View>
           </View>
         )}
 

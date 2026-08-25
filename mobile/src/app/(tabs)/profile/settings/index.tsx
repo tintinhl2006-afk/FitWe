@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, Alert, Share, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert, Share, ActivityIndicator } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { User, Ruler, Lock, Palette as PaletteIcon, Download, LogOut, ChevronRight, Building2, Trash2, CreditCard } from 'lucide-react-native';
 import { useAppTheme } from '../../../../context/ThemeContext';

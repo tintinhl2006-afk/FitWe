@@ -9,7 +9,6 @@ export default function WorkoutStackLayout() {
       <Stack.Screen name="generate" options={{ animation: 'slide_from_bottom' }} />
       <Stack.Screen name="exercises" />
       <Stack.Screen name="exercise/[id]" />
-      <Stack.Screen name="live/[sessionId]" options={{ animation: 'fade' }} />
     </Stack>
   );
 }

@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, TextInput, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Plus, Dumbbell, Trash2, Play, Sparkles, BicepsFlexed, ChevronRight } from 'lucide-react-native';
 import { useAppTheme } from '../../../context/ThemeContext';
+import { useLiveWorkout } from '../../../context/LiveWorkoutContext';
 import { Palette } from '../../../constants/theme';
 import { api } from '../../../lib/apiClient';
 
@@ -16,6 +18,7 @@ interface Routine {
 export default function WorkoutScreen() {
   const { colors } = useAppTheme();
   const router = useRouter();
+  const { startSession } = useLiveWorkout();
 
   const [routines, setRoutines] = useState<Routine[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -93,7 +96,7 @@ export default function WorkoutScreen() {
     setStartingId(routine.id);
     try {
       const session = await api.post('/api/sessions/start', { routineId: routine.id });
-      router.push({ pathname: '/workout/live/[sessionId]', params: { sessionId: session.id } });
+      startSession(session.id);
     } catch (e) {
       Alert.alert('Error', e instanceof Error ? e.message : 'No se pudo iniciar el entrenamiento.');
     } finally {

@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, SafeAreaView, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Sun, Moon, Smartphone } from 'lucide-react-native';
 import { useAppTheme } from '../../../../context/ThemeContext';
 import { SettingsHeader } from '../../../../components/SettingsHeader';
