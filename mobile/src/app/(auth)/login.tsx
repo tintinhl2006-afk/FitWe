@@ -8,10 +8,11 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
-import { Sparkles, Lock, Mail, AlertCircle, ArrowRight } from 'lucide-react-native';
+import { Lock, Mail, AlertCircle, ArrowRight } from 'lucide-react-native';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -57,24 +58,11 @@ export default function LoginScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={{ alignItems: 'center', marginBottom: 40 }}>
-          <View
-            style={{
-              width: 64,
-              height: 64,
-              borderRadius: 20,
-              backgroundColor: '#06b6d4',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginBottom: 16,
-              shadowColor: '#06b6d4',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.3,
-              shadowRadius: 8,
-              elevation: 6,
-            }}
-          >
-            <Sparkles size={32} color="#ffffff" />
-          </View>
+          <Image
+            source={require('../../../assets/images/fitwe-icon.png')}
+            resizeMode="contain"
+            style={{ width: 88, height: 88, marginBottom: 16 }}
+          />
           <Text style={{ fontSize: 28, fontWeight: 'bold', color: '#ffffff', textAlign: 'center' }}>
             FitWe
           </Text>
