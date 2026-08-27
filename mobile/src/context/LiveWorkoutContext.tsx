@@ -16,6 +16,15 @@ interface LiveWorkoutContextType {
   expand: () => void;
   /** Clears the active session (after it's saved or discarded server-side). */
   endSession: () => void;
+  // Client-only overlay state lifted up here (instead of local state inside
+  // LiveWorkoutOverlay) so it survives the overlay's Modal being unmounted while
+  // minimized — RN's Modal doesn't keep its children mounted when `visible` is false.
+  exerciseOrder: string[] | null;
+  setExerciseOrder: React.Dispatch<React.SetStateAction<string[] | null>>;
+  restDurations: Record<string, number>;
+  setRestDurations: React.Dispatch<React.SetStateAction<Record<string, number>>>;
+  weightUnitOverrides: Record<string, 'kg' | 'lbs'>;
+  setWeightUnitOverrides: React.Dispatch<React.SetStateAction<Record<string, 'kg' | 'lbs'>>>;
 }
 
 const LiveWorkoutContext = createContext<LiveWorkoutContextType | undefined>(undefined);
@@ -24,6 +33,9 @@ export function LiveWorkoutProvider({ children }: { children: React.ReactNode })
   const { user } = useAuth();
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [isMinimized, setIsMinimized] = useState(false);
+  const [exerciseOrder, setExerciseOrder] = useState<string[] | null>(null);
+  const [restDurations, setRestDurations] = useState<Record<string, number>>({});
+  const [weightUnitOverrides, setWeightUnitOverrides] = useState<Record<string, 'kg' | 'lbs'>>({});
 
   // On login (or app relaunch while already logged in), check for a workout session
   // that was left running — e.g. the app was closed or crashed mid-workout — and
@@ -53,6 +65,9 @@ export function LiveWorkoutProvider({ children }: { children: React.ReactNode })
   function startSession(sessionId: string) {
     setActiveSessionId(sessionId);
     setIsMinimized(false);
+    setExerciseOrder(null);
+    setRestDurations({});
+    setWeightUnitOverrides({});
     SecureStore.setItemAsync(ACTIVE_SESSION_KEY, sessionId).catch(() => {});
   }
 
@@ -67,11 +82,29 @@ export function LiveWorkoutProvider({ children }: { children: React.ReactNode })
   function endSession() {
     setActiveSessionId(null);
     setIsMinimized(false);
+    setExerciseOrder(null);
+    setRestDurations({});
+    setWeightUnitOverrides({});
     SecureStore.deleteItemAsync(ACTIVE_SESSION_KEY).catch(() => {});
   }
 
   return (
-    <LiveWorkoutContext.Provider value={{ activeSessionId, isMinimized, startSession, minimize, expand, endSession }}>
+    <LiveWorkoutContext.Provider
+      value={{
+        activeSessionId,
+        isMinimized,
+        startSession,
+        minimize,
+        expand,
+        endSession,
+        exerciseOrder,
+        setExerciseOrder,
+        restDurations,
+        setRestDurations,
+        weightUnitOverrides,
+        setWeightUnitOverrides,
+      }}
+    >
       {children}
     </LiveWorkoutContext.Provider>
   );

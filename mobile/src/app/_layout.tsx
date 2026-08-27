@@ -34,11 +34,16 @@ function ThemedStack() {
 // switching tabs, and its minimized pill floats above every screen — not just the
 // Workout tab's own stack, which is what a route-based live-session screen would give us.
 function GlobalLiveWorkout() {
-  const { activeSessionId, isMinimized } = useLiveWorkout();
+  const { activeSessionId, isMinimized, minimize } = useLiveWorkout();
 
   return (
     <>
-      <Modal visible={!!activeSessionId && !isMinimized} animationType="slide" presentationStyle="fullScreen">
+      <Modal
+        visible={!!activeSessionId && !isMinimized}
+        animationType="slide"
+        presentationStyle="fullScreen"
+        onRequestClose={minimize}
+      >
         {activeSessionId && <LiveWorkoutOverlay sessionId={activeSessionId} />}
       </Modal>
       <MiniWorkoutBar />

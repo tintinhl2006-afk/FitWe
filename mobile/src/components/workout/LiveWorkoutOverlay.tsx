@@ -104,7 +104,16 @@ function roundWeight(value: number): number {
 export default function LiveWorkoutOverlay({ sessionId }: { sessionId: string }) {
   const { colors, theme } = useAppTheme();
   const { weightUnit, distanceUnit } = usePreferences();
-  const { minimize, endSession } = useLiveWorkout();
+  const {
+    minimize,
+    endSession,
+    exerciseOrder,
+    setExerciseOrder,
+    restDurations,
+    setRestDurations,
+    weightUnitOverrides,
+    setWeightUnitOverrides,
+  } = useLiveWorkout();
 
   const [session, setSession] = useState<WorkoutSession | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -125,20 +134,15 @@ export default function LiveWorkoutOverlay({ sessionId }: { sessionId: string })
   const [isSyncingRoutine, setIsSyncingRoutine] = useState(false);
 
   const [menuForExerciseId, setMenuForExerciseId] = useState<string | null>(null);
-  const [exerciseOrder, setExerciseOrder] = useState<string[] | null>(null);
   const [isReordering, setIsReordering] = useState(false);
   const [reorderDraft, setReorderDraft] = useState<string[]>([]);
   const [replaceTargetExerciseId, setReplaceTargetExerciseId] = useState<string | null>(null);
   const [isReplacingExercise, setIsReplacingExercise] = useState(false);
   const [removingExerciseId, setRemovingExerciseId] = useState<string | null>(null);
 
-  // Per-exercise rest duration (seconds; 0 = off), kept client-side only for this session.
-  const [restDurations, setRestDurations] = useState<Record<string, number>>({});
+  // exerciseOrder/restDurations/weightUnitOverrides live in LiveWorkoutContext (not local
+  // state) so they survive the overlay's Modal unmounting while minimized.
   const [restSecondsLeft, setRestSecondsLeft] = useState<number | null>(null);
-
-  // Per-exercise display-only weight unit override (kg/lbs). Absent = follow the
-  // account's global weightUnit preference. Client-side only, reset each session.
-  const [weightUnitOverrides, setWeightUnitOverrides] = useState<Record<string, 'kg' | 'lbs'>>({});
   const [unitPickerExerciseId, setUnitPickerExerciseId] = useState<string | null>(null);
 
   async function fetchSession() {
@@ -276,6 +280,18 @@ export default function LiveWorkoutOverlay({ sessionId }: { sessionId: string })
           : prev
       );
       setExerciseOrder((prev) => (prev ? prev.map((id) => (id === oldExerciseId ? newExercise.id : id)) : prev));
+      // Carry the rest timer / display-unit override over to the new exercise id — otherwise
+      // they'd silently reset since both maps are keyed by exercise id.
+      setRestDurations((prev) => {
+        if (!(oldExerciseId in prev)) return prev;
+        const { [oldExerciseId]: value, ...rest } = prev;
+        return { ...rest, [newExercise.id]: value };
+      });
+      setWeightUnitOverrides((prev) => {
+        if (!(oldExerciseId in prev)) return prev;
+        const { [oldExerciseId]: value, ...rest } = prev;
+        return { ...rest, [newExercise.id]: value };
+      });
       setIsPickerOpen(false);
       setReplaceTargetExerciseId(null);
     } catch (e) {
@@ -369,9 +385,16 @@ export default function LiveWorkoutOverlay({ sessionId }: { sessionId: string })
       if (!re) newExerciseIds.push(exerciseId);
       else if (count > re.sets) increasedSetExerciseIds.push(exerciseId);
     });
+    // An exercise the routine originally specified but that no longer has any sets in this
+    // session (replaced or removed mid-workout) — otherwise "Actualizar Rutina" only ever
+    // adds, leaving the replaced/removed exercise stranded in the routine.
+    const removedExerciseIds: string[] = [];
+    routineSetCounts.forEach((re, exerciseId) => {
+      if (!sessionSetCounts.has(exerciseId)) removedExerciseIds.push(exerciseId);
+    });
 
-    if (newExerciseIds.length === 0 && increasedSetExerciseIds.length === 0) return null;
-    return { newExerciseIds, increasedSetExerciseIds, sessionSetCounts, routineSetCounts };
+    if (newExerciseIds.length === 0 && increasedSetExerciseIds.length === 0 && removedExerciseIds.length === 0) return null;
+    return { newExerciseIds, increasedSetExerciseIds, removedExerciseIds, sessionSetCounts, routineSetCounts };
   }
 
   async function syncRoutineWithSession() {
@@ -383,6 +406,10 @@ export default function LiveWorkoutOverlay({ sessionId }: { sessionId: string })
         const re = diff.routineSetCounts.get(exerciseId)!;
         const newCount = diff.sessionSetCounts.get(exerciseId)!;
         await api.patch(`/api/routines/${session.routineId}/exercises/${re.id}`, { sets: newCount });
+      }
+      for (const exerciseId of diff.removedExerciseIds) {
+        const re = diff.routineSetCounts.get(exerciseId)!;
+        await api.delete(`/api/routines/${session.routineId}/exercises/${re.id}`);
       }
       for (const exerciseId of diff.newExerciseIds) {
         const setsForExercise = session.workoutSets.filter((s) => s.exercise.id === exerciseId);
@@ -475,6 +502,9 @@ export default function LiveWorkoutOverlay({ sessionId }: { sessionId: string })
   const recordsBroken: { exerciseName: string; type: string; value: number }[] = [];
   const seen = new Set<string>();
   completedSets.forEach((set) => {
+    // Cardio sets store distance in `weight`, not a real weight — skip them here too,
+    // same as the volume figure above and SetRow's own `isRecord` check.
+    if (set.exercise.muscleGroup.toLowerCase() === 'cardio') return;
     const record = session.exerciseAllTimeRecordsMap?.[set.exercise.id];
     if (!record) return;
     const volume = set.weight * set.reps;
@@ -911,7 +941,7 @@ export default function LiveWorkoutOverlay({ sessionId }: { sessionId: string })
           <View style={{ width: '100%', maxWidth: 380, backgroundColor: '#0f172a', borderWidth: 1, borderColor: 'rgba(51,65,85,0.5)', borderRadius: 24, padding: 22 }}>
             <Text style={{ color: '#fff', fontSize: 15, fontWeight: '900', textAlign: 'center' }}>¿Actualizar tu rutina?</Text>
             <Text style={{ color: '#94a3b8', fontSize: 12, textAlign: 'center', marginTop: 8, lineHeight: 18 }}>
-              Has añadido series o ejercicios nuevos respecto a &quot;{session.routine?.name}&quot;. ¿Quieres guardar estos cambios en la rutina para tus próximos entrenamientos, o dejarla como estaba?
+              Has cambiado series o ejercicios respecto a &quot;{session.routine?.name}&quot;. ¿Quieres guardar estos cambios en la rutina para tus próximos entrenamientos, o dejarla como estaba?
             </Text>
             <View style={{ gap: 10, marginTop: 20 }}>
               <TouchableOpacity
