@@ -18,6 +18,7 @@ export async function GET(req: Request) {
       select: {
         subscriptionStatus: true,
         subscriptionEndDate: true,
+        emailVerified: true,
       },
     });
 
@@ -30,6 +31,7 @@ export async function GET(req: Request) {
     return NextResponse.json({
       subscriptionStatus: user.subscriptionStatus,
       subscriptionEndDate: user.subscriptionEndDate?.toISOString() || null,
+      emailVerified: user.emailVerified,
       serverNow: serverNow.toISOString(),
     });
   } catch (error) {

@@ -33,6 +33,8 @@ import {
   ArrowRight,
   CalendarDays,
   Activity,
+  MailWarning,
+  CheckCircle,
 } from 'lucide-react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { api } from '../../lib/apiClient';
@@ -86,6 +88,9 @@ export default function HomeScreen() {
   const [qrTimeLeft, setQrTimeLeft] = useState(QR_LIFETIME_SECONDS);
   const [isZoomed, setIsZoomed] = useState(false);
   const [occupancy, setOccupancy] = useState<{ enabled: boolean; count?: number } | null>(null);
+  const [emailVerified, setEmailVerified] = useState(true);
+  const [isResendingVerification, setIsResendingVerification] = useState(false);
+  const [verificationResent, setVerificationResent] = useState(false);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -115,12 +120,26 @@ export default function HomeScreen() {
     }
   }
 
+  async function handleResendVerification() {
+    setIsResendingVerification(true);
+    try {
+      await api.post('/api/auth/resend-verification');
+      setVerificationResent(true);
+      setTimeout(() => setVerificationResent(false), 4000);
+    } catch (e) {
+      console.error('Error al reenviar el email de verificación:', e);
+    } finally {
+      setIsResendingVerification(false);
+    }
+  }
+
   async function fetchAll() {
     try {
       const sub = await api.get('/api/user/subscription-status');
       setSubscriptionStatus(sub.subscriptionStatus);
       setSubscriptionEndDate(sub.subscriptionEndDate);
       setServerNow(sub.serverNow);
+      setEmailVerified(sub.emailVerified !== false);
 
       const isExpiredNow = sub.subscriptionEndDate ? new Date(sub.subscriptionEndDate) < new Date(sub.serverNow) : false;
       const isInactiveNow = sub.subscriptionStatus !== 'ACTIVE' || isExpiredNow;
@@ -250,6 +269,45 @@ export default function HomeScreen() {
             </View>
           )}
         </View>
+
+        {!isLoading && !emailVerified && (
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 10,
+              borderRadius: 18,
+              padding: 14,
+              borderWidth: 1,
+              borderColor: theme === 'dark' ? 'rgba(245,158,11,0.3)' : Palette.amber400,
+              backgroundColor: theme === 'dark' ? 'rgba(245,158,11,0.12)' : Palette.amber50,
+              marginBottom: 20,
+            }}
+          >
+            <MailWarning size={18} color={Palette.amber500} />
+            <Text style={{ flex: 1, fontSize: 12, fontWeight: '600', color: colors.textPrimary }}>
+              Aún no has verificado tu email.
+            </Text>
+            {verificationResent ? (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                <CheckCircle size={14} color={Palette.emerald500} />
+                <Text style={{ fontSize: 11, fontWeight: 'bold', color: Palette.emerald500 }}>Email reenviado</Text>
+              </View>
+            ) : (
+              <TouchableOpacity
+                onPress={handleResendVerification}
+                disabled={isResendingVerification}
+                style={{ backgroundColor: Palette.amber500, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999 }}
+              >
+                {isResendingVerification ? (
+                  <ActivityIndicator color="#fff" size="small" />
+                ) : (
+                  <Text style={{ color: '#fff', fontSize: 11, fontWeight: 'bold' }}>Reenviar email</Text>
+                )}
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
 
         {isLoading ? (
           <View style={{ height: 220, alignItems: 'center', justifyContent: 'center' }}>

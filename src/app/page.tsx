@@ -53,15 +53,15 @@ export default function LandingPage() {
 
         {/* CTA Buttons */}
         <div className="mt-10 flex flex-col sm:flex-row items-center gap-4 animate-fade-in-up animation-delay-300">
-          <Link
-            href="/registro-gimnasio"
+          <a
+            href="mailto:tudesarrollodigital@gmail.com?subject=Quiero%20una%20demo%20de%20FitWe"
             id="cta-gym"
             className="group inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-8 py-4 text-base font-semibold text-white backdrop-blur-sm hover:bg-white/10 hover:border-white/20 hover:scale-[1.03] active:scale-[0.98] transition-all"
           >
             <Building2 className="h-5 w-5 text-cyan-400" />
-            Registrar mi Gimnasio
+            Solicitar Demo para mi Gimnasio
             <ChevronRight className="h-4 w-4 text-slate-500 transition-transform group-hover:translate-x-1 group-hover:text-white" />
-          </Link>
+          </a>
         </div>
 
         {/* Native CSS Dashboard Mockup */}
@@ -328,13 +328,13 @@ export default function LandingPage() {
             <p className="text-lg text-cyan-100/80 max-w-2xl mx-auto mb-10">
               Únete a la red de centros deportivos de élite que confían en FitWe para digitalizar, fidelizar y potenciar su negocio.
             </p>
-            <Link
-              href="/registro-gimnasio"
+            <a
+              href="mailto:tudesarrollodigital@gmail.com?subject=Quiero%20una%20demo%20de%20FitWe"
               className="inline-flex items-center gap-2 rounded-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 px-8 py-4 text-lg font-bold transition-all hover:scale-105 active:scale-95 shadow-lg shadow-cyan-500/25"
             >
               <Building2 className="h-5 w-5" />
-              Registrar mi Centro Deportivo ahora
-            </Link>
+              Solicitar Demo para mi Centro Deportivo
+            </a>
           </div>
         </div>
       </section>

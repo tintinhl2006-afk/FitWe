@@ -158,6 +158,14 @@ export default function LoginScreen() {
                 style={{ flex: 1, color: '#ffffff', fontSize: 15 }}
               />
             </View>
+            <TouchableOpacity
+              onPress={() => router.push('/(auth)/forgot-password')}
+              style={{ alignSelf: 'flex-end', marginTop: 10 }}
+            >
+              <Text style={{ color: '#06b6d4', fontSize: 13, fontWeight: '600' }}>
+                ¿Olvidaste tu contraseña?
+              </Text>
+            </TouchableOpacity>
           </View>
 
           <TouchableOpacity

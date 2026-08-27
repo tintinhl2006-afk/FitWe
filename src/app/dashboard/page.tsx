@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { Activity, Apple, Building2, Dumbbell, Loader2, ArrowRight, Flame, CalendarDays, Clock, TrendingUp, Zap, Trophy, ChevronRight, Calendar, QrCode, RefreshCw, X, Maximize2, Lock } from "lucide-react";
+import { Activity, Apple, Building2, Dumbbell, Loader2, ArrowRight, Flame, CalendarDays, Clock, TrendingUp, Zap, Trophy, ChevronRight, Calendar, QrCode, RefreshCw, X, Maximize2, Lock, MailWarning, Check } from "lucide-react";
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { cn } from "@/lib/utils";
 import { SubscriptionBanner } from "@/components/shared/SubscriptionBanner";
@@ -62,6 +62,9 @@ export default function DashboardPage() {
   const [liveStatus, setLiveStatus] = useState<string | null>(null);
   const [liveEndDate, setLiveEndDate] = useState<string | null>(null);
   const [serverNow, setServerNow] = useState<string | null>(null);
+  const [emailVerified, setEmailVerified] = useState<boolean | null>(null);
+  const [isResendingVerification, setIsResendingVerification] = useState(false);
+  const [verificationResent, setVerificationResent] = useState(false);
 
   const finalStatus = liveStatus || session?.user?.subscriptionStatus || "INACTIVE";
   const finalEndDate = liveEndDate !== null ? liveEndDate : session?.user?.subscriptionEndDate;
@@ -205,6 +208,7 @@ export default function DashboardPage() {
             setLiveStatus(subData.subscriptionStatus);
             setLiveEndDate(subData.subscriptionEndDate);
             setServerNow(subData.serverNow);
+            setEmailVerified(subData.emailVerified);
 
             currentStatus = subData.subscriptionStatus;
             currentEndDate = subData.subscriptionEndDate;
@@ -278,6 +282,18 @@ export default function DashboardPage() {
   const weekHours = data ? Math.floor(data.weeklyMinutes / 60) : 0;
   const weekMins = data ? data.weeklyMinutes % 60 : 0;
 
+  const handleResendVerification = async () => {
+    setIsResendingVerification(true);
+    try {
+      const res = await fetch("/api/auth/resend-verification", { method: "POST" });
+      if (res.ok) setVerificationResent(true);
+    } catch (e) {
+      console.error("Error resending verification email:", e);
+    } finally {
+      setIsResendingVerification(false);
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-8">
@@ -345,6 +361,28 @@ export default function DashboardPage() {
         </div>
 
         <SubscriptionBanner />
+
+        {emailVerified === false && (
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 rounded-2xl border border-amber-200 dark:border-amber-900/40 bg-amber-50 dark:bg-amber-950/20 px-5 py-3.5 animate-in fade-in duration-300">
+            <MailWarning className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
+            <p className="text-sm text-amber-800 dark:text-amber-300 flex-1">
+              Aún no has verificado tu email. Revisa tu bandeja de entrada para confirmarlo.
+            </p>
+            {verificationResent ? (
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 shrink-0">
+                <Check className="h-3.5 w-3.5" /> Email reenviado
+              </span>
+            ) : (
+              <button
+                onClick={handleResendVerification}
+                disabled={isResendingVerification}
+                className="shrink-0 text-xs font-bold text-amber-700 dark:text-amber-300 hover:underline disabled:opacity-50 cursor-pointer"
+              >
+                {isResendingVerification ? "Enviando..." : "Reenviar email"}
+              </button>
+            )}
+          </div>
+        )}
 
         {isLoading ? (
           <div className="flex h-64 items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-slate-400" /></div>

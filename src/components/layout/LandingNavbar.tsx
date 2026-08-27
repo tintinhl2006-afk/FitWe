@@ -56,12 +56,12 @@ export function LandingNavbar() {
                 >
                   Iniciar Sesión
                 </Link>
-                <Link
-                  href="/registro-gimnasio"
+                <a
+                  href="mailto:tudesarrollodigital@gmail.com?subject=Quiero%20una%20demo%20de%20FitWe"
                   className="inline-flex items-center gap-2 rounded-3xl bg-gradient-to-r from-cyan-500 to-cyan-600 px-5 py-2.5 text-sm font-semibold text-white shadow-soft shadow-cyan-500/25 hover:shadow-cyan-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all"
                 >
-                  Registrarse
-                </Link>
+                  Solicitar Demo
+                </a>
               </>
             )}
           </div>
@@ -100,12 +100,12 @@ export function LandingNavbar() {
               >
                 Iniciar Sesión
               </Link>
-              <Link
-                href="/registro-gimnasio"
+              <a
+                href="mailto:tudesarrollodigital@gmail.com?subject=Quiero%20una%20demo%20de%20FitWe"
                 className="block w-full text-center rounded-3xl bg-gradient-to-r from-cyan-500 to-cyan-600 px-5 py-2.5 text-sm font-semibold text-white shadow-soft"
               >
-                Registrarse
-              </Link>
+                Solicitar Demo
+              </a>
             </>
           )}
         </div>

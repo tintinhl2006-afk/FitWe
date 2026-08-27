@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import { z } from "zod";
+import { sendVerificationEmail, getAppBaseUrl } from "@/lib/email";
 
 const registerClientSchema = z.object({
   name: z.string().min(1, "El nombre es obligatorio."),
@@ -55,7 +57,11 @@ export async function POST(req: Request) {
     // 3. Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 4. Create user linked to gym
+    // 4. Generate an email verification token up front so it can be stored with the user
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+    const verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 horas
+
+    // 5. Create user linked to gym
     const newUser = await prisma.user.create({
       data: {
         name: name.trim(),
@@ -65,6 +71,8 @@ export async function POST(req: Request) {
         gymId: gym.id,
         subscriptionStatus: "INACTIVE", // Needs subscription plan selection / payment
         mustChangePassword: false,      // User chose their own password
+        verificationToken,
+        verificationTokenExpiry,
       },
       select: {
         id: true,
@@ -72,6 +80,14 @@ export async function POST(req: Request) {
         email: true,
       },
     });
+
+    // Best-effort: a failed verification email must not block account creation.
+    try {
+      const verifyLink = `${getAppBaseUrl(req)}/verify-email?token=${verificationToken}`;
+      await sendVerificationEmail(newUser.email, newUser.name, verifyLink);
+    } catch (emailError) {
+      console.error("Error sending verification email:", emailError);
+    }
 
     return NextResponse.json(
       { user: newUser, message: "Usuario registrado con éxito" },

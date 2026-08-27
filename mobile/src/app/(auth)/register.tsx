@@ -11,12 +11,13 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
-import { User, Lock, Mail, AlertCircle, ArrowRight, ArrowLeft } from 'lucide-react-native';
+import { User, Lock, Mail, AlertCircle, ArrowRight, ArrowLeft, KeyRound } from 'lucide-react-native';
 
 export default function RegisterScreen() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [gymCode, setGymCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -30,7 +31,7 @@ export default function RegisterScreen() {
   }, [user]);
 
   async function handleRegister() {
-    if (!name || !email || !password) {
+    if (!name || !email || !password || !gymCode) {
       setError('Por favor, rellena todos los campos.');
       return;
     }
@@ -40,11 +41,16 @@ export default function RegisterScreen() {
       return;
     }
 
+    if (gymCode.trim().length !== 6) {
+      setError('El código de gimnasio debe tener exactamente 6 caracteres.');
+      return;
+    }
+
     setError(null);
     setSubmitting(true);
 
     try {
-      await register({ name, email, password });
+      await register({ name, email, password, gymCode: gymCode.trim().toUpperCase() });
       router.replace('/(tabs)');
     } catch (err: any) {
       setError(err.message || 'Error al completar el registro');
@@ -181,6 +187,38 @@ export default function RegisterScreen() {
                 style={{ flex: 1, color: '#ffffff', fontSize: 15 }}
               />
             </View>
+          </View>
+
+          <View>
+            <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 8, letterSpacing: 0.5 }}>
+              Código de Gimnasio
+            </Text>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                backgroundColor: '#1e293b',
+                borderColor: '#334155',
+                borderWidth: 1,
+                borderRadius: 16,
+                paddingHorizontal: 16,
+                height: 52,
+              }}
+            >
+              <KeyRound size={20} color="#64748b" style={{ marginRight: 12 }} />
+              <TextInput
+                value={gymCode}
+                onChangeText={(v) => setGymCode(v.toUpperCase())}
+                placeholder="Ej. AB12CD"
+                placeholderTextColor="#64748b"
+                autoCapitalize="characters"
+                maxLength={6}
+                style={{ flex: 1, color: '#ffffff', fontSize: 15 }}
+              />
+            </View>
+            <Text style={{ fontSize: 12, color: '#64748b', marginTop: 6 }}>
+              Te lo facilita tu gimnasio al darte de alta.
+            </Text>
           </View>
 
           <TouchableOpacity

@@ -72,6 +72,12 @@ model User {
   mustChangePassword    Boolean             @default(true)
   resetToken            String?
   resetTokenExpiry      DateTime?
+  // Verificación de email al registrarse. Los usuarios ya existentes antes de esta
+  // funcionalidad quedan sin verificar (false) pero NO se bloquea su acceso — es solo
+  // un recordatorio no bloqueante, para no dejar fuera a nadie ya registrado.
+  emailVerified            Boolean   @default(false)
+  verificationToken        String?
+  verificationTokenExpiry  DateTime?
   gymCode               String?             @unique
   sessionVersion        Int                 @default(0)
   paymentMethods        GymPaymentMethod[]  @relation("GymPaymentMethods")

@@ -143,10 +143,13 @@ export default function LoginPage() {
             </Link>
           </div>
           <div>
-            <span className="text-slate-600 dark:text-slate-400">¿Eres un gimnasio y no tienes cuenta? </span>
-            <Link href="/registro-gimnasio" className="font-medium text-primary dark:text-cyan-400 hover:underline">
-              Registra tu centro aquí
-            </Link>
+            <span className="text-slate-600 dark:text-slate-400">¿Eres un gimnasio y quieres unirte a FitWe? </span>
+            <a
+              href="mailto:tudesarrollodigital@gmail.com?subject=Quiero%20una%20demo%20de%20FitWe"
+              className="font-medium text-primary dark:text-cyan-400 hover:underline"
+            >
+              Contáctanos
+            </a>
           </div>
         </div>
       </div>
