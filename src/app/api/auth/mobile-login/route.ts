@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { encode } from "next-auth/jwt";
+import { getAuthSecret } from "@/lib/authSecret";
+import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 
 export async function POST(req: Request) {
   try {
@@ -14,8 +16,21 @@ export async function POST(req: Request) {
       );
     }
 
+    const normalizedEmail = email.toLowerCase().trim();
+    const ip = getClientIp(req);
+    const [ipLimit, emailLimit] = await Promise.all([
+      checkRateLimit(`login:ip:${ip}`, 20, 15),
+      checkRateLimit(`login:email:${normalizedEmail}`, 10, 15),
+    ]);
+    if (!ipLimit.allowed || !emailLimit.allowed) {
+      return NextResponse.json(
+        { message: "Demasiados intentos. Espera unos minutos antes de volver a intentarlo." },
+        { status: 429 }
+      );
+    }
+
     const user = await prisma.user.findUnique({
-      where: { email: email.toLowerCase().trim() },
+      where: { email: normalizedEmail },
       include: { gym: { select: { id: true, name: true } } },
     });
 
@@ -52,17 +67,10 @@ export async function POST(req: Request) {
       sessionVersion: user.sessionVersion,
     };
 
-    const secret = process.env.NEXTAUTH_SECRET || "default_secret_key";
-    let token = "";
-
-    try {
-      token = await encode({
-        token: tokenPayload,
-        secret,
-      });
-    } catch (encodeErr) {
-      token = Buffer.from(JSON.stringify(tokenPayload)).toString("base64");
-    }
+    // No unsigned fallback if encode() throws: an unsigned token would never verify against
+    // getRequestUserId anyway (it's not valid JWE), so silently issuing one just breaks the
+    // client's session in a confusing way. Fail loudly instead — bubbled to the outer catch.
+    const token = await encode({ token: tokenPayload, secret: getAuthSecret() });
 
     const userResponse = {
       id: user.id,

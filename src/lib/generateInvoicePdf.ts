@@ -81,6 +81,7 @@ export interface InvoicePayment {
   invoiceNumber?: string | null;
   vatRate?: number | null;
   source?: "ONLINE" | "CASH" | null;
+  refundedAt?: string | Date | null;
 }
 
 export interface InvoiceClient {
@@ -162,6 +163,26 @@ export async function generateInvoicePdf(
   page.drawText(truncateToWidth(invPayMethod, fontRegular, 10, metaColWidth), { x: 380, y: height - 90, size: 10, font: fontRegular, color: rgb(1, 1, 1) });
 
   let yPos = height - 160;
+
+  // ── REFUNDED BANNER ──
+  if (payment.refundedAt) {
+    const bannerHeight = 26;
+    page.drawRectangle({
+      x: 0,
+      y: yPos - bannerHeight + 10,
+      width,
+      height: bannerHeight,
+      color: rgb(0.86, 0.15, 0.15),
+    });
+    page.drawText("FACTURA REEMBOLSADA", {
+      x: 40,
+      y: yPos - bannerHeight + 18,
+      size: 11,
+      font: fontBold,
+      color: rgb(1, 1, 1),
+    });
+    yPos -= bannerHeight + 10;
+  }
 
   // ── EMITTER & RECIPIENT COLUMNS ──
   // Each column is truncated to its own width so long business names, addresses or emails

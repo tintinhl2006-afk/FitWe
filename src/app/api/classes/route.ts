@@ -1,8 +1,15 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getNow } from "@/lib/timeUtils";
-import { generateClassesFromTemplate } from "@/lib/classUtils";
+import { generateClassesFromTemplates } from "@/lib/classUtils";
 import { getRequestUserId } from "@/lib/apiAuth";
+import { sendClassBookingConfirmedEmail, sendClassBookingCancelledEmail } from "@/lib/email";
+
+function formatClassDate(d: Date): { dateLabel: string; timeLabel: string } {
+  const dateLabel = d.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" });
+  const timeLabel = d.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
+  return { dateLabel: dateLabel.charAt(0).toUpperCase() + dateLabel.slice(1), timeLabel };
+}
 
 const BOOKING_WINDOW_MS = 48 * 60 * 60 * 1000; // 48 hours
 
@@ -31,9 +38,7 @@ export async function GET(req: Request) {
     const templates = await prisma.classTemplate.findMany({
       where: { gymId: user.gymId },
     });
-    for (const template of templates) {
-      await generateClassesFromTemplate(template, 14);
-    }
+    await generateClassesFromTemplates(templates, 14);
 
     const { searchParams } = new URL(req.url);
     const dateParam = searchParams.get("date"); // e.g. "2026-05-22"
@@ -61,9 +66,19 @@ export async function GET(req: Request) {
       },
       include: {
         _count: { select: { bookings: true } },
+        // Roster shown to fellow members ("quién va"). Kept small (class capacity is
+        // never huge) so it's cheap to include inline rather than a separate endpoint;
+        // the requesting user's own booking is derived from this same list below
+        // instead of a second filtered `bookings` include (a relation can only be
+        // included once per query).
         bookings: {
-          where: { userId },
-          select: { id: true, status: true },
+          select: {
+            id: true,
+            status: true,
+            userId: true,
+            user: { select: { name: true, image: true, isPrivate: true } },
+          },
+          orderBy: { createdAt: "asc" },
         },
       },
       orderBy: { startTime: "asc" },
@@ -73,8 +88,16 @@ export async function GET(req: Request) {
     const result = classes.map((c) => {
       const msUntilStart = c.startTime.getTime() - now.getTime();
       const isOpen = msUntilStart <= BOOKING_WINDOW_MS;
-      const userBooking = c.bookings[0] || null;
+      const userBooking = c.bookings.find((b) => b.userId === userId) || null;
       const isFull = c._count.bookings >= c.capacity;
+
+      // Un usuario con perfil privado no muestra su nombre/foto a otros socios, solo
+      // cuenta a efectos de aforo/plazas. A sí mismo siempre se le muestra su propio nombre.
+      const attendees = c.bookings.map((b) => ({
+        id: b.userId,
+        name: !b.user.isPrivate || b.userId === userId ? b.user.name : null,
+        image: !b.user.isPrivate || b.userId === userId ? b.user.image : null,
+      }));
 
       return {
         id: c.id,
@@ -89,6 +112,7 @@ export async function GET(req: Request) {
         opensAt: isOpen ? null : new Date(c.startTime.getTime() - BOOKING_WINDOW_MS).toISOString(),
         userBookingId: userBooking?.id || null,
         isBooked: !!userBooking,
+        attendees,
       };
     });
 
@@ -115,10 +139,13 @@ export async function POST(req: Request) {
     // Find user's gym and check subscription
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { 
+      select: {
+        name: true,
+        email: true,
         gymId: true,
         subscriptionStatus: true,
         subscriptionEndDate: true,
+        gym: { select: { name: true } },
       },
     });
 
@@ -184,6 +211,15 @@ export async function POST(req: Request) {
       },
     });
 
+    // Awaited (not fire-and-forget): a serverless function can be frozen right after the
+    // response is sent, which would silently drop an un-awaited send.
+    const { dateLabel, timeLabel } = formatClassDate(gymClass.startTime);
+    try {
+      await sendClassBookingConfirmedEmail(user.email, user.name, gymClass.name, user.gym?.name || "tu gimnasio", dateLabel, timeLabel);
+    } catch (e) {
+      console.error("Error sending class booking confirmation email:", e);
+    }
+
     return NextResponse.json(booking, { status: 201 });
   } catch (error) {
     console.error("Error booking class:", error);
@@ -208,6 +244,11 @@ export async function DELETE(req: Request) {
 
     const booking = await prisma.classBooking.findFirst({
       where: { id: bookingId, userId },
+      select: {
+        id: true,
+        user: { select: { name: true, email: true } },
+        class: { select: { name: true, startTime: true } },
+      },
     });
 
     if (!booking) {
@@ -215,6 +256,13 @@ export async function DELETE(req: Request) {
     }
 
     await prisma.classBooking.delete({ where: { id: bookingId } });
+
+    const { dateLabel, timeLabel } = formatClassDate(booking.class.startTime);
+    try {
+      await sendClassBookingCancelledEmail(booking.user.email, booking.user.name, booking.class.name, dateLabel, timeLabel);
+    } catch (e) {
+      console.error("Error sending class booking cancellation email:", e);
+    }
 
     return NextResponse.json({ message: "Reserva cancelada" });
   } catch (error) {

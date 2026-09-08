@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { encryptSecret } from "@/lib/encryption";
 
 export async function GET() {
   try {
@@ -10,10 +11,17 @@ export async function GET() {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
-    const methods = await prisma.gymPaymentMethod.findMany({
+    const rawMethods = await prisma.gymPaymentMethod.findMany({
       where: { gymId: session.user.id },
       orderBy: { createdAt: "asc" },
     });
+
+    // Never send the (encrypted, at-rest) Redsys signing key to the browser — it's write-only
+    // from the client's perspective. The UI only needs to know whether one is already set.
+    const methods = rawMethods.map(({ redsysClave, ...method }) => ({
+      ...method,
+      hasRedsysClave: !!redsysClave,
+    }));
 
     return NextResponse.json({ methods });
   } catch (error) {
@@ -96,14 +104,15 @@ export async function POST(req: Request) {
             ? {
                 redsysFuc: redsysFuc.trim(),
                 redsysTerminal: redsysTerminal?.trim() || "001",
-                redsysClave: redsysClave.trim(),
+                redsysClave: encryptSecret(redsysClave.trim()),
               }
             : {}),
         },
       });
     });
 
-    return NextResponse.json({ method });
+    const { redsysClave: _redsysClave, ...methodWithoutClave } = method;
+    return NextResponse.json({ method: { ...methodWithoutClave, hasRedsysClave: !!method.redsysClave } });
   } catch (error) {
     console.error("Error creating gym payment method:", error);
     return NextResponse.json({ message: "Error en el servidor" }, { status: 500 });

@@ -4,6 +4,7 @@ import Stripe from "stripe";
 // @ts-ignore
 import { Redsys } from "node-redsys-api";
 import { getRequestAuth } from "@/lib/apiAuth";
+import { decryptSecret } from "@/lib/encryption";
 
 export async function POST(req: Request) {
   try {
@@ -118,10 +119,8 @@ export async function POST(req: Request) {
 
     // ─── MÉTODO ACTIVO: REDSYS (TPV Virtual) ───
     if (activeMethod.gateway === "REDSYS") {
-      const isRedsysReal =
-        !!activeMethod.redsysFuc &&
-        !!activeMethod.redsysClave &&
-        activeMethod.redsysClave.trim().toLowerCase() !== "mock";
+      const redsysClave = decryptSecret(activeMethod.redsysClave);
+      const isRedsysReal = !!activeMethod.redsysFuc && !!redsysClave && redsysClave.trim().toLowerCase() !== "mock";
 
       if (isRedsysReal) {
         try {
@@ -148,7 +147,7 @@ export async function POST(req: Request) {
           // @ts-ignore
           const redsys = new Redsys();
           const merchantParameters = redsys.createMerchantParameters(redsysParams);
-          const signature = redsys.createMerchantSignature(activeMethod.redsysClave!.trim(), redsysParams);
+          const signature = redsys.createMerchantSignature(redsysClave.trim(), redsysParams);
 
           const redsysUrl = "https://sis-t.redsys.es:25443/sis/realizarPago";
 
@@ -235,6 +234,21 @@ export async function POST(req: Request) {
           );
         }
       } else {
+        // Sin STRIPE_SECRET_KEY en el servidor: en producción esto es siempre un error de
+        // configuración (la plataforma nunca debería quedarse sin esta clave con gimnasios
+        // ya conectados a Stripe), nunca una situación de prueba legítima — a diferencia de
+        // Redsys, aquí no hay ningún gesto explícito por gimnasio que active el simulador.
+        // Degradar a un checkout falso "activaría" cuotas reales sin cobrar nada. Solo se
+        // permite el simulador fuera de producción (desarrollo/test).
+        if (process.env.NODE_ENV === "production") {
+          console.error(
+            `STRIPE_SECRET_KEY no está configurada en producción; se ha bloqueado un intento de pago con Stripe para el gimnasio ${user.gymId}.`
+          );
+          return NextResponse.json(
+            { message: "Los pagos con tarjeta no están disponibles en este momento. Contacta con tu centro deportivo." },
+            { status: 503 }
+          );
+        }
         const mockStripeUrl = `/dashboard/pago/stripe-mock?amount=${amount}&planName=${encodeURIComponent(planName)}&methodId=${activeMethod.id}${resolvedPlanId ? `&planId=${resolvedPlanId}` : ""}`;
         return NextResponse.json({ url: mockStripeUrl }, { status: 200 });
       }

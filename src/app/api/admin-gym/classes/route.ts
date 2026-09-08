@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getNow } from "@/lib/timeUtils";
-import { generateClassesFromTemplate } from "@/lib/classUtils";
+import { generateClassesFromTemplates } from "@/lib/classUtils";
 
 export async function GET(req: Request) {
   try {
@@ -25,9 +25,7 @@ export async function GET(req: Request) {
     const templates = await prisma.classTemplate.findMany({
       where: { gymId },
     });
-    for (const template of templates) {
-      await generateClassesFromTemplate(template, 14);
-    }
+    await generateClassesFromTemplates(templates, 14);
 
     const { searchParams } = new URL(req.url);
     const dateParam = searchParams.get("date"); // e.g. "2026-05-22"

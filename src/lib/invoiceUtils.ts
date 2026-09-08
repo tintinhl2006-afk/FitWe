@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/prisma";
+import { generateInvoicePdf, type InvoiceClient, type InvoiceGym } from "@/lib/generateInvoicePdf";
+import { sendInvoiceEmail } from "@/lib/email";
 
 /** First 2 letters (A-Z only) of a name, uppercased — used as the invoice number prefix. */
 function invoicePrefixFromName(name: string | null | undefined): string {
@@ -62,6 +64,97 @@ export async function generateNextInvoiceNumber(
 
   const formattedSeq = String(currentValue).padStart(5, "0");
   return `FW-${currentYear}-${formattedSeq}`;
+}
+
+/**
+ * Emails the invoice PDF for a just-created payment to the client — the exact same PDF
+ * (same `generateInvoicePdf` function, same field mapping) the app itself shows/downloads,
+ * so the emailed copy never drifts from what's visible in the panel. Best-effort: a failed
+ * send is logged but never thrown, since it must not roll back or fail the payment flow
+ * that already completed by the time this runs.
+ */
+export async function sendInvoiceEmailForPayment(paymentId: string): Promise<void> {
+  try {
+    const payment = await prisma.paymentRecord.findUnique({
+      where: { id: paymentId },
+      select: {
+        id: true,
+        amount: true,
+        description: true,
+        date: true,
+        invoiceNumber: true,
+        vatRate: true,
+        source: true,
+        user: {
+          select: {
+            name: true,
+            lastName: true,
+            email: true,
+            documentType: true,
+            documentNumber: true,
+            documentLetter: true,
+            address: true,
+            postalCode: true,
+            province: true,
+            locality: true,
+          },
+        },
+        paymentMethod: true,
+      },
+    });
+
+    if (!payment || !payment.invoiceNumber) return;
+
+    const client: InvoiceClient = {
+      name: payment.user.name,
+      lastName: payment.user.lastName || "",
+      email: payment.user.email,
+      documentType: payment.user.documentType || "",
+      documentNumber: payment.user.documentNumber || "",
+      documentLetter: payment.user.documentLetter || "",
+      address: payment.user.address || "",
+      postalCode: payment.user.postalCode || "",
+      province: payment.user.province || "",
+      locality: payment.user.locality || "",
+    };
+
+    // Misma lógica que /api/admin-gym/invoices: los datos fiscales del emisor son los del
+    // método de pago con el que se cobró, no el perfil general del gimnasio.
+    const pm = payment.paymentMethod;
+    const gym: InvoiceGym | null = pm
+      ? {
+          name: pm.billingName,
+          email: pm.billingEmail || "",
+          documentType: pm.billingDocumentType || "",
+          documentNumber: pm.billingDocumentNumber || "",
+          documentLetter: pm.billingDocumentLetter || "",
+          phone: pm.billingPhone || "",
+          address: pm.billingAddress || "",
+          country: pm.billingCountry || "",
+          province: pm.billingProvince || "",
+          locality: pm.billingLocality || "",
+          postalCode: pm.billingPostalCode || "",
+        }
+      : null;
+
+    const pdfBytes = await generateInvoicePdf(
+      {
+        id: payment.id,
+        amount: payment.amount,
+        description: payment.description,
+        date: payment.date,
+        invoiceNumber: payment.invoiceNumber,
+        vatRate: payment.vatRate,
+        source: payment.source,
+      },
+      client,
+      gym
+    );
+
+    await sendInvoiceEmail(payment.user.email, payment.user.name, payment.invoiceNumber, pdfBytes);
+  } catch (error) {
+    console.error("Error sending invoice email:", error);
+  }
 }
 
 /**

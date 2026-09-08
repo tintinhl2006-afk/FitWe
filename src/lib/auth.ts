@@ -4,6 +4,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { getNow } from "@/lib/timeUtils";
+import { checkRateLimit } from "@/lib/rateLimit";
 
 export const authOptions: NextAuthOptions = {
   // ... (adapter remains same)
@@ -16,13 +17,26 @@ export const authOptions: NextAuthOptions = {
         email: { label: "Email", type: "email", placeholder: "tu@email.com" },
         password: { label: "Contraseña", type: "password" }
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         if (!credentials?.email || !credentials?.password) {
           throw new Error("Email y contraseña requeridos");
         }
 
+        const normalizedEmail = credentials.email.toLowerCase().trim();
+        // NextAuth's credentials `req` exposes headers as a plain object, not a full Request —
+        // extract the proxy-forwarded IP the same way the shape allows.
+        const forwardedFor = (req?.headers as Record<string, string> | undefined)?.["x-forwarded-for"];
+        const ip = forwardedFor ? forwardedFor.split(",")[0].trim() : "unknown";
+        const [ipLimit, emailLimit] = await Promise.all([
+          checkRateLimit(`login:ip:${ip}`, 20, 15),
+          checkRateLimit(`login:email:${normalizedEmail}`, 10, 15),
+        ]);
+        if (!ipLimit.allowed || !emailLimit.allowed) {
+          throw new Error("Demasiados intentos. Espera unos minutos antes de volver a intentarlo.");
+        }
+
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
+          where: { email: normalizedEmail },
           include: { gym: { select: { id: true, name: true } } },
         });
 

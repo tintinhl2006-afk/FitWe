@@ -9,6 +9,7 @@ export interface InvoicePayment {
   invoiceNumber?: string | null;
   vatRate?: number | null;
   source?: 'ONLINE' | 'CASH' | null;
+  refundedAt?: string | null;
 }
 
 export interface InvoiceClient {
@@ -115,6 +116,11 @@ function buildInvoiceHtml(payment: InvoicePayment, client: InvoiceClient, gym: I
             <div>${invPayMethod}</div>
           </div>
         </div>
+        ${
+          payment.refundedAt
+            ? '<div style="background:#dc2626;color:#fff;padding:8px 32px;font-weight:bold;font-size:13px;">FACTURA REEMBOLSADA</div>'
+            : ''
+        }
         <div class="wrap">
           <div class="columns">
             <div class="col">

@@ -144,6 +144,8 @@ export async function GET(req: Request) {
           date: true,
           invoiceNumber: true,
           paymentMethodId: true,
+          refundedAt: true,
+          refundReason: true,
           user: {
             select: {
               name: true,

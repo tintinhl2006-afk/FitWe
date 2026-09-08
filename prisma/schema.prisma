@@ -3,8 +3,12 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  // Neon's pooled connection (DATABASE_URL, used at runtime) doesn't support the Postgres
+  // advisory locks Prisma Migrate needs to serialize concurrent migration runs — migrations
+  // must go through the direct, non-pooled connection instead.
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -84,6 +88,12 @@ model User {
   creditsRemaining      Int?
   creditsNextRechargeAt DateTime?
 
+  // Marca de "ya avisado" para los emails de cuota (evita reenviar en cada pasada del cron).
+  // Se resetean a null en cada concesión de plan exitosa (computePlanGrant), así una
+  // renovación siempre vuelve a habilitar el aviso para el próximo ciclo.
+  subscriptionExpiryReminderSentAt DateTime?
+  subscriptionExpiredNotifiedAt    DateTime?
+
   // Aforo en vivo: solo relevante en filas de gimnasio (role = GYM). Si el centro no tiene
   // escáner de salida, occupancyAutoExitMinutes actúa como temporizador de "salida automática"
   // para dar de baja a un cliente del recuento aunque nunca haga check-out explícito.
@@ -141,6 +151,16 @@ model PaymentRecord {
   planId          String?           @db.Uuid
   invoiceNumber   String?
   paymentMethodId String?           @db.Uuid
+  // Referencia externa de la pasarela (Stripe session_id / Redsys Ds_Order). Único a nivel de
+  // BD para que el propio INSERT sea la barrera de idempotencia ante un doble verify/webhook
+  // casi simultáneo — antes solo había un SELECT-then-INSERT sin garantía atómica. Null para
+  // pagos en efectivo, que no tienen referencia de pasarela.
+  providerRef     String?           @unique
+  // Reembolso registrado manualmente por el gimnasio. No existía ningún mecanismo de
+  // reembolso antes de esto — el pago en sí nunca se borra (es el registro fiscal/factura),
+  // solo se marca, para que quede reflejado tanto en el listado como en el PDF de la factura.
+  refundedAt      DateTime?
+  refundReason    String?
   user            User              @relation(fields: [userId], references: [id])
   plan            SubscriptionPlan? @relation(fields: [planId], references: [id])
   paymentMethod   GymPaymentMethod? @relation(fields: [paymentMethodId], references: [id])
@@ -242,13 +262,14 @@ model ClassTemplate {
 }
 
 model ClassBooking {
-  id        String   @id @default(uuid()) @db.Uuid
-  userId    String   @db.Uuid
-  classId   String   @db.Uuid
-  status    String   @default("CONFIRMED")
-  createdAt DateTime @default(now())
-  class     GymClass @relation(fields: [classId], references: [id])
-  user      User     @relation(fields: [userId], references: [id])
+  id             String    @id @default(uuid()) @db.Uuid
+  userId         String    @db.Uuid
+  classId        String    @db.Uuid
+  status         String    @default("CONFIRMED")
+  createdAt      DateTime  @default(now())
+  reminderSentAt DateTime?
+  class          GymClass  @relation(fields: [classId], references: [id])
+  user           User      @relation(fields: [userId], references: [id])
 
   @@unique([userId, classId])
   @@index([userId])
@@ -445,6 +466,19 @@ model GymInvoiceSequence {
   gymId     String @id @db.Uuid
   nextValue Int    @default(1)
   gym       User   @relation("GymInvoiceSequence", fields: [gymId], references: [id], onDelete: Cascade)
+}
+
+// Rate limiting for auth-adjacent endpoints (login, register, forgot-password). Backed by the
+// DB rather than in-memory because this app runs as stateless serverless functions across
+// possibly many concurrent instances — an in-memory counter wouldn't be shared between them.
+// Rows are short-lived (cleaned up by the daily cron); `key` groups attempts to count
+// (e.g. "login:ip:1.2.3.4" or "login:email:foo@bar.com").
+model RateLimitHit {
+  id        String   @id @default(cuid())
+  key       String
+  createdAt DateTime @default(now())
+
+  @@index([key, createdAt])
 }
 
 model SavedDietItem {

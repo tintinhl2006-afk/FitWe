@@ -84,7 +84,7 @@ export async function PATCH(
       creditsRemaining: client.creditsRemaining,
     });
 
-    const updatedUser = await prisma.$transaction(async (tx) => {
+    const { user: updatedUser, paymentId } = await prisma.$transaction(async (tx) => {
       const user = await tx.user.update({
         where: { id: clientId },
         data: {
@@ -99,7 +99,7 @@ export async function PATCH(
       const activeMethod = await getActiveGymPaymentMethod(tx, session.user.id);
       const invoiceNumber = await generateNextInvoiceNumber(tx, session.user.id, activeMethod);
 
-      await tx.paymentRecord.create({
+      const pRecord = await tx.paymentRecord.create({
         data: {
           userId: clientId,
           amount: plan.price,
@@ -113,8 +113,11 @@ export async function PATCH(
         },
       });
 
-      return user;
+      return { user, paymentId: pRecord.id };
     });
+
+    const { sendInvoiceEmailForPayment } = await import("@/lib/invoiceUtils");
+    await sendInvoiceEmailForPayment(paymentId);
 
     return NextResponse.json(updatedUser);
   } catch (error) {

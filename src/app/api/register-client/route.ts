@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { z } from "zod";
 import { sendVerificationEmail, getAppBaseUrl } from "@/lib/email";
+import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 
 const registerClientSchema = z.object({
   name: z.string().min(1, "El nombre es obligatorio."),
@@ -14,9 +15,17 @@ const registerClientSchema = z.object({
 
 export async function POST(req: Request) {
   try {
+    const { allowed } = await checkRateLimit(`register:ip:${getClientIp(req)}`, 5, 60);
+    if (!allowed) {
+      return NextResponse.json(
+        { message: "Demasiados intentos de registro. Inténtalo de nuevo más tarde." },
+        { status: 429 }
+      );
+    }
+
     const body = await req.json();
     const parsed = registerClientSchema.safeParse(body);
-    
+
     if (!parsed.success) {
       return NextResponse.json(
         { message: parsed.error.issues[0].message },

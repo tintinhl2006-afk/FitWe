@@ -4,9 +4,19 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { encode } from "next-auth/jwt";
 import { sendVerificationEmail, getAppBaseUrl } from "@/lib/email";
+import { getAuthSecret } from "@/lib/authSecret";
+import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 
 export async function POST(req: Request) {
   try {
+    const { allowed } = await checkRateLimit(`register:ip:${getClientIp(req)}`, 5, 60);
+    if (!allowed) {
+      return NextResponse.json(
+        { message: "Demasiados intentos de registro. Inténtalo de nuevo más tarde." },
+        { status: 429 }
+      );
+    }
+
     const { name, email, password, gymCode } = await req.json();
 
     if (!name || !email || !password || !gymCode) {
@@ -80,17 +90,8 @@ export async function POST(req: Request) {
       sessionVersion: newUser.sessionVersion,
     };
 
-    const secret = process.env.NEXTAUTH_SECRET || "default_secret_key";
-    let token = "";
-
-    try {
-      token = await encode({
-        token: tokenPayload,
-        secret,
-      });
-    } catch (encodeErr) {
-      token = Buffer.from(JSON.stringify(tokenPayload)).toString("base64");
-    }
+    // No unsigned fallback if encode() throws — see mobile-login/route.ts for why.
+    const token = await encode({ token: tokenPayload, secret: getAuthSecret() });
 
     const userResponse = {
       id: newUser.id,

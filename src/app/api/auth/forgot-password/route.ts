@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import crypto from "crypto";
 import { z } from "zod";
 import { sendPasswordResetEmail, getAppBaseUrl } from "@/lib/email";
+import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 
 const forgotPasswordSchema = z.object({
   email: z.string().email("Introduce un correo electrónico válido."),
@@ -21,6 +22,19 @@ export async function POST(req: Request) {
 
     const { email } = parsed.data;
     const trimmedEmail = email.trim().toLowerCase();
+
+    // Checked before the existence lookup and always answered the same generic way on the
+    // 429 path too, so this never becomes a second email-enumeration side channel.
+    const [ipLimit, emailLimit] = await Promise.all([
+      checkRateLimit(`forgot-password:ip:${getClientIp(req)}`, 5, 60),
+      checkRateLimit(`forgot-password:email:${trimmedEmail}`, 3, 60),
+    ]);
+    if (!ipLimit.allowed || !emailLimit.allowed) {
+      return NextResponse.json(
+        { message: "Demasiados intentos. Inténtalo de nuevo más tarde." },
+        { status: 429 }
+      );
+    }
 
     // 1. Buscar usuario en base de datos
     const user = await prisma.user.findUnique({

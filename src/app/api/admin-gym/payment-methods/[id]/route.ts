@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { encryptSecret } from "@/lib/encryption";
 
 async function assertOwnedMethod(gymId: string, methodId: string) {
   const method = await prisma.gymPaymentMethod.findUnique({ where: { id: methodId } });
@@ -62,7 +63,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     if (method.gateway === "REDSYS") {
       if (redsysFuc !== undefined) updateData.redsysFuc = redsysFuc?.trim() || null;
       if (redsysTerminal !== undefined) updateData.redsysTerminal = redsysTerminal?.trim() || "001";
-      if (redsysClave !== undefined) updateData.redsysClave = redsysClave?.trim() || null;
+      if (redsysClave !== undefined) updateData.redsysClave = redsysClave?.trim() ? encryptSecret(redsysClave.trim()) : null;
     }
 
     const updated = await prisma.gymPaymentMethod.update({
@@ -70,7 +71,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       data: updateData,
     });
 
-    return NextResponse.json({ method: updated });
+    const { redsysClave: _redsysClave, ...updatedWithoutClave } = updated;
+    return NextResponse.json({ method: { ...updatedWithoutClave, hasRedsysClave: !!updated.redsysClave } });
   } catch (error) {
     console.error("Error updating gym payment method:", error);
     return NextResponse.json({ message: "Error en el servidor" }, { status: 500 });

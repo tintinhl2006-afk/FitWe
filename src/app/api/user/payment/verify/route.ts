@@ -3,9 +3,11 @@ import { prisma } from "@/lib/prisma";
 import Stripe from "stripe";
 import { logger } from "@/lib/logger";
 import { getRequestUserId } from "@/lib/apiAuth";
-import { getActiveGymPaymentMethod } from "@/lib/invoiceUtils";
+import { getActiveGymPaymentMethod, sendInvoiceEmailForPayment } from "@/lib/invoiceUtils";
 import { isRedsysTestMerchant } from "@/lib/redsys";
 import { computePlanGrant } from "@/lib/planUtils";
+import { isDuplicateProviderRefViolation } from "@/lib/paymentDedup";
+import { decryptSecret } from "@/lib/encryption";
 
 export async function GET(req: Request) {
   try {
@@ -120,36 +122,18 @@ export async function GET(req: Request) {
         );
       }
 
-      // Evitar procesamiento duplicado
-      const existingPayment = await prisma.paymentRecord.findFirst({
-        where: {
-          userId: user.id,
-          description: {
-            contains: sessionId,
-          },
-        },
-      });
-
-      if (existingPayment) {
-        // El pago ya se procesó, retornamos los detalles directamente
-        const resolvedPlan = existingPayment.planId
-          ? await prisma.subscriptionPlan.findUnique({ where: { id: existingPayment.planId } })
-          : null;
-
-        return NextResponse.json({
-          message: "Pago ya verificado anteriormente.",
-          payment: {
-            id: existingPayment.id,
-            amount: existingPayment.amount,
-            date: existingPayment.date.toISOString(),
-            planName: resolvedPlan?.name || "Cuota mensual",
-            cardLast4: "••••",
-            cardBrand: "Tarjeta",
-            gymName: gym.name,
-            endDate: user.subscriptionEndDate?.toISOString(),
-            creditsRemaining: user.creditsRemaining,
-          },
-        });
+      // IDOR guard: session_id values leak into browser history/URL bars, server logs, etc. —
+      // without this check, anyone who obtains any OTHER user's completed session_id could
+      // authenticate as themselves and get their own account activated off someone else's
+      // payment. The session was stamped with the paying user's id at creation (payment/route.ts).
+      if (stripeSession.metadata?.userId !== user.id) {
+        logger.warn(
+          `Intento de verificación de pago con session_id ajeno: usuario ${user.id} intentó verificar una sesión de Stripe perteneciente a ${stripeSession.metadata?.userId}.`
+        );
+        return NextResponse.json(
+          { message: "Esta sesión de pago no pertenece a tu cuenta." },
+          { status: 403 }
+        );
       }
 
       // Extraer datos desde la sesión de Stripe
@@ -190,39 +174,74 @@ export async function GET(req: Request) {
         user
       );
 
-      // Guardar registro de pago y activar la suscripción en una transacción atómica
-      const payment = await prisma.$transaction(async (tx) => {
-        let invoiceNumber = null;
-        if (user.gymId) {
-          const { generateNextInvoiceNumber } = await import("@/lib/invoiceUtils");
-          invoiceNumber = await generateNextInvoiceNumber(tx, user.gymId, gymPaymentMethod);
+      // Guardar registro de pago y activar la suscripción en una transacción atómica. La
+      // unicidad de `providerRef` es la barrera real de idempotencia: si otra petición
+      // concurrente para este mismo session_id ya ganó la carrera, este INSERT falla con
+      // P2002 en vez de duplicar la concesión.
+      let payment;
+      try {
+        payment = await prisma.$transaction(async (tx) => {
+          let invoiceNumber = null;
+          if (user.gymId) {
+            const { generateNextInvoiceNumber } = await import("@/lib/invoiceUtils");
+            invoiceNumber = await generateNextInvoiceNumber(tx, user.gymId, gymPaymentMethod);
+          }
+
+          const pRecord = await tx.paymentRecord.create({
+            data: {
+              userId: user.id,
+              amount: finalAmount,
+              description: `${finalPlanName} - Stripe Connect (Ref: ${sessionId})`,
+              planId: resolvedPlanId,
+              vatRate: finalVatRate,
+              source: "ONLINE",
+              date: new Date(),
+              invoiceNumber,
+              paymentMethodId: gymPaymentMethod.id,
+              providerRef: sessionId,
+            },
+          });
+
+          await tx.user.update({
+            where: { id: user.id },
+            data: {
+              subscriptionStatus: "ACTIVE",
+              ...grant,
+              ...(resolvedPlanId && { planId: resolvedPlanId }),
+            },
+          });
+
+          return pRecord;
+        });
+      } catch (err) {
+        if (isDuplicateProviderRefViolation(err)) {
+          const existingPayment = await prisma.paymentRecord.findUnique({ where: { providerRef: sessionId } });
+          if (existingPayment) {
+            const resolvedExistingPlan = existingPayment.planId
+              ? await prisma.subscriptionPlan.findUnique({ where: { id: existingPayment.planId } })
+              : null;
+            return NextResponse.json({
+              message: "Pago ya verificado anteriormente.",
+              payment: {
+                id: existingPayment.id,
+                amount: existingPayment.amount,
+                date: existingPayment.date.toISOString(),
+                planName: resolvedExistingPlan?.name || "Cuota mensual",
+                cardLast4: "••••",
+                cardBrand: "Tarjeta",
+                gymName: gym.name,
+                endDate: user.subscriptionEndDate?.toISOString(),
+                creditsRemaining: user.creditsRemaining,
+              },
+            });
+          }
         }
+        throw err;
+      }
 
-        const pRecord = await tx.paymentRecord.create({
-          data: {
-            userId: user.id,
-            amount: finalAmount,
-            description: `${finalPlanName} - Stripe Connect (Ref: ${sessionId})`,
-            planId: resolvedPlanId,
-            vatRate: finalVatRate,
-            source: "ONLINE",
-            date: new Date(),
-            invoiceNumber,
-            paymentMethodId: gymPaymentMethod.id,
-          },
-        });
-
-        await tx.user.update({
-          where: { id: user.id },
-          data: {
-            subscriptionStatus: "ACTIVE",
-            ...grant,
-            ...(resolvedPlanId && { planId: resolvedPlanId }),
-          },
-        });
-
-        return pRecord;
-      });
+      // Awaited (not fire-and-forget): a serverless function can be frozen/terminated
+      // right after the response is sent, which would silently drop an un-awaited send.
+      await sendInvoiceEmailForPayment(payment.id);
 
       return NextResponse.json({
         message: "Pago de Stripe verificado y aplicado con éxito.",
@@ -243,29 +262,23 @@ export async function GET(req: Request) {
 
     // ─── CASO 2: VERIFICACIÓN SIMULADA (MOCK) ───
     if (mock) {
-      // Restringir verificación simulada en producción con pasarelas de pago configuradas.
-      // Estas condiciones deben reflejar exactamente las que usa POST /api/user/payment para
-      // decidir si generar una sesión real o caer al checkout simulado — si no coinciden, un
-      // gimnasio con un método "activo" pero sin STRIPE_SECRET_KEY en el servidor (o con clave
-      // Redsys de prueba) queda atrapado: la creación cae a mock, pero la verificación lo rechaza.
       const activeMethod = await prisma.gymPaymentMethod.findFirst({
         where: { gymId: user.gymId, isActive: true },
       });
-      const hasRealStripe =
-        activeMethod?.gateway === "STRIPE" &&
-        !!activeMethod.stripeConnected &&
-        !!activeMethod.stripeAccountId &&
-        !!process.env.STRIPE_SECRET_KEY;
+
+      // Redsys: bloqueado en producción si el gimnasio tiene credenciales reales configuradas
+      // (con la excepción deliberada del comerciante de pruebas público de Redsys, que nunca
+      // mueve dinero real y por tanto es seguro dejarlo simulado incluso en producción).
+      const decryptedRedsysClave = activeMethod?.redsysClave ? decryptSecret(activeMethod.redsysClave) : "";
       const hasRealRedsys = !!(
         activeMethod?.gateway === "REDSYS" &&
         activeMethod.redsysFuc?.trim() &&
-        activeMethod.redsysClave?.trim() &&
-        activeMethod.redsysClave.trim().toLowerCase() !== "mock" &&
+        decryptedRedsysClave.trim() &&
+        decryptedRedsysClave.trim().toLowerCase() !== "mock" &&
         !isRedsysTestMerchant(activeMethod.redsysFuc)
       );
-      const hasRealCredentials = hasRealStripe || hasRealRedsys;
 
-      if (process.env.NODE_ENV === "production" && hasRealCredentials) {
+      if (process.env.NODE_ENV === "production" && hasRealRedsys) {
         logger.warn(`Intento de pago simulado bloqueado en producción para el usuario ${user.id} (gimnasio: ${gym.name})`);
         return NextResponse.json(
           { message: "Los pagos simulados están deshabilitados en producción con pasarela de pago activa." },
@@ -273,41 +286,22 @@ export async function GET(req: Request) {
         );
       }
 
-      const mockOrderId = searchParams.get("order") || searchParams.get("session_id");
-
-      if (mockOrderId) {
-        // Evitar procesamiento duplicado para pagos simulados
-        const existingPayment = await prisma.paymentRecord.findFirst({
-          where: {
-            userId: user.id,
-            description: {
-              contains: mockOrderId,
-            },
-          },
-        });
-
-        if (existingPayment) {
-          logger.info(`[Verify] Pago simulado duplicado detectado para Ref: ${mockOrderId}. Evitando doble extensión.`);
-          const resolvedPlan = existingPayment.planId
-            ? await prisma.subscriptionPlan.findUnique({ where: { id: existingPayment.planId } })
-            : null;
-
-          return NextResponse.json({
-            message: "Pago simulado ya verificado anteriormente.",
-            payment: {
-              id: existingPayment.id,
-              amount: existingPayment.amount,
-              date: existingPayment.date.toISOString(),
-              planName: resolvedPlan?.name || "Cuota mensual",
-              cardLast4: "4242",
-              cardBrand: "Visa / Test Connect",
-              gymName: gym.name,
-              endDate: user.subscriptionEndDate?.toISOString(),
-              creditsRemaining: user.creditsRemaining,
-            },
-          });
-        }
+      // Stripe: a diferencia de Redsys, no existe ningún comerciante de pruebas público
+      // legítimo — si el método activo es Stripe, la única razón por la que POST /payment
+      // habría generado una URL simulada es que STRIPE_SECRET_KEY falta en el servidor, un
+      // error de configuración, nunca una prueba intencionada. Bloquear siempre en producción,
+      // sin excepciones, para no poder activar una cuota real sin cobrar nada.
+      if (process.env.NODE_ENV === "production" && activeMethod?.gateway === "STRIPE") {
+        logger.error(
+          `Verificación simulada de Stripe bloqueada en producción para el usuario ${user.id} (gimnasio: ${gym.name}) — probable STRIPE_SECRET_KEY ausente en el servidor.`
+        );
+        return NextResponse.json(
+          { message: "Los pagos con tarjeta no están disponibles en este momento. Contacta con tu centro deportivo." },
+          { status: 503 }
+        );
       }
+
+      const mockOrderId = searchParams.get("order") || searchParams.get("session_id");
 
       let resolvedPlan: Awaited<ReturnType<typeof prisma.subscriptionPlan.findUnique>> = null;
       if (queryPlanId) {
@@ -334,39 +328,71 @@ export async function GET(req: Request) {
         user
       );
 
-      // Guardar transacción mock con identificador único
-      const payment = await prisma.$transaction(async (tx) => {
-        let invoiceNumber = null;
-        if (user.gymId) {
-          const { generateNextInvoiceNumber } = await import("@/lib/invoiceUtils");
-          invoiceNumber = await generateNextInvoiceNumber(tx, user.gymId, activeMethod);
+      // Guardar transacción mock con identificador único. Igual que en la rama Stripe real,
+      // la unicidad de `providerRef` (cuando hay mockOrderId) es la barrera de idempotencia.
+      let payment;
+      try {
+        payment = await prisma.$transaction(async (tx) => {
+          let invoiceNumber = null;
+          if (user.gymId) {
+            const { generateNextInvoiceNumber } = await import("@/lib/invoiceUtils");
+            invoiceNumber = await generateNextInvoiceNumber(tx, user.gymId, activeMethod);
+          }
+
+          const pRecord = await tx.paymentRecord.create({
+            data: {
+              userId: user.id,
+              amount: finalAmount,
+              description: `${finalPlanName} - Pago Simulado en Cuenta Conectada${mockOrderId ? ` (Ref: ${mockOrderId})` : ""}`,
+              planId: resolvedPlanId,
+              vatRate: finalVatRate,
+              source: "ONLINE",
+              date: new Date(),
+              invoiceNumber,
+              paymentMethodId: activeMethod?.id,
+              providerRef: mockOrderId || null,
+            },
+          });
+
+          await tx.user.update({
+            where: { id: user.id },
+            data: {
+              subscriptionStatus: "ACTIVE",
+              ...grant,
+              ...(resolvedPlanId && { planId: resolvedPlanId }),
+            },
+          });
+
+          return pRecord;
+        });
+      } catch (err) {
+        if (mockOrderId && isDuplicateProviderRefViolation(err)) {
+          logger.info(`[Verify] Pago simulado duplicado detectado para Ref: ${mockOrderId}. Evitando doble extensión.`);
+          const existingPayment = await prisma.paymentRecord.findUnique({ where: { providerRef: mockOrderId } });
+          if (existingPayment) {
+            const resolvedExistingPlan = existingPayment.planId
+              ? await prisma.subscriptionPlan.findUnique({ where: { id: existingPayment.planId } })
+              : null;
+            return NextResponse.json({
+              message: "Pago simulado ya verificado anteriormente.",
+              payment: {
+                id: existingPayment.id,
+                amount: existingPayment.amount,
+                date: existingPayment.date.toISOString(),
+                planName: resolvedExistingPlan?.name || "Cuota mensual",
+                cardLast4: "4242",
+                cardBrand: "Visa / Test Connect",
+                gymName: gym.name,
+                endDate: user.subscriptionEndDate?.toISOString(),
+                creditsRemaining: user.creditsRemaining,
+              },
+            });
+          }
         }
+        throw err;
+      }
 
-        const pRecord = await tx.paymentRecord.create({
-          data: {
-            userId: user.id,
-            amount: finalAmount,
-            description: `${finalPlanName} - Pago Simulado en Cuenta Conectada${mockOrderId ? ` (Ref: ${mockOrderId})` : ""}`,
-            planId: resolvedPlanId,
-            vatRate: finalVatRate,
-            source: "ONLINE",
-            date: new Date(),
-            invoiceNumber,
-            paymentMethodId: activeMethod?.id,
-          },
-        });
-
-        await tx.user.update({
-          where: { id: user.id },
-          data: {
-            subscriptionStatus: "ACTIVE",
-            ...grant,
-            ...(resolvedPlanId && { planId: resolvedPlanId }),
-          },
-        });
-
-        return pRecord;
-      });
+      await sendInvoiceEmailForPayment(payment.id);
 
       return NextResponse.json({
         message: "Pago simulado procesado y verificado con éxito.",

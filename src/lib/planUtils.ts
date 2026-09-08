@@ -17,6 +17,10 @@ export interface PlanGrantResult {
   subscriptionEndDate: Date | null;
   creditsRemaining: number | null;
   creditsNextRechargeAt: Date | null;
+  // Toda concesión de plan exitosa reinicia el "ya avisado" de los emails de cuota, para
+  // que el próximo ciclo vuelva a poder notificar cuando corresponda.
+  subscriptionExpiryReminderSentAt: null;
+  subscriptionExpiredNotifiedAt: null;
 }
 
 function addDays(date: Date, days: number): Date {
@@ -45,6 +49,8 @@ export function computePlanGrant(plan: PlanGrantInput, current: PlanGrantCurrent
         subscriptionEndDate: addDays(baseDate, plan.durationDays),
         creditsRemaining: plan.creditsPerCycle ?? 0,
         creditsNextRechargeAt: addDays(now, plan.rechargeIntervalDays ?? plan.durationDays),
+        subscriptionExpiryReminderSentAt: null,
+        subscriptionExpiredNotifiedAt: null,
       };
     }
 
@@ -56,6 +62,8 @@ export function computePlanGrant(plan: PlanGrantInput, current: PlanGrantCurrent
       subscriptionEndDate: plan.creditsNeverExpire ? null : addDays(baseDate, plan.durationDays),
       creditsRemaining: (creditsStillValid ? current.creditsRemaining || 0 : 0) + (plan.creditsPerCycle ?? 0),
       creditsNextRechargeAt: null,
+      subscriptionExpiryReminderSentAt: null,
+      subscriptionExpiredNotifiedAt: null,
     };
   }
 
@@ -64,5 +72,7 @@ export function computePlanGrant(plan: PlanGrantInput, current: PlanGrantCurrent
     subscriptionEndDate: addDays(baseDate, plan.durationDays),
     creditsRemaining: null,
     creditsNextRechargeAt: null,
+    subscriptionExpiryReminderSentAt: null,
+    subscriptionExpiredNotifiedAt: null,
   };
 }

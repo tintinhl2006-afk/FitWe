@@ -1,6 +1,5 @@
 import crypto from "crypto";
-
-const SECRET = process.env.NEXTAUTH_SECRET || "fallback_secret_key_for_development_purposes";
+import { getAccessTokenSecret } from "@/lib/authSecret";
 
 /**
  * Genera un token de acceso firmado digitalmente para un usuario.
@@ -10,10 +9,10 @@ const SECRET = process.env.NEXTAUTH_SECRET || "fallback_secret_key_for_developme
 export function generateAccessCode(userId: string): string {
   const timestamp = Date.now();
   const payload = `${userId}:${timestamp}`;
-  
+
   // Generar firma HMAC-SHA256
   const signature = crypto
-    .createHmac("sha256", SECRET)
+    .createHmac("sha256", getAccessTokenSecret())
     .update(payload)
     .digest("hex");
     
@@ -45,7 +44,7 @@ export function verifyAccessCode(token: string): { userId: string; timestamp: nu
     
     // Re-computar firma esperada
     const expectedSignature = crypto
-      .createHmac("sha256", SECRET)
+      .createHmac("sha256", getAccessTokenSecret())
       .update(payload)
       .digest("hex");
       

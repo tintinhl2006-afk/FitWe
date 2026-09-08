@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Image, NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from 'expo-router';
 import {
@@ -14,6 +14,8 @@ import {
   User as UserIcon,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  UserCircle2,
 } from 'lucide-react-native';
 import { useAppTheme } from '../../../context/ThemeContext';
 import { Palette } from '../../../constants/theme';
@@ -32,6 +34,7 @@ interface ClassItem {
   opensAt: string | null;
   userBookingId: string | null;
   isBooked: boolean;
+  attendees: { id: string; name: string | null; image: string | null }[];
 }
 
 function timeUntil(dateStr: string, now: Date): string {
@@ -63,6 +66,7 @@ export default function ClassesScreen() {
   const [toast, setToast] = useState<{ msg: string; type: 'ok' | 'err' } | null>(null);
   const [noGym, setNoGym] = useState(false);
   const [isSubscriptionActive, setIsSubscriptionActive] = useState(false);
+  const [expandedClassId, setExpandedClassId] = useState<string | null>(null);
 
   const daysScrollRef = useRef<ScrollView>(null);
   const daysScrollXRef = useRef(0);
@@ -338,7 +342,61 @@ export default function ClassesScreen() {
                           <MetaPill colors={colors} icon={<Clock size={12} color={colors.primaryAccent} />} text={`${timeStart} - ${timeEnd}`} />
                           <MetaPill colors={colors} icon={<UserIcon size={12} color={Palette.violet600} />} text={c.instructor} />
                           <MetaPill colors={colors} icon={<Users size={12} color={Palette.emerald500} />} text={`${c.spotsLeft} plaza${c.spotsLeft !== 1 ? 's' : ''} libre${c.spotsLeft !== 1 ? 's' : ''}`} />
+                          {c.attendees.length > 0 && (
+                            <TouchableOpacity
+                              onPress={() => setExpandedClassId(expandedClassId === c.id ? null : c.id)}
+                              style={{ flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: colors.surfaceAlt, borderRadius: 10, paddingHorizontal: 9, paddingVertical: 5 }}
+                            >
+                              <UserCircle2 size={12} color={colors.primaryAccent} />
+                              <Text style={{ fontSize: 11, fontWeight: '600', color: colors.textSecondary }}>
+                                {c.attendees.length} apuntado{c.attendees.length !== 1 ? 's' : ''}
+                              </Text>
+                              <ChevronDown
+                                size={11}
+                                color={colors.textSecondary}
+                                style={{ transform: [{ rotate: expandedClassId === c.id ? '180deg' : '0deg' }] }}
+                              />
+                            </TouchableOpacity>
+                          )}
                         </View>
+
+                        {expandedClassId === c.id && (
+                          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
+                            {c.attendees.map((a) => (
+                              <View
+                                key={a.id}
+                                style={{
+                                  flexDirection: 'row',
+                                  alignItems: 'center',
+                                  gap: 6,
+                                  backgroundColor: colors.surfaceAlt,
+                                  borderRadius: 999,
+                                  paddingLeft: 4,
+                                  paddingRight: 10,
+                                  paddingVertical: 4,
+                                }}
+                              >
+                                {a.image ? (
+                                  <Image source={{ uri: a.image }} style={{ height: 20, width: 20, borderRadius: 10 }} />
+                                ) : (
+                                  <View
+                                    style={{
+                                      height: 20,
+                                      width: 20,
+                                      borderRadius: 10,
+                                      backgroundColor: colors.border,
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                    }}
+                                  >
+                                    <UserIcon size={11} color={colors.textMuted} />
+                                  </View>
+                                )}
+                                <Text style={{ fontSize: 11, fontWeight: '600', color: colors.textSecondary }}>{a.name || 'Alguien'}</Text>
+                              </View>
+                            ))}
+                          </View>
+                        )}
 
                         <View style={{ marginTop: 14 }}>
                           {c.isBooked ? (

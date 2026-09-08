@@ -1,37 +1,17 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { decode } from "next-auth/jwt";
+import { getRequestUserId } from "@/lib/apiAuth";
 
 export async function GET(req: Request) {
   try {
-    const authHeader = req.headers.get("authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return NextResponse.json({ message: "No autorizado" }, { status: 401 });
-    }
-
-    const tokenString = authHeader.substring(7);
-    const secret = process.env.NEXTAUTH_SECRET || "default_secret_key";
-
-    let userId: string | null = null;
-
-    try {
-      const decoded = await decode({ token: tokenString, secret });
-      if (decoded && decoded.id) {
-        userId = decoded.id as string;
-      }
-    } catch (e) {
-      try {
-        const parsed = JSON.parse(Buffer.from(tokenString, "base64").toString("utf-8"));
-        if (parsed && parsed.id) {
-          userId = parsed.id;
-        }
-      } catch (err) {
-        userId = null;
-      }
-    }
+    // Delegates to the shared, correctly-signed bearer-token verifier — this route used to
+    // have its own decode logic with an insecure fallback that trusted an UNSIGNED base64
+    // JSON blob (e.g. `{"id":"<any-user-id>"}`) whenever JWT verification failed, letting
+    // anyone impersonate any user id with no signature at all. Removed.
+    const userId = await getRequestUserId(req);
 
     if (!userId) {
-      return NextResponse.json({ message: "Token inválido o expirado" }, { status: 401 });
+      return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
     const user = await prisma.user.findUnique({

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Loader2, Receipt, Download, Search, Eye, ChevronLeft, ChevronRight, FileSpreadsheet } from "lucide-react";
+import { Loader2, Receipt, Download, Search, Eye, ChevronLeft, ChevronRight, FileSpreadsheet, Undo2, X, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   generateInvoicePdf,
@@ -31,6 +31,8 @@ interface Invoice {
   invoiceNumber: string | null;
   paymentMethodId: string | null;
   paymentMethodName: string | null;
+  refundedAt: string | null;
+  refundReason: string | null;
   user: InvoiceClient;
   gym: GymProfile;
 }
@@ -56,6 +58,10 @@ export default function FacturacionPage() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [isExporting, setIsExporting] = useState(false);
+  const [refundTarget, setRefundTarget] = useState<Invoice | null>(null);
+  const [refundReason, setRefundReason] = useState("");
+  const [revokeAccess, setRevokeAccess] = useState(false);
+  const [isRefunding, setIsRefunding] = useState(false);
 
   // Debounce search input before hitting the server
   useEffect(() => {
@@ -149,6 +155,38 @@ export default function FacturacionPage() {
     } catch (err) {
       console.error("Error generating invoice PDF:", err);
       alert("Error al generar el PDF de la factura");
+    }
+  };
+
+  const openRefundModal = (invoice: Invoice) => {
+    setRefundTarget(invoice);
+    setRefundReason("");
+    setRevokeAccess(false);
+  };
+
+  const handleConfirmRefund = async () => {
+    if (!refundTarget) return;
+    setIsRefunding(true);
+    try {
+      const res = await fetch(`/api/admin-gym/payments/${refundTarget.id}/refund`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason: refundReason, revokeAccess }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || "Error al registrar el reembolso");
+      }
+      setInvoices((prev) =>
+        prev.map((inv) =>
+          inv.id === refundTarget.id ? { ...inv, refundedAt: new Date().toISOString(), refundReason } : inv
+        )
+      );
+      setRefundTarget(null);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Error al registrar el reembolso");
+    } finally {
+      setIsRefunding(false);
     }
   };
 
@@ -291,16 +329,26 @@ export default function FacturacionPage() {
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">{inv.description}</td>
                     <td className="px-6 py-4 text-sm whitespace-nowrap">
-                      <span
-                        className={cn(
-                          "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full",
-                          inv.source === "CASH"
-                            ? "bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400"
-                            : "bg-cyan-50 dark:bg-cyan-950/30 text-primary dark:text-cyan-400"
+                      <div className="inline-flex items-center gap-1.5">
+                        <span
+                          className={cn(
+                            "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full",
+                            inv.source === "CASH"
+                              ? "bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400"
+                              : "bg-cyan-50 dark:bg-cyan-950/30 text-primary dark:text-cyan-400"
+                          )}
+                        >
+                          {inv.source === "CASH" ? "Efectivo" : "Online"}
+                        </span>
+                        {inv.refundedAt && (
+                          <span
+                            title={inv.refundReason || undefined}
+                            className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400"
+                          >
+                            Reembolsada
+                          </span>
                         )}
-                      >
-                        {inv.source === "CASH" ? "Efectivo" : "Online"}
-                      </span>
+                      </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400 whitespace-nowrap">
                       {inv.paymentMethodName || "—"}
@@ -324,6 +372,15 @@ export default function FacturacionPage() {
                           <Download className="h-3.5 w-3.5" />
                           <span>Descargar</span>
                         </button>
+                        {!inv.refundedAt && (
+                          <button
+                            onClick={() => openRefundModal(inv)}
+                            className="inline-flex items-center gap-1.5 text-xs font-bold text-red-500 hover:underline hover:text-red-600 cursor-pointer"
+                          >
+                            <Undo2 className="h-3.5 w-3.5" />
+                            <span>Reembolsar</span>
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -366,6 +423,80 @@ export default function FacturacionPage() {
           </div>
         )}
       </div>
+
+      {/* Refund Modal */}
+      {refundTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800 shrink-0">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-red-500" />
+                Marcar factura como reembolsada
+              </h3>
+              <button onClick={() => setRefundTarget(null)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                Factura <strong className="text-slate-900 dark:text-white">{refundTarget.invoiceNumber}</strong> de{" "}
+                <strong className="text-slate-900 dark:text-white">
+                  {refundTarget.user.name} {refundTarget.user.lastName || ""}
+                </strong>{" "}
+                por <strong className="text-slate-900 dark:text-white">{refundTarget.amount.toFixed(2)} €</strong>.
+              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Esto no borra la factura (queda como registro fiscal) — la marca visiblemente como reembolsada
+                tanto en este listado como en el PDF. El reembolso en sí (devolver el dinero) tienes que hacerlo
+                desde tu propia cuenta de Stripe/Redsys; esto solo lo refleja en FitWe.
+              </p>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
+                  Motivo (opcional)
+                </label>
+                <textarea
+                  value={refundReason}
+                  onChange={(e) => setRefundReason(e.target.value)}
+                  rows={2}
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 py-2 px-3 text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary/20"
+                  placeholder="Ej. Cliente insatisfecho, error de cobro..."
+                />
+              </div>
+
+              <label className="flex items-start gap-2.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={revokeAccess}
+                  onChange={(e) => setRevokeAccess(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded border-slate-300 text-red-500 focus:ring-red-500/30"
+                />
+                <span className="text-xs text-slate-600 dark:text-slate-400">
+                  Además, desactivar el acceso del cliente ahora mismo (no espera a que caduque su cuota).
+                </span>
+              </label>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-slate-100 dark:border-slate-800 shrink-0">
+              <button
+                onClick={() => setRefundTarget(null)}
+                className="rounded-xl px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleConfirmRefund}
+                disabled={isRefunding}
+                className="inline-flex items-center gap-2 rounded-xl bg-red-500 hover:bg-red-600 disabled:opacity-50 px-4 py-2 text-sm font-bold text-white cursor-pointer transition-colors"
+              >
+                {isRefunding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Undo2 className="h-4 w-4" />}
+                Confirmar reembolso
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyCallbackSignature } from "@/lib/redsys";
 import { computePlanGrant } from "@/lib/planUtils";
+import { sendInvoiceEmailForPayment } from "@/lib/invoiceUtils";
+import { isDuplicateProviderRefViolation } from "@/lib/paymentDedup";
+import { decryptSecret } from "@/lib/encryption";
 
 export async function POST(req: Request) {
   try {
@@ -64,7 +67,7 @@ export async function POST(req: Request) {
       merchantParametersB64,
       signatureReceived,
       order,
-      redsysClave: gymPaymentMethod.redsysClave.trim(),
+      redsysClave: decryptSecret(gymPaymentMethod.redsysClave).trim(),
     });
 
     if (!isSignatureValid) {
@@ -81,21 +84,6 @@ export async function POST(req: Request) {
     if (!isAuthorized) {
       console.log(`⚠️ Transacción rechazada por el banco (Código de error: ${responseCode}).`);
       return new Response("Transaction declined by issuer bank", { status: 200 }); // Retornar 200 a Redsys para confirmar recepción
-    }
-
-    // Evitar procesamiento duplicado
-    const existingPayment = await prisma.paymentRecord.findFirst({
-      where: {
-        userId: userId,
-        description: {
-          contains: order,
-        },
-      },
-    });
-
-    if (existingPayment) {
-      console.log("⚠️ Transacción ya procesada anteriormente. Evitando doble recarga.");
-      return new Response("Payment already processed", { status: 200 });
     }
 
     // Cargar datos de la suscripción del cliente
@@ -138,37 +126,53 @@ export async function POST(req: Request) {
       user
     );
 
-    // Guardar transacción y activar en caliente la suscripción en Neon Postgres
-    await prisma.$transaction(async (tx) => {
-      let invoiceNumber = null;
-      if (gymId) {
-        const { generateNextInvoiceNumber } = await import("@/lib/invoiceUtils");
-        invoiceNumber = await generateNextInvoiceNumber(tx, gymId, gymPaymentMethod);
+    // Guardar transacción y activar en caliente la suscripción en Neon Postgres. La unicidad
+    // de `providerRef` (el pedido de Redsys) es la barrera real de idempotencia ante reintentos
+    // de entrega del webhook — antes solo había un SELECT-then-INSERT sin garantía atómica.
+    let payment;
+    try {
+      payment = await prisma.$transaction(async (tx) => {
+        let invoiceNumber = null;
+        if (gymId) {
+          const { generateNextInvoiceNumber } = await import("@/lib/invoiceUtils");
+          invoiceNumber = await generateNextInvoiceNumber(tx, gymId, gymPaymentMethod);
+        }
+
+        const pRecord = await tx.paymentRecord.create({
+          data: {
+            userId: userId,
+            amount: finalAmount,
+            description: `${finalPlanName} - TPV Virtual Redsys (Pedido: ${order})`,
+            planId: resolvedPlanId,
+            vatRate: finalVatRate,
+            source: "ONLINE",
+            date: new Date(),
+            invoiceNumber,
+            paymentMethodId: gymPaymentMethod.id,
+            providerRef: order,
+          },
+        });
+
+        await tx.user.update({
+          where: { id: userId },
+          data: {
+            subscriptionStatus: "ACTIVE",
+            ...grant,
+            ...(resolvedPlanId && { planId: resolvedPlanId }),
+          },
+        });
+
+        return pRecord;
+      });
+    } catch (err) {
+      if (isDuplicateProviderRefViolation(err)) {
+        console.log("⚠️ Transacción ya procesada anteriormente (constraint única). Evitando doble recarga.");
+        return new Response("Payment already processed", { status: 200 });
       }
+      throw err;
+    }
 
-      await tx.paymentRecord.create({
-        data: {
-          userId: userId,
-          amount: finalAmount,
-          description: `${finalPlanName} - TPV Virtual Redsys (Pedido: ${order})`,
-          planId: resolvedPlanId,
-          vatRate: finalVatRate,
-          source: "ONLINE",
-          date: new Date(),
-          invoiceNumber,
-          paymentMethodId: gymPaymentMethod.id,
-        },
-      });
-
-      await tx.user.update({
-        where: { id: userId },
-        data: {
-          subscriptionStatus: "ACTIVE",
-          ...grant,
-          ...(resolvedPlanId && { planId: resolvedPlanId }),
-        },
-      });
-    });
+    await sendInvoiceEmailForPayment(payment.id);
 
     console.log(`🎉 Membresía del socio en ${gym.name} renovada con éxito vía Redsys.`);
     return new Response("OK", { status: 200 });

@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth";
 import { decode } from "next-auth/jwt";
 import { authOptions } from "@/lib/auth";
+import { getAuthSecret } from "@/lib/authSecret";
 
 /**
  * Resolves the authenticated user id for an API route from either source:
@@ -24,11 +25,16 @@ export async function getRequestAuth(req: Request): Promise<{ id: string; role: 
 
   if (authHeader?.startsWith("Bearer ")) {
     const tokenString = authHeader.substring(7);
-    const secret = process.env.NEXTAUTH_SECRET || "default_secret_key";
     try {
-      const decoded = await decode({ token: tokenString, secret });
+      const decoded = await decode({ token: tokenString, secret: getAuthSecret() });
       if (decoded?.id) return { id: decoded.id as string, role: (decoded.role as string) || "MEMBER" };
-    } catch {
+    } catch (err) {
+      // NEXTAUTH_SECRET missing is a real misconfiguration, not just "no bearer token
+      // present" — surface it loudly instead of silently degrading to cookie auth (which
+      // would just look like an unrelated 401 to whoever's debugging this).
+      if (err instanceof Error && err.message.includes("NEXTAUTH_SECRET")) {
+        console.error(err.message);
+      }
       // Fall through to cookie-based session
     }
   }
