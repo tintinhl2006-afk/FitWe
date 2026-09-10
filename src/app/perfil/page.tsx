@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useCustomAlert } from "@/components/providers/CustomAlertProvider";
-import { User, Activity, Calendar, Clock, Dumbbell, Loader2, Camera, X, Eye, QrCode, RefreshCw } from "lucide-react";
+import { User, Activity, Calendar, Clock, Dumbbell, Loader2, Camera, X, Eye, QrCode, RefreshCw, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { cn } from "@/lib/utils";
@@ -41,6 +41,11 @@ interface ProfileData {
   };
   monthlyDates: string[];
   recentSessions: SessionData[];
+  totalSessions: number;
+  page: number;
+  pageSize: number;
+  memberSinceYear: number;
+  memberSinceMonth: number;
 }
 
 export default function ProfilePage() {
@@ -50,8 +55,15 @@ export default function ProfilePage() {
   const [data, setData] = useState<ProfileData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [expandedWorkoutId, setExpandedWorkoutId] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>("");
+  const [calendarMonth, setCalendarMonth] = useState<number | null>(null);
+  const [calendarYear, setCalendarYear] = useState<number | null>(null);
+  const [calendarDates, setCalendarDates] = useState<string[] | null>(null);
+  const [isLoadingCalendar, setIsLoadingCalendar] = useState(false);
+  const [isMonthPickerOpen, setIsMonthPickerOpen] = useState(false);
+  const [pickerYear, setPickerYear] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -141,6 +153,45 @@ export default function ProfilePage() {
     }
   };
 
+  const loadMoreSessions = async () => {
+    if (!data || isLoadingMore) return;
+    setIsLoadingMore(true);
+    try {
+      const nextPage = data.page + 1;
+      const params = new URLSearchParams({ page: String(nextPage), pageSize: String(data.pageSize) });
+      if (selectedDate) params.set("date", selectedDate);
+      const res = await fetch(`/api/profile?${params.toString()}`);
+      if (res.ok) {
+        const json = await res.json();
+        setData(prev => prev ? {
+          ...json,
+          recentSessions: [...prev.recentSessions, ...json.recentSessions],
+        } : json);
+      }
+    } catch (error) {
+      console.error("Error al cargar más entrenamientos:", error);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
+
+  const goToMonth = async (targetMonth: number, targetYear: number) => {
+    setCalendarMonth(targetMonth);
+    setCalendarYear(targetYear);
+    setIsLoadingCalendar(true);
+    try {
+      const res = await fetch(`/api/profile/calendar?month=${targetMonth}&year=${targetYear}`);
+      if (res.ok) {
+        const json = await res.json();
+        setCalendarDates(json.monthlyDates);
+      }
+    } catch (error) {
+      console.error("Error al cargar el calendario:", error);
+    } finally {
+      setIsLoadingCalendar(false);
+    }
+  };
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -190,13 +241,20 @@ export default function ProfilePage() {
   }
 
   const now = session?.user?.serverNow ? new Date(session.user.serverNow) : new Date();
-  const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const displayMonth = calendarMonth ?? now.getMonth() + 1;
+  const displayYear = calendarYear ?? now.getFullYear();
+  const monthlyDatesForCalendar = calendarDates ?? data.monthlyDates;
+  const firstDayOfMonth = new Date(displayYear, displayMonth - 1, 1);
   // getDay(): 0 (Dom) a 6 (Sab). Convertimos a: 0 (Lun) a 6 (Dom)
   const startOffset = (firstDayOfMonth.getDay() + 6) % 7;
-  
-  const currentMonthDays = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+
+  const currentMonthDays = new Date(displayYear, displayMonth, 0).getDate();
   const calendarDays = Array.from({ length: currentMonthDays }, (_, i) => i + 1);
-  const activeDays = new Set(data.monthlyDates.map(d => new Date(d).getDate()));
+  const activeDays = new Set(monthlyDatesForCalendar.map(d => new Date(d).getDate()));
+  const isCurrentMonth = displayMonth === now.getMonth() + 1 && displayYear === now.getFullYear();
+  const monthLabel = firstDayOfMonth
+    .toLocaleDateString("es-ES", { month: "long", year: "numeric" })
+    .replace(/^\w/, c => c.toUpperCase());
 
   const hoursTrained = Math.floor(data.stats.totalWeeklyMinutes / 60);
   const minsTrained = data.stats.totalWeeklyMinutes % 60;
@@ -287,25 +345,93 @@ export default function ProfilePage() {
                   {activeDays.size} sesiones
                 </span>
               </div>
-              
+
+              <div className="relative mb-3 flex justify-center">
+                <button
+                  onClick={() => {
+                    setPickerYear(displayYear);
+                    setIsMonthPickerOpen(true);
+                  }}
+                  disabled={isLoadingCalendar}
+                  className="flex items-center gap-2 rounded-full bg-slate-50 dark:bg-slate-800 px-4 py-2 text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-60 transition-colors"
+                >
+                  {monthLabel}
+                  <ChevronDown className="h-4 w-4 text-slate-400" />
+                </button>
+
+                {isMonthPickerOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setIsMonthPickerOpen(false)} />
+                    <div className="absolute top-full mt-2 z-50 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl p-4 w-72">
+                      <div className="flex items-center justify-between mb-3">
+                        <button
+                          onClick={() => setPickerYear(y => (y ?? now.getFullYear()) - 1)}
+                          disabled={(pickerYear ?? now.getFullYear()) <= data.memberSinceYear}
+                          className="p-2 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                        </button>
+                        <span className="font-black text-slate-900 dark:text-white">{pickerYear ?? now.getFullYear()}</span>
+                        <button
+                          onClick={() => setPickerYear(y => (y ?? now.getFullYear()) + 1)}
+                          disabled={(pickerYear ?? now.getFullYear()) >= now.getFullYear()}
+                          className="p-2 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2">
+                        {['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'].map((label, idx) => {
+                          const m = idx + 1;
+                          const y = pickerYear ?? now.getFullYear();
+                          const isSelected = m === displayMonth && y === displayYear;
+                          const isFuture = y === now.getFullYear() && m > now.getMonth() + 1;
+                          const isBeforeJoin = y === data.memberSinceYear && m < data.memberSinceMonth;
+                          const isDisabled = isFuture || isBeforeJoin;
+                          return (
+                            <button
+                              key={label}
+                              disabled={isDisabled}
+                              onClick={() => {
+                                goToMonth(m, y);
+                                setIsMonthPickerOpen(false);
+                              }}
+                              className={cn(
+                                "rounded-xl py-2.5 text-xs font-bold transition-colors",
+                                isSelected
+                                  ? "bg-primary text-white"
+                                  : "bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700",
+                                isDisabled && "opacity-30 cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-900"
+                              )}
+                            >
+                              {label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+
               <div className="flex-1 flex flex-col justify-center">
                 <div className="grid grid-cols-7 gap-1.5">
                   {['L', 'M', 'X', 'J', 'V', 'S', 'D'].map(d => (
                     <div key={d} className="text-center text-[10px] font-black text-slate-300 dark:text-slate-600 mb-1">{d}</div>
                   ))}
-                  
+
                   {/* Celdas vacías para el desfase del inicio de mes */}
                   {Array.from({ length: startOffset }).map((_, i) => (
                     <div key={`empty-${i}`} className="aspect-square" />
                   ))}
 
                   {calendarDays.map(day => (
-                    <div 
-                      key={day} 
+                    <div
+                      key={day}
                       className={cn(
                         "aspect-square rounded-2xl flex items-center justify-center text-xs font-bold transition-all",
-                        activeDays.has(day) 
-                          ? "bg-primary text-white shadow-soft shadow-cyan-100 dark:shadow-none scale-105" 
+                        activeDays.has(day)
+                          ? "bg-primary text-white shadow-soft shadow-cyan-100 dark:shadow-none scale-105"
                           : "bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700"
                       )}
                     >
@@ -387,6 +513,25 @@ export default function ProfilePage() {
                 ))
               )}
             </div>
+
+            {data.recentSessions.length < data.totalSessions && (
+              <div className="flex justify-center mt-6">
+                <button
+                  onClick={loadMoreSessions}
+                  disabled={isLoadingMore}
+                  className="px-6 py-2.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-sm font-bold text-slate-600 dark:text-slate-300 hover:border-cyan-200 dark:hover:border-cyan-400 hover:text-primary dark:hover:text-cyan-400 transition-all disabled:opacity-60 flex items-center gap-2"
+                >
+                  {isLoadingMore ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Cargando...
+                    </>
+                  ) : (
+                    "Cargar más entrenamientos"
+                  )}
+                </button>
+              </div>
+            )}
           </div>
         </div>
 

@@ -390,7 +390,7 @@ export default function GymClassesPage() {
               
               <div className="flex items-center gap-3">
                 {/* Rolling 14-day selector */}
-                <div className="flex-1 flex overflow-x-auto gap-2.5 pb-1.5 scrollbar-none scroll-smooth">
+                <div className="flex-1 min-w-0 flex overflow-x-auto gap-2.5 pb-1.5 scrollbar-none scroll-smooth">
                   {Array.from({ length: 14 }).map((_, i) => {
                     const d = new Date(now);
                     d.setDate(d.getDate() + i);

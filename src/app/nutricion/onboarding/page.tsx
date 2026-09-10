@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePreferences } from "@/context/PreferencesContext";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
 
 export default function NutritionOnboardingPage() {
   const router = useRouter();
@@ -182,7 +183,8 @@ export default function NutritionOnboardingPage() {
   const totalPct = manualTargets.proteinPct + manualTargets.carbsPct + manualTargets.fatPct;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-6 transition-colors">
+    <DashboardLayout>
+    <div className="flex flex-col items-center justify-center py-6 transition-colors">
       {isLoadingProfile ? (
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-cyan-500" />
@@ -601,5 +603,6 @@ export default function NutritionOnboardingPage() {
       </div>
       )}
     </div>
+    </DashboardLayout>
   );
 }

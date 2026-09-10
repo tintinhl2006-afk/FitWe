@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Modal, ActivityIndicator, Dimensions } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Modal, ActivityIndicator, Dimensions, Image, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import QRCode from 'react-native-qrcode-svg';
+import * as ImagePicker from 'expo-image-picker';
 import {
   User,
   Settings,
@@ -14,6 +15,10 @@ import {
   X,
   Eye,
   RefreshCw,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  Camera,
 } from 'lucide-react-native';
 import { useAppTheme } from '../../../context/ThemeContext';
 import { usePreferences } from '../../../context/PreferencesContext';
@@ -44,6 +49,11 @@ interface ProfileData {
   stats: { totalWeeklyMinutes: number; weeklySessionsCount: number; weeklyChartData: { day: string; minutos: number }[] };
   monthlyDates: string[];
   recentSessions: SessionEntry[];
+  totalSessions: number;
+  memberSinceYear: number;
+  memberSinceMonth: number;
+  page: number;
+  pageSize: number;
 }
 
 export default function ProfileScreen() {
@@ -53,7 +63,15 @@ export default function ProfileScreen() {
 
   const [data, setData] = useState<ProfileData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [expandedSession, setExpandedSession] = useState<SessionEntry | null>(null);
+  const [calendarMonth, setCalendarMonth] = useState<number | null>(null);
+  const [calendarYear, setCalendarYear] = useState<number | null>(null);
+  const [calendarDates, setCalendarDates] = useState<string[] | null>(null);
+  const [isLoadingCalendar, setIsLoadingCalendar] = useState(false);
+  const [isMonthPickerOpen, setIsMonthPickerOpen] = useState(false);
+  const [pickerYear, setPickerYear] = useState<number | null>(null);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
 
   const [isQrOpen, setIsQrOpen] = useState(false);
   const [qrToken, setQrToken] = useState<string | null>(null);
@@ -68,6 +86,95 @@ export default function ProfileScreen() {
     } finally {
       setIsLoading(false);
     }
+  }
+
+  async function loadMoreSessions() {
+    if (!data || isLoadingMore) return;
+    setIsLoadingMore(true);
+    try {
+      const nextPage = data.page + 1;
+      const res = await api.get(`/api/profile?page=${nextPage}&pageSize=${data.pageSize}`);
+      setData({
+        ...res,
+        recentSessions: [...data.recentSessions, ...res.recentSessions],
+      });
+    } catch (e) {
+      console.error('Error al cargar más entrenamientos:', e);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }
+
+  async function goToMonth(targetMonth: number, targetYear: number) {
+    setCalendarMonth(targetMonth);
+    setCalendarYear(targetYear);
+    setIsLoadingCalendar(true);
+    try {
+      const res = await api.get(`/api/profile/calendar?month=${targetMonth}&year=${targetYear}`);
+      setCalendarDates(res.monthlyDates);
+    } catch (e) {
+      console.error('Error al cargar el calendario:', e);
+    } finally {
+      setIsLoadingCalendar(false);
+    }
+  }
+
+  async function uploadPhoto(asset: ImagePicker.ImagePickerAsset) {
+    if (!asset.base64) return;
+    setIsUploadingPhoto(true);
+    try {
+      const mimeType = asset.mimeType || 'image/jpeg';
+      const dataUri = `data:${mimeType};base64,${asset.base64}`;
+      const res = await api.post('/api/profile/image', { image: dataUri });
+      setData((prev) => (prev ? { ...prev, user: { ...prev.user, image: res.image } } : prev));
+    } catch (e) {
+      Alert.alert('Error', e instanceof Error ? e.message : 'No se pudo subir la imagen.');
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  }
+
+  async function pickFromLibrary() {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert('Permiso requerido', 'Necesitamos acceso a tus fotos para cambiar tu foto de perfil.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.6,
+      base64: true,
+    });
+    if (!result.canceled && result.assets[0]) {
+      await uploadPhoto(result.assets[0]);
+    }
+  }
+
+  async function takePhoto() {
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert('Permiso requerido', 'Necesitamos acceso a tu cámara para hacer una foto de perfil.');
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.6,
+      base64: true,
+    });
+    if (!result.canceled && result.assets[0]) {
+      await uploadPhoto(result.assets[0]);
+    }
+  }
+
+  function handleChangePhoto() {
+    Alert.alert('Foto de perfil', undefined, [
+      { text: 'Hacer una foto', onPress: takePhoto },
+      { text: 'Elegir de la galería', onPress: pickFromLibrary },
+      { text: 'Cancelar', style: 'cancel' },
+    ]);
   }
 
   async function fetchQrToken() {
@@ -118,11 +225,18 @@ export default function ProfileScreen() {
   }
 
   const now = new Date();
-  const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const displayMonth = calendarMonth ?? now.getMonth() + 1;
+  const displayYear = calendarYear ?? now.getFullYear();
+  const monthlyDatesForCalendar = calendarDates ?? data.monthlyDates;
+  const firstDayOfMonth = new Date(displayYear, displayMonth - 1, 1);
   const startOffset = (firstDayOfMonth.getDay() + 6) % 7;
-  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const daysInMonth = new Date(displayYear, displayMonth, 0).getDate();
   const calendarDays = Array.from({ length: daysInMonth }, (_, i) => i + 1);
-  const activeDays = new Set(data.monthlyDates.map((d) => new Date(d).getDate()));
+  const activeDays = new Set(monthlyDatesForCalendar.map((d) => new Date(d).getDate()));
+  const isCurrentMonth = displayMonth === now.getMonth() + 1 && displayYear === now.getFullYear();
+  const monthLabel = firstDayOfMonth
+    .toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })
+    .replace(/^\w/, (c) => c.toUpperCase());
 
   const hoursTrained = Math.floor(data.stats.totalWeeklyMinutes / 60);
   const minsTrained = data.stats.totalWeeklyMinutes % 60;
@@ -143,21 +257,46 @@ export default function ProfileScreen() {
 
         {/* Avatar */}
         <View style={{ alignItems: 'center', marginBottom: 24 }}>
-          <View
-            style={{
-              height: 96,
-              width: 96,
-              borderRadius: 48,
-              backgroundColor: colors.surfaceAlt,
-              borderWidth: 3,
-              borderColor: colors.surface,
-              alignItems: 'center',
-              justifyContent: 'center',
-              overflow: 'hidden',
-            }}
-          >
-            <User size={44} color={colors.textMuted} />
-          </View>
+          <TouchableOpacity onPress={handleChangePhoto} disabled={isUploadingPhoto} activeOpacity={0.8}>
+            <View
+              style={{
+                height: 96,
+                width: 96,
+                borderRadius: 48,
+                backgroundColor: colors.surfaceAlt,
+                borderWidth: 3,
+                borderColor: colors.surface,
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden',
+              }}
+            >
+              {isUploadingPhoto ? (
+                <ActivityIndicator color={colors.primary} />
+              ) : data.user.image ? (
+                <Image source={{ uri: data.user.image }} style={{ height: '100%', width: '100%' }} />
+              ) : (
+                <User size={44} color={colors.textMuted} />
+              )}
+            </View>
+            <View
+              style={{
+                position: 'absolute',
+                bottom: 0,
+                right: 0,
+                height: 32,
+                width: 32,
+                borderRadius: 16,
+                backgroundColor: colors.primary,
+                borderWidth: 2,
+                borderColor: colors.surface,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Camera size={14} color="#fff" />
+            </View>
+          </TouchableOpacity>
           <Text style={{ fontSize: 22, fontWeight: '900', color: colors.textPrimary, marginTop: 12 }}>{data.user.name}</Text>
           <Text style={{ fontSize: 13, color: colors.textSecondary, marginTop: 2 }}>{data.user.email}</Text>
 
@@ -224,6 +363,31 @@ export default function ProfileScreen() {
               </Text>
             </View>
           </View>
+
+          <TouchableOpacity
+            onPress={() => {
+              setPickerYear(displayYear);
+              setIsMonthPickerOpen(true);
+            }}
+            disabled={isLoadingCalendar}
+            activeOpacity={0.7}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              alignSelf: 'center',
+              backgroundColor: colors.surfaceAlt,
+              borderRadius: 999,
+              paddingVertical: 10,
+              paddingHorizontal: 18,
+              marginBottom: 12,
+              opacity: isLoadingCalendar ? 0.6 : 1,
+            }}
+          >
+            <Text style={{ fontSize: 14, fontWeight: '800', color: colors.textPrimary }}>{monthLabel}</Text>
+            <ChevronDown size={16} color={colors.textMuted} />
+          </TouchableOpacity>
 
           <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
             {['L', 'M', 'X', 'J', 'V', 'S', 'D'].map((d) => (
@@ -295,6 +459,34 @@ export default function ProfileScreen() {
               </TouchableOpacity>
             ))}
           </View>
+        )}
+
+        {data.recentSessions.length < data.totalSessions && (
+          <TouchableOpacity
+            onPress={loadMoreSessions}
+            disabled={isLoadingMore}
+            style={{
+              marginTop: 14,
+              alignSelf: 'center',
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 8,
+              paddingHorizontal: 20,
+              paddingVertical: 10,
+              borderRadius: 999,
+              borderWidth: 1,
+              borderColor: colors.border,
+              opacity: isLoadingMore ? 0.6 : 1,
+            }}
+          >
+            {isLoadingMore ? (
+              <ActivityIndicator size="small" color={colors.primaryAccent} />
+            ) : (
+              <Text style={{ fontSize: 12, fontWeight: '900', color: colors.primaryAccent, textTransform: 'uppercase' }}>
+                Cargar más entrenamientos
+              </Text>
+            )}
+          </TouchableOpacity>
         )}
       </ScrollView>
 
@@ -416,6 +608,75 @@ export default function ProfileScreen() {
                 </Text>
               </View>
             )}
+          </View>
+        </View>
+      </Modal>
+
+      {/* Month Picker Modal */}
+      <Modal visible={isMonthPickerOpen} animationType="slide" transparent onRequestClose={() => setIsMonthPickerOpen(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(2,6,23,0.6)', justifyContent: 'flex-end' }}>
+          <View style={{ backgroundColor: colors.surface, borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingBottom: 28, borderWidth: 1, borderColor: colors.border }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, borderBottomWidth: 1, borderBottomColor: colors.border }}>
+              <Text style={{ fontSize: 16, fontWeight: '900', color: colors.textPrimary }}>Selecciona un mes</Text>
+              <TouchableOpacity
+                onPress={() => setIsMonthPickerOpen(false)}
+                style={{ height: 34, width: 34, borderRadius: 17, backgroundColor: colors.surfaceAlt, alignItems: 'center', justifyContent: 'center' }}
+              >
+                <X size={16} color={colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={{ padding: 20 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
+                <TouchableOpacity
+                  onPress={() => setPickerYear((y) => (y ?? now.getFullYear()) - 1)}
+                  disabled={(pickerYear ?? now.getFullYear()) <= data.memberSinceYear}
+                  style={{ height: 48, width: 48, borderRadius: 24, backgroundColor: colors.surfaceAlt, alignItems: 'center', justifyContent: 'center', opacity: (pickerYear ?? now.getFullYear()) <= data.memberSinceYear ? 0.35 : 1 }}
+                >
+                  <ChevronLeft size={20} color={colors.textPrimary} />
+                </TouchableOpacity>
+                <Text style={{ fontSize: 18, fontWeight: '900', color: colors.textPrimary }}>{pickerYear ?? now.getFullYear()}</Text>
+                <TouchableOpacity
+                  onPress={() => setPickerYear((y) => (y ?? now.getFullYear()) + 1)}
+                  disabled={(pickerYear ?? now.getFullYear()) >= now.getFullYear()}
+                  style={{ height: 48, width: 48, borderRadius: 24, backgroundColor: colors.surfaceAlt, alignItems: 'center', justifyContent: 'center', opacity: (pickerYear ?? now.getFullYear()) >= now.getFullYear() ? 0.35 : 1 }}
+                >
+                  <ChevronRight size={20} color={colors.textPrimary} />
+                </TouchableOpacity>
+              </View>
+
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+                {['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'].map((label, idx) => {
+                  const m = idx + 1;
+                  const y = pickerYear ?? now.getFullYear();
+                  const isSelected = m === displayMonth && y === displayYear;
+                  const isFuture = y === now.getFullYear() && m > now.getMonth() + 1;
+                  const isBeforeJoin = y === data.memberSinceYear && m < data.memberSinceMonth;
+                  const isDisabled = isFuture || isBeforeJoin;
+                  return (
+                    <TouchableOpacity
+                      key={label}
+                      disabled={isDisabled}
+                      onPress={() => {
+                        goToMonth(m, y);
+                        setIsMonthPickerOpen(false);
+                      }}
+                      style={{
+                        width: '30%',
+                        minHeight: 52,
+                        borderRadius: 16,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: isSelected ? colors.primary : colors.surfaceAlt,
+                        opacity: isDisabled ? 0.35 : 1,
+                      }}
+                    >
+                      <Text style={{ fontSize: 14, fontWeight: '800', color: isSelected ? '#fff' : colors.textPrimary }}>{label}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
           </View>
         </View>
       </Modal>

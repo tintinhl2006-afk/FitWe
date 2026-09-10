@@ -38,6 +38,12 @@ export default function TabsLayout() {
           title: 'Nutrición',
           tabBarIcon: ({ color, size }) => <Utensils size={size} color={color} />,
         }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            e.preventDefault();
+            navigation.navigate('nutrition', { screen: 'index' });
+          },
+        })}
       />
       <Tabs.Screen
         name="workout"
@@ -45,6 +51,12 @@ export default function TabsLayout() {
           title: 'Entrenos',
           tabBarIcon: ({ color, size }) => <Dumbbell size={size} color={color} />,
         }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            e.preventDefault();
+            navigation.navigate('workout', { screen: 'index' });
+          },
+        })}
       />
       <Tabs.Screen
         name="classes"
@@ -52,6 +64,12 @@ export default function TabsLayout() {
           title: 'Clases',
           tabBarIcon: ({ color, size }) => <Calendar size={size} color={color} />,
         }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            e.preventDefault();
+            navigation.navigate('classes', { screen: 'index' });
+          },
+        })}
       />
       <Tabs.Screen
         name="profile"
@@ -59,6 +77,12 @@ export default function TabsLayout() {
           title: 'Perfil',
           tabBarIcon: ({ color, size }) => <User size={size} color={color} />,
         }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            e.preventDefault();
+            navigation.navigate('profile', { screen: 'index' });
+          },
+        })}
       />
     </Tabs>
   );

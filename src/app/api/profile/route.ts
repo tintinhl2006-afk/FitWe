@@ -12,16 +12,25 @@ export async function GET(request: Request) {
     }
     const { searchParams } = new URL(request.url);
     const dateParam = searchParams.get("date");
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10) || 1);
+    const pageSize = Math.min(
+      50,
+      Math.max(1, parseInt(searchParams.get("pageSize") || "10", 10) || 10)
+    );
 
     // Obtener datos básicos del usuario
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { name: true, image: true, email: true },
+      select: { name: true, image: true, email: true, createdAt: true },
     });
 
     if (!user) {
       return NextResponse.json({ message: "Usuario no encontrado" }, { status: 404 });
     }
+
+    const { createdAt, ...userWithoutCreatedAt } = user;
+    const memberSinceYear = createdAt.getFullYear();
+    const memberSinceMonth = createdAt.getMonth() + 1;
 
     // Fechas clave
     const now = await getNow();
@@ -109,10 +118,15 @@ export async function GET(request: Request) {
       };
     }
 
-    // Todos los entrenamientos (o filtrados por fecha)
+    // Historial paginado (o el día concreto filtrado, que ya es naturalmente pequeño — pero
+    // igualmente acotado con pageSize por seguridad). Antes esto traía TODO el historial del
+    // usuario sin límite en cada carga de la pantalla de perfil.
+    const totalSessions = await prisma.workoutSession.count({ where: sessionsWhereClause });
     const last5SessionsRaw = await prisma.workoutSession.findMany({
       where: sessionsWhereClause,
       orderBy: { startTime: 'desc' },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
       include: {
         routine: { select: { name: true } },
         workoutSets: {
@@ -153,7 +167,7 @@ export async function GET(request: Request) {
     });
 
     return NextResponse.json({
-      user,
+      user: userWithoutCreatedAt,
       stats: {
         totalWeeklyMinutes,
         weeklySessionsCount: weeklySessions.length,
@@ -161,6 +175,11 @@ export async function GET(request: Request) {
       },
       monthlyDates,
       recentSessions,
+      totalSessions,
+      page,
+      pageSize,
+      memberSinceYear,
+      memberSinceMonth,
     });
   } catch (error) {
     console.error("Error fetching profile data:", error);

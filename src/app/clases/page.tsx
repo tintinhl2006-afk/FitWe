@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import {
@@ -14,6 +14,10 @@ import {
   AlertCircle,
   Lock,
   User as UserIcon,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  UserCircle2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SubscriptionBanner, useIsSubscriptionActive } from "@/components/shared/SubscriptionBanner";
@@ -31,6 +35,7 @@ interface ClassItem {
   opensAt: string | null;
   userBookingId: string | null;
   isBooked: boolean;
+  attendees: { id: string; name: string | null; image: string | null }[];
 }
 
 function timeUntil(dateStr: string, now: Date): string {
@@ -54,6 +59,19 @@ export default function ClasesPage() {
   const [toast, setToast] = useState<{ msg: string; type: "ok" | "err" } | null>(null);
   const [noGym, setNoGym] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>("");
+  const [expandedClassId, setExpandedClassId] = useState<string | null>(null);
+
+  const daysScrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollDaysLeft, setCanScrollDaysLeft] = useState(false);
+  const DAYS_SCROLL_STEP = 220;
+
+  function handleDaysScroll() {
+    setCanScrollDaysLeft((daysScrollRef.current?.scrollLeft ?? 0) > 5);
+  }
+
+  function scrollDays(direction: 1 | -1) {
+    daysScrollRef.current?.scrollBy({ left: direction * DAYS_SCROLL_STEP, behavior: "smooth" });
+  }
 
   const now = session?.user?.serverNow ? new Date(session.user.serverNow) : new Date();
   const todayStr = now.toISOString().split("T")[0];
@@ -190,8 +208,22 @@ export default function ClasesPage() {
             </div>
             
             <div className="flex items-center gap-3">
+              {canScrollDaysLeft && (
+                <button
+                  type="button"
+                  onClick={() => scrollDays(-1)}
+                  className="shrink-0 h-9 w-9 flex items-center justify-center rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-cyan-400 hover:border-cyan-500/30 transition-all cursor-pointer"
+                  aria-label="Días anteriores"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+              )}
               {/* Rolling 14-day selector */}
-              <div className="flex-1 flex overflow-x-auto gap-2.5 pb-1.5 scrollbar-none scroll-smooth">
+              <div
+                ref={daysScrollRef}
+                onScroll={handleDaysScroll}
+                className="flex-1 min-w-0 flex overflow-x-auto gap-2.5 pb-1.5 scrollbar-none scroll-smooth"
+              >
                 {Array.from({ length: 14 }).map((_, i) => {
                   const d = new Date(now);
                   d.setDate(d.getDate() + i);
@@ -248,6 +280,15 @@ export default function ClasesPage() {
                 })}
               </div>
               
+              <button
+                type="button"
+                onClick={() => scrollDays(1)}
+                className="shrink-0 h-9 w-9 flex items-center justify-center rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-cyan-400 hover:border-cyan-500/30 transition-all cursor-pointer"
+                aria-label="Días siguientes"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+
               {/* Premium calendar date picker button */}
               <div className="shrink-0 relative w-12 h-12 flex items-center justify-center rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-cyan-400 transition-all cursor-pointer shadow-sm">
                 <CalendarDays className="h-5 w-5" />
@@ -368,7 +409,45 @@ export default function ClasesPage() {
                                 <Users className="h-3.5 w-3.5 text-emerald-500" />
                                 {c.spotsLeft} plaza{c.spotsLeft !== 1 && "s"} libre{c.spotsLeft !== 1 && "s"}
                               </span>
+                              {c.attendees.length > 0 && (
+                                <button
+                                  type="button"
+                                  onClick={() => setExpandedClassId(expandedClassId === c.id ? null : c.id)}
+                                  className="inline-flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/50 px-2.5 py-1 rounded-lg border border-slate-100 dark:border-slate-800 hover:border-cyan-500/30 hover:text-primary dark:hover:text-cyan-400 transition-colors cursor-pointer"
+                                >
+                                  <UserCircle2 className="h-3.5 w-3.5 text-cyan-500" />
+                                  {c.attendees.length} apuntado{c.attendees.length !== 1 && "s"}
+                                  <ChevronDown
+                                    className={cn(
+                                      "h-3 w-3 transition-transform",
+                                      expandedClassId === c.id && "rotate-180"
+                                    )}
+                                  />
+                                </button>
+                              )}
                             </div>
+
+                            {expandedClassId === c.id && (
+                              <div className="mt-3 flex flex-wrap gap-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                                {c.attendees.map((a) => (
+                                  <div
+                                    key={a.id}
+                                    className="inline-flex items-center gap-2 bg-slate-50 dark:bg-slate-800/50 pl-1.5 pr-3 py-1 rounded-full border border-slate-100 dark:border-slate-800"
+                                  >
+                                    {a.image ? (
+                                      <img src={a.image} alt="" className="h-5 w-5 rounded-full object-cover" />
+                                    ) : (
+                                      <div className="h-5 w-5 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
+                                        <UserIcon className="h-3 w-3 text-slate-400" />
+                                      </div>
+                                    )}
+                                    <span className="text-xs font-medium text-slate-600 dark:text-slate-300">
+                                      {a.name || "Alguien"}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
 
                           <div className="shrink-0 self-start sm:self-auto">
