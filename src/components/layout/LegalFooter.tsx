@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { X } from "lucide-react";
 
 type ModalType = "aviso" | "privacidad" | "terminos" | null;
@@ -61,12 +62,12 @@ export function LegalFooter() {
             >
               Aviso Legal
             </button>
-            <button
-              onClick={() => setActiveModal("privacidad")}
-              className="text-sm text-slate-500 hover:text-slate-300 transition-colors bg-transparent border-none cursor-pointer"
+            <Link
+              href="/privacidad"
+              className="text-sm text-slate-500 hover:text-slate-300 transition-colors"
             >
               Política de Privacidad
-            </button>
+            </Link>
             <button
               onClick={() => setActiveModal("terminos")}
               className="text-sm text-slate-500 hover:text-slate-300 transition-colors bg-transparent border-none cursor-pointer"
