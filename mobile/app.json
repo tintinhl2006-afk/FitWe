@@ -19,8 +19,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.fitwe.app",
-      "versionCode": 1
+      "package": "com.fitwe.app"
     },
     "web": {
       "output": "static",
@@ -43,6 +42,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "1d062b5b-91d3-4b26-a86a-92247730ce79"
+      }
+    },
+    "owner": "tudesarrollodigital"
   }
 }
