@@ -8,8 +8,12 @@
     "scheme": "mobile",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon",
-      "bundleIdentifier": "com.fitwe.app"
+      "icon": "./assets/images/ios-icon.png",
+      "bundleIdentifier": "com.fitwe.app",
+      "supportsTablet": false,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -30,9 +34,24 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#020617",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "imageWidth": 220
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "FitWe necesita acceso a tus fotos para que puedas elegir tu foto de perfil.",
+          "cameraPermission": "FitWe necesita acceso a la cámara para que puedas hacerte una foto de perfil."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "FitWe necesita acceso a la cámara para escanear códigos QR de acceso.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false
         }
       ],
       "expo-secure-store",
