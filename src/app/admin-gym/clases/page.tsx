@@ -390,7 +390,7 @@ export default function GymClassesPage() {
               
               <div className="flex items-center gap-3">
                 {/* Rolling 14-day selector */}
-                <div className="flex-1 min-w-0 flex overflow-x-auto gap-2.5 pb-1.5 scrollbar-none scroll-smooth">
+                <div className="flex-1 min-w-0 grid grid-cols-7 gap-1.5 sm:gap-2.5">
                   {Array.from({ length: 14 }).map((_, i) => {
                     const d = new Date(now);
                     d.setDate(d.getDate() + i);
@@ -414,7 +414,7 @@ export default function GymClassesPage() {
                         key={dateStr}
                         onClick={() => setSelectedDate(dateStr)}
                         className={cn(
-                          "flex flex-col items-center justify-center min-w-[72px] py-3.5 rounded-2xl border transition-all duration-200 cursor-pointer",
+                          "flex flex-col items-center justify-center min-w-0 py-3.5 rounded-2xl border transition-all duration-200 cursor-pointer",
                           isSelected
                             ? "bg-gradient-to-br from-cyan-500 to-primary text-white border-transparent shadow-md shadow-cyan-500/20 scale-102"
                             : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-cyan-500/30 hover:bg-slate-50 dark:hover:bg-slate-800/50"
@@ -606,8 +606,8 @@ export default function GymClassesPage() {
       ) : (
         /* TEMPLATES TAB */
         <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
+          <div className="w-full">
+            <table className="responsive-table w-full text-left">
               <thead className="bg-slate-50 dark:bg-slate-800/50 text-xs font-semibold text-slate-500 uppercase tracking-wider">
                 <tr>
                   <th className="px-6 py-3">Día</th>
@@ -623,14 +623,14 @@ export default function GymClassesPage() {
                   <tr><td colSpan={6} className="p-12 text-center text-slate-500">No hay plantillas configuradas</td></tr>
                 ) : paginatedTemplates.map((t) => (
                   <tr key={t.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                    <td className="px-6 py-4 text-sm font-bold text-primary dark:text-cyan-400">{DAYS[t.dayOfWeek - 1]}</td>
-                    <td className="px-6 py-4 text-sm font-medium text-slate-900 dark:text-white">{t.name}</td>
-                    <td className="px-6 py-4 text-sm text-slate-700 dark:text-slate-300">{t.instructor}</td>
-                    <td className="px-6 py-4">
+                    <td data-label="Día" className="px-6 py-4 text-sm font-bold text-primary dark:text-cyan-400">{DAYS[t.dayOfWeek - 1]}</td>
+                    <td data-label="Clase" className="px-6 py-4 text-sm font-medium text-slate-900 dark:text-white">{t.name}</td>
+                    <td data-label="Instructor" className="px-6 py-4 text-sm text-slate-700 dark:text-slate-300">{t.instructor}</td>
+                    <td data-label="Hora y duración" className="px-6 py-4">
                       <p className="text-sm font-medium">{t.startTime}</p>
                       <p className="text-xs text-slate-500">{t.durationMinutes} min</p>
                     </td>
-                    <td className="px-6 py-4 text-sm">{t.capacity} plazas</td>
+                    <td data-label="Aforo" className="px-6 py-4 text-sm">{t.capacity} plazas</td>
                     <td className="px-6 py-4 text-right">
                       {(isGym || t.instructorId === session?.user?.id) && (
                         <button onClick={() => handleDeleteTemplate(t.id)} className="text-slate-400 hover:text-red-500 p-2 transition-colors">
@@ -882,8 +882,8 @@ export default function GymClassesPage() {
                   <p className="text-slate-500">No hay reservas para esta clase todavía.</p>
                 </div>
               ) : (
-                <div className="rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden overflow-x-auto">
-                  <table className="w-full text-left min-w-[500px]">
+                <div className="rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+                  <table className="responsive-table w-full text-left">
                     <thead className="bg-slate-50 dark:bg-slate-800/50 text-xs font-semibold text-slate-500 uppercase tracking-wider">
                       <tr>
                         <th className="px-4 py-3">Usuario</th>
@@ -894,11 +894,11 @@ export default function GymClassesPage() {
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                       {classBookings.map((booking) => (
                         <tr key={booking.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30">
-                          <td className="px-4 py-3">
+                          <td data-label="Usuario" className="px-4 py-3">
                             <p className="text-sm font-bold text-slate-900 dark:text-white">{booking.user.name}</p>
                             <p className="text-xs text-slate-500">{booking.user.email}</p>
                           </td>
-                          <td className="px-4 py-3">
+                          <td data-label="Estado cuota" className="px-4 py-3">
                             <span className={cn(
                               "text-xs font-bold px-2 py-1 rounded-full",
                               booking.user.subscriptionStatus === "ACTIVE" 

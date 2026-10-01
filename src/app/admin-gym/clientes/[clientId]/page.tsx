@@ -796,8 +796,8 @@ export default function ClientDetailPage({
             Historial de Pagos y Ajustes
           </h2>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+        <div className="w-full">
+          <table className="responsive-table w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-slate-50 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
                 <th className="px-6 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Fecha</th>
@@ -809,13 +809,13 @@ export default function ClientDetailPage({
               {payments.length > 0 ? (
                 payments.map((p) => (
                   <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                    <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                    <td data-label="Fecha" className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400 whitespace-nowrap">
                       {new Date(p.date).toLocaleDateString("es-ES", { day: '2-digit', month: 'short', year: 'numeric' })}
                     </td>
-                    <td className="px-6 py-4 text-sm font-medium text-slate-900 dark:text-white">
+                    <td data-label="Concepto" className="px-6 py-4 text-sm font-medium text-slate-900 dark:text-white">
                       {p.description}
                     </td>
-                    <td className="px-6 py-4 text-sm font-bold text-slate-900 dark:text-white">
+                    <td data-label="Cantidad" className="px-6 py-4 text-sm font-bold text-slate-900 dark:text-white">
                       {p.amount > 0 ? `${p.amount}€` : "-"}
                     </td>
                   </tr>

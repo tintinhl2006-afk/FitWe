@@ -604,20 +604,16 @@ export default function RoutineDetailScreen() {
                       style={{ flex: 1, color: colors.textPrimary, height: 44 }}
                     />
                   </View>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                    <View style={{ flexDirection: 'row', gap: 6 }}>
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
                       {MUSCLE_GROUPS.map((m) => (
                         <FilterChip key={m || 'todos-m'} label={m || 'Todos'} active={filterMuscle === m} onPress={() => setFilterMuscle(m)} colors={colors} />
                       ))}
                     </View>
-                  </ScrollView>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                    <View style={{ flexDirection: 'row', gap: 6 }}>
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
                       {EQUIPMENT_TYPES.map((eq) => (
                         <FilterChip key={eq || 'todos-eq'} label={eq || 'Todos'} active={filterEquipment === eq} onPress={() => setFilterEquipment(eq)} colors={colors} />
                       ))}
                     </View>
-                  </ScrollView>
                 </View>
 
                 <ScrollView style={{ paddingHorizontal: 16 }} contentContainerStyle={{ paddingBottom: 20, gap: 8 }}>

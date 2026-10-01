@@ -177,13 +177,13 @@ function StatChart({ title, data, dataKey, unit, color }: { title: string; data:
   return (
     <Card>
       <Text style={{ fontSize: 13, fontWeight: 'bold', color: colors.textPrimary, marginBottom: 14 }}>{title}</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 14, height: 130, paddingHorizontal: 4 }}>
+      <View>
+        <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 4, height: 130 }}>
           {data.map((point, idx) => {
             const val = Number(point[dataKey]);
             const heightPct = Math.max((val / max) * 100, 4);
             return (
-              <View key={idx} style={{ alignItems: 'center', width: 44 }}>
+              <View key={idx} style={{ alignItems: 'center', flex: 1, minWidth: 0 }}>
                 <Text style={{ fontSize: 9, fontWeight: 'bold', color: colors.textSecondary, marginBottom: 4 }}>{Math.round(val)}</Text>
                 <View style={{ width: 20, height: `${heightPct}%`, backgroundColor: color, borderRadius: 5 }} />
                 <Text style={{ fontSize: 8, color: colors.textMuted, marginTop: 6, textAlign: 'center' }} numberOfLines={1}>
@@ -193,7 +193,7 @@ function StatChart({ title, data, dataKey, unit, color }: { title: string; data:
             );
           })}
         </View>
-      </ScrollView>
+      </View>
       <Text style={{ fontSize: 10, color: colors.textMuted, marginTop: 10, textAlign: 'right' }}>Unidad: {unit}</Text>
     </Card>
   );

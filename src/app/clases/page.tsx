@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import {
@@ -14,8 +14,6 @@ import {
   AlertCircle,
   Lock,
   User as UserIcon,
-  ChevronLeft,
-  ChevronRight,
   ChevronDown,
   UserCircle2,
 } from "lucide-react";
@@ -60,18 +58,6 @@ export default function ClasesPage() {
   const [noGym, setNoGym] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [expandedClassId, setExpandedClassId] = useState<string | null>(null);
-
-  const daysScrollRef = useRef<HTMLDivElement>(null);
-  const [canScrollDaysLeft, setCanScrollDaysLeft] = useState(false);
-  const DAYS_SCROLL_STEP = 220;
-
-  function handleDaysScroll() {
-    setCanScrollDaysLeft((daysScrollRef.current?.scrollLeft ?? 0) > 5);
-  }
-
-  function scrollDays(direction: 1 | -1) {
-    daysScrollRef.current?.scrollBy({ left: direction * DAYS_SCROLL_STEP, behavior: "smooth" });
-  }
 
   const now = session?.user?.serverNow ? new Date(session.user.serverNow) : new Date();
   const todayStr = now.toISOString().split("T")[0];
@@ -208,22 +194,8 @@ export default function ClasesPage() {
             </div>
             
             <div className="flex items-center gap-3">
-              {canScrollDaysLeft && (
-                <button
-                  type="button"
-                  onClick={() => scrollDays(-1)}
-                  className="shrink-0 h-9 w-9 flex items-center justify-center rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-cyan-400 hover:border-cyan-500/30 transition-all cursor-pointer"
-                  aria-label="Días anteriores"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-              )}
               {/* Rolling 14-day selector */}
-              <div
-                ref={daysScrollRef}
-                onScroll={handleDaysScroll}
-                className="flex-1 min-w-0 flex overflow-x-auto gap-2.5 pb-1.5 scrollbar-none scroll-smooth"
-              >
+              <div className="flex-1 min-w-0 grid grid-cols-7 gap-1.5 sm:gap-2.5">
                 {Array.from({ length: 14 }).map((_, i) => {
                   const d = new Date(now);
                   d.setDate(d.getDate() + i);
@@ -247,7 +219,7 @@ export default function ClasesPage() {
                       key={dateStr}
                       onClick={() => setSelectedDate(dateStr)}
                       className={cn(
-                        "flex flex-col items-center justify-center min-w-[72px] py-3.5 rounded-2xl border transition-all duration-200 cursor-pointer",
+                        "flex flex-col items-center justify-center min-w-0 py-3.5 rounded-2xl border transition-all duration-200 cursor-pointer",
                         isSelected
                           ? "bg-gradient-to-br from-cyan-500 to-primary text-white border-transparent shadow-md shadow-cyan-500/20 scale-102"
                           : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-cyan-500/30 hover:bg-slate-50 dark:hover:bg-slate-800/50"
@@ -280,15 +252,6 @@ export default function ClasesPage() {
                 })}
               </div>
               
-              <button
-                type="button"
-                onClick={() => scrollDays(1)}
-                className="shrink-0 h-9 w-9 flex items-center justify-center rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-cyan-400 hover:border-cyan-500/30 transition-all cursor-pointer"
-                aria-label="Días siguientes"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
-
               {/* Premium calendar date picker button */}
               <div className="shrink-0 relative w-12 h-12 flex items-center justify-center rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-cyan-400 transition-all cursor-pointer shadow-sm">
                 <CalendarDays className="h-5 w-5" />

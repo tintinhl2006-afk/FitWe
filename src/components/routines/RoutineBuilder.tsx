@@ -662,7 +662,7 @@ export function RoutineBuilder({
                     {/* Grupo de Músculo Pills */}
                     <div className="flex flex-col gap-1.5">
                       <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Grupo Muscular</span>
-                      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
+                      <div className="flex flex-wrap gap-1.5">
                         {["", "Pecho", "Espalda", "Pierna", "Brazo", "Hombro", "Core", "Cardio"].map((muscle) => (
                           <button
                             key={muscle}
@@ -684,7 +684,7 @@ export function RoutineBuilder({
                     {/* Equipamiento Pills */}
                     <div className="flex flex-col gap-1.5">
                       <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Equipamiento</span>
-                      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
+                      <div className="flex flex-wrap gap-1.5">
                         {["", "Barra", "Mancuernas", "Máquina", "Peso Corporal"].map((eq) => (
                           <button
                             key={eq}

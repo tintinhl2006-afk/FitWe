@@ -208,23 +208,23 @@ export default function SessionDetailPage({
               </div>
 
               {/* Sets Table */}
-              <div className="overflow-x-auto">
+              <div className="w-full">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="bg-slate-50 dark:bg-slate-950 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                      <th className="px-6 py-2.5 text-left">Serie</th>
+                      <th className="px-3 sm:px-6 py-2.5 text-left">Serie</th>
                       {isCardio ? (
                         <>
-                          <th className="px-6 py-2.5 text-right">Distancia ({session.distanceUnit || 'km'})</th>
-                          <th className="px-6 py-2.5 text-right">Tiempo (min)</th>
+                          <th className="px-3 sm:px-6 py-2.5 text-right">Distancia ({session.distanceUnit || 'km'})</th>
+                          <th className="px-3 sm:px-6 py-2.5 text-right">Tiempo (min)</th>
                         </>
                       ) : (
                         <>
-                          <th className="px-6 py-2.5 text-right">Peso ({session.weightUnit || "kg"})</th>
-                          <th className="px-6 py-2.5 text-right">Reps</th>
+                          <th className="px-3 sm:px-6 py-2.5 text-right">Peso ({session.weightUnit || "kg"})</th>
+                          <th className="px-3 sm:px-6 py-2.5 text-right">Reps</th>
                         </>
                       )}
-                      <th className="px-6 py-2.5 text-center">Estado</th>
+                      <th className="px-3 sm:px-6 py-2.5 text-center">Estado</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50 dark:divide-slate-800">

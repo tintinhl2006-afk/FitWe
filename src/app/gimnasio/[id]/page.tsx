@@ -133,7 +133,7 @@ export default function ExerciseDetailPage({ params }: { params: Promise<{ id: s
           </div>
         </div>
 
-        <div className="flex border-b border-slate-200 dark:border-slate-800 overflow-x-auto hide-scrollbar">
+        <div className="flex flex-wrap border-b border-slate-200 dark:border-slate-800">
           {[
             { id: "indicaciones", icon: Info, label: "Indicaciones" },
             { id: "historial", icon: History, label: "Historial de Progresión" },
@@ -143,7 +143,7 @@ export default function ExerciseDetailPage({ params }: { params: Promise<{ id: s
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
               className={cn(
-                "flex items-center gap-2 py-4 px-6 text-sm font-medium border-b-2 transition-colors whitespace-nowrap",
+                "flex items-center gap-2 py-3 px-3 sm:py-4 sm:px-6 text-sm font-medium border-b-2 transition-colors",
                 activeTab === tab.id
                   ? "border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400"
                   : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700"
@@ -186,7 +186,7 @@ export default function ExerciseDetailPage({ params }: { params: Promise<{ id: s
                       </span>
                     </div>
                     <div className="px-5 py-2">
-                      <div className="overflow-x-auto">
+                      <div className="w-full">
                         <table className="w-full text-sm text-left">
                         <thead>
                           <tr className="text-slate-400 dark:text-slate-500 font-medium border-b border-slate-100 dark:border-slate-800">
