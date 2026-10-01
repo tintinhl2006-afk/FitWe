@@ -662,7 +662,8 @@ export function RoutineBuilder({
                     {/* Grupo de Músculo Pills */}
                     <div className="flex flex-col gap-1.5">
                       <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Grupo Muscular</span>
-                      <div className="flex flex-wrap gap-1.5">
+                      <select value={filterMuscle} onChange={(e) => setFilterMuscle(e.target.value)} className="sm:hidden w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3 py-2 text-sm text-slate-700 dark:text-slate-200"><option value="">Todos</option><option value="Pecho">Pecho</option><option value="Espalda">Espalda</option><option value="Pierna">Pierna</option><option value="Brazo">Brazo</option><option value="Hombro">Hombro</option><option value="Core">Core</option><option value="Cardio">Cardio</option></select>
+                      <div className="hidden sm:flex flex-wrap gap-1.5">
                         {["", "Pecho", "Espalda", "Pierna", "Brazo", "Hombro", "Core", "Cardio"].map((muscle) => (
                           <button
                             key={muscle}
@@ -684,7 +685,8 @@ export function RoutineBuilder({
                     {/* Equipamiento Pills */}
                     <div className="flex flex-col gap-1.5">
                       <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Equipamiento</span>
-                      <div className="flex flex-wrap gap-1.5">
+                      <select value={filterEquipment} onChange={(e) => setFilterEquipment(e.target.value)} className="sm:hidden w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3 py-2 text-sm text-slate-700 dark:text-slate-200"><option value="">Todos</option><option value="Barra">Barra</option><option value="Mancuernas">Mancuernas</option><option value="Máquina">Máquina</option><option value="Peso Corporal">Peso Corporal</option></select>
+                      <div className="hidden sm:flex flex-wrap gap-1.5">
                         {["", "Barra", "Mancuernas", "Máquina", "Peso Corporal"].map((eq) => (
                           <button
                             key={eq}

@@ -19,6 +19,8 @@ import {
   GripVertical,
   ArrowUpDown,
   Download,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react-native';
 import { useAppTheme } from '../../../../context/ThemeContext';
 import { useLiveWorkout } from '../../../../context/LiveWorkoutContext';
@@ -604,16 +606,8 @@ export default function RoutineDetailScreen() {
                       style={{ flex: 1, color: colors.textPrimary, height: 44 }}
                     />
                   </View>
-                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
-                      {MUSCLE_GROUPS.map((m) => (
-                        <FilterChip key={m || 'todos-m'} label={m || 'Todos'} active={filterMuscle === m} onPress={() => setFilterMuscle(m)} colors={colors} />
-                      ))}
-                    </View>
-                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
-                      {EQUIPMENT_TYPES.map((eq) => (
-                        <FilterChip key={eq || 'todos-eq'} label={eq || 'Todos'} active={filterEquipment === eq} onPress={() => setFilterEquipment(eq)} colors={colors} />
-                      ))}
-                    </View>
+                  <FilterDropdown label="Grupo muscular" options={MUSCLE_GROUPS} value={filterMuscle} onChange={setFilterMuscle} colors={colors} />
+                  <FilterDropdown label="Equipamiento" options={EQUIPMENT_TYPES} value={filterEquipment} onChange={setFilterEquipment} colors={colors} />
                 </View>
 
                 <ScrollView style={{ paddingHorizontal: 16 }} contentContainerStyle={{ paddingBottom: 20, gap: 8 }}>
@@ -723,21 +717,33 @@ export default function RoutineDetailScreen() {
   );
 }
 
-function FilterChip({ label, active, onPress, colors }: { label: string; active: boolean; onPress: () => void; colors: any }) {
+function FilterDropdown({ label, options, value, onChange, colors }: { label: string; options: string[]; value: string; onChange: (v: string) => void; colors: any }) {
+  const [open, setOpen] = useState(false);
   return (
-    <TouchableOpacity
-      onPress={onPress}
-      style={{
-        paddingHorizontal: 14,
-        paddingVertical: 7,
-        borderRadius: 999,
-        backgroundColor: active ? colors.primary : colors.surfaceAlt,
-        borderWidth: 1,
-        borderColor: active ? colors.primary : colors.border,
-      }}
-    >
-      <Text style={{ fontSize: 11, fontWeight: 'bold', color: active ? '#fff' : colors.textSecondary }}>{label}</Text>
-    </TouchableOpacity>
+    <View>
+      <TouchableOpacity
+        onPress={() => setOpen((o) => !o)}
+        style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 14, paddingVertical: 11, borderRadius: 14, backgroundColor: colors.surfaceAlt, borderWidth: 1, borderColor: colors.border }}
+      >
+        <Text style={{ fontSize: 12, color: colors.textSecondary }}>
+          {label}: <Text style={{ fontWeight: 'bold', color: colors.textPrimary }}>{value || 'Todos'}</Text>
+        </Text>
+        {open ? <ChevronUp size={16} color={colors.textMuted} /> : <ChevronDown size={16} color={colors.textMuted} />}
+      </TouchableOpacity>
+      {open && (
+        <View style={{ marginTop: 4, borderRadius: 14, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, overflow: 'hidden' }}>
+          {options.map((o) => (
+            <TouchableOpacity
+              key={o || 'todos'}
+              onPress={() => { onChange(o); setOpen(false); }}
+              style={{ paddingHorizontal: 14, paddingVertical: 11, backgroundColor: o === value ? colors.surfaceAlt : 'transparent' }}
+            >
+              <Text style={{ fontSize: 13, fontWeight: o === value ? 'bold' : 'normal', color: o === value ? colors.primary : colors.textPrimary }}>{o || 'Todos'}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+    </View>
   );
 }
 
