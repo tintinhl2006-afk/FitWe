@@ -468,7 +468,7 @@ export default function SavedDietsModal({
 
             {/* Totals Summary */}
             {dietItems.length > 0 && (
-              <div className="grid grid-cols-4 gap-4 p-4 bg-slate-50 dark:bg-slate-950/20 border border-slate-200/50 dark:border-slate-800/40 rounded-2xl text-center">
+              <div className="grid grid-cols-4 gap-2 sm:gap-4 p-3 sm:p-4 bg-slate-50 dark:bg-slate-950/20 border border-slate-200/50 dark:border-slate-800/40 rounded-2xl text-center">
                 {(() => {
                   const totals = calculateDietTotals(dietItems);
                   return (

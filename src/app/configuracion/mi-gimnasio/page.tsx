@@ -92,7 +92,7 @@ export default function MiGimnasioConfigPage() {
       </p>
 
       {/* Información del gimnasio actual */}
-      <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 mb-8 flex flex-col md:flex-row gap-5 items-start md:items-center justify-between">
+      <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 mb-8 flex flex-col lg:flex-row gap-5 items-start lg:items-center justify-between">
         <div className="flex gap-4 items-center">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-cyan-50 dark:bg-cyan-950/30 text-primary dark:text-cyan-400">
             <Dumbbell className="h-6 w-6" />

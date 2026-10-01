@@ -362,7 +362,7 @@ export default function ProfilePage() {
                 {isMonthPickerOpen && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setIsMonthPickerOpen(false)} />
-                    <div className="absolute top-full mt-2 z-50 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl p-4 w-72">
+                    <div className="absolute top-full mt-2 z-50 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl p-4 w-72 left-0 max-w-[calc(100vw-4rem)]">
                       <div className="flex items-center justify-between mb-3">
                         <button
                           onClick={() => setPickerYear(y => (y ?? now.getFullYear()) - 1)}
@@ -478,7 +478,7 @@ export default function ProfilePage() {
                 data.recentSessions.map(session => (
                   <div 
                     key={session.id} 
-                    className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm hover:border-cyan-200 dark:hover:border-cyan-400 hover:shadow-soft transition-all cursor-pointer relative overflow-hidden"
+                    className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 shadow-sm hover:border-cyan-200 dark:hover:border-cyan-400 hover:shadow-soft transition-all cursor-pointer relative overflow-hidden"
                     onClick={() => setExpandedWorkoutId(session.id)}
                   >
                     <div className="flex items-center gap-5 relative z-10">
@@ -494,7 +494,7 @@ export default function ProfilePage() {
                       </div>
                     </div>
                     
-                    <div className="flex items-center justify-between sm:justify-end gap-8 border-t border-slate-50 dark:border-slate-800 sm:border-0 pt-4 sm:pt-0 relative z-10">
+                    <div className="flex items-center justify-between lg:justify-end gap-8 border-t border-slate-50 dark:border-slate-800 lg:border-0 pt-4 lg:pt-0 relative z-10">
                       <div className="flex gap-8">
                         <div>
                           <p className="text-[10px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-widest mb-1">Duración</p>
@@ -637,11 +637,11 @@ export default function ProfilePage() {
 
             <div className="flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 rounded-3xl p-5 border border-slate-100 dark:border-slate-900/60 relative">
               {isQrLoading ? (
-                <div className="h-[240px] w-[240px] flex items-center justify-center">
+                <div className="h-[240px] w-[240px] max-w-full flex items-center justify-center">
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 </div>
               ) : qrTimeLeft <= 0 ? (
-                <div className="h-[240px] w-[240px] flex flex-col items-center justify-center text-center px-4">
+                <div className="h-[240px] w-[240px] max-w-full flex flex-col items-center justify-center text-center px-4">
                   <p className="text-sm font-bold text-red-500 mb-2">Código Expirado</p>
                   <p className="text-xs text-slate-400 mb-4">Por seguridad, el código QR expira en 20 segundos.</p>
                   <button

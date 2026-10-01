@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { User, Lock, Settings, Globe, Moon, Download, Dumbbell } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -29,6 +29,7 @@ const configMenu = [
 
 export default function ConfigLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { data: session } = useSession();
   const isClient = session?.user?.role === "USER";
 
@@ -50,10 +51,24 @@ export default function ConfigLayout({ children }: { children: React.ReactNode }
       <div className="max-w-6xl mx-auto w-full">
         <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-8">Configuración</h1>
         
-        <div className="flex flex-col md:flex-row gap-8">
+        <div className="flex flex-col lg:flex-row gap-4 lg:gap-8">
           {/* Sidebar */}
-          <aside className="w-full md:w-64 shrink-0">
-            <nav className="space-y-8">
+          <aside className="w-full lg:w-64 lg:shrink-0">
+            <select
+              aria-label="Sección de configuración"
+              value={pathname === "/configuracion" ? "/configuracion/perfil" : pathname}
+              onChange={(e) => router.push(e.target.value)}
+              className="lg:hidden w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3 text-sm font-medium text-slate-800 dark:text-slate-100"
+            >
+              {dynamicMenu.map((section) => (
+                <optgroup key={section.title} label={section.title}>
+                  {section.items.map((item) => (
+                    <option key={item.href} value={item.href}>{item.name}</option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+            <nav className="hidden lg:block space-y-8">
               {dynamicMenu.map((section) => (
                 <div key={section.title}>
                   <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 px-3">
@@ -85,7 +100,7 @@ export default function ConfigLayout({ children }: { children: React.ReactNode }
           </aside>
 
           {/* Main Content */}
-          <main className="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm min-h-[500px]">
+          <main className="flex-1 min-w-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm min-h-[500px]">
             {children}
           </main>
         </div>

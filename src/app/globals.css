@@ -178,7 +178,7 @@ body {
 }
 
 /* Tablas responsive: en móvil cada fila se apila como una tarjeta */
-@media (max-width: 767px) {
+@media (max-width: 1279px) {
   table.responsive-table,
   table.responsive-table tbody,
   table.responsive-table tr {
@@ -215,4 +215,22 @@ body {
     display: block;
     text-align: center;
   }
+}
+
+/* Los hijos de grid/flex no deben ensanchar el layout más allá del viewport */
+@layer base {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .truncate,
+  [class*="line-clamp-"],
+  .grid > *,
+  main,
+  main > * {
+    min-width: 0;
+  }
+}
+
+body {
+  overflow-wrap: anywhere;
 }
