@@ -93,7 +93,7 @@ export function Sidebar() {
                 </span>
               </div>
             </Link>
-            <div className="space-y-1 pb-4 md:pb-0">
+            <div className="space-y-1 pb-4 lg:pb-0">
 
               {session.user.role === "USER" && (
                 <Link
@@ -149,7 +149,7 @@ export function Sidebar() {
   return (
     <>
       {/* Mobile Header Bar */}
-      <div className="flex md:hidden fixed top-0 left-0 right-0 w-full px-4 py-3 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 z-40 items-center justify-between">
+      <div className="flex lg:hidden fixed top-0 left-0 right-0 w-full px-4 py-3 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 z-40 items-center justify-between">
         <button
           onClick={() => setIsMobileOpen(true)}
           className="p-2 -ml-2 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
@@ -168,7 +168,7 @@ export function Sidebar() {
       {/* Mobile Overlay */}
       {isMobileOpen && (
         <div
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 md:hidden"
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 lg:hidden"
           onClick={() => setIsMobileOpen(false)}
         />
       )}
@@ -176,14 +176,14 @@ export function Sidebar() {
       {/* Sidebar - Desktop: sticky, Mobile: slide-in overlay */}
       <aside
         className={cn(
-          "fixed md:sticky top-0 left-0 h-[100dvh] w-72 flex-col border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 z-50 transition-transform duration-300 ease-in-out flex px-4 py-6 shadow-2xl md:shadow-none",
-          isMobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+          "fixed lg:sticky top-0 left-0 h-[100dvh] w-72 flex-col border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 z-50 transition-transform duration-300 ease-in-out flex px-4 py-6 shadow-2xl lg:shadow-none",
+          isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
       >
         {/* Mobile close button */}
         <button
           onClick={() => setIsMobileOpen(false)}
-          className="absolute top-4 right-4 p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors md:hidden"
+          className="absolute top-4 right-4 p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors lg:hidden"
         >
           <X className="h-5 w-5" />
         </button>

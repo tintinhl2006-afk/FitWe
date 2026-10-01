@@ -715,7 +715,7 @@ export default function RoutineDetailPage({ params }: { params: Promise<{ id: st
   return (
     <DashboardLayout>
       <div className="space-y-6 max-w-4xl">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4 justify-between bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm">
+        <div className="flex flex-col xl:flex-row xl:items-center gap-4 justify-between bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm">
           <div className="flex items-center gap-4 flex-1 min-w-0">
             <Link
               href="/entrenamientos"
@@ -755,7 +755,7 @@ export default function RoutineDetailPage({ params }: { params: Promise<{ id: st
                 </div>
               ) : (
                 <div className="flex items-center gap-2 group">
-                  <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white truncate max-w-[200px] sm:max-w-md">
+                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white break-words min-w-0 sm:max-w-md">
                     {routine.name}
                   </h1>
                   <button
@@ -773,17 +773,17 @@ export default function RoutineDetailPage({ params }: { params: Promise<{ id: st
               <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Creada el {new Date(routine.createdAt).toLocaleDateString("es-ES")}</p>
             </div>
           </div>
-          <div className="flex flex-wrap gap-2 sm:gap-3 w-full sm:w-auto shrink-0">
+          <div className="flex flex-wrap gap-2 sm:gap-3 w-full xl:w-auto xl:shrink-0">
             <button
               onClick={handleDownloadPDF}
-              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 px-4.5 py-2.5 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+              className="flex-1 basis-full min-[480px]:basis-0 sm:flex-none sm:basis-auto inline-flex items-center justify-center gap-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 px-4.5 py-2.5 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
             >
               <Download className="h-4 w-4 text-cyan-600" />
               Exportar PDF
             </button>
             <button
               onClick={() => { setReplacingExerciseId(null); setStep("picker"); setIsModalOpen(true); }}
-              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4.5 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+              className="flex-1 basis-full min-[480px]:basis-0 sm:flex-none sm:basis-auto inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4.5 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
             >
               <Plus className="h-4 w-4 text-primary" />
               Añadir Ejercicio
@@ -791,7 +791,7 @@ export default function RoutineDetailPage({ params }: { params: Promise<{ id: st
             <button
               onClick={handleStartWorkout}
               disabled={isSubmitting || !routine.exercises?.length}
-              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:opacity-90 transition-all disabled:opacity-75"
+              className="flex-1 basis-full min-[480px]:basis-0 sm:flex-none sm:basis-auto inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:opacity-90 transition-all disabled:opacity-75"
             >
               {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Comenzar Entrenamiento"}
             </button>

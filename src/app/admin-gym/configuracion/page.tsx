@@ -176,7 +176,18 @@ export default function GymSettingsPage() {
       </div>
 
       {/* Tabs Menu */}
-      <div className="flex border-b border-slate-200 dark:border-slate-800 mb-8">
+      <select
+        aria-label="Sección de configuración"
+        value={activeTab}
+        onChange={(e) => setActiveTab(e.target.value as typeof activeTab)}
+        className="sm:hidden w-full mb-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3 text-sm font-medium text-slate-800 dark:text-slate-100"
+      >
+        <option value="general">General</option>
+        <option value="idioma">Idioma</option>
+        <option value="tema">Tema</option>
+        <option value="aforo">Aforo</option>
+      </select>
+      <div className="hidden sm:flex border-b border-slate-200 dark:border-slate-800 mb-8">
         <button
           onClick={() => setActiveTab("general")}
           className={cn(

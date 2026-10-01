@@ -243,7 +243,7 @@ export default function FacturacionPage() {
             </button>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 w-full">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap xl:flex-nowrap gap-3 w-full">
             <select
               value={paymentMethodFilter}
               onChange={(e) => {
@@ -260,7 +260,7 @@ export default function FacturacionPage() {
                 </option>
               ))}
             </select>
-            <div className="flex items-center gap-2 w-full sm:w-auto">
+            <div className="flex flex-col min-[480px]:flex-row min-[480px]:items-center gap-2 w-full sm:w-auto">
               <input
                 type="date"
                 value={dateFrom}
@@ -269,7 +269,7 @@ export default function FacturacionPage() {
                   setDateFrom(e.target.value);
                   setPage(1);
                 }}
-                className="w-full sm:w-40 py-2 px-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
+                className="w-full min-w-0 sm:w-40 py-2 px-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
               />
               <span className="text-xs text-slate-400 shrink-0">a</span>
               <input
@@ -280,10 +280,10 @@ export default function FacturacionPage() {
                   setDateTo(e.target.value);
                   setPage(1);
                 }}
-                className="w-full sm:w-40 py-2 px-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
+                className="w-full min-w-0 sm:w-40 py-2 px-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
               />
             </div>
-            <div className="relative w-full sm:flex-1">
+            <div className="relative w-full min-w-0 sm:flex-1 sm:min-w-[12rem]">
               <Search className="h-4 w-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
@@ -357,7 +357,7 @@ export default function FacturacionPage() {
                       {inv.amount.toFixed(2)} €
                     </td>
                     <td className="px-6 py-4 text-sm text-right whitespace-nowrap">
-                      <div className="inline-flex items-center gap-4">
+                      <div className="inline-flex flex-wrap items-center justify-end gap-x-4 gap-y-1">
                         <button
                           onClick={() => handleViewInvoice(inv)}
                           className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400 hover:underline hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"

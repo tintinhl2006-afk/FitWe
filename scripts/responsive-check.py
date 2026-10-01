@@ -36,21 +36,44 @@ for(const e of document.querySelectorAll('body *')){
  if(over)bad.push(e.tagName+'.'+String(e.className).slice(0,70)+' right='+Math.round(r.right)+' "'+(e.innerText||'').trim().slice(0,30)+'"')}
 return bad.slice(0,8)}"""
 
+WORDS = r"""()=>{const out=[];const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let n;
+while(n=w.nextNode()){const el=n.parentElement;if(!el||el.closest('script,style,noscript,svg,.skiptranslate,[aria-hidden="true"]'))continue;
+ const cs=getComputedStyle(el);if(cs.visibility==='hidden'||cs.display==='none')continue;
+ const t=n.textContent;const re=/[^\s]{4,}/g;let m;
+ while((m=re.exec(t))){const r=document.createRange();r.setStart(n,m.index);r.setEnd(n,m.index+m[0].length);
+  const rects=[...r.getClientRects()].filter(x=>x.width>0);
+  const tops=new Set(rects.map(x=>Math.round(x.top/4)));
+  if(tops.size>1&&!/^(https?:|[^@]+@)/.test(m[0])){out.push(m[0]+' <'+el.tagName+'>');}}}
+return [...new Set(out)].slice(0,10)}"""
+
 with sync_playwright() as p:
     b = p.chromium.launch()
+    # Un solo login (el endpoint tiene rate limit) y se reutiliza la sesión en todos los anchos.
+    ctx0 = b.new_context(viewport={"width": 1280, "height": 800})
+    pg = ctx0.new_page()
+    pg.goto(BASE + "/login")
+    pg.fill('input[type="email"]', os.environ["TEST_EMAIL"])
+    pg.fill('input[type="password"]', os.environ["TEST_PASSWORD"])
+    pg.click('button[type="submit"]')
+    pg.wait_for_load_state("networkidle")
+    pg.wait_for_timeout(5000)
+    if "/login" in pg.url:
+        sys.exit("Login fallido: revisa TEST_EMAIL / TEST_PASSWORD (o espera 15 min si saltó el rate limit)")
+    state = ctx0.storage_state()
     for w in (320, 375, 768, 1024, 1280):
-        pg = b.new_context(viewport={"width": w, "height": 800}).new_page()
-        pg.goto(BASE + "/login")
-        pg.fill('input[type="email"]', os.environ["TEST_EMAIL"])
-        pg.fill('input[type="password"]', os.environ["TEST_PASSWORD"])
-        pg.click('button[type="submit"]')
-        pg.wait_for_load_state("networkidle")
-        pg.wait_for_timeout(2500)
-        if "/login" in pg.url:
-            sys.exit("Login fallido: revisa TEST_EMAIL / TEST_PASSWORD")
-        for r in ROUTES:
+        pg = b.new_context(viewport={"width": w, "height": 800}, storage_state=state).new_page()
+        routes = list(ROUTES)
+        for lst, prefix in ([("/entrenamientos", "/entrenamientos/"), ("/gimnasio", "/gimnasio/")] if ROLE == "USER"
+                            else [("/admin-gym/clientes", "/admin-gym/clientes/")]):
+            pg.goto(BASE + lst, wait_until="networkidle")
+            hrefs = pg.eval_on_selector_all("a[href^='%s']" % prefix, "e=>e.map(x=>x.getAttribute('href'))")
+            routes += [h for h in dict.fromkeys(hrefs) if h.count("/") == prefix.count("/")][:2]
+        for r in routes:
             pg.goto(BASE + r, wait_until="networkidle")
             bad = pg.evaluate(JS)
+            broken = pg.evaluate(WORDS)
+            if broken:
+                print(w, r, "PALABRAS PARTIDAS:", broken)
             print(w, r, "->" + pg.url.replace(BASE, ""), "OK" if not bad else "OVERFLOW")
             for x in bad:
                 print("    ", x)

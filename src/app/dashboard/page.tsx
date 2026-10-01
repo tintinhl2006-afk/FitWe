@@ -570,7 +570,7 @@ export default function DashboardPage() {
                       <Link 
                         key={s.id}
                         href="/perfil"
-                        className="group flex items-center justify-between px-6 py-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/15 transition-all duration-200"
+                        className="group flex flex-col xl:flex-row xl:items-center justify-between gap-3 px-4 sm:px-6 py-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/15 transition-all duration-200"
                       >
                         <div className="flex items-center gap-4">
                           <div>
@@ -584,9 +584,9 @@ export default function DashboardPage() {
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-4 sm:gap-6">
+                        <div className="flex items-center gap-2 sm:gap-6">
                           {/* Duration Card Pill */}
-                          <div className="bg-slate-50/60 dark:bg-slate-950/30 border border-slate-100 dark:border-slate-800/80 rounded-2xl px-3.5 py-1.5 flex flex-col justify-center min-w-[85px] text-center">
+                          <div className="bg-slate-50/60 dark:bg-slate-950/30 border border-slate-100 dark:border-slate-800/80 rounded-2xl px-3.5 py-1.5 flex flex-col justify-center flex-1 xl:flex-none xl:min-w-[85px] text-center">
                             <span className="text-[8px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none">DURACIÓN</span>
                             <span className="text-xs font-black text-slate-800 dark:text-slate-200 mt-1.5 flex items-center justify-center gap-1">
                               <Clock className="h-3 w-3 text-cyan-400 shrink-0" />
@@ -595,7 +595,7 @@ export default function DashboardPage() {
                           </div>
 
                           {/* Volume Card Pill */}
-                          <div className="bg-slate-50/60 dark:bg-slate-950/30 border border-slate-100 dark:border-slate-800/80 rounded-2xl px-3.5 py-1.5 flex flex-col justify-center min-w-[85px] text-center">
+                          <div className="bg-slate-50/60 dark:bg-slate-950/30 border border-slate-100 dark:border-slate-800/80 rounded-2xl px-3.5 py-1.5 flex flex-col justify-center flex-1 xl:flex-none xl:min-w-[85px] text-center">
                             <span className="text-[8px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none">VOLUMEN</span>
                             <span className="text-xs font-black text-slate-800 dark:text-slate-200 mt-1.5 flex items-center justify-center gap-1">
                               <TrendingUp className="h-3 w-3 text-emerald-400 shrink-0" />

@@ -178,7 +178,7 @@ body {
 }
 
 /* Tablas responsive: en móvil cada fila se apila como una tarjeta */
-@media (max-width: 1279px) {
+@media (max-width: 1535px) {
   table.responsive-table,
   table.responsive-table tbody,
   table.responsive-table tr {
@@ -199,7 +199,7 @@ body {
     padding: 0.3rem 0;
     text-align: right;
     white-space: normal;
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
   }
   table.responsive-table td[data-label]::before {
     content: attr(data-label);
@@ -232,5 +232,5 @@ body {
 }
 
 body {
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }

@@ -183,7 +183,7 @@ export default function PagosPage() {
                       {p.amount.toFixed(2)} €
                     </td>
                     <td className="px-6 py-4 text-sm text-right whitespace-nowrap">
-                      <div className="inline-flex items-center gap-4">
+                      <div className="inline-flex flex-wrap items-center justify-end gap-x-4 gap-y-1">
                         <button
                           onClick={() => handleViewInvoice(p)}
                           className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400 hover:underline hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"

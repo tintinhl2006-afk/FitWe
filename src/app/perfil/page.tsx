@@ -481,9 +481,9 @@ export default function ProfilePage() {
                     className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 shadow-sm hover:border-cyan-200 dark:hover:border-cyan-400 hover:shadow-soft transition-all cursor-pointer relative overflow-hidden"
                     onClick={() => setExpandedWorkoutId(session.id)}
                   >
-                    <div className="flex items-center gap-5 relative z-10">
-                      <div>
-                        <h3 className="font-black text-slate-900 dark:text-white text-xl leading-tight group-hover:text-primary dark:group-hover:text-cyan-400 transition-colors">{session.name}</h3>
+                    <div className="flex items-center gap-5 relative z-10 min-w-0">
+                      <div className="min-w-0">
+                        <h3 className="font-black text-slate-900 dark:text-white text-lg sm:text-xl leading-tight group-hover:text-primary dark:group-hover:text-cyan-400 transition-colors">{session.name.replace(/\//g, "/​")}</h3>
                         <p className="text-sm font-semibold text-slate-400 dark:text-slate-500 mt-0.5">
                           {new Date(session.date).toLocaleDateString("es-ES", {
                             weekday: 'long',

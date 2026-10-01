@@ -581,7 +581,7 @@ export default function NutricionPage() {
         </div>
 
         {/* Premium Diet Generator Action Card */}
-        <div className="relative overflow-hidden bg-gradient-to-r from-cyan-500/10 via-blue-500/5 to-transparent border border-cyan-500/25 dark:border-cyan-500/40 rounded-3xl p-6 flex flex-col lg:flex-row items-center justify-between gap-6 backdrop-blur-sm shadow-soft">
+        <div className="relative overflow-hidden bg-gradient-to-r from-cyan-500/10 via-blue-500/5 to-transparent border border-cyan-500/25 dark:border-cyan-500/40 rounded-3xl p-6 flex flex-col xl:flex-row items-center justify-between gap-6 backdrop-blur-sm shadow-soft">
           <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/5 dark:bg-cyan-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
           <div className="flex items-center gap-4 relative z-10">
             <div className="bg-gradient-to-tr from-cyan-500 to-blue-600 p-3.5 rounded-2xl text-white shadow-lg shadow-cyan-500/20 shrink-0">
@@ -596,7 +596,7 @@ export default function NutricionPage() {
               </p>
             </div>
           </div>
-          <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto relative z-10 lg:shrink-0">
+          <div className="flex flex-col sm:flex-row gap-3 w-full xl:w-auto relative z-10 xl:shrink-0">
             <button
               onClick={() => setIsSavedDietsOpen(true)}
               className="px-5 py-3.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2"
