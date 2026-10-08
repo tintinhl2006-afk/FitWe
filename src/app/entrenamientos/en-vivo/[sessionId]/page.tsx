@@ -31,7 +31,7 @@ interface WorkoutSession {
   startTime: string;
   endTime: string | null;
   workoutSets: WorkoutSet[];
-  routine?: { name: string; exercises?: { id: string; exerciseId: string; reps: number; repsList: string | null }[] };
+  routine?: { name: string; exercises?: { id: string; exerciseId: string; sets: number; reps: number; repsList: string | null }[] };
   exerciseHistoryMap?: Record<string, { weight: number, reps: number }[]>;
   exerciseAllTimeRecordsMap?: Record<string, { maxWeight: number, max1RM: number, maxVolume: number }>;
 }
@@ -49,6 +49,14 @@ export default function LiveWorkoutPage({ params }: { params: Promise<{ sessionI
   const [timeElapsed, setTimeElapsed] = useState("00:00");
   const [activeRecord, setActiveRecord] = useState<any>(null);
   const [showSummary, setShowSummary] = useState(false);
+
+  const [addingSetForExerciseId, setAddingSetForExerciseId] = useState<string | null>(null);
+  const [exerciseCatalog, setExerciseCatalog] = useState<Exercise[]>([]);
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
+  const [pickerSearch, setPickerSearch] = useState("");
+  const [isAddingExercise, setIsAddingExercise] = useState(false);
+  const [showRoutineSyncPrompt, setShowRoutineSyncPrompt] = useState(false);
+  const [isSyncingRoutine, setIsSyncingRoutine] = useState(false);
   
   // Ruedita states
   const [editedHours, setEditedHours] = useState(0);
@@ -177,20 +185,123 @@ export default function LiveWorkoutPage({ params }: { params: Promise<{ sessionI
     }
   };
 
+  const handleAddSet = async (exercise: Exercise) => {
+    if (!session) return;
+    setAddingSetForExerciseId(exercise.id);
+    try {
+      const setsForExercise = session.workoutSets.filter((s) => s.exercise.id === exercise.id);
+      const lastSet = setsForExercise[setsForExercise.length - 1];
+      const res = await fetch(`/api/sessions/${sessionId}/sets`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ exerciseId: exercise.id, weight: lastSet?.weight || 0, reps: lastSet?.reps || 0 }),
+      });
+      if (res.ok) {
+        const newSet = await res.json();
+        setSession((prev) => (prev ? { ...prev, workoutSets: [...prev.workoutSets, newSet] } : prev));
+      }
+    } catch (error) {
+      console.error("Error adding set:", error);
+    } finally {
+      setAddingSetForExerciseId(null);
+    }
+  };
+
+  const openExercisePicker = () => {
+    setPickerSearch("");
+    setIsPickerOpen(true);
+    if (exerciseCatalog.length === 0) {
+      fetch("/api/exercises")
+        .then((res) => res.json())
+        .then((data) => setExerciseCatalog(Array.isArray(data) ? data : []))
+        .catch(() => {});
+    }
+  };
+
+  const handleAddExercise = async (exercise: Exercise) => {
+    if (!session) return;
+    setIsAddingExercise(true);
+    try {
+      const setCount = exercise.muscleGroup.toLowerCase() === "cardio" ? 1 : 3;
+      for (let i = 0; i < setCount; i++) {
+        const res = await fetch(`/api/sessions/${sessionId}/sets`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ exerciseId: exercise.id, weight: 0, reps: 0 }),
+        });
+        if (res.ok) {
+          const newSet = await res.json();
+          setSession((prev) => (prev ? { ...prev, workoutSets: [...prev.workoutSets, newSet] } : prev));
+        }
+      }
+      setIsPickerOpen(false);
+    } catch (error) {
+      console.error("Error adding exercise:", error);
+    } finally {
+      setIsAddingExercise(false);
+    }
+  };
+
+  /** Any exercise/set count added live beyond what the routine originally specified. */
+  const getRoutineDiff = () => {
+    if (!session?.routineId || !session.routine?.exercises) return null;
+    const routineSetCounts = new Map(session.routine.exercises.map((re) => [re.exerciseId, re]));
+    const sessionSetCounts = new Map<string, number>();
+    session.workoutSets.forEach((s) => {
+      sessionSetCounts.set(s.exercise.id, (sessionSetCounts.get(s.exercise.id) || 0) + 1);
+    });
+
+    const newExerciseIds: string[] = [];
+    const increasedSetExerciseIds: string[] = [];
+    sessionSetCounts.forEach((count, exerciseId) => {
+      const re = routineSetCounts.get(exerciseId);
+      if (!re) newExerciseIds.push(exerciseId);
+      else if (count > re.sets) increasedSetExerciseIds.push(exerciseId);
+    });
+
+    if (newExerciseIds.length === 0 && increasedSetExerciseIds.length === 0) return null;
+    return { newExerciseIds, increasedSetExerciseIds, sessionSetCounts, routineSetCounts };
+  };
+
+  const syncRoutineWithSession = async () => {
+    const diff = getRoutineDiff();
+    if (!diff || !session?.routineId) return;
+    setIsSyncingRoutine(true);
+    try {
+      for (const exerciseId of diff.increasedSetExerciseIds) {
+        const re = diff.routineSetCounts.get(exerciseId)!;
+        const newCount = diff.sessionSetCounts.get(exerciseId)!;
+        await fetch(`/api/routines/${session.routineId}/exercises/${re.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sets: newCount }),
+        });
+      }
+      for (const exerciseId of diff.newExerciseIds) {
+        const setsForExercise = session!.workoutSets.filter((s) => s.exercise.id === exerciseId);
+        const reps = setsForExercise.find((s) => s.reps > 0)?.reps || 10;
+        await fetch(`/api/routines/${session!.routineId}/exercises`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ exerciseId, sets: setsForExercise.length, reps, weight: 0 }),
+        });
+      }
+    } catch (error) {
+      console.error("Error syncing routine:", error);
+      // Best-effort: the session itself still saves normally below regardless of sync outcome.
+    } finally {
+      setIsSyncingRoutine(false);
+      setShowRoutineSyncPrompt(false);
+      handleSaveWorkout();
+    }
+  };
+
   const handleSaveWorkout = async () => {
     if (!session) return;
     setIsFinishing(true);
     try {
-      const uncompletedSetsWithData = session.workoutSets.filter(s => !s.isCompleted && (s.reps > 0 || s.weight > 0)) || [];
-      if (uncompletedSetsWithData.length > 0) {
-        await Promise.all(uncompletedSetsWithData.map(s => 
-          fetch(`/api/sessions/sets/${s.id}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ reps: s.reps, weight: s.weight, isCompleted: true }),
-          })
-        ));
-      }
+      // Solo las series marcadas explícitamente con el check cuentan como completadas —
+      // tener peso/reps escritos sin marcarlas no debe autocompletarlas al guardar.
 
       // Calcular custom endTime basado en horas, minutos y segundos de la ruedita
       const totalSeconds = (editedHours * 3600) + (editedMinutes * 60) + editedSeconds;
@@ -206,6 +317,14 @@ export default function LiveWorkoutPage({ params }: { params: Promise<{ sessionI
       console.error("Error finishing workout:", error);
       setIsFinishing(false);
     }
+  };
+
+  const handleSaveWorkoutClick = () => {
+    if (getRoutineDiff()) {
+      setShowRoutineSyncPrompt(true);
+      return;
+    }
+    handleSaveWorkout();
   };
 
   const handleDiscardWorkout = () => {
@@ -500,7 +619,7 @@ export default function LiveWorkoutPage({ params }: { params: Promise<{ sessionI
           {/* Action Grid Buttons */}
           <div className="space-y-3 pt-4">
             <button
-              onClick={handleSaveWorkout}
+              onClick={handleSaveWorkoutClick}
               disabled={isFinishing}
               className="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-extrabold rounded-2xl text-base shadow-lg shadow-emerald-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-75 cursor-pointer"
             >
@@ -619,9 +738,26 @@ export default function LiveWorkoutPage({ params }: { params: Promise<{ sessionI
                   />
                 );
               })}
+
+              <button
+                onClick={() => handleAddSet(exercise)}
+                disabled={addingSetForExerciseId === exercise.id}
+                className="w-full mt-1 py-2.5 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors disabled:opacity-60 cursor-pointer"
+              >
+                {addingSetForExerciseId === exercise.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
+                Añadir Serie
+              </button>
             </div>
           </div>
         ))}
+
+        <button
+          onClick={openExercisePicker}
+          className="w-full py-3.5 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-primary dark:text-cyan-400 text-sm font-bold flex items-center justify-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
+        >
+          <Plus className="h-4 w-4" />
+          Añadir Ejercicio
+        </button>
       </div>
 
       {/* Récords Personales Modal Overlay */}
@@ -698,6 +834,90 @@ export default function LiveWorkoutPage({ params }: { params: Promise<{ sessionI
             >
               ¡Seguir Entrenando!
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Exercise Picker Modal */}
+      {isPickerOpen && (
+        <div className="fixed inset-0 z-[10000] flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-md transition-all duration-300 animate-in fade-in">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-t-3xl sm:rounded-3xl w-full sm:max-w-md max-h-[80vh] overflow-hidden flex flex-col animate-in slide-in-from-bottom-4 duration-200">
+            <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800">
+              <h3 className="font-black text-slate-900 dark:text-white text-sm">Añadir Ejercicio</h3>
+              <button
+                onClick={() => setIsPickerOpen(false)}
+                className="p-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="p-4 pb-2">
+              <input
+                type="text"
+                value={pickerSearch}
+                onChange={(e) => setPickerSearch(e.target.value)}
+                placeholder="Buscar ejercicio..."
+                className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2.5 text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-cyan-500/30"
+              />
+            </div>
+            <div className="overflow-y-auto px-4 pb-4 space-y-2">
+              {exerciseCatalog
+                .filter((ex) => ex.name.toLowerCase().includes(pickerSearch.trim().toLowerCase()))
+                .map((ex) => (
+                  <button
+                    key={ex.id}
+                    onClick={() => handleAddExercise(ex)}
+                    disabled={isAddingExercise}
+                    className="w-full flex items-center gap-3 p-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-60 cursor-pointer text-left"
+                  >
+                    <div className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+                      {ex.imageUrl ? (
+                        <Image src={ex.imageUrl} alt={ex.name} fill className="object-cover" />
+                      ) : (
+                        getExerciseIcon(ex.equipment, ex.muscleGroup)
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{ex.name}</p>
+                      <p className="text-xs text-slate-400">
+                        {ex.muscleGroup}
+                        {ex.equipment ? ` • ${ex.equipment}` : ""}
+                      </p>
+                    </div>
+                  </button>
+                ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Routine Sync Prompt Modal */}
+      {showRoutineSyncPrompt && (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md transition-all duration-300 animate-in fade-in">
+          <div className="bg-slate-950 border border-slate-700/40 shadow-2xl rounded-3xl w-full max-w-sm p-6 text-center animate-in zoom-in-95 duration-200">
+            <h3 className="text-base font-black text-white">¿Actualizar tu rutina?</h3>
+            <p className="text-xs text-slate-400 mt-2 leading-relaxed">
+              Has añadido series o ejercicios nuevos respecto a &quot;{session.routine?.name}&quot;. ¿Quieres guardar estos cambios en la rutina para tus próximos entrenamientos, o dejarla como estaba?
+            </p>
+            <div className="mt-5 space-y-2.5">
+              <button
+                onClick={syncRoutineWithSession}
+                disabled={isSyncingRoutine}
+                className="w-full py-3 bg-primary hover:opacity-90 text-white font-black rounded-2xl text-sm transition-all disabled:opacity-70 cursor-pointer flex items-center justify-center gap-2"
+              >
+                {isSyncingRoutine ? <Loader2 className="h-4 w-4 animate-spin" /> : "Actualizar Rutina"}
+              </button>
+              <button
+                onClick={() => {
+                  setShowRoutineSyncPrompt(false);
+                  handleSaveWorkout();
+                }}
+                disabled={isSyncingRoutine}
+                className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-black rounded-2xl text-sm border border-slate-700 transition-all cursor-pointer"
+              >
+                Dejar Rutina como Estaba
+              </button>
+            </div>
           </div>
         </div>
       )}
