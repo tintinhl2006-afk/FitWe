@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isValidCronRequest } from "@/lib/cronAuth";
 import { prisma } from "@/lib/prisma";
 
 export async function runRechargeCredits(): Promise<{ recharged: number }> {
@@ -46,11 +47,7 @@ export async function runRechargeCredits(): Promise<{ recharged: number }> {
 
 export async function GET(req: Request) {
   try {
-    const authHeader = req.headers.get("authorization");
-    const cronSecret = process.env.CRON_SECRET;
-    const isSecretValid = cronSecret && authHeader === `Bearer ${cronSecret}`;
-
-    if (!isSecretValid) {
+    if (!isValidCronRequest(req)) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 

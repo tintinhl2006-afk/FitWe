@@ -69,6 +69,19 @@ export function getAppBaseUrl(req?: Request): string {
   return process.env.NEXTAUTH_URL || req?.headers.get("origin") || "http://localhost:3000";
 }
 
+/**
+ * Escapes a value for use inside the HTML of an email. Names and class names are typed by users
+ * (and gym staff), and were interpolated raw into every template.
+ */
+function esc(value: unknown): string {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function emailShell(title: string, bodyHtml: string): string {
   return `
     <div style="font-family: sans-serif; padding: 24px; color: #1e293b; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 16px;">
@@ -85,11 +98,11 @@ export async function sendPasswordResetEmail(to: string, name: string, resetLink
     html: emailShell(
       "Restablecer Contraseña",
       `
-        <p>Hola, ${name}:</p>
+        <p>Hola, ${esc(name)}:</p>
         <p>Hemos recibido una solicitud para restablecer la contraseña de tu cuenta de FitWe.</p>
         <p>Puedes hacerlo haciendo clic en el siguiente botón:</p>
         <div style="margin: 24px 0;">
-          <a href="${resetLink}" style="background-color: #0891b2; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Restablecer Contraseña</a>
+          <a href="${esc(resetLink)}" style="background-color: #0891b2; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Restablecer Contraseña</a>
         </div>
         <p style="font-size: 11px; color: #64748b; margin-top: 24px;">Este enlace es de un solo uso y expirará en 1 hora. Si no has solicitado este cambio, puedes ignorar este correo de forma segura.</p>
       `
@@ -109,8 +122,8 @@ export async function sendInvoiceEmail(
     html: emailShell(
       "Nueva Factura",
       `
-        <p>Hola, ${clientName}:</p>
-        <p>Adjuntamos la factura <strong>${invoiceNumber}</strong> correspondiente a tu último pago.</p>
+        <p>Hola, ${esc(clientName)}:</p>
+        <p>Adjuntamos la factura <strong>${esc(invoiceNumber)}</strong> correspondiente a tu último pago.</p>
         <p style="font-size: 11px; color: #64748b; margin-top: 24px;">También puedes consultarla en cualquier momento desde la app, en tu historial de pagos.</p>
       `
     ),
@@ -137,10 +150,10 @@ export async function sendClassBookingConfirmedEmail(
     html: emailShell(
       "Reserva Confirmada",
       `
-        <p>Hola, ${name}:</p>
-        <p>Tu plaza en <strong>${className}</strong> en ${gymName} está confirmada.</p>
+        <p>Hola, ${esc(name)}:</p>
+        <p>Tu plaza en <strong>${esc(className)}</strong> en ${esc(gymName)} está confirmada.</p>
         <div style="margin: 20px 0; padding: 16px; background-color: #f0fdfa; border-radius: 12px; border: 1px solid #99f6e4;">
-          <p style="margin: 0; font-size: 13px; color: #0f766e;"><strong>Cuándo:</strong> ${dateLabel}, ${timeLabel}</p>
+          <p style="margin: 0; font-size: 13px; color: #0f766e;"><strong>Cuándo:</strong> ${esc(dateLabel)}, ${esc(timeLabel)}</p>
         </div>
         <p style="font-size: 11px; color: #64748b; margin-top: 24px;">Puedes cancelar tu plaza en cualquier momento desde la app, en la sección de Clases.</p>
       `
@@ -161,8 +174,8 @@ export async function sendClassBookingCancelledEmail(
     html: emailShell(
       "Reserva Cancelada",
       `
-        <p>Hola, ${name}:</p>
-        <p>Tu plaza en <strong>${className}</strong> (${dateLabel}, ${timeLabel}) ha sido cancelada correctamente. Tu hueco queda libre para otro socio.</p>
+        <p>Hola, ${esc(name)}:</p>
+        <p>Tu plaza en <strong>${esc(className)}</strong> (${esc(dateLabel)}, ${esc(timeLabel)}) ha sido cancelada correctamente. Tu hueco queda libre para otro socio.</p>
         <p style="font-size: 11px; color: #64748b; margin-top: 24px;">Si ha sido un error, puedes volver a reservar desde la app si aún quedan plazas.</p>
       `
     ),
@@ -182,8 +195,8 @@ export async function sendClassReminderEmail(
     html: emailShell(
       "Recordatorio de Clase",
       `
-        <p>Hola, ${name}:</p>
-        <p><strong>${className}</strong> en ${gymName} es <strong>mañana a las ${timeLabel}</strong>. ¡Te esperamos!</p>
+        <p>Hola, ${esc(name)}:</p>
+        <p><strong>${esc(className)}</strong> en ${esc(gymName)} es <strong>mañana a las ${esc(timeLabel)}</strong>. ¡Te esperamos!</p>
         <p style="font-size: 11px; color: #64748b; margin-top: 24px;">Si ya no puedes asistir, cancela tu plaza desde la app para liberar el hueco a otro socio.</p>
       `
     ),
@@ -204,10 +217,10 @@ export async function sendSubscriptionExpiringSoonEmail(
     html: emailShell(
       "Tu Cuota Está a Punto de Caducar",
       `
-        <p>Hola, ${name}:</p>
-        <p>Tu cuota en <strong>${gymName}</strong> caduca el <strong>${endDateLabel}</strong>. Renuévala para no perder el acceso.</p>
+        <p>Hola, ${esc(name)}:</p>
+        <p>Tu cuota en <strong>${esc(gymName)}</strong> caduca el <strong>${esc(endDateLabel)}</strong>. Renuévala para no perder el acceso.</p>
         <div style="margin: 24px 0;">
-          <a href="${paymentLink}" style="background-color: #0891b2; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Renovar Cuota</a>
+          <a href="${esc(paymentLink)}" style="background-color: #0891b2; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Renovar Cuota</a>
         </div>
         <p style="font-size: 11px; color: #64748b; margin-top: 24px;">Si ya la has renovado, puedes ignorar este correo.</p>
       `
@@ -227,10 +240,10 @@ export async function sendSubscriptionExpiredEmail(
     html: emailShell(
       "Tu Cuota Ha Caducado",
       `
-        <p>Hola, ${name}:</p>
-        <p>Tu cuota en <strong>${gymName}</strong> ha caducado y tu acceso ha quedado inactivo. Renuévala cuando quieras para recuperarlo.</p>
+        <p>Hola, ${esc(name)}:</p>
+        <p>Tu cuota en <strong>${esc(gymName)}</strong> ha caducado y tu acceso ha quedado inactivo. Renuévala cuando quieras para recuperarlo.</p>
         <div style="margin: 24px 0;">
-          <a href="${paymentLink}" style="background-color: #0891b2; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Renovar Cuota</a>
+          <a href="${esc(paymentLink)}" style="background-color: #0891b2; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Renovar Cuota</a>
         </div>
       `
     ),
@@ -244,10 +257,10 @@ export async function sendVerificationEmail(to: string, name: string, verifyLink
     html: emailShell(
       "Confirma tu Email",
       `
-        <p>Hola, ${name}:</p>
+        <p>Hola, ${esc(name)}:</p>
         <p>Gracias por registrarte en FitWe. Confirma que esta dirección de correo es tuya haciendo clic en el siguiente botón:</p>
         <div style="margin: 24px 0;">
-          <a href="${verifyLink}" style="background-color: #0891b2; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Confirmar Email</a>
+          <a href="${esc(verifyLink)}" style="background-color: #0891b2; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Confirmar Email</a>
         </div>
         <p style="font-size: 11px; color: #64748b; margin-top: 24px;">Este enlace expira en 24 horas. Si no has creado esta cuenta, puedes ignorar este correo de forma segura.</p>
       `

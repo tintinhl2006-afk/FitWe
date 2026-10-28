@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isValidCronRequest } from "@/lib/cronAuth";
 import { runGenerateClasses } from "@/app/api/cron/generate-classes/route";
 import { runRechargeCredits } from "@/app/api/cron/recharge-credits/route";
 import { runClassReminders } from "@/app/api/cron/class-reminders/route";
@@ -19,11 +20,7 @@ import { cleanupOldRateLimitHits } from "@/lib/rateLimit";
  */
 export async function GET(req: Request) {
   try {
-    const authHeader = req.headers.get("authorization");
-    const cronSecret = process.env.CRON_SECRET;
-    const isSecretValid = cronSecret && authHeader === `Bearer ${cronSecret}`;
-
-    if (!isSecretValid) {
+    if (!isValidCronRequest(req)) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
