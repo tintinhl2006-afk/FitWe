@@ -7,6 +7,7 @@ import { useAppTheme } from '../../../context/ThemeContext';
 import { useLiveWorkout } from '../../../context/LiveWorkoutContext';
 import { Palette } from '../../../constants/theme';
 import { api } from '../../../lib/apiClient';
+import { LoadMoreButton } from '../../../components/LoadMoreButton';
 
 interface Routine {
   id: string;
@@ -21,6 +22,9 @@ export default function WorkoutScreen() {
   const { startSession } = useLiveWorkout();
 
   const [routines, setRoutines] = useState<Routine[]>([]);
+  const [routinesPage, setRoutinesPage] = useState(1);
+  const [hasMoreRoutines, setHasMoreRoutines] = useState(false);
+  const [isLoadingMoreRoutines, setIsLoadingMoreRoutines] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubscriptionActive, setIsSubscriptionActive] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -29,15 +33,27 @@ export default function WorkoutScreen() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [startingId, setStartingId] = useState<string | null>(null);
 
-  async function fetchRoutines() {
+  const ROUTINES_PAGE_SIZE = 30;
+
+  async function fetchRoutines(page = 1) {
     try {
-      const res = await api.get('/api/routines');
-      setRoutines(Array.isArray(res) ? res : []);
+      const res = await api.get(`/api/routines?page=${page}&pageSize=${ROUTINES_PAGE_SIZE}`);
+      const list: Routine[] = Array.isArray(res) ? res : [];
+      setRoutines((prev) => (page === 1 ? list : [...prev, ...list]));
+      // A full page means there may be another one.
+      setHasMoreRoutines(list.length === ROUTINES_PAGE_SIZE);
+      setRoutinesPage(page);
     } catch (e) {
       console.error('Error al cargar rutinas:', e);
     } finally {
       setIsLoading(false);
     }
+  }
+
+  async function loadMoreRoutines() {
+    setIsLoadingMoreRoutines(true);
+    await fetchRoutines(routinesPage + 1);
+    setIsLoadingMoreRoutines(false);
   }
 
   useEffect(() => {
@@ -299,6 +315,9 @@ export default function WorkoutScreen() {
               </TouchableOpacity>
             ))}
           </View>
+        )}
+        {hasMoreRoutines && routines.length > 0 && (
+          <LoadMoreButton onPress={loadMoreRoutines} isLoading={isLoadingMoreRoutines} />
         )}
       </ScrollView>
     </SafeAreaView>

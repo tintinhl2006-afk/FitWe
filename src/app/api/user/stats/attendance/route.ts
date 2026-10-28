@@ -21,12 +21,18 @@ export async function GET(req: Request) {
     });
 
     // 2. Fetch all successful access logs to calculate streak and hourly patterns
+    // Streak and hourly pattern only need recent history. This loaded every check-in since the
+    // account was created; two years is far longer than any streak the screen can show.
+    const historyStart = new Date(now);
+    historyStart.setFullYear(historyStart.getFullYear() - 2);
     const allSuccessfulLogs = await prisma.accessLog.findMany({
       where: {
         userId,
-        status: "GRANTED"
+        status: "GRANTED",
+        createdAt: { gte: historyStart },
       },
       orderBy: { createdAt: "desc" },
+      take: 5000,
       select: { createdAt: true }
     });
 
@@ -51,7 +57,7 @@ export async function GET(req: Request) {
       lastWeekDate.setDate(lastWeekDate.getDate() - 7);
       const lastWeekStr = getStartOfWeek(lastWeekDate);
 
-      let expectedMonday = new Date(now);
+      const expectedMonday = new Date(now);
 
       if (uniqueWeeks[0] === thisWeekStr) {
         streak = 1;

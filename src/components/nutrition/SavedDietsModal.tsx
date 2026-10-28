@@ -1,24 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { 
-  X, 
-  Trash2, 
-  Edit3, 
-  Plus, 
-  Save, 
-  Calendar, 
-  Sparkles, 
-  Flame, 
-  Beef, 
-  Wheat, 
-  Droplet, 
-  Loader2, 
+import {
+  X,
+  Trash2,
+  Edit3,
+  Plus,
+  Save,
+  Calendar,
+  Loader2,
   Search,
   ArrowLeft,
-  ChevronRight
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { LoadMoreButton } from "@/components/shared/LoadMoreButton";
 import { STANDARD_FOODS, DietFood } from "@/lib/dietEngine";
 import { useCustomAlert } from "@/components/providers/CustomAlertProvider";
 
@@ -57,6 +51,8 @@ const MEAL_TYPES = [
   { id: "SNACK", label: "Snacks" },
 ];
 
+const DIETS_PAGE_SIZE = 20;
+
 export default function SavedDietsModal({
   isOpen,
   onClose,
@@ -68,6 +64,9 @@ export default function SavedDietsModal({
 
   // General States
   const [diets, setDiets] = useState<SavedDiet[]>([]);
+  const [dietsPage, setDietsPage] = useState(1);
+  const [hasMoreDiets, setHasMoreDiets] = useState(false);
+  const [isLoadingMoreDiets, setIsLoadingMoreDiets] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [view, setView] = useState<"list" | "edit" | "create_from_current">("list");
 
@@ -85,18 +84,26 @@ export default function SavedDietsModal({
   const [searchMealType, setSearchMealType] = useState("BREAKFAST");
 
   // Load diets list
-  const loadDiets = async () => {
-    setIsLoading(true);
+  const loadDiets = async (page = 1) => {
+    if (page === 1) setIsLoading(true);
+    else setIsLoadingMoreDiets(true);
     try {
-      const res = await fetch(`/api/user/nutrition/saved-diets?t=${Date.now()}`, { cache: "no-store" });
+      const res = await fetch(
+        `/api/user/nutrition/saved-diets?page=${page}&pageSize=${DIETS_PAGE_SIZE}&t=${Date.now()}`,
+        { cache: "no-store" }
+      );
       if (res.ok) {
-        const data = await res.json();
-        setDiets(data);
+        const data: SavedDiet[] = await res.json();
+        setDiets((prev) => (page === 1 ? data : [...prev, ...data]));
+        // A full page means there may be another one.
+        setHasMoreDiets(data.length === DIETS_PAGE_SIZE);
+        setDietsPage(page);
       }
     } catch (e) {
       console.error("Error loading saved diets:", e);
     } finally {
       setIsLoading(false);
+      setIsLoadingMoreDiets(false);
     }
   };
 
@@ -351,6 +358,7 @@ export default function SavedDietsModal({
             </div>
 
             {diets.length > 0 ? (
+              <>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {diets.map(diet => {
                   const totals = calculateDietTotals(diet.items);
@@ -421,6 +429,10 @@ export default function SavedDietsModal({
                   );
                 })}
               </div>
+              {hasMoreDiets && (
+                <LoadMoreButton onClick={() => loadDiets(dietsPage + 1)} isLoading={isLoadingMoreDiets} />
+              )}
+              </>
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center p-12 text-center space-y-3">
                 <p className="text-sm text-slate-500 dark:text-slate-400">

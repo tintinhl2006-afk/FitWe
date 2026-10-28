@@ -7,6 +7,7 @@ import { useAppTheme } from '../../../context/ThemeContext';
 import { Card, EmptyState, TextField } from '../../../components/ui';
 import { Palette } from '../../../constants/theme';
 import { api } from '../../../lib/apiClient';
+import { LoadMoreButton } from '../../../components/LoadMoreButton';
 
 interface SavedDietItem {
   id: string;
@@ -45,6 +46,9 @@ export default function SavedDietsScreen() {
   const { colors } = useAppTheme();
 
   const [diets, setDiets] = useState<SavedDiet[]>([]);
+  const [dietsPage, setDietsPage] = useState(1);
+  const [hasMoreDiets, setHasMoreDiets] = useState(false);
+  const [isLoadingMoreDiets, setIsLoadingMoreDiets] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [applyingId, setApplyingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -54,15 +58,23 @@ export default function SavedDietsScreen() {
 
   const targetDate = date || new Date().toISOString().split('T')[0];
 
-  async function fetchDiets() {
-    setIsLoading(true);
+  const DIETS_PAGE_SIZE = 20;
+
+  async function fetchDiets(page = 1) {
+    if (page === 1) setIsLoading(true);
+    else setIsLoadingMoreDiets(true);
     try {
-      const data = await api.get('/api/user/nutrition/saved-diets');
-      setDiets(Array.isArray(data) ? data : []);
+      const data = await api.get(`/api/user/nutrition/saved-diets?page=${page}&pageSize=${DIETS_PAGE_SIZE}`);
+      const list: SavedDiet[] = Array.isArray(data) ? data : [];
+      setDiets((prev) => (page === 1 ? list : [...prev, ...list]));
+      // A full page means there may be another one.
+      setHasMoreDiets(list.length === DIETS_PAGE_SIZE);
+      setDietsPage(page);
     } catch {
-      setDiets([]);
+      if (page === 1) setDiets([]);
     } finally {
       setIsLoading(false);
+      setIsLoadingMoreDiets(false);
     }
   }
 
@@ -219,6 +231,9 @@ export default function SavedDietsScreen() {
                 );
               })}
             </View>
+          )}
+          {hasMoreDiets && diets.length > 0 && (
+            <LoadMoreButton onPress={() => fetchDiets(dietsPage + 1)} isLoading={isLoadingMoreDiets} />
           )}
         </ScrollView>
       )}

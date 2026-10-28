@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { Loader2, CreditCard, Calendar, Receipt, Download, Eye } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { LoadMoreButton } from "@/components/shared/LoadMoreButton";
 import {
   generateInvoicePdf,
   type InvoicePayment as PaymentRecord,
@@ -15,25 +15,40 @@ interface PaymentWithGym extends PaymentRecord {
   gym: GymProfile;
 }
 
+const PAYMENTS_PAGE_SIZE = 25;
+
 export default function PagosPage() {
   const { data: session } = useSession();
   const [payments, setPayments] = useState<PaymentWithGym[]>([]);
+  const [paymentsPage, setPaymentsPage] = useState(1);
+  const [hasMorePayments, setHasMorePayments] = useState(false);
+  const [isLoadingMorePayments, setIsLoadingMorePayments] = useState(false);
   const [client, setClient] = useState<ClientProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchPayments = async () => {
+  const fetchPayments = async (page = 1) => {
     try {
-      const res = await fetch("/api/user/payments");
+      const res = await fetch(`/api/user/payments?page=${page}&pageSize=${PAYMENTS_PAGE_SIZE}`);
       if (res.ok) {
         const data = await res.json();
-        setPayments(data.payments || []);
+        const list: PaymentWithGym[] = data.payments || [];
+        setPayments((prev) => (page === 1 ? list : [...prev, ...list]));
         setClient(data.client || null);
+        // A full page means there may be another one.
+        setHasMorePayments(list.length === PAYMENTS_PAGE_SIZE);
+        setPaymentsPage(page);
       }
     } catch (e) {
       console.error("Error fetching payments:", e);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const loadMorePayments = async () => {
+    setIsLoadingMorePayments(true);
+    await fetchPayments(paymentsPage + 1);
+    setIsLoadingMorePayments(false);
   };
 
   useEffect(() => {
@@ -212,6 +227,11 @@ export default function PagosPage() {
             </tbody>
           </table>
         </div>
+        {hasMorePayments && (
+          <div className="px-6 pb-4">
+            <LoadMoreButton onClick={loadMorePayments} isLoading={isLoadingMorePayments} />
+          </div>
+        )}
       </div>
     </div>
   );

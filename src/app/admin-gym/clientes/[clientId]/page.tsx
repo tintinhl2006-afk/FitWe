@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, use } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -13,9 +12,6 @@ import {
   Clock,
   Activity,
   AlertTriangle,
-  Ruler,
-  Weight,
-  Plus,
   CreditCard,
   Edit,
   History,
@@ -24,7 +20,9 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCustomAlert } from "@/components/providers/CustomAlertProvider";
+import { LoadMoreButton } from "@/components/shared/LoadMoreButton";
 
+import { getErrorMessage } from "@/lib/errors";
 interface PaymentRecord {
   id: string;
   amount: number;
@@ -106,12 +104,14 @@ export default function ClientDetailPage({
 }: {
   params: Promise<{ clientId: string }>;
 }) {
-  const router = useRouter();
   const { clientId } = use(params);
   const { showConfirm } = useCustomAlert();
 
   const [client, setClient] = useState<ClientDetail | null>(null);
   const [payments, setPayments] = useState<PaymentRecord[]>([]);
+  const [paymentsPage, setPaymentsPage] = useState(1);
+  const [hasMorePayments, setHasMorePayments] = useState(false);
+  const [isLoadingMorePayments, setIsLoadingMorePayments] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
   const [notFound, setNotFound] = useState(false);
@@ -323,7 +323,7 @@ export default function ClientDetailPage({
         const data = await res.json();
         setEditFormError(data.message || "Error al actualizar la ficha");
       }
-    } catch (error) {
+    } catch {
       setEditFormError("Error de conexión. Inténtalo de nuevo.");
     } finally {
       setIsEditSubmitting(false);
@@ -347,15 +347,29 @@ export default function ClientDetailPage({
     }
   };
 
-  const fetchPayments = async () => {
+  const PAYMENTS_PAGE_SIZE = 25;
+
+  const fetchPayments = async (page = 1) => {
     try {
-      const res = await fetch(`/api/admin-gym/clients/${clientId}/subscription`);
+      const res = await fetch(
+        `/api/admin-gym/clients/${clientId}/subscription?page=${page}&pageSize=${PAYMENTS_PAGE_SIZE}`
+      );
       if (res.ok) {
-        setPayments(await res.json());
+        const list: PaymentRecord[] = await res.json();
+        setPayments((prev) => (page === 1 ? list : [...prev, ...list]));
+        // A full page means there may be another one.
+        setHasMorePayments(list.length === PAYMENTS_PAGE_SIZE);
+        setPaymentsPage(page);
       }
     } catch (e) {
       console.error("Error fetching payments:", e);
     }
+  };
+
+  const loadMorePayments = async () => {
+    setIsLoadingMorePayments(true);
+    await fetchPayments(paymentsPage + 1);
+    setIsLoadingMorePayments(false);
   };
 
   const fetchGymPlans = async () => {
@@ -418,8 +432,8 @@ export default function ClientDetailPage({
       setIsPlanModalOpen(false);
       fetchClient();
       fetchPayments();
-    } catch (e: any) {
-      setPlanModalError(e.message || "Error al asignar la tarifa");
+    } catch (e) {
+      setPlanModalError(getErrorMessage(e) || "Error al asignar la tarifa");
     } finally {
       setIsUpdating(false);
     }
@@ -830,6 +844,11 @@ export default function ClientDetailPage({
             </tbody>
           </table>
         </div>
+        {hasMorePayments && (
+          <div className="px-6 pb-4">
+            <LoadMoreButton onClick={loadMorePayments} isLoading={isLoadingMorePayments} />
+          </div>
+        )}
       </div>
 
       {/* ── Two Column Grid ── */}

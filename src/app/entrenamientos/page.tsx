@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { Plus, Loader2, Dumbbell, Calendar, Trash2, MoreHorizontal, Sparkles } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Plus, Loader2, Dumbbell, Trash2, MoreHorizontal, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { SubscriptionBanner, useIsSubscriptionActive } from "@/components/shared/SubscriptionBanner";
 import { useCustomAlert } from "@/components/providers/CustomAlertProvider";
 import AiWorkoutPlanner from "@/components/workout/AiWorkoutPlanner";
+import { LoadMoreButton } from "@/components/shared/LoadMoreButton";
 
 interface Routine {
   id: string;
@@ -20,10 +20,15 @@ interface Routine {
   }[];
 }
 
+const ROUTINES_PAGE_SIZE = 30;
+
 export default function EntrenamientosPage() {
   const isActive = useIsSubscriptionActive();
   const { showConfirm } = useCustomAlert();
   const [routines, setRoutines] = useState<Routine[]>([]);
+  const [routinesPage, setRoutinesPage] = useState(1);
+  const [hasMoreRoutines, setHasMoreRoutines] = useState(false);
+  const [isLoadingMoreRoutines, setIsLoadingMoreRoutines] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [newRoutineName, setNewRoutineName] = useState("");
@@ -32,22 +37,31 @@ export default function EntrenamientosPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [showAiPlanner, setShowAiPlanner] = useState(false);
 
-  const fetchRoutines = async () => {
+  const fetchRoutines = async (page = 1) => {
     if (!isActive) {
       setIsLoading(false);
       return;
     }
     try {
-      const res = await fetch("/api/routines");
+      const res = await fetch(`/api/routines?page=${page}&pageSize=${ROUTINES_PAGE_SIZE}`);
       if (res.ok) {
-        const data = await res.json();
-        setRoutines(data);
+        const data: Routine[] = await res.json();
+        setRoutines((prev) => (page === 1 ? data : [...prev, ...data]));
+        // A full page means there may be another one.
+        setHasMoreRoutines(data.length === ROUTINES_PAGE_SIZE);
+        setRoutinesPage(page);
       }
     } catch (error) {
       console.error("Error al cargar rutinas:", error);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const loadMoreRoutines = async () => {
+    setIsLoadingMoreRoutines(true);
+    await fetchRoutines(routinesPage + 1);
+    setIsLoadingMoreRoutines(false);
   };
 
   useEffect(() => {
@@ -183,6 +197,7 @@ export default function EntrenamientosPage() {
             <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
           </div>
         ) : routines.length > 0 ? (
+          <>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {routines.map((routine) => (
               <Link
@@ -225,6 +240,10 @@ export default function EntrenamientosPage() {
               </Link>
             ))}
           </div>
+          {hasMoreRoutines && (
+            <LoadMoreButton onClick={loadMoreRoutines} isLoading={isLoadingMoreRoutines} />
+          )}
+          </>
         ) : (
           <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 py-16 px-6 text-center">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white dark:bg-slate-800 shadow-sm mb-4">

@@ -3,13 +3,13 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { Plus, Flame, Beef, Wheat, Droplet, Calendar as CalendarIcon, Loader2, Trash2, X, Search, Settings, Target as TargetIcon, Edit3, BarChart3, PieChart, Sparkles, Folder, ChevronUp, ChevronDown, GripVertical } from "lucide-react";
+import { Plus, Flame, Beef, Wheat, Droplet, Calendar as CalendarIcon, Loader2, Trash2, X, Search, Target as TargetIcon, Edit3, BarChart3, PieChart, Sparkles, Folder, ChevronUp, ChevronDown, GripVertical } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
-import Image from "next/image";
 import { useCustomAlert } from "@/components/providers/CustomAlertProvider";
 import AiDietPlanner from "@/components/nutrition/AiDietPlanner";
 import SavedDietsModal from "@/components/nutrition/SavedDietsModal";
+import { LoadMoreButton } from "@/components/shared/LoadMoreButton";
 
 const FOOD_CATEGORIES = [
   "Todos",
@@ -75,7 +75,7 @@ export default function NutricionPage() {
   
   const [profile, setProfile] = useState<any>(null);
   const [meals, setMeals] = useState<MealEntry[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [, setIsLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState("");
 
   // Modal State
@@ -101,6 +101,9 @@ export default function NutricionPage() {
   
   // Search & Foods
   const [foods, setFoods] = useState<FoodItem[]>([]);
+  const [foodsPage, setFoodsPage] = useState(1);
+  const [hasMoreFoods, setHasMoreFoods] = useState(false);
+  const [isLoadingMoreFoods, setIsLoadingMoreFoods] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   
@@ -320,18 +323,33 @@ export default function NutricionPage() {
     if (selectedDate) fetchNutritionData(selectedDate);
   }, [selectedDate]);
 
-  const fetchFoods = async (query: string = "") => {
-    setIsSearching(true);
+  const FOODS_PAGE_SIZE = 60;
+
+  const fetchFoods = async (query: string = "", page: number = 1) => {
+    if (page === 1) setIsSearching(true);
+    else setIsLoadingMoreFoods(true);
     try {
-      const res = await fetch(`/api/user/foods?query=${encodeURIComponent(query)}`);
+      const params = new URLSearchParams({
+        query,
+        page: String(page),
+        pageSize: String(FOODS_PAGE_SIZE),
+        sort: "category",
+      });
+      // Category filtering is done by the server now: it only ever sends one page at a time.
+      if (selectedCategoryFilter !== "Todos") params.set("category", selectedCategoryFilter);
+      const res = await fetch(`/api/user/foods?${params.toString()}`);
       if (res.ok) {
-        const data = await res.json();
-        setFoods(data);
+        const data: FoodItem[] = await res.json();
+        setFoods((prev) => (page === 1 ? data : [...prev, ...data]));
+        // A full page means there may be another one.
+        setHasMoreFoods(data.length === FOODS_PAGE_SIZE);
+        setFoodsPage(page);
       }
     } catch (error) {
       console.error("Error fetching foods", error);
     } finally {
       setIsSearching(false);
+      setIsLoadingMoreFoods(false);
     }
   };
 
@@ -343,7 +361,7 @@ export default function NutricionPage() {
       }, 300);
       return () => clearTimeout(delayFn);
     }
-  }, [searchQuery, isModalOpen, activeTab]);
+  }, [searchQuery, isModalOpen, activeTab, selectedCategoryFilter]);
 
   const openAddFoodModal = (mealType: string) => {
     setModalMealType(mealType);
@@ -947,6 +965,12 @@ export default function NutricionPage() {
                       </div>
                     )}
                   </div>
+                  {hasMoreFoods && !isSearching && (
+                    <LoadMoreButton
+                      onClick={() => fetchFoods(searchQuery, foodsPage + 1)}
+                      isLoading={isLoadingMoreFoods}
+                    />
+                  )}
                 </div>
               ) : (
                 <form onSubmit={handleCreateFood} className="space-y-4">

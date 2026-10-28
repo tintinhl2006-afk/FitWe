@@ -22,6 +22,7 @@ import { useRouter } from 'expo-router';
 import { useAppTheme } from '../../../context/ThemeContext';
 import { Palette } from '../../../constants/theme';
 import { api } from '../../../lib/apiClient';
+import { LoadMoreButton } from '../../../components/LoadMoreButton';
 import { SaveTemplateModal, SavedDietItemInput } from '../../../components/nutrition/SaveTemplateModal';
 
 interface FoodItem {
@@ -108,6 +109,9 @@ export default function NutritionScreen() {
   const [modalMealType, setModalMealType] = useState('BREAKFAST');
   const [activeTab, setActiveTab] = useState<'search' | 'create'>('search');
   const [foods, setFoods] = useState<FoodItem[]>([]);
+  const [foodsPage, setFoodsPage] = useState(1);
+  const [hasMoreFoods, setHasMoreFoods] = useState(false);
+  const [isLoadingMoreFoods, setIsLoadingMoreFoods] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [selectedFood, setSelectedFood] = useState<FoodItem | null>(null);
@@ -152,20 +156,43 @@ export default function NutritionScreen() {
     fetchNutritionData(selectedDate);
   }, [selectedDate]);
 
+  const FOODS_PAGE_SIZE = 60;
+
+  function loadMoreFoods() {
+    const requestId = foodSearchRequestIdRef.current;
+    setIsLoadingMoreFoods(true);
+    api
+      .get(`/api/user/foods?query=${encodeURIComponent(searchQuery)}&page=${foodsPage + 1}&pageSize=${FOODS_PAGE_SIZE}`)
+      .then((data) => {
+        // A newer search replaced this list while the page was loading: drop the stale result.
+        if (requestId !== foodSearchRequestIdRef.current) return;
+        const list: FoodItem[] = Array.isArray(data) ? data : [];
+        setFoods((prev) => [...prev, ...list]);
+        setFoodsPage((page) => page + 1);
+        setHasMoreFoods(list.length === FOODS_PAGE_SIZE);
+      })
+      .catch(() => {})
+      .finally(() => setIsLoadingMoreFoods(false));
+  }
+
   useEffect(() => {
     if (!isModalOpen || activeTab !== 'search') return;
     const t = setTimeout(() => {
       const requestId = ++foodSearchRequestIdRef.current;
       setIsSearching(true);
       api
-        .get(`/api/user/foods?query=${encodeURIComponent(searchQuery)}`)
+        .get(`/api/user/foods?query=${encodeURIComponent(searchQuery)}&page=1&pageSize=${FOODS_PAGE_SIZE}`)
         .then((data) => {
           if (requestId !== foodSearchRequestIdRef.current) return;
-          setFoods(Array.isArray(data) ? data : []);
+          const list: FoodItem[] = Array.isArray(data) ? data : [];
+          setFoods(list);
+          setFoodsPage(1);
+          setHasMoreFoods(list.length === FOODS_PAGE_SIZE);
         })
         .catch(() => {
           if (requestId !== foodSearchRequestIdRef.current) return;
           setFoods([]);
+          setHasMoreFoods(false);
         })
         .finally(() => {
           if (requestId === foodSearchRequestIdRef.current) setIsSearching(false);
@@ -564,6 +591,9 @@ export default function NutritionScreen() {
                         )}
                       </View>
                     ))
+                  )}
+                  {hasMoreFoods && !isSearching && foods.length > 0 && (
+                    <LoadMoreButton onPress={loadMoreFoods} isLoading={isLoadingMoreFoods} />
                   )}
                 </ScrollView>
               </>

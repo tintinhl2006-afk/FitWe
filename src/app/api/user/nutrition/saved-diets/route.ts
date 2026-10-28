@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { readPageParams } from "@/lib/pagination";
 import { getRequestUserId } from "@/lib/apiAuth";
 
 // GET: Retrieve all saved diets for the authenticated user
@@ -10,12 +11,15 @@ export async function GET(req: Request) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
+    const { skip, take } = readPageParams(req.url, { defaultSize: 50, maxSize: 100 });
     const savedDiets = await prisma.savedDiet.findMany({
       where: { userId },
       include: {
         items: true,
       },
       orderBy: { updatedAt: "desc" },
+      skip,
+      take,
     });
 
     return NextResponse.json(savedDiets);

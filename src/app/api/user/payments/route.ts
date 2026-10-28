@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { readPageParams } from "@/lib/pagination";
 import { getRequestUserId } from "@/lib/apiAuth";
 
 export async function GET(req: Request) {
@@ -11,6 +12,8 @@ export async function GET(req: Request) {
         { status: 401 }
       );
     }
+
+    const { skip, take } = readPageParams(req.url, { defaultSize: 50, maxSize: 100 });
 
     // Get the client's payments and their associated gym info
     const userWithGymAndPayments = await prisma.user.findUnique({
@@ -28,6 +31,8 @@ export async function GET(req: Request) {
         locality: true,
         payments: {
           orderBy: { date: "desc" },
+          skip,
+          take,
           include: { paymentMethod: true },
         },
         gym: {

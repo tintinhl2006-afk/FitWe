@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getFoodCategory } from "@/lib/nutritionUtils";
 import { STANDARD_FOODS } from "@/lib/dietEngine";
 import { getRequestUserId } from "@/lib/apiAuth";
+import { readPageParams } from "@/lib/pagination";
 
 export async function GET(req: Request) {
   try {
@@ -38,6 +39,10 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const query = searchParams.get("query") || "";
 
+    // The candidate set is bounded: the shared catalogue plus this user's own foods. Matching is
+    // accent-insensitive, which the database cannot do here without an extension, so it stays in
+    // memory, but over a capped set and returning one page instead of every match.
+    const { skip, take } = readPageParams(req.url, { defaultSize: 60, maxSize: 200 });
     const allFoods = await prisma.foodItem.findMany({
       where: {
         OR: [
@@ -46,18 +51,33 @@ export async function GET(req: Request) {
         ],
       },
       orderBy: { name: "asc" },
+      take: 5000,
     });
 
     const normalizeText = (str: string) =>
       str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
     const normalizedQuery = normalizeText(query);
-    const filteredFoods = allFoods.filter((food) =>
-      normalizeText(food.name).includes(normalizedQuery) ||
-      (food.category && normalizeText(food.category).includes(normalizedQuery))
-    );
+    // Category filter and ordering used to happen in the browser over the full list. With one page
+    // at a time they have to happen here, in the same order the screen shows (category, then name).
+    const categoryFilter = searchParams.get("category");
+    const filteredFoods = allFoods
+      .filter((food) =>
+        normalizeText(food.name).includes(normalizedQuery) ||
+        (food.category && normalizeText(food.category).includes(normalizedQuery))
+      )
+      .filter((food) => !categoryFilter || categoryFilter === "Todos" || (food.category || "Otros") === categoryFilter)
+      .sort((a, b) => {
+        // The web groups results by category; the mobile app has always listed them by name.
+        if (searchParams.get("sort") === "category") {
+          const catA = a.category || "Otros";
+          const catB = b.category || "Otros";
+          if (catA !== catB) return catA.localeCompare(catB);
+        }
+        return a.name.localeCompare(b.name);
+      });
 
-    return NextResponse.json(filteredFoods);
+    return NextResponse.json(filteredFoods.slice(skip, skip + take));
   } catch (error) {
     console.error("Error fetching foods:", error);
     return NextResponse.json(

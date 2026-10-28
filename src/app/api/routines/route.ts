@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { readPageParams } from "@/lib/pagination";
 import { getNow } from "@/lib/timeUtils";
 import { getRequestUserId } from "@/lib/apiAuth";
 
@@ -11,8 +12,11 @@ export async function GET(req: Request) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
+    const { skip, take } = readPageParams(req.url, { defaultSize: 50, maxSize: 100 });
     const routines = await prisma.routine.findMany({
       where: { userId },
+      skip,
+      take,
       include: {
         exercises: {
           include: {
