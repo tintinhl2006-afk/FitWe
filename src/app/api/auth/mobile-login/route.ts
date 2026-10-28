@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import bcrypt from "bcryptjs";
+import { verifyPassword } from "@/lib/password";
 import { encode } from "next-auth/jwt";
 import { getAuthSecret } from "@/lib/authSecret";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
@@ -34,15 +34,9 @@ export async function POST(req: Request) {
       include: { gym: { select: { id: true, name: true } } },
     });
 
-    if (!user || !user.password) {
-      return NextResponse.json(
-        { message: "Credenciales inválidas" },
-        { status: 401 }
-      );
-    }
-
-    const isValid = await bcrypt.compare(password, user.password);
-    if (!isValid) {
+    // Same work whether or not the account exists, so response time does not reveal it.
+    const isValid = await verifyPassword(password, user?.password);
+    if (!user || !isValid) {
       return NextResponse.json(
         { message: "Credenciales inválidas" },
         { status: 401 }
@@ -64,6 +58,8 @@ export async function POST(req: Request) {
       subscriptionEndDate: user.subscriptionEndDate?.toISOString() || null,
       gymId: user.gymId,
       gymName: user.gym?.name || null,
+      // Required by the JWT type declared in src/types/next-auth.d.ts; the web login sets it too.
+      serverNow: now.toISOString(),
       sessionVersion: user.sessionVersion,
     };
 
@@ -91,7 +87,8 @@ export async function POST(req: Request) {
   } catch (error: any) {
     console.error("Mobile login error:", error);
     return NextResponse.json(
-      { message: error?.message || String(error) || "Error interno del servidor" },
+      // Never echo the exception: it can carry server configuration details.
+      { message: "Error interno del servidor" },
       { status: 500 }
     );
   }

@@ -119,7 +119,7 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
-    let timer: NodeJS.Timeout;
+    let timer: ReturnType<typeof setInterval> | undefined;
     if (qrToken) {
       if (qrTimeLeft > 0) {
         timer = setInterval(() => {

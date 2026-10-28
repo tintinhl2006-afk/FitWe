@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useCustomAlert } from "@/components/providers/CustomAlertProvider";
 import { User, Activity, Calendar, Clock, Dumbbell, Loader2, Camera, X, Eye, QrCode, RefreshCw, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { cn } from "@/lib/utils";
 import { usePreferences } from "@/context/PreferencesContext";
@@ -50,7 +50,7 @@ interface ProfileData {
 
 export default function ProfilePage() {
   const { data: session, update } = useSession();
-  const { weightUnit, distanceUnit } = usePreferences();
+  const { weightUnit } = usePreferences();
   const { showAlert } = useCustomAlert();
   const [data, setData] = useState<ProfileData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -78,7 +78,7 @@ export default function ProfilePage() {
   }, [selectedDate]);
 
   useEffect(() => {
-    let timer: NodeJS.Timeout;
+    let timer: ReturnType<typeof setInterval> | undefined;
     if (isQrOpen) {
       if (qrTimeLeft > 0) {
         timer = setInterval(() => {

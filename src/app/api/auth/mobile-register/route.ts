@@ -1,11 +1,22 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import bcrypt from "bcryptjs";
+import { hashPassword } from "@/lib/password";
 import crypto from "crypto";
+import { z } from "zod";
 import { encode } from "next-auth/jwt";
 import { sendVerificationEmail, getAppBaseUrl } from "@/lib/email";
 import { getAuthSecret } from "@/lib/authSecret";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
+
+const mobileRegisterSchema = z.object({
+  name: z.string().trim().min(1, "El nombre es obligatorio.").max(80, "El nombre es demasiado largo."),
+  email: z.string().trim().email("Introduce un correo electrónico válido.").max(254),
+  password: z
+    .string()
+    .min(6, "La contraseña debe tener al menos 6 caracteres.")
+    .max(128, "La contraseña es demasiado larga."),
+  gymCode: z.string().trim().length(6, "El código de gimnasio debe tener exactamente 6 caracteres"),
+});
 
 export async function POST(req: Request) {
   try {
@@ -17,21 +28,14 @@ export async function POST(req: Request) {
       );
     }
 
-    const { name, email, password, gymCode } = await req.json();
-
-    if (!name || !email || !password || !gymCode) {
-      return NextResponse.json(
-        { message: "Todos los campos obligatorios deben ser completados" },
-        { status: 400 }
-      );
+    // Same rules as the web registration (src/app/api/register-client): this endpoint used to
+    // accept any type and any length for every field, including the name that is later put into
+    // emails and exported to spreadsheets.
+    const parsed = mobileRegisterSchema.safeParse(await req.json().catch(() => null));
+    if (!parsed.success) {
+      return NextResponse.json({ message: parsed.error.issues[0].message }, { status: 400 });
     }
-
-    if (typeof gymCode !== "string" || gymCode.trim().length !== 6) {
-      return NextResponse.json(
-        { message: "El código de gimnasio debe tener exactamente 6 caracteres" },
-        { status: 400 }
-      );
-    }
+    const { name, email, password, gymCode } = parsed.data;
 
     const existingUser = await prisma.user.findUnique({
       where: { email: email.toLowerCase().trim() },
@@ -55,7 +59,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await hashPassword(password);
     const verificationToken = crypto.randomBytes(32).toString("hex");
     const verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 horas
 
@@ -87,6 +91,9 @@ export async function POST(req: Request) {
       name: newUser.name,
       role: newUser.role,
       subscriptionStatus: newUser.subscriptionStatus,
+      // Required by the JWT type declared in src/types/next-auth.d.ts.
+      subscriptionEndDate: newUser.subscriptionEndDate?.toISOString() ?? null,
+      serverNow: new Date().toISOString(),
       sessionVersion: newUser.sessionVersion,
     };
 
@@ -108,7 +115,7 @@ export async function POST(req: Request) {
   } catch (error: any) {
     console.error("Mobile register error:", error);
     return NextResponse.json(
-      { message: error?.message || "Error al registrar el usuario" },
+      { message: "Error al registrar el usuario" },
       { status: 500 }
     );
   }
