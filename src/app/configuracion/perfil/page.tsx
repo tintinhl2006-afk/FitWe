@@ -5,7 +5,7 @@ import { Loader2, Save } from "lucide-react";
 import { useSession } from "next-auth/react";
 
 export default function ProfileConfigPage() {
-  const { data: session, update } = useSession();
+  const { update } = useSession();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({

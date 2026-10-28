@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
   Plus,
-  Minus,
   Loader2,
   Dumbbell,
   Trash2,

@@ -26,7 +26,7 @@ export async function GET() {
     });
 
     return NextResponse.json(templates);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ message: "Error" }, { status: 500 });
   }
 }
@@ -72,7 +72,7 @@ export async function POST(req: Request) {
     await generateClassesFromTemplate(template, 7);
 
     return NextResponse.json(template, { status: 201 });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ message: "Error" }, { status: 500 });
   }
 }
@@ -111,7 +111,7 @@ export async function DELETE(req: Request) {
     });
 
     return NextResponse.json({ message: "Eliminado" });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ message: "Error" }, { status: 500 });
   }
 }

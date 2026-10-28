@@ -2,20 +2,18 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { 
-  Loader2, 
-  ArrowRight, 
-  Activity, 
-  Target as TargetIcon, 
-  Scale, 
-  User, 
-  CheckCircle2, 
-  ArrowLeft, 
+import {
+  Loader2,
+  ArrowRight,
+  Activity,
+  Target as TargetIcon,
+  Scale,
+  User,
+  CheckCircle2,
+  ArrowLeft,
   Wand2,
-  ChefHat,
-  ShieldAlert,
   Sparkles,
-  Flame
+  Flame,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePreferences } from "@/context/PreferencesContext";

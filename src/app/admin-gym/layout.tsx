@@ -1,5 +1,4 @@
 import { AdminGymSidebar } from "@/components/admin/AdminGymSidebar";
-import { AdminGymHeader } from "@/components/admin/AdminGymHeader";
 
 export default async function AdminGymLayout({
   children,

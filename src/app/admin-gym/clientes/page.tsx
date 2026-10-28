@@ -7,12 +7,10 @@ import {
   Search,
   Loader2,
   User,
-  Dumbbell,
   Mail,
   CalendarDays,
   UserPlus,
   X,
-  Lock,
   CheckCircle2,
   AlertCircle,
   ChevronLeft,
@@ -220,7 +218,7 @@ export default function ClientesPage() {
         const data = await res.json();
         setFormError(data.message || "Error al crear el cliente");
       }
-    } catch (error) {
+    } catch {
       setFormError("Error de conexión. Inténtalo de nuevo.");
     } finally {
       setIsSubmitting(false);

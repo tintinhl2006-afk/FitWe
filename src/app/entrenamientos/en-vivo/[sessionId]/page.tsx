@@ -2,8 +2,7 @@
 
 import { useState, useEffect, use, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
-import { Check, Loader2, StopCircle, Dumbbell, Clock, Target, Activity, Accessibility, BicepsFlexed, Trophy, X, Plus, Minus, Save, ArrowLeft, Trash2 } from "lucide-react";
+import { Check, Loader2, StopCircle, Dumbbell, Clock, Target, Activity, Accessibility, BicepsFlexed, Trophy, X, Plus, Save, ArrowLeft, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePreferences } from "@/context/PreferencesContext";
 import Image from "next/image";
@@ -38,7 +37,6 @@ interface WorkoutSession {
 
 export default function LiveWorkoutPage({ params }: { params: Promise<{ sessionId: string }> }) {
   const router = useRouter();
-  const { data: authSession } = useSession();
   const { sessionId } = use(params);
   const { weightUnit, distanceUnit } = usePreferences();
   const { showConfirm } = useCustomAlert();

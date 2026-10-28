@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 import { provinces } from "@/lib/provinces";
 import { useCustomAlert } from "@/components/providers/CustomAlertProvider";
 
+import { getErrorMessage } from "@/lib/errors";
 type Gateway = "STRIPE" | "REDSYS";
 
 interface PaymentMethod {
@@ -121,7 +122,7 @@ export default function MetodosPagoPage() {
           } else {
             showToast("error", "No se completó el onboarding de Stripe Connect. Inténtalo de nuevo.");
           }
-        } catch (e) {
+        } catch {
           showToast("error", "Error al verificar el estado de Stripe Connect.");
         } finally {
           setConnectingId(null);
@@ -197,8 +198,8 @@ export default function MetodosPagoPage() {
       setIsModalOpen(false);
       showToast("success", `Método de pago ${isEditing ? "actualizado" : "añadido"} correctamente`);
       fetchMethods();
-    } catch (err: any) {
-      showToast("error", err.message || "Error al guardar el método de pago");
+    } catch (err) {
+      showToast("error", getErrorMessage(err) || "Error al guardar el método de pago");
     } finally {
       setIsSubmitting(false);
     }
@@ -214,8 +215,8 @@ export default function MetodosPagoPage() {
       }
       showToast("success", "Método de pago activado");
       fetchMethods();
-    } catch (err: any) {
-      showToast("error", err.message || "Error al activar el método de pago");
+    } catch (err) {
+      showToast("error", getErrorMessage(err) || "Error al activar el método de pago");
     } finally {
       setBusyId(null);
     }
@@ -231,8 +232,8 @@ export default function MetodosPagoPage() {
       }
       showToast("success", "Método de pago eliminado");
       fetchMethods();
-    } catch (err: any) {
-      showToast("error", err.message || "Error al eliminar el método de pago");
+    } catch (err) {
+      showToast("error", getErrorMessage(err) || "Error al eliminar el método de pago");
     } finally {
       setBusyId(null);
     }
@@ -256,8 +257,8 @@ export default function MetodosPagoPage() {
       if (data.url) {
         window.location.href = data.url;
       }
-    } catch (err: any) {
-      showToast("error", err.message || "Error al conectar con Stripe.");
+    } catch (err) {
+      showToast("error", getErrorMessage(err) || "Error al conectar con Stripe.");
       setConnectingId(null);
     }
   };

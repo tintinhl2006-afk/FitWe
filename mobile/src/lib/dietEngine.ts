@@ -5414,18 +5414,12 @@ export function solveMealGrams(
   // Run iterative relaxation to solve cross-macro dependencies (5 iterations converge perfectly)
   for (let i = 0; i < 5; i++) {
     if (cFood) {
-      const pContrib = wp * (pFood?.protein || 0) + wf * (fFood?.protein || 0);
-      const fContrib = wp * (pFood?.fat || 0) + wf * (fFood?.fat || 0);
       wc = Math.max(0.2, (remCarb - wp * (pFood?.carbs || 0) - wf * (fFood?.carbs || 0)) / cFood.carbs);
     }
     if (pFood) {
-      const cContrib = wc * (cFood?.carbs || 0) + wf * (fFood?.carbs || 0);
-      const fContrib = wc * (cFood?.fat || 0) + wf * (fFood?.fat || 0);
       wp = Math.max(0.3, (remPro - wc * (cFood?.protein || 0) - wf * (fFood?.protein || 0)) / pFood.protein);
     }
     if (fFood) {
-      const cContrib = wc * (cFood?.carbs || 0) + wp * (pFood?.carbs || 0);
-      const pContrib = wc * (cFood?.protein || 0) + wp * (pFood?.protein || 0);
       wf = Math.max(0.05, (remFat - wc * (cFood?.fat || 0) - wp * (pFood?.fat || 0)) / fFood.fat);
     }
   }
@@ -5763,7 +5757,7 @@ export function getMealTemplate(
       let carb: DietFood | undefined;
       let protein: DietFood | undefined;
       let fat: DietFood | undefined;
-      let fruit: DietFood | undefined = pickFruit("std-platano");
+      const fruit: DietFood | undefined = pickFruit("std-platano");
 
       if (profile === "OATMEAL") {
         // Oatmeal bowl: Oats + Dairy/Shake + Nuts/Peanut Butter

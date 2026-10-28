@@ -1,28 +1,26 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
-import { 
-  Users, 
-  Plus, 
-  Search, 
-  Phone, 
-  Mail, 
-  Trash2, 
-  Edit2, 
-  Loader2, 
-  X, 
-  CheckCircle2, 
-  AlertTriangle,
+import {
+  Plus,
+  Search,
+  Phone,
+  Mail,
+  Trash2,
+  Edit2,
+  Loader2,
+  X,
+  CheckCircle2,
   UserCheck,
   CalendarDays,
   Lock,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCustomAlert } from "@/components/providers/CustomAlertProvider";
 
+import { getErrorMessage } from "@/lib/errors";
 interface Employee {
   id: string;
   name: string;
@@ -60,7 +58,6 @@ const currentYear = new Date().getFullYear();
 const years = Array.from({ length: 110 }, (_, i) => String(currentYear - i));
 
 export default function EmployeesPage() {
-  const { data: session } = useSession();
   const { showConfirm } = useCustomAlert();
   
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -302,8 +299,8 @@ export default function EmployeesPage() {
       });
       setIsModalOpen(false);
       fetchEmployees();
-    } catch (err: any) {
-      setError(err.message || "Algo salió mal");
+    } catch (err) {
+      setError(getErrorMessage(err) || "Algo salió mal");
     } finally {
       setIsSubmitting(false);
     }

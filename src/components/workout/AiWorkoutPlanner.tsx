@@ -2,24 +2,22 @@
 
 import { useState, useEffect } from "react";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
-import { 
-  Loader2, 
-  X, 
-  Check, 
-  Sparkles, 
-  Sliders, 
-  Dumbbell, 
-  CalendarDays,
+import {
+  Loader2,
+  X,
+  Check,
+  Sparkles,
+  Sliders,
+  Dumbbell,
   Target,
-  Activity,
-  HeartPulse,
   ArrowLeft,
   ArrowRight,
   Download,
-  Clipboard
+  Clipboard,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+import { getErrorMessage } from "@/lib/errors";
 function sanitizeText(str: string): string {
   if (!str) return "";
   return str
@@ -430,8 +428,8 @@ export default function AiWorkoutPlanner({ onClose, onSaved }: AiWorkoutPlannerP
       const data = await res.json();
       setGeneratedPlan(data.plan);
       setSetupStep(4);
-    } catch (e: any) {
-      setError(e.message || "Ocurrió un error al generar las rutinas");
+    } catch (e) {
+      setError(getErrorMessage(e) || "Ocurrió un error al generar las rutinas");
     } finally {
       setIsLoading(false);
     }
@@ -521,8 +519,8 @@ export default function AiWorkoutPlanner({ onClose, onSaved }: AiWorkoutPlannerP
       }
       
       onSaved();
-    } catch (e: any) {
-      setError(e.message || "Ocurrió un error al guardar las rutinas");
+    } catch (e) {
+      setError(getErrorMessage(e) || "Ocurrió un error al guardar las rutinas");
     } finally {
       setIsSaving(false);
     }

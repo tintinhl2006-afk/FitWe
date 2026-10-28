@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Calendar, Check, X, Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 interface PendingClass {
   id: string;

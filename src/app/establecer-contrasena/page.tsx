@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import { Lock, Loader2, CheckCircle2, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+import { getErrorMessage } from "@/lib/errors";
 export default function EstablecerContrasenaPage() {
   const { data: session, update } = useSession();
   const router = useRouter();
@@ -64,9 +65,9 @@ export default function EstablecerContrasenaPage() {
           router.replace("/dashboard");
         }
       }, 1500);
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      setError(err.message || "Error al conectar con el servidor.");
+      setError(getErrorMessage(err) || "Error al conectar con el servidor.");
       setIsSubmitting(false);
     }
   };

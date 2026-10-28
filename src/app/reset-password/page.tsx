@@ -3,9 +3,9 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Lock, Loader2, CheckCircle2, AlertCircle, Eye, EyeOff } from "lucide-react";
-import Link from "next/link";
 import { cn } from "@/lib/utils";
 
+import { getErrorMessage } from "@/lib/errors";
 function ResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -66,9 +66,9 @@ function ResetPasswordContent() {
       setTimeout(() => {
         router.replace("/login");
       }, 2000);
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      setError(err.message || "Error de red al conectar con el servidor.");
+      setError(getErrorMessage(err) || "Error de red al conectar con el servidor.");
       setIsSubmitting(false);
     }
   };

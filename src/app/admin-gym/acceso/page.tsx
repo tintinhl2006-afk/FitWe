@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+import { getErrorMessage } from "@/lib/errors";
 interface ValidationResult {
   status: "GRANTED" | "DENIED";
   message: string;
@@ -150,8 +151,8 @@ export default function AccessControlPage() {
         ...prev.slice(0, 19), // Limitar a las últimas 20 entradas en memoria
       ]);
 
-    } catch (err: any) {
-      setError(err.message || "Error al procesar el acceso.");
+    } catch (err) {
+      setError(getErrorMessage(err) || "Error al procesar el acceso.");
       playSound("failure");
     } finally {
       setIsLoading(false);

@@ -3,11 +3,9 @@
 import { useState, useEffect } from "react";
 import { Loader2, Dumbbell, MapPin, AlertCircle, Save } from "lucide-react";
 import { useCustomAlert } from "@/components/providers/CustomAlertProvider";
-import { useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
 
 export default function MiGimnasioConfigPage() {
-  const { data: session } = useSession();
   const { showConfirm, showAlert } = useCustomAlert();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -67,7 +65,7 @@ export default function MiGimnasioConfigPage() {
           } else {
             showAlert(data.message || "Error al vincular el gimnasio.");
           }
-        } catch (e) {
+        } catch {
           showAlert("Error de conexión al servidor.");
         } finally {
           setIsSaving(false);

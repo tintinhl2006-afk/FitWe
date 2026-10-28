@@ -2,19 +2,18 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { 
-  Calendar, 
-  Plus, 
-  Users, 
-  Clock, 
-  User as UserIcon, 
-  Loader2, 
+import {
+  Calendar,
+  Plus,
+  Users,
+  Clock,
+  User as UserIcon,
+  Loader2,
   X,
   CheckCircle2,
   Trash2,
   CalendarDays,
   AlertTriangle,
-  Zap,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";

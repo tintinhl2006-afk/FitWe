@@ -7,11 +7,9 @@ import { useSession, signOut } from "next-auth/react";
 import {
   LayoutDashboard,
   Users,
-  Dumbbell,
   BarChart3,
   Settings,
   LogOut,
-  Building2,
   ChevronRight,
   Calendar,
   Menu,

@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { MailCheck, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 
+import { getErrorMessage } from "@/lib/errors";
 function VerifyEmailContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
@@ -30,9 +31,9 @@ function VerifyEmailContent() {
         if (!res.ok) throw new Error(data.message || "Error al verificar el email.");
         setStatus("success");
         setMessage(data.message);
-      } catch (err: any) {
+      } catch (err) {
         setStatus("error");
-        setMessage(err.message || "Error de red al conectar con el servidor.");
+        setMessage(getErrorMessage(err) || "Error de red al conectar con el servidor.");
       }
     })();
   }, [token]);

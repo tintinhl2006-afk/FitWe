@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Search, Loader2, BicepsFlexed, Activity, Accessibility, Dumbbell, Target, Plus } from "lucide-react";
-import { cn } from "@/lib/utils";
 import Link from "next/link";
 import Image from "next/image";
 

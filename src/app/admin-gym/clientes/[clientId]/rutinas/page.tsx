@@ -4,7 +4,6 @@ import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Plus, Loader2, Dumbbell, Trash2, Edit2, ArrowLeft } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { useCustomAlert } from "@/components/providers/CustomAlertProvider";
 
 interface Exercise {

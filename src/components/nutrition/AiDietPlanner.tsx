@@ -2,19 +2,18 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { 
-  Loader2, 
-  X, 
-  ShoppingBag, 
-  Utensils, 
-  RefreshCw, 
-  Check, 
-  Sparkles, 
+import {
+  Loader2,
+  X,
+  ShoppingBag,
+  Utensils,
+  RefreshCw,
+  Check,
+  Sparkles,
   Calendar,
   AlertCircle,
   ThumbsUp,
   ThumbsDown,
-  ChevronRight,
   Flame,
   ChefHat,
   Sliders,
@@ -22,12 +21,12 @@ import {
   Wand2,
   ArrowLeft,
   ArrowRight,
-  Plus,
-  Save
+  Save,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getPortionEquivalent, DietFood, MealPlan, SolvedItem, STANDARD_FOODS } from "@/lib/dietEngine";
+import { getPortionEquivalent, DietFood, MealPlan, SolvedItem } from "@/lib/dietEngine";
 
+import { getErrorMessage } from "@/lib/errors";
 interface AiDietPlannerProps {
   onClose: () => void;
   onSaved: () => void;
@@ -466,8 +465,8 @@ export default function AiDietPlanner({ onClose, onSaved, initialDate }: AiDietP
       setMealPlan(data.plan);
       setAvailableFoods(data.availableFoods);
       setShowSetup(false);
-    } catch (e: any) {
-      setError(e.message || "Ocurrió un error al generar la dieta");
+    } catch (e) {
+      setError(getErrorMessage(e) || "Ocurrió un error al generar la dieta");
     } finally {
       setIsLoading(false);
     }
@@ -563,8 +562,8 @@ export default function AiDietPlanner({ onClose, onSaved, initialDate }: AiDietP
       }
 
       onSaved();
-    } catch (e: any) {
-      setError(e.message || "Error al registrar la dieta.");
+    } catch (e) {
+      setError(getErrorMessage(e) || "Error al registrar la dieta.");
     } finally {
       setIsLoading(false);
     }
@@ -608,8 +607,8 @@ export default function AiDietPlanner({ onClose, onSaved, initialDate }: AiDietP
       setIsSavingTemplate(false);
       setTemplateName("");
       alert("¡Plantilla de dieta guardada con éxito!");
-    } catch (e: any) {
-      setError(e.message || "Error al guardar la plantilla.");
+    } catch (e) {
+      setError(getErrorMessage(e) || "Error al guardar la plantilla.");
     } finally {
       setIsLoading(false);
     }

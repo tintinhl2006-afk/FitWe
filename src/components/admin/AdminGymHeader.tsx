@@ -1,7 +1,6 @@
 "use client";
 
-import { usePathname } from "next/navigation";
-import { Building2, LayoutDashboard, Users, Dumbbell, Calendar, BarChart3, Settings, Tag, QrCode } from "lucide-react";
+import { LayoutDashboard, Users, Dumbbell, Calendar, BarChart3, Settings, Tag, QrCode } from "lucide-react";
 
 const gymNavItems = [
   { title: "Dashboard", href: "/admin-gym", icon: LayoutDashboard },

@@ -103,7 +103,7 @@ export async function GET(request: Request) {
     });
     const monthlyDates = monthlySessions.map(s => s.startTime.toISOString());
 
-    let sessionsWhereClause: any = {
+    const sessionsWhereClause: any = {
       userId,
       endTime: { not: null },
     };

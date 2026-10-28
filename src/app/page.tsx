@@ -1,14 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import {
   Activity,
-  ArrowRight,
   Building2,
   ChevronRight,
-  Heart,
   Salad,
-  Sparkles,
   Zap,
   CheckCircle2,
 } from "lucide-react";

@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import {
   Plus,
-  Minus,
   ArrowLeft,
   Loader2,
   Dumbbell,
