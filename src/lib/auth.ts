@@ -2,9 +2,9 @@ import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
-import bcrypt from "bcryptjs";
+import { verifyPassword } from "@/lib/password";
 import { getNow } from "@/lib/timeUtils";
-import { checkRateLimit } from "@/lib/rateLimit";
+import { checkRateLimit, pickClientIp } from "@/lib/rateLimit";
 
 export const authOptions: NextAuthOptions = {
   // ... (adapter remains same)
@@ -25,8 +25,8 @@ export const authOptions: NextAuthOptions = {
         const normalizedEmail = credentials.email.toLowerCase().trim();
         // NextAuth's credentials `req` exposes headers as a plain object, not a full Request —
         // extract the proxy-forwarded IP the same way the shape allows.
-        const forwardedFor = (req?.headers as Record<string, string> | undefined)?.["x-forwarded-for"];
-        const ip = forwardedFor ? forwardedFor.split(",")[0].trim() : "unknown";
+        const reqHeaders = req?.headers as Record<string, string> | undefined;
+        const ip = pickClientIp((name) => reqHeaders?.[name]);
         const [ipLimit, emailLimit] = await Promise.all([
           checkRateLimit(`login:ip:${ip}`, 20, 15),
           checkRateLimit(`login:email:${normalizedEmail}`, 10, 15),
@@ -40,14 +40,13 @@ export const authOptions: NextAuthOptions = {
           include: { gym: { select: { id: true, name: true } } },
         });
 
-        if (!user || !user.password) {
-          throw new Error("Usuario no encontrado");
-        }
+        // One message for "no such user" and "wrong password", and the same amount of work for
+        // both: telling them apart (by text or by response time) let anyone test which emails
+        // are registered. The mobile login already behaved this way.
+        const isValid = await verifyPassword(credentials.password, user?.password);
 
-        const isValid = await bcrypt.compare(credentials.password, user.password);
-
-        if (!isValid) {
-          throw new Error("Contraseña incorrecta");
+        if (!user || !isValid) {
+          throw new Error("Credenciales inválidas");
         }
 
         return {
@@ -88,12 +87,29 @@ export const authOptions: NextAuthOptions = {
       
       // Manejar la actualización manual del lado del cliente
       if (trigger === "update") {
-        if (session?.name) token.name = session.name;
-        if (session?.monthlyFee !== undefined) token.monthlyFee = session.monthlyFee;
-        if (session?.subscriptionStatus) token.subscriptionStatus = session.subscriptionStatus;
-        if (session?.subscriptionEndDate) token.subscriptionEndDate = session.subscriptionEndDate;
-        if (session?.mustChangePassword !== undefined) token.mustChangePassword = session.mustChangePassword;
-        if (session?.sessionVersion !== undefined) token.sessionVersion = session.sessionVersion;
+        if (typeof session?.name === "string" && session.name.trim()) token.name = session.name;
+
+        // `session` here is req.body.data of POST /api/auth/session, i.e. fully controlled by
+        // whoever holds the cookie. Security-relevant claims must never be copied from it:
+        // sessionVersion is the very value the revocation check below compares against, so
+        // accepting it from the client let a revoked session re-validate itself. Re-read them.
+        const fresh = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: {
+            sessionVersion: true,
+            mustChangePassword: true,
+            subscriptionStatus: true,
+            subscriptionEndDate: true,
+            monthlyFee: true,
+          },
+        });
+        if (fresh) {
+          token.sessionVersion = fresh.sessionVersion;
+          token.mustChangePassword = fresh.mustChangePassword;
+          token.subscriptionStatus = fresh.subscriptionStatus;
+          token.subscriptionEndDate = fresh.subscriptionEndDate?.toISOString() ?? null;
+          token.monthlyFee = fresh.monthlyFee;
+        }
       }
 
       return token;

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 
 const verifyEmailSchema = z.object({
   token: z.string().min(1, "El token de verificación es requerido."),
@@ -8,6 +9,14 @@ const verifyEmailSchema = z.object({
 
 export async function POST(req: Request) {
   try {
+    const { allowed } = await checkRateLimit(`verify-email:ip:${getClientIp(req)}`, 20, 15);
+    if (!allowed) {
+      return NextResponse.json(
+        { message: "Demasiados intentos. Inténtalo de nuevo más tarde." },
+        { status: 429 }
+      );
+    }
+
     const body = await req.json();
     const parsed = verifyEmailSchema.safeParse(body);
     if (!parsed.success) {

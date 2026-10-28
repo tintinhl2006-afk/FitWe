@@ -3,12 +3,25 @@ import { prisma } from "@/lib/prisma";
 import crypto from "crypto";
 import { getRequestUserId } from "@/lib/apiAuth";
 import { sendVerificationEmail, getAppBaseUrl } from "@/lib/email";
+import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 
 export async function POST(req: Request) {
   try {
     const userId = await getRequestUserId(req);
     if (!userId) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
+    }
+
+    // Every call rotates the token and sends an email: unlimited, it floods an inbox.
+    const [userLimit, ipLimit] = await Promise.all([
+      checkRateLimit(`resend-verification:user:${userId}`, 3, 60),
+      checkRateLimit(`resend-verification:ip:${getClientIp(req)}`, 10, 60),
+    ]);
+    if (!userLimit.allowed || !ipLimit.allowed) {
+      return NextResponse.json(
+        { message: "Demasiados intentos. Inténtalo de nuevo más tarde." },
+        { status: 429 }
+      );
     }
 
     const user = await prisma.user.findUnique({ where: { id: userId } });

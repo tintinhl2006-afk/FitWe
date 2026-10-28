@@ -6,10 +6,20 @@ import { prisma } from "@/lib/prisma";
  * IP-based limiting effectively becomes "one global bucket," which is fine for dev and never
  * hit in production since Vercel always sets this header.
  */
-export function getClientIp(req: Request): string {
-  const forwardedFor = req.headers.get("x-forwarded-for");
+export function pickClientIp(get: (name: string) => string | null | undefined): string {
+  // Prefer the headers the hosting platform sets itself over x-forwarded-for, whose leftmost
+  // entry is whatever the client chose to send if the proxy appends instead of replacing.
+  const platform = get("x-vercel-forwarded-for")?.split(",")[0]?.trim();
+  if (platform) return platform;
+  const real = get("x-real-ip")?.trim();
+  if (real) return real;
+  const forwardedFor = get("x-forwarded-for");
   if (forwardedFor) return forwardedFor.split(",")[0].trim();
-  return req.headers.get("x-real-ip") || "unknown";
+  return "unknown";
+}
+
+export function getClientIp(req: Request): string {
+  return pickClientIp((name) => req.headers.get(name));
 }
 
 /**

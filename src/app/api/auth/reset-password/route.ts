@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import bcrypt from "bcryptjs";
+import { hashPassword } from "@/lib/password";
 import { z } from "zod";
+import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 
 const resetPasswordSchema = z.object({
   token: z.string().min(1, "El token de restablecimiento es requerido."),
@@ -10,6 +11,15 @@ const resetPasswordSchema = z.object({
 
 export async function POST(req: Request) {
   try {
+    // The token is the only thing protecting this endpoint, and it had no limit at all.
+    const { allowed } = await checkRateLimit(`reset-password:ip:${getClientIp(req)}`, 10, 15);
+    if (!allowed) {
+      return NextResponse.json(
+        { message: "Demasiados intentos. Inténtalo de nuevo más tarde." },
+        { status: 429 }
+      );
+    }
+
     const body = await req.json();
     const parsed = resetPasswordSchema.safeParse(body);
     if (!parsed.success) {
@@ -39,7 +49,7 @@ export async function POST(req: Request) {
     }
 
     // 2. Encriptar nueva contraseña
-    const hashedPassword = await bcrypt.hash(password.trim(), 10);
+    const hashedPassword = await hashPassword(password.trim());
 
     // 3. Actualizar contraseña y limpiar campos de recuperación
     await prisma.user.update({
@@ -50,6 +60,8 @@ export async function POST(req: Request) {
         resetTokenExpiry: null,
         // Si tuviera contraseña provisional, la damos por restablecida
         mustChangePassword: false,
+        // A reset is the remedy for a suspected compromise: it must end every existing session.
+        sessionVersion: { increment: 1 },
       },
     });
 

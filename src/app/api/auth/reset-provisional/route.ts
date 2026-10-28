@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import bcrypt from "bcryptjs";
+import { hashPassword } from "@/lib/password";
 
 import { z } from "zod";
 
@@ -28,15 +28,32 @@ export async function POST(req: Request) {
 
     const { password } = parsed.data;
 
-    // Hash the new password
-    const hashedPassword = await bcrypt.hash(password.trim(), 10);
+    // This route exists for ONE flow: replacing a password the gym issued. It used to accept
+    // any authenticated session on any account, so holding a cookie was enough to take the
+    // account over permanently, silently and without knowing the current password. The state
+    // is read from the database, never from the token (whose claims the client can influence).
+    const account = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { mustChangePassword: true },
+    });
+    if (!account?.mustChangePassword) {
+      return NextResponse.json(
+        { message: "Esta acción solo está disponible para contraseñas provisionales. Usa Ajustes > Contraseña." },
+        { status: 403 }
+      );
+    }
 
-    // Update the database
+    // Hash the new password
+    const hashedPassword = await hashPassword(password.trim());
+
+    // Update the database. sessionVersion is bumped so every OTHER session issued with the
+    // old provisional password dies; the caller's own session re-syncs through update().
     await prisma.user.update({
       where: { id: session.user.id },
       data: {
         password: hashedPassword,
         mustChangePassword: false,
+        sessionVersion: { increment: 1 },
       },
     });
 

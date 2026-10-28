@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import bcrypt from "bcryptjs";
+import { hashPassword } from "@/lib/password";
 import crypto from "crypto";
 import { z } from "zod";
 import { sendVerificationEmail, getAppBaseUrl } from "@/lib/email";
@@ -64,7 +64,7 @@ export async function POST(req: Request) {
     }
 
     // 3. Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await hashPassword(password);
 
     // 4. Generate an email verification token up front so it can be stored with the user
     const verificationToken = crypto.randomBytes(32).toString("hex");

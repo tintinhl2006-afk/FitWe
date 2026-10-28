@@ -3,6 +3,9 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { hashPassword } from "@/lib/password";
+import { checkRateLimit } from "@/lib/rateLimit";
+import { generateGymCode } from "@/lib/gymCode";
 
 export async function GET() {
   try {
@@ -36,14 +39,17 @@ export async function GET() {
     if (user.role === "GYM" && !user.gymCode) {
       let generatedCode = "";
       let isUnique = false;
-      while (!isUnique) {
-        generatedCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+      for (let attempt = 0; attempt < 20 && !isUnique; attempt++) {
+        generatedCode = generateGymCode();
         const existing = await prisma.user.findFirst({
           where: { gymCode: generatedCode },
         });
         if (!existing) {
           isUnique = true;
         }
+      }
+      if (!isUnique) {
+        return NextResponse.json({ message: "No se pudo generar el código. Inténtalo de nuevo." }, { status: 500 });
       }
 
       await prisma.user.update({
@@ -75,7 +81,7 @@ export async function PATCH(req: Request) {
     }
 
     const body = await req.json();
-    const { name, newPassword, monthlyFee } = body;
+    const { name, newPassword, currentPassword, monthlyFee } = body;
 
     // Build the update payload dynamically
     const updateData: any = {};
@@ -91,7 +97,30 @@ export async function PATCH(req: Request) {
           { status: 400 }
         );
       }
-      updateData.password = await bcrypt.hash(newPassword, 10);
+
+      // Holding a session cookie must not be enough to take the account over: the current
+      // password is required, exactly as POST /api/settings/password already does.
+      const limit = await checkRateLimit(`pwchange:user:${session.user.id}`, 5, 15);
+      if (!limit.allowed) {
+        return NextResponse.json(
+          { message: "Demasiados intentos. Espera unos minutos antes de volver a intentarlo." },
+          { status: 429 }
+        );
+      }
+      const dbUser = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { password: true },
+      });
+      if (
+        !dbUser?.password ||
+        typeof currentPassword !== "string" ||
+        !(await bcrypt.compare(currentPassword, dbUser.password))
+      ) {
+        return NextResponse.json({ message: "La contraseña actual no es correcta" }, { status: 400 });
+      }
+
+      updateData.password = await hashPassword(newPassword);
+      updateData.sessionVersion = { increment: 1 };
     }
 
     if (session.user.role === "GYM" && monthlyFee !== undefined) {

@@ -61,10 +61,7 @@ export async function GET(req: Request) {
     });
   } catch (error: any) {
     console.error("Error fetching gym plans:", error);
-    return NextResponse.json({
-      error: "Error interno",
-      message: error?.message || String(error),
-      stack: error?.stack,
-    }, { status: 500 });
+    // The exception and its stack trace used to be sent to the client.
+    return NextResponse.json({ error: "Error interno", message: "Error interno del servidor" }, { status: 500 });
   }
 }

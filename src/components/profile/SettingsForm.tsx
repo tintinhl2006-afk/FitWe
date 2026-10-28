@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+import { getErrorMessage } from "@/lib/errors";
 interface SettingsFormProps {
   user: {
     name: string;
@@ -26,6 +27,7 @@ export function SettingsForm({ user }: SettingsFormProps) {
 
   const [name, setName] = useState(user.name);
   const [newPassword, setNewPassword] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [gymCode, setGymCode] = useState("");
@@ -64,6 +66,7 @@ export function SettingsForm({ user }: SettingsFormProps) {
       const body: Record<string, any> = { name: name.trim() };
       if (newPassword.length > 0) {
         body.newPassword = newPassword;
+        body.currentPassword = currentPassword;
       }
 
       const res = await fetch("/api/user/settings", {
@@ -82,9 +85,10 @@ export function SettingsForm({ user }: SettingsFormProps) {
       await update({ name: name.trim() });
 
       setNewPassword("");
+      setCurrentPassword("");
       showToast("success", data.message || "Cambios guardados correctamente");
-    } catch (err: any) {
-      showToast("error", err.message || "Error al guardar los cambios");
+    } catch (err) {
+      showToast("error", getErrorMessage(err) || "Error al guardar los cambios");
     } finally {
       setIsSaving(false);
     }
@@ -177,6 +181,30 @@ export function SettingsForm({ user }: SettingsFormProps) {
               >
                 Copiar Código
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* Current password: required by the server to change the password */}
+        {newPassword.length > 0 && (
+          <div>
+            <label htmlFor="settings-current-password" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              Contraseña actual
+            </label>
+            <div className="relative">
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
+                <Lock className="h-4 w-4 text-slate-400 dark:text-slate-500" />
+              </div>
+              <input
+                id="settings-current-password"
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                required
+                autoComplete="current-password"
+                className="w-full rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 py-2.5 pl-10 pr-4 text-slate-900 dark:text-white shadow-sm focus:border-primary focus:ring-2 focus:ring-cyan-500/20 outline-none transition-all sm:text-sm"
+                placeholder="Necesaria para cambiar la contraseña"
+              />
             </div>
           </div>
         )}

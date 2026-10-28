@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Save } from 'lucide-react-native';
 import { useAppTheme } from '../../../../context/ThemeContext';
 import { SettingsHeader } from '../../../../components/SettingsHeader';
-import { api } from '../../../../lib/apiClient';
+import { api, saveAuthToken } from '../../../../lib/apiClient';
 
 export default function PasswordSettingsScreen() {
   const { colors } = useAppTheme();
@@ -25,7 +25,10 @@ export default function PasswordSettingsScreen() {
 
     setIsSaving(true);
     try {
-      await api.post('/api/settings/password', { current, newPass });
+      const res = await api.post('/api/settings/password', { current, newPass });
+      // The server revokes every other session on a password change and returns a fresh token
+      // for this one; keep it or the next request would sign this device out.
+      if (res?.token) await saveAuthToken(res.token);
       Alert.alert('Contraseña Actualizada', 'Tu contraseña se ha cambiado correctamente.');
       setCurrent('');
       setNewPass('');

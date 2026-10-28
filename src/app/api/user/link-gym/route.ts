@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { logger } from "@/lib/logger";
 import { z } from "zod";
 import { getRequestAuth } from "@/lib/apiAuth";
+import { checkRateLimit } from "@/lib/rateLimit";
 
 const linkGymSchema = z.object({
   gymCode: z.string().length(6, "El código de gimnasio debe tener exactamente 6 caracteres."),
@@ -50,6 +51,16 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { message: "No autorizado" },
         { status: 401 }
+      );
+    }
+
+    // The gym code is the only secret protecting a gym's member list, and this endpoint
+    // confirmed whether a guess was valid with no limit.
+    const limit = await checkRateLimit(`link-gym:user:${auth.id}`, 10, 60);
+    if (!limit.allowed) {
+      return NextResponse.json(
+        { message: "Demasiados intentos. Inténtalo de nuevo más tarde." },
+        { status: 429 }
       );
     }
 

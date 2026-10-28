@@ -6,7 +6,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useCustomAlert } from "@/components/providers/CustomAlertProvider";
 
 export default function AccountConfigPage() {
-  const { data: session } = useSession();
+  const { update } = useSession();
   const { showConfirm, showAlert } = useCustomAlert();
   const [isLoading, setIsLoading] = useState(true);
   const [passwords, setPasswords] = useState({ current: "", newPass: "" });
@@ -27,12 +27,14 @@ export default function AccountConfigPage() {
       });
       const data = await res.json();
       if (res.ok) {
+        // The server bumped sessionVersion to end other sessions; re-sync this one.
+        await update();
         showAlert("Contraseña actualizada correctamente");
         setPasswords({ current: "", newPass: "" });
       } else {
         showAlert(data.message || "Error al cambiar contraseña");
       }
-    } catch (e) {
+    } catch {
       showAlert("Error interno");
     } finally {
       setIsChangingPass(false);
@@ -41,7 +43,7 @@ export default function AccountConfigPage() {
 
   const handleDeleteAccount = () => {
     showConfirm(
-      "ADVERTENCIA EXTREMA\n\n¿Estás absolutamente seguro de querer eliminar tu cuenta? Se borrarán TODOS tus entrenamientos, rutinas e historial para siempre.",
+      "ADVERTENCIA EXTREMA\n\n¿Estás absolutamente seguro de querer eliminar tu cuenta? Se borrarán TODOS tus entrenamientos, rutinas e historial para siempre. Si has realizado pagos, solo se conservarán las facturas emitidas (nombre, documento y dirección fiscal), que el gimnasio está obligado a guardar.",
       () => {
         showConfirm("¿Última confirmación? Esta acción NO se puede deshacer.", async () => {
           try {
@@ -51,7 +53,7 @@ export default function AccountConfigPage() {
             } else {
               showAlert("Error al eliminar la cuenta");
             }
-          } catch (e) {
+          } catch {
             showAlert("Error interno");
           }
         });
