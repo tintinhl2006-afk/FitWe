@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getNow } from "@/lib/timeUtils";
-import bcrypt from "bcryptjs";
+import { hashPassword } from "@/lib/password";
 
 export async function GET(
   _req: Request,
@@ -212,7 +212,7 @@ export async function PATCH(
           { status: 400 }
         );
       }
-      const hashedPassword = await bcrypt.hash(newPassword, 12);
+      const hashedPassword = await hashPassword(newPassword);
       await prisma.user.update({
         where: { id: clientId },
         data: { 

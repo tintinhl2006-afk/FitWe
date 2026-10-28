@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import bcrypt from "bcryptjs";
+import { hashPassword } from "@/lib/password";
 import { z } from "zod";
 
 const createEmployeeSchema = z.object({
@@ -151,7 +151,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "El correo electrónico ya está registrado" }, { status: 409 });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await hashPassword(password);
 
     const newEmployee = await prisma.user.create({
       data: {
@@ -274,7 +274,7 @@ export async function PUT(req: Request) {
     };
 
     if (password) {
-      updateData.password = await bcrypt.hash(password, 10);
+      updateData.password = await hashPassword(password);
       updateData.sessionVersion = { increment: 1 };
     }
 
@@ -319,12 +319,22 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ message: "Empleado no encontrado" }, { status: 404 });
     }
 
-    await prisma.user.delete({
-      where: { id },
+    // Bookings restrict the delete, so remove them in the same transaction instead of failing
+    // with a generic 500 after partially working.
+    await prisma.$transaction(async (tx) => {
+      await tx.classBooking.deleteMany({ where: { userId: id } });
+      await tx.user.delete({ where: { id } });
     });
 
     return NextResponse.json({ message: "Empleado eliminado correctamente" });
   } catch (error) {
+    // P2003: the employee is referenced by something that must be kept (an issued invoice).
+    if ((error as { code?: string })?.code === "P2003") {
+      return NextResponse.json(
+        { message: "Este empleado tiene registros asociados (por ejemplo facturas) y no puede eliminarse." },
+        { status: 409 }
+      );
+    }
     console.error("Error deleting employee:", error);
     return NextResponse.json({ message: "Error en el servidor" }, { status: 500 });
   }

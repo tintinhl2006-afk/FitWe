@@ -141,6 +141,42 @@ export async function POST(req: Request) {
       }
     }
 
+    // A QR code is single use. Its signature and 20 s window were the only checks, so the same
+    // code could be scanned repeatedly inside that window (a screenshot passed to someone else,
+    // or a photo of the screen), each scan admitting a person and, on a credits plan, charging
+    // the owner again. Any access already granted to this member after the moment the code was
+    // issued means it has been used; a code minted afterwards is unaffected.
+    if (verifiedToken) {
+      const alreadyUsed = await prisma.accessLog.findFirst({
+        where: {
+          userId: client.id,
+          gymId: session.user.id,
+          status: "GRANTED",
+          createdAt: { gte: new Date(verifiedToken.timestamp) },
+        },
+        select: { id: true },
+      });
+
+      if (alreadyUsed) {
+        logger.warn(`Intento de acceso denegado: Token QR ya utilizado para el cliente ${client.id} (gimnasio ${session.user.id})`);
+        await prisma.accessLog.create({
+          data: {
+            userId: client.id,
+            gymId: session.user.id,
+            status: "DENIED",
+            reason: "ALREADY_USED",
+            direction,
+          },
+        });
+
+        return NextResponse.json({
+          status: "DENIED",
+          reason: "ALREADY_USED",
+          message: "Este código QR ya se ha utilizado. Pida al cliente que genere uno nuevo.",
+        });
+      }
+    }
+
     // La salida no comprueba suscripción ni créditos — se asume que el cliente ya estaba
     // dentro; solo queda constancia de que salió (aforo/duración de visita a futuro).
     if (direction === "EXIT") {

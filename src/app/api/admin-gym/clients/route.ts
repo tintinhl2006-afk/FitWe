@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import bcrypt from "bcryptjs";
+import { hashPassword } from "@/lib/password";
+import { ERASED_EMAIL_DOMAIN } from "@/lib/accountErasure";
 
 export async function GET(req: Request) {
   try {
@@ -28,6 +29,9 @@ export async function GET(req: Request) {
 
     const where = {
       gymId,
+      // Accounts closed by their owner are kept only because of the invoices they issued; they
+      // are not clients any more.
+      NOT: { email: { endsWith: `@${ERASED_EMAIL_DOMAIN}` } },
       ...(search
         ? {
             OR: [
@@ -151,7 +155,7 @@ export async function POST(req: Request) {
     }
 
     // Hashear la contraseña
-    const hashedPassword = await bcrypt.hash(password, 12);
+    const hashedPassword = await hashPassword(password);
 
     // Crear el usuario vinculado al gimnasio
     const newClient = await prisma.user.create({
