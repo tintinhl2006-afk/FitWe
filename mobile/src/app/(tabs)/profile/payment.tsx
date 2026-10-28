@@ -9,6 +9,7 @@ import { useAuth } from '../../../context/AuthContext';
 import { Card, EmptyState } from '../../../components/ui';
 import { Palette } from '../../../constants/theme';
 import { api, API_BASE_URL, getAuthToken } from '../../../lib/apiClient';
+import { LoadMoreButton } from '../../../components/LoadMoreButton';
 import { downloadAndShareInvoice, type InvoiceClient, type InvoiceGym, type InvoicePayment } from '../../../lib/generateInvoicePdf';
 
 interface Plan {
@@ -48,6 +49,15 @@ function escapeHtmlAttr(value: string) {
   return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
+/** True only for the app's own success page, compared by origin and exact path (not a substring match). */
+const API_ORIGIN = (/^https?:\/\/[^/]+/i.exec(API_BASE_URL) || [''])[0].toLowerCase();
+
+function isFirstPartySuccessUrl(url: string) {
+  // Plain text comparison on purpose: React Native's URL implementation is incomplete.
+  const base = url.split(/[?#]/)[0].toLowerCase();
+  return API_ORIGIN !== '' && base === `${API_ORIGIN}/dashboard/pago/success`;
+}
+
 /** Extracts the query string from a URL, tolerant of a `#fragment` after it (unlike a plain split('?')[1]). */
 function extractQueryString(url: string) {
   const withoutFragment = url.split('#')[0];
@@ -78,16 +88,31 @@ export default function PaymentScreen() {
 
   const [invoices, setInvoices] = useState<(InvoicePayment & { gym: InvoiceGym })[]>([]);
   const [invoiceClient, setInvoiceClient] = useState<InvoiceClient | null>(null);
+  const [invoicesPage, setInvoicesPage] = useState(1);
+  const [hasMoreInvoices, setHasMoreInvoices] = useState(false);
+  const [isLoadingMoreInvoices, setIsLoadingMoreInvoices] = useState(false);
   const [downloadingInvoiceId, setDownloadingInvoiceId] = useState<string | null>(null);
 
-  async function fetchInvoiceHistory() {
+  const INVOICES_PAGE_SIZE = 25;
+
+  async function fetchInvoiceHistory(page = 1) {
     try {
-      const data = await api.get('/api/user/payments');
-      setInvoices(data.payments || []);
+      const data = await api.get(`/api/user/payments?page=${page}&pageSize=${INVOICES_PAGE_SIZE}`);
+      const list = data.payments || [];
+      setInvoices((prev) => (page === 1 ? list : [...prev, ...list]));
       setInvoiceClient(data.client || null);
+      // A full page means there may be another one.
+      setHasMoreInvoices(list.length === INVOICES_PAGE_SIZE);
+      setInvoicesPage(page);
     } catch (e) {
       console.error('Error fetching payment history:', e);
     }
+  }
+
+  async function loadMoreInvoices() {
+    setIsLoadingMoreInvoices(true);
+    await fetchInvoiceHistory(invoicesPage + 1);
+    setIsLoadingMoreInvoices(false);
   }
 
   async function handleDownloadInvoice(payment: InvoicePayment & { gym: InvoiceGym }) {
@@ -127,8 +152,11 @@ export default function PaymentScreen() {
     // The web pages this WebView loads (mock checkout pages) call our own authenticated API
     // routes via cookie-based fetch, which the WebView has no session for. Patch fetch so
     // those calls carry the mobile Bearer token instead.
+    // injectedJavaScriptBeforeContentLoaded runs in EVERY document the WebView loads, including
+    // the bank's pages. The token is only ever wired in on the app's own origin.
     return `
       (function() {
+        if (window.location.origin !== ${JSON.stringify(API_ORIGIN)}) return;
         var originalFetch = window.fetch;
         window.fetch = function(input, init) {
           init = init || {};
@@ -208,7 +236,7 @@ export default function PaymentScreen() {
 
   function handleNavigationChange(navState: WebViewNavigation) {
     const url = navState.url;
-    if (url.includes('/dashboard/pago/success')) {
+    if (isFirstPartySuccessUrl(url)) {
       handleVerify(url);
       return;
     }
@@ -445,6 +473,9 @@ export default function PaymentScreen() {
                     </Card>
                   ))}
                 </View>
+              )}
+              {hasMoreInvoices && invoices.length > 0 && (
+                <LoadMoreButton onPress={loadMoreInvoices} isLoading={isLoadingMoreInvoices} />
               )}
             </View>
           </>

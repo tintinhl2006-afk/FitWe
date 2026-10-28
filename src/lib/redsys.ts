@@ -78,6 +78,13 @@ export function generateMerchantSignature({
   };
 }
 
+/** Constant-time string comparison (a plain === leaks how many leading characters matched). */
+function safeEqual(a: string, b: string): boolean {
+  const left = Buffer.from(a, "utf8");
+  const right = Buffer.from(b, "utf8");
+  return left.length === right.length && crypto.timingSafeEqual(left, right);
+}
+
 /**
  * Verifica la firma recibida de una llamada de notificación (webhook) de Redsys
  * para certificar que el pago es auténtico y procede del banco.
@@ -114,7 +121,7 @@ export function verifyCallbackSignature({
       
     const normalizedSig = sigBase64.replace(/=+$/, "");
     
-    return normalizedSig === normalizedReceived || sigBase64Url === signatureReceived;
+    return safeEqual(normalizedSig, normalizedReceived) || safeEqual(sigBase64Url, signatureReceived);
   } catch (e) {
     console.error("Error verifying Redsys callback signature:", e);
     return false;

@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
+import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import Stripe from "stripe";
-// @ts-ignore
 import { Redsys } from "node-redsys-api";
 import { getRequestAuth } from "@/lib/apiAuth";
 import { decryptSecret } from "@/lib/encryption";
+import { signPaymentBinding } from "@/lib/paymentBinding";
+import { signMockLink } from "@/lib/mockLink";
 
 export async function POST(req: Request) {
   try {
@@ -124,7 +126,10 @@ export async function POST(req: Request) {
 
       if (isRedsysReal) {
         try {
-          const order = `${Date.now().toString().slice(-10)}${Math.floor(10 + Math.random() * 90)}`;
+          // Redsys order: 12 digits. It used to be the clock plus two random digits, so two members
+          // paying in the same millisecond collided one time in ninety, and the second payment was
+          // then treated as a duplicate and never granted. It is also the idempotency key.
+          const order = String(crypto.randomInt(0, 1_000_000_000_000)).padStart(12, "0");
 
           const redsysParams = {
             Ds_Merchant_Amount: Math.round(amount * 100).toString(),
@@ -134,17 +139,27 @@ export async function POST(req: Request) {
             Ds_Merchant_Terminal: activeMethod.redsysTerminal?.trim() || "001",
             Ds_Merchant_TransactionType: "0",
             Ds_Merchant_MerchantURL: `${origin}/api/user/payment/redsys-webhook`,
-            Ds_Merchant_UrlOK: `${origin}/dashboard/pago/success?mock_redsys=true&planId=${resolvedPlanId || ""}&order=${order}&amount=${amount}`,
+            // The simulation flag is emitted only outside production. It used to be stamped on
+            // the REAL gateway return URL, sending genuine card payments through the unsigned
+            // mock verification branch (and letting anyone type that URL to self-grant a plan).
+            Ds_Merchant_UrlOK: `${origin}/dashboard/pago/success?${process.env.NODE_ENV === "production" ? "" : "mock_redsys=true&"}planId=${resolvedPlanId || ""}&order=${order}&amount=${amount}`,
             Ds_Merchant_UrlKO: `${origin}/dashboard/pago`,
             Ds_Merchant_MerchantData: JSON.stringify({
               userId: auth.id,
               planId: resolvedPlanId || "",
               gymId: user.gymId,
               paymentMethodId: activeMethod.id,
+              // Lets the webhook trust the fields above (see src/lib/paymentBinding.ts).
+              mac: signPaymentBinding({
+                userId: String(auth.id),
+                planId: String(resolvedPlanId || ""),
+                gymId: String(user.gymId),
+                paymentMethodId: String(activeMethod.id),
+                order,
+              }),
             }),
           };
 
-          // @ts-ignore
           const redsys = new Redsys();
           const merchantParameters = redsys.createMerchantParameters(redsysParams);
           const signature = redsys.createMerchantSignature(redsysClave.trim(), redsysParams);
@@ -168,7 +183,10 @@ export async function POST(req: Request) {
           );
         }
       } else {
-        const mockRedsysUrl = `/dashboard/pago/redsys-mock?amount=${amount}${resolvedPlanId ? `&planId=${resolvedPlanId}` : ""}`;
+        // In production the simulated terminal only opens with a signature issued here for this
+        // exact amount and plan (checked in the middleware).
+        const mockLink = await signMockLink(String(amount), resolvedPlanId || "");
+        const mockRedsysUrl = `/dashboard/pago/redsys-mock?amount=${amount}${resolvedPlanId ? `&planId=${resolvedPlanId}` : ""}&exp=${mockLink.exp}&sig=${mockLink.sig}`;
         return NextResponse.json({ url: mockRedsysUrl });
       }
     }

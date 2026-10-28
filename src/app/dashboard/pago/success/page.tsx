@@ -12,15 +12,13 @@ import {
   Building2,
   CreditCard,
   ArrowRight,
-  ShieldAlert,
   ArrowLeft,
   Receipt,
   Shield,
-  Download,
 } from "lucide-react";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
 
+import { getErrorMessage } from "@/lib/errors";
 interface PaymentDetails {
   id: string;
   amount: number;
@@ -56,7 +54,8 @@ function SuccessContent() {
   const { update } = useSession();
 
   const sessionId = searchParams.get("session_id");
-  const mock = searchParams.get("mock") === "true" || searchParams.get("mock_redsys") === "true";
+  const mock = searchParams.get("mock") === "true";
+  const mockRedsys = searchParams.get("mock_redsys") === "true";
   const planId = searchParams.get("planId");
   const stripeConnect = searchParams.get("stripe_connect") === "true";
   const methodId = searchParams.get("methodId");
@@ -76,16 +75,29 @@ function SuccessContent() {
         const queryParams = new URLSearchParams();
         if (sessionId) queryParams.set("session_id", sessionId);
         if (mock) queryParams.set("mock", "true");
+        // Forwarded as-is: the server alone decides whether it is honoured (never in production).
+        if (mockRedsys) queryParams.set("mock_redsys", "true");
         if (planId) queryParams.set("planId", planId);
         if (stripeConnect) queryParams.set("stripe_connect", "true");
         if (methodId) queryParams.set("methodId", methodId);
         if (order) queryParams.set("order", order);
 
-        const res = await fetch(`/api/user/payment/verify?${queryParams.toString()}`);
-        const data = await res.json();
+        // A real Redsys payment is granted by the bank's webhook, which can land a few seconds
+        // after the customer is redirected back: poll briefly before reporting an error.
+        let res!: Response;
+        let data: { pending?: boolean; message?: string; error?: string; payment?: PaymentDetails } = {};
+        for (let attempt = 0; attempt < 8; attempt++) {
+          res = await fetch(`/api/user/payment/verify?${queryParams.toString()}`);
+          data = await res.json();
+          if (res.status !== 409 || !data.pending) break;
+          await new Promise((resolve) => setTimeout(resolve, 2500));
+        }
 
         if (!res.ok) {
           throw new Error(data.message || data.error || "No se pudo verificar el pago");
+        }
+        if (!data.payment) {
+          throw new Error("La verificación no devolvió los datos del pago.");
         }
 
         setPaymentDetails(data.payment);
@@ -97,15 +109,15 @@ function SuccessContent() {
         });
 
         setStatus("success");
-      } catch (err: any) {
+      } catch (err) {
         console.error("Error al verificar el pago:", err);
-        setError(err.message || "Error de verificación.");
+        setError(getErrorMessage(err) || "Error de verificación.");
         setStatus("error");
       }
     };
 
     verifyPayment();
-  }, [sessionId, mock, planId, methodId, order, update]);
+  }, [sessionId, mock, mockRedsys, planId, methodId, order, update]);
 
   // Pantalla de Cargando
   if (status === "loading") {

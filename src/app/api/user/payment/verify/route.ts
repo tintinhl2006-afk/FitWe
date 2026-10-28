@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import Stripe from "stripe";
 import { logger } from "@/lib/logger";
 import { getRequestUserId } from "@/lib/apiAuth";
-import { getActiveGymPaymentMethod, sendInvoiceEmailForPayment } from "@/lib/invoiceUtils";
+import { sendInvoiceEmailForPayment } from "@/lib/invoiceUtils";
 import { isRedsysTestMerchant } from "@/lib/redsys";
 import { computePlanGrant } from "@/lib/planUtils";
 import { isDuplicateProviderRefViolation } from "@/lib/paymentDedup";
@@ -19,7 +19,12 @@ export async function GET(req: Request) {
 
     const { searchParams } = new URL(req.url);
     const sessionId = searchParams.get("session_id");
-    const mock = searchParams.get("mock") === "true" || searchParams.get("mock_redsys") === "true";
+    // `mock_redsys` is only ever emitted outside production (see POST /api/user/payment). It used
+    // to be stamped on the REAL Redsys success URL too, which routed genuine card payments into
+    // the unsigned mock branch below; in production it is now ignored entirely.
+    const mock =
+      searchParams.get("mock") === "true" ||
+      (searchParams.get("mock_redsys") === "true" && process.env.NODE_ENV !== "production");
     const queryPlanId = searchParams.get("planId");
     const isStripeConnect = searchParams.get("stripe_connect") === "true";
     const queryMethodId = searchParams.get("methodId");
@@ -68,8 +73,6 @@ export async function GET(req: Request) {
     // (nunca para pagos simulados: la página stripe-mock también genera un session_id falso
     // para poder reutilizar este mismo flujo de verificación, por eso se comprueba `mock` aquí)
     if (sessionId && !mock) {
-      let stripe: Stripe;
-      let stripeSession: Stripe.Checkout.Session;
 
       const platformSecretKey = process.env.STRIPE_SECRET_KEY;
       if (!platformSecretKey) {
@@ -93,12 +96,12 @@ export async function GET(req: Request) {
         );
       }
 
-      stripe = new Stripe(platformSecretKey, {
+      const stripe = new Stripe(platformSecretKey, {
         apiVersion: "2023-10-16" as any,
       });
 
       // Recuperar la sesión especificando el header stripeAccount (Direct Charges)
-      stripeSession = await stripe.checkout.sessions.retrieve(
+      const stripeSession = await stripe.checkout.sessions.retrieve(
         sessionId,
         {
           expand: ["payment_intent"],
@@ -143,7 +146,7 @@ export async function GET(req: Request) {
         ? parseInt(stripeSession.metadata.durationDays, 10)
         : finalDurationDays;
       resolvedPlanId = stripeSession.metadata?.planId || null;
-      let resolvedPlan = resolvedPlanId
+      const resolvedPlan = resolvedPlanId
         ? await prisma.subscriptionPlan.findUnique({ where: { id: resolvedPlanId } })
         : null;
       // El IVA de la factura lo determina el método de pago usado, no la tarifa (cuyo
@@ -301,7 +304,32 @@ export async function GET(req: Request) {
         );
       }
 
-      const mockOrderId = searchParams.get("order") || searchParams.get("session_id");
+      // Without a gym payment method there is nothing to simulate: POST /api/user/payment
+      // already refuses to start a payment in that state, so reaching this branch means the
+      // request was crafted. Previously both guards above were conditional on a configured
+      // gateway, so a gym with none satisfied neither and members could self-grant plans.
+      if (process.env.NODE_ENV === "production" && !activeMethod) {
+        logger.warn(`Pago simulado bloqueado: el gimnasio ${gym.name} no tiene método de pago activo (usuario ${user.id}).`);
+        return NextResponse.json(
+          { message: "Este centro deportivo no tiene un método de pago online configurado." },
+          { status: 403 }
+        );
+      }
+
+      const rawMockOrderId = searchParams.get("order") || searchParams.get("session_id");
+      // A reference is mandatory: a NULL providerRef is not constrained by the unique index
+      // (PostgreSQL treats NULLs as distinct), which made the grant repeatable without limit.
+      if (!rawMockOrderId) {
+        return NextResponse.json(
+          { message: "Falta la referencia del pago simulado." },
+          { status: 400 }
+        );
+      }
+      const mockOrderId = rawMockOrderId.slice(0, 64);
+      // Namespaced so a crafted mock reference can never occupy the unique slot of a real
+      // gateway order number (those are predictable) and make the genuine webhook look like a
+      // duplicate.
+      const mockProviderRef = `mock:${mockOrderId}`;
 
       let resolvedPlan: Awaited<ReturnType<typeof prisma.subscriptionPlan.findUnique>> = null;
       if (queryPlanId) {
@@ -350,7 +378,7 @@ export async function GET(req: Request) {
               date: new Date(),
               invoiceNumber,
               paymentMethodId: activeMethod?.id,
-              providerRef: mockOrderId || null,
+              providerRef: mockProviderRef,
             },
           });
 
@@ -366,10 +394,11 @@ export async function GET(req: Request) {
           return pRecord;
         });
       } catch (err) {
-        if (mockOrderId && isDuplicateProviderRefViolation(err)) {
+        if (isDuplicateProviderRefViolation(err)) {
           logger.info(`[Verify] Pago simulado duplicado detectado para Ref: ${mockOrderId}. Evitando doble extensión.`);
-          const existingPayment = await prisma.paymentRecord.findUnique({ where: { providerRef: mockOrderId } });
-          if (existingPayment) {
+          const existingPayment = await prisma.paymentRecord.findUnique({ where: { providerRef: mockProviderRef } });
+          // Never hand back another member's payment details because they share a reference.
+          if (existingPayment && existingPayment.userId === user.id) {
             const resolvedExistingPlan = existingPayment.planId
               ? await prisma.subscriptionPlan.findUnique({ where: { id: existingPayment.planId } })
               : null;
@@ -407,6 +436,53 @@ export async function GET(req: Request) {
           endDate: grant.subscriptionEndDate?.toISOString() ?? null,
           creditsRemaining: grant.creditsRemaining,
           invoiceNumber: payment.invoiceNumber,
+        },
+      });
+    }
+
+    // ─── CASO 3: CONFIRMACIÓN DE UN PAGO REDSYS REAL ───
+    // The real Redsys payment is granted by the signed webhook, never here. When the customer
+    // returns from the gateway this endpoint only REPORTS the record the webhook created, so
+    // it cannot be used to obtain a plan without paying.
+    const redsysOrder = searchParams.get("order");
+    if (!mock && !sessionId && redsysOrder) {
+      const confirmed = await prisma.paymentRecord.findUnique({
+        where: { providerRef: redsysOrder.slice(0, 64) },
+        include: { plan: { select: { name: true } } },
+      });
+
+      if (!confirmed || confirmed.userId !== user.id) {
+        // 409 + pending so the web page can poll briefly, and so the already-published mobile
+        // app (which treats any non-OK as an error and offers "Reintentar verificación")
+        // re-checks the SAME order instead of sending the member back to pay twice.
+        return NextResponse.json(
+          {
+            pending: true,
+            message:
+              "Tu pago todavía se está confirmando con el banco. Espera unos segundos y pulsa «Reintentar verificación»; no vuelvas a pagar.",
+          },
+          { status: 409 }
+        );
+      }
+
+      const current = await prisma.user.findUnique({
+        where: { id: user.id },
+        select: { subscriptionEndDate: true, creditsRemaining: true },
+      });
+
+      return NextResponse.json({
+        message: "Pago verificado con éxito.",
+        payment: {
+          id: confirmed.id,
+          amount: confirmed.amount,
+          date: confirmed.date.toISOString(),
+          planName: confirmed.plan?.name || "Cuota mensual",
+          cardLast4: "····",
+          cardBrand: "Tarjeta",
+          gymName: gym.name,
+          endDate: current?.subscriptionEndDate?.toISOString() ?? null,
+          creditsRemaining: current?.creditsRemaining ?? null,
+          invoiceNumber: confirmed.invoiceNumber,
         },
       });
     }

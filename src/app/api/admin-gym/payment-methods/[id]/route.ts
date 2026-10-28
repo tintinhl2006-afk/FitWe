@@ -92,6 +92,21 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
       return NextResponse.json({ message: "Método de pago no encontrado" }, { status: 404 });
     }
 
+    // A method that has issued invoices carries their fiscal identity (billing name, tax id,
+    // address) and its numbering. The foreign key is ON DELETE SET NULL, so deleting it used to
+    // silently detach every past invoice (they then regenerate with blank issuer details) and
+    // discard the counter so a recreated method restarted at 00001.
+    const issued = await prisma.paymentRecord.count({ where: { paymentMethodId: method.id } });
+    if (issued > 0) {
+      return NextResponse.json(
+        {
+          message:
+            "Este método ya ha emitido facturas y no puede eliminarse porque conservan sus datos fiscales. Desactívalo en su lugar.",
+        },
+        { status: 409 }
+      );
+    }
+
     await prisma.gymPaymentMethod.delete({ where: { id: method.id } });
 
     return NextResponse.json({ message: "Método de pago eliminado" });

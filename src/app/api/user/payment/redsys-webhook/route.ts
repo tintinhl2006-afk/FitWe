@@ -1,10 +1,10 @@
-import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyCallbackSignature } from "@/lib/redsys";
 import { computePlanGrant } from "@/lib/planUtils";
 import { sendInvoiceEmailForPayment } from "@/lib/invoiceUtils";
 import { isDuplicateProviderRefViolation } from "@/lib/paymentDedup";
 import { decryptSecret } from "@/lib/encryption";
+import { verifyPaymentBinding } from "@/lib/paymentBinding";
 
 export async function POST(req: Request) {
   try {
@@ -39,11 +39,32 @@ export async function POST(req: Request) {
     }
 
     // Extraer datos de vinculación
-    const { userId, planId, gymId, paymentMethodId } = JSON.parse(decodeURIComponent(merchantDataStr));
+    const { userId, planId, gymId, paymentMethodId, mac } = JSON.parse(decodeURIComponent(merchantDataStr));
 
     if (!userId || !gymId || !paymentMethodId) {
       console.error("❌ Datos de socio, gimnasio o método de pago inválidos en merchant data.");
       return new Response("Invalid merchant data", { status: 400 });
+    }
+
+    // These fields arrive inside a payload nobody has authenticated yet, and the next step
+    // uses paymentMethodId to choose WHICH KEY verifies the signature. Without this check anyone
+    // holding any gym's Redsys key (an operator, or anyone using the public test merchant) could
+    // sign a callback naming an arbitrary user and plan. The MAC is issued only by the checkout
+    // endpoint and binds user, plan, gym, method and order together.
+    if (
+      !verifyPaymentBinding(
+        {
+          userId: String(userId),
+          planId: String(planId ?? ""),
+          gymId: String(gymId),
+          paymentMethodId: String(paymentMethodId),
+          order: String(order),
+        },
+        mac
+      )
+    ) {
+      console.error("❌ La notificación no está vinculada a un cobro iniciado por este servidor.");
+      return new Response("Invalid payment binding", { status: 400 });
     }
 
     // Buscar el método de pago Redsys que se usó para iniciar este cobro
@@ -87,8 +108,9 @@ export async function POST(req: Request) {
     }
 
     // Cargar datos de la suscripción del cliente
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
+    // The paying member must belong to the gym whose method authenticated this callback.
+    const user = await prisma.user.findFirst({
+      where: { id: userId, gymId: gymPaymentMethod.gymId },
       select: { subscriptionEndDate: true, subscriptionStatus: true, creditsRemaining: true },
     });
 
@@ -108,9 +130,18 @@ export async function POST(req: Request) {
     let resolvedPlan: Awaited<ReturnType<typeof prisma.subscriptionPlan.findUnique>> = null;
 
     if (planId) {
-      const plan = await prisma.subscriptionPlan.findUnique({
-        where: { id: planId },
+      // The plan must belong to the gym that owns the verified payment method, as the
+      // checkout endpoint already enforces. Resolving it by id alone applied any gym's terms.
+      const plan = await prisma.subscriptionPlan.findFirst({
+        where: { id: planId, gymId: gymPaymentMethod.gymId },
       });
+      if (!plan) {
+        console.error("❌ Tarifa no encontrada o ajena al gimnasio del método de pago.");
+        return new Response("Invalid plan for merchant", { status: 400 });
+      }
+      if (Math.round(plan.price * 100) !== parseInt(amountCents, 10)) {
+        console.warn(`⚠️ Importe notificado (${amountCents}) distinto del precio de la tarifa (${plan.price}).`);
+      }
       if (plan) {
         finalAmount = plan.price;
         finalPlanName = plan.name;

@@ -26,44 +26,49 @@ export async function generateNextInvoiceNumber(
 ): Promise<string> {
   const currentYear = new Date().getFullYear();
 
-  if (paymentMethod) {
-    const method = await tx.gymPaymentMethod.findUnique({
-      where: { id: paymentMethod.id },
-      select: { invoiceNextValue: true },
-    });
-    const currentValue = method?.invoiceNextValue ?? 1;
+  // The counter is advanced with a single atomic UPDATE ... SET x = x + 1 (row-locked), instead
+  // of the previous read-then-write: under READ COMMITTED two concurrent payments both read the
+  // same value and were issued the same invoice number.
+  //
+  // On top of that every candidate is checked against the numbers this gym has already issued.
+  // The prefix is only two letters of a free-text name, so two payment methods of one gym (for
+  // example Stripe and Redsys under the same legal name) share a prefix but have independent
+  // counters, and used to issue the same number twice. Skipping an already-used number keeps
+  // the gym's combined series unique.
+  for (let attempt = 0; attempt < 100; attempt++) {
+    let currentValue: number;
+    let prefix: string;
 
-    await tx.gymPaymentMethod.update({
-      where: { id: paymentMethod.id },
-      data: { invoiceNextValue: currentValue + 1 },
-    });
+    if (paymentMethod) {
+      const updated = await tx.gymPaymentMethod.update({
+        where: { id: paymentMethod.id },
+        data: { invoiceNextValue: { increment: 1 } },
+        select: { invoiceNextValue: true },
+      });
+      currentValue = updated.invoiceNextValue - 1;
+      prefix = invoicePrefixFromName(paymentMethod.billingName);
+    } else {
+      // Sin ningún método de pago configurado: se mantiene una numeración de respaldo a nivel
+      // de gimnasio (p.ej. para un cobro en efectivo registrado antes de dar de alta ninguno).
+      const updated = await tx.gymInvoiceSequence.upsert({
+        where: { gymId },
+        create: { gymId, nextValue: 2 },
+        update: { nextValue: { increment: 1 } },
+        select: { nextValue: true },
+      });
+      currentValue = updated.nextValue - 1;
+      prefix = "FW";
+    }
 
-    const prefix = invoicePrefixFromName(paymentMethod.billingName);
-    const formattedSeq = String(currentValue).padStart(5, "0");
-    return `${prefix}-${currentYear}-${formattedSeq}`;
+    const candidate = `${prefix}-${currentYear}-${String(currentValue).padStart(5, "0")}`;
+    const alreadyIssued = await tx.paymentRecord.findFirst({
+      where: { invoiceNumber: candidate, user: { gymId } },
+      select: { id: true },
+    });
+    if (!alreadyIssued) return candidate;
   }
 
-  // Sin ningún método de pago configurado: se mantiene una numeración de respaldo a nivel
-  // de gimnasio (p.ej. para un cobro en efectivo registrado antes de dar de alta ninguno).
-  let sequence = await tx.gymInvoiceSequence.findUnique({
-    where: { gymId },
-  });
-
-  if (!sequence) {
-    sequence = await tx.gymInvoiceSequence.create({
-      data: { gymId, nextValue: 1 },
-    });
-  }
-
-  const currentValue = sequence.nextValue;
-
-  await tx.gymInvoiceSequence.update({
-    where: { gymId },
-    data: { nextValue: currentValue + 1 },
-  });
-
-  const formattedSeq = String(currentValue).padStart(5, "0");
-  return `FW-${currentYear}-${formattedSeq}`;
+  throw new Error("No se pudo asignar un número de factura único.");
 }
 
 /**

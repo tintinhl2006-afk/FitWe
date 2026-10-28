@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import type { NextRequest } from "next/server";
+import { verifyMockLink } from "@/lib/mockLink";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Payment gateway redirect targets (Stripe Checkout / Redsys TPV / mock fallback pages) are
@@ -11,6 +12,21 @@ export async function middleware(request: NextRequest) {
   // protected at the API layer (Bearer-token aware via getRequestUserId), so these pages don't
   // need the cookie-based gate here; gating them just breaks the return trip from the gateway.
   if (pathname.startsWith("/dashboard/pago")) {
+    // The simulated terminals are bank-branded card-entry pages; being reachable without a
+    // session meant anyone could send a link to one with an amount of their choosing, served
+    // from the real domain and certificate. In production the Stripe one is never legitimate
+    // (checkout refuses to start without a Stripe key) and the Redsys one needs a signature
+    // issued by the checkout endpoint for that exact amount and plan.
+    if (process.env.NODE_ENV === "production") {
+      if (pathname.startsWith("/dashboard/pago/stripe-mock")) {
+        return NextResponse.redirect(new URL("/login", request.url));
+      }
+      if (pathname.startsWith("/dashboard/pago/redsys-mock")) {
+        const q = request.nextUrl.searchParams;
+        const ok = await verifyMockLink(q.get("amount"), q.get("planId"), q.get("exp"), q.get("sig"));
+        if (!ok) return NextResponse.redirect(new URL("/login", request.url));
+      }
+    }
     return NextResponse.next();
   }
 

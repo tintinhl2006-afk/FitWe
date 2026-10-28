@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+import { getErrorMessage } from "@/lib/errors";
 function RedsysLoading() {
   return (
     <div className="flex h-screen flex-col items-center justify-center bg-slate-100 text-slate-650 p-6">
@@ -86,8 +87,8 @@ function RedsysContent() {
         // Redirigir al cliente de vuelta a la página de éxito de FitWe
         router.push(`/dashboard/pago/success?mock=true&order=${order}${planId ? `&planId=${planId}` : ""}`);
       }, 1500);
-    } catch (err: any) {
-      setError(err.message || "Error al conectar con la pasarela bancaria.");
+    } catch (err) {
+      setError(getErrorMessage(err) || "Error al conectar con la pasarela bancaria.");
       setIsProcessing(false);
     }
   };
