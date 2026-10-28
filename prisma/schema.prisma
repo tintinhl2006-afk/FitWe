@@ -64,6 +64,7 @@ model User {
   workoutSessions       WorkoutSession[]
   nutritionProfile      NutritionProfile?
   foodItems             FoodItem[]
+  exercises             Exercise[]          @relation("UserExercises")
   mealEntries           MealEntry[]
   plan                  SubscriptionPlan?   @relation("UserPlan", fields: [planId], references: [id])
   gymPlans              SubscriptionPlan[]  @relation("GymPlans")
@@ -283,8 +284,13 @@ model Exercise {
   muscleGroup      String
   equipment        String?
   imageUrl         String?
+  // Owner of a user-created exercise. NULL = part of the shared catalog.
+  userId           String?           @db.Uuid
+  user             User?             @relation("UserExercises", fields: [userId], references: [id], onDelete: SetNull)
   routineExercises RoutineExercise[]
   workoutSets      WorkoutSet[]
+
+  @@index([userId])
 }
 
 model Routine {
