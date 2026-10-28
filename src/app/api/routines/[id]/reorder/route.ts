@@ -27,12 +27,22 @@ export async function PATCH(
       return NextResponse.json({ message: "No autorizado" }, { status: 404 });
     }
 
-    // Process all updates in a transaction
+    if (orderUpdates.length > 200) {
+      return NextResponse.json({ message: "Demasiados elementos" }, { status: 400 });
+    }
+    for (const u of orderUpdates) {
+      if (typeof u?.id !== "string" || !Number.isInteger(u?.order) || u.order < 0 || u.order > 10000) {
+        return NextResponse.json({ message: "Datos inválidos" }, { status: 400 });
+      }
+    }
+
+    // Every id in the caller-supplied array must belong to the authorized routine. Updating by
+    // id alone let any user reorder exercises of any other user's routine.
     await prisma.$transaction(
       orderUpdates.map(({ id, order }: { id: string; order: number }) =>
-        prisma.routineExercise.update({
-          where: { id },
-          data: { order }
+        prisma.routineExercise.updateMany({
+          where: { id, routineId: routine.id },
+          data: { order },
         })
       )
     );

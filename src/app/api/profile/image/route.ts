@@ -18,9 +18,20 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "No se proporcionó imagen" }, { status: 400 });
     }
 
+    if (typeof image !== "string") {
+      return NextResponse.json({ message: "Formato de imagen no válido" }, { status: 400 });
+    }
+
     // Validar el tamaño del base64 (límite aprox 2MB = ~2.8MB en base64)
     if (image.length > 2.8 * 1024 * 1024) {
       return NextResponse.json({ message: "La imagen es demasiado grande (máximo 2MB)" }, { status: 413 });
+    }
+
+    // Only an inline raster image is accepted. Any other string was handed to the uploader,
+    // which also treats URLs as fetch targets, and could be stored verbatim in User.image and
+    // rendered to gym staff and other members (a beacon with the viewer's address and time).
+    if (!/^data:image\/(png|jpe?g|webp|gif|heic|heif);base64,[A-Za-z0-9+/=]+$/.test(image)) {
+      return NextResponse.json({ message: "Formato de imagen no válido" }, { status: 400 });
     }
 
     let finalImageUrl = image;
@@ -37,8 +48,9 @@ export async function POST(req: Request) {
         finalImageUrl = uploadResponse.secure_url;
         console.log("Imagen de perfil subida correctamente a Cloudinary:", finalImageUrl);
       } catch (uploadError) {
-        console.error("Error al subir a Cloudinary, aplicando fallback local en base de datos:", uploadError);
-        // Fallback: si falla Cloudinary por red/credenciales, guardar base64 para evitar fallo crítico.
+        // No fallback to storing the caller's string: an upload failure is an error to report.
+        console.error("Error al subir la imagen de perfil a Cloudinary:", uploadError);
+        return NextResponse.json({ message: "No se pudo procesar la imagen. Inténtalo de nuevo." }, { status: 502 });
       }
     } else {
       console.warn("Cloudinary no configurado en variables de entorno. Guardando como Base64 en base de datos.");

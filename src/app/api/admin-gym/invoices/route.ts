@@ -4,10 +4,15 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 function csvEscape(value: string): string {
-  if (/[",\n]/.test(value)) {
-    return `"${value.replace(/"/g, '""')}"`;
+  // A cell that starts with = + - @ (or tab/CR) is executed as a formula by the spreadsheet that
+  // opens this file, and these cells carry member-supplied names. Prefix it so it is read as
+  // text; plain numbers (including negative amounts) are left untouched.
+  const isPlainNumber = /^-?\d+([.,]\d+)?$/.test(value);
+  const safe = !isPlainNumber && /^[=+\-@\t\r]/.test(value) ? `'${value}` : value;
+  if (/[",\n\r]/.test(safe)) {
+    return `"${safe.replace(/"/g, '""')}"`;
   }
-  return value;
+  return safe;
 }
 
 const MAX_EXPORT_ROWS = 20000;

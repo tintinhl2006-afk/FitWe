@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getRequestUserId } from "@/lib/apiAuth";
+import { visibleExercisesWhere } from "@/lib/exerciseAccess";
 
 export async function GET(
   req: Request,
@@ -20,8 +21,8 @@ export async function GET(
       return NextResponse.json({ message: "ID inválido" }, { status: 400 });
     }
 
-    const exercise = await prisma.exercise.findUnique({
-      where: { id },
+    const exercise = await prisma.exercise.findFirst({
+      where: { id, ...(await visibleExercisesWhere(userId)) },
     });
 
     if (!exercise) {

@@ -90,10 +90,14 @@ export async function DELETE(
       return NextResponse.json({ message: "Clase no encontrada o no autorizada" }, { status: 404 });
     }
 
-    // Delete the booking
-    await prisma.classBooking.delete({
-      where: { id: bookingId },
+    // Bind the deletion to the class whose ownership was just verified. Deleting by bookingId
+    // alone let any gym/employee remove a booking belonging to another gym's class.
+    const { count } = await prisma.classBooking.deleteMany({
+      where: { id: bookingId, classId },
     });
+    if (count === 0) {
+      return NextResponse.json({ message: "Reserva no encontrada" }, { status: 404 });
+    }
 
     return NextResponse.json({ message: "Reserva cancelada correctamente" });
   } catch (error: any) {

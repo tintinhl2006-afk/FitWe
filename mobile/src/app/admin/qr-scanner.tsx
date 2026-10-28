@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { useRouter } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
 import { ArrowLeft, CheckCircle2, XCircle, RefreshCw } from 'lucide-react-native';
 import { api } from '../../lib/apiClient';
+import { useAuth } from '../../context/AuthContext';
 
 export default function AdminQRScannerScreen() {
   const [permission, requestPermission] = useCameraPermissions();
@@ -12,6 +13,15 @@ export default function AdminQRScannerScreen() {
   const [resultMessage, setResultMessage] = useState<{ allowed: boolean; text: string } | null>(null);
 
   const router = useRouter();
+  const { user } = useAuth();
+
+  // Staff-only screen. The app's URL scheme makes every route addressable from outside the app
+  // (mobile://admin/qr-scanner), so the screen has to check the role itself instead of relying
+  // on no menu linking to it.
+  const role = user?.role as string | undefined;
+  if (role !== 'GYM' && role !== 'EMPLOYEE') {
+    return <Redirect href="/" />;
+  }
 
   if (!permission) {
     return <View style={{ flex: 1, backgroundColor: '#0f172a' }} />;

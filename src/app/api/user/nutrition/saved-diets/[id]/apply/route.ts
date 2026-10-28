@@ -67,9 +67,12 @@ export async function POST(
         if (!foodItem) {
           foodItem = await tx.foodItem.create({
             data: {
-              userId: null, // Global standard food
-              name: item.foodName,
-              brand: item.brand || null,
+              // Owned by the member who created it. This used to be `userId: null`, a GLOBAL row
+              // served to every user and matched by name for everyone else's diet, so one member
+              // could plant a food that silently replaced the nutrition data other members saw.
+              userId,
+              name: String(item.foodName).slice(0, 120),
+              brand: item.brand ? String(item.brand).slice(0, 80) : null,
               calories: Number(item.calories) || 0,
               protein: Number(item.protein) || 0,
               carbs: Number(item.carbs) || 0,

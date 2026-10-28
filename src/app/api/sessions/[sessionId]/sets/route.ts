@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getRequestUserId } from "@/lib/apiAuth";
+import { visibleExercisesWhere } from "@/lib/exerciseAccess";
 
 export async function POST(
   req: Request,
@@ -35,7 +36,7 @@ export async function POST(
       );
     }
 
-    const exercise = await prisma.exercise.findUnique({ where: { id: exerciseId } });
+    const exercise = await prisma.exercise.findFirst({ where: { id: exerciseId, ...(await visibleExercisesWhere(userId)) } });
     if (!exercise) {
       return NextResponse.json(
         { message: "Ejercicio no encontrado" },

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { generateDietPlan, STANDARD_FOODS, filterFoodsForUser, solveMealGrams } from "@/lib/dietEngine";
+import { generateDietPlan, STANDARD_FOODS } from "@/lib/dietEngine";
 import { getFoodCategory } from "@/lib/nutritionUtils";
 import { getRequestUserId } from "@/lib/apiAuth";
 
@@ -106,7 +106,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { date, items } = body; // date: "YYYY-MM-DD", items: Array of { foodName, calories, protein, carbs, fat, quantityGrams, mealType, brand }
 
-    if (!date || !items || !Array.isArray(items)) {
+    if (!date || !items || !Array.isArray(items) || items.length > 200) {
       return NextResponse.json({ message: "Datos incompletos" }, { status: 400 });
     }
 
@@ -146,9 +146,12 @@ export async function POST(req: Request) {
         if (!foodItem) {
           foodItem = await tx.foodItem.create({
             data: {
-              userId: null, // Global standard food
-              name: item.foodName,
-              brand: item.brand || null,
+              // Owned by the member who created it. This used to be `userId: null`, a GLOBAL row
+              // served to every user and matched by name for everyone else's diet, so one member
+              // could plant a food that silently replaced the nutrition data other members saw.
+              userId,
+              name: String(item.foodName).slice(0, 120),
+              brand: item.brand ? String(item.brand).slice(0, 80) : null,
               category: getFoodCategory(item.foodName),
               calories: Number(item.caloriesPer100g) || 0,
               protein: Number(item.proteinPer100g) || 0,

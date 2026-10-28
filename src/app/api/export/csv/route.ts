@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getRequestUserId } from "@/lib/apiAuth";
 
+const EXPORT_SESSION_LIMIT = 5000;
+
 export async function GET(req: Request) {
   try {
     const userId = await getRequestUserId(req);
@@ -22,8 +24,13 @@ export async function GET(req: Request) {
           orderBy: { id: 'asc' }
         }
       },
-      orderBy: { startTime: 'desc' }
+      orderBy: { startTime: 'desc' },
+      // Bounded so one request cannot load an unbounded history into memory. The cap is far above
+      // any real history; if it is ever hit the response says so instead of truncating silently.
+      take: EXPORT_SESSION_LIMIT + 1,
     });
+    const exportTruncated = workoutSessions.length > EXPORT_SESSION_LIMIT;
+    if (exportTruncated) workoutSessions.length = EXPORT_SESSION_LIMIT;
 
     // Funciones de utilidad
     const formatDate = (date: Date) => {
@@ -32,6 +39,14 @@ export async function GET(req: Request) {
       const datePart = d.toLocaleDateString("es-ES", { day: 'numeric', month: 'short', year: 'numeric' }).replace('.', '');
       const timePart = d.toLocaleTimeString("es-ES", { hour: '2-digit', minute: '2-digit' });
       return `"${datePart}, ${timePart}"`;
+    };
+
+    // Double embedded quotes and neutralise formula-leading values: exercise names come from a
+    // catalog other users can write to, and the old code concatenated them inside quotes raw.
+    const csvField = (value: unknown): string => {
+      const s = value == null ? "" : String(value);
+      const safe = /^[=+\-@\t\r]/.test(s) ? `'${s}` : s;
+      return `"${safe.replace(/"/g, '""')}"`;
     };
 
     // Construir CSV
@@ -43,13 +58,13 @@ export async function GET(req: Request) {
     workoutSessions.forEach(ws => {
       const startTimeStr = formatDate(ws.startTime);
       const endTimeStr = ws.endTime ? formatDate(ws.endTime) : '""';
-      const routineName = `"${ws.className || ws.routine?.name || "Entrenamiento Libre"}"`;
+      const routineName = csvField(ws.className || ws.routine?.name || "Entrenamiento Libre");
       const description = '""';
       
       const exerciseSetCounts: Record<string, number> = {};
 
       ws.workoutSets.forEach(set => {
-        const exerciseNameStr = `"${set.exercise.name}"`;
+        const exerciseNameStr = csvField(set.exercise.name);
         
         if (exerciseSetCounts[set.exercise.name] === undefined) {
           exerciseSetCounts[set.exercise.name] = 0;
@@ -100,6 +115,7 @@ export async function GET(req: Request) {
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
         "Content-Disposition": 'attachment; filename="fitwe_export.csv"',
+        ...(exportTruncated ? { "X-Export-Truncated": String(EXPORT_SESSION_LIMIT) } : {}),
       },
     });
   } catch (error) {

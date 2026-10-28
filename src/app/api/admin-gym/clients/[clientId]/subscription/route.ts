@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { readPageParams } from "@/lib/pagination";
 import { getNow } from "@/lib/timeUtils";
 import { computePlanGrant } from "@/lib/planUtils";
 
@@ -17,9 +18,23 @@ export async function GET(
     }
 
     const { clientId } = await params;
+
+    // Same ownership barrier the PATCH handler below already applies: a gym may only read the
+    // payment history of its own clients. Without it any gym could read any user's invoices.
+    const client = await prisma.user.findFirst({
+      where: { id: clientId, gymId: session.user.id },
+      select: { id: true },
+    });
+    if (!client) {
+      return NextResponse.json({ message: "Cliente no encontrado" }, { status: 404 });
+    }
+
+    const { skip, take } = readPageParams(req.url, { defaultSize: 50, maxSize: 100 });
     const payments = await prisma.paymentRecord.findMany({
-      where: { userId: clientId },
+      where: { userId: client.id },
       orderBy: { date: "desc" },
+      skip,
+      take,
     });
 
     return NextResponse.json(payments);

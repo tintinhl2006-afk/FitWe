@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Alert, Modal, Share } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Print from 'expo-print';
+import { escapeHtml } from '../../../lib/escapeHtml';
 import * as Sharing from 'expo-sharing';
 import { useRouter } from 'expo-router';
 import { X, Check, Sparkles, ArrowLeft, ArrowRight, Minus, Plus, Download, Share2 } from 'lucide-react-native';
@@ -253,13 +254,13 @@ export default function GenerateRoutinesScreen() {
       const routinesHtml = plan
         .map(
           (routine) => `
-          <h2>${routine.name}</h2>
+          <h2>${escapeHtml(routine.name)}</h2>
           <table>
             <thead><tr><th>Ejercicio</th><th>Series</th><th>Reps</th><th>RIR</th><th>Tempo</th><th>Descanso</th></tr></thead>
             <tbody>
               ${routine.exercises
                 .map(
-                  (ex) => `<tr><td>${ex.name}</td><td>${ex.sets}</td><td>${ex.reps}</td><td>${ex.rir}</td><td>${ex.tempo}</td><td>${ex.descanso}</td></tr>`
+                  (ex) => `<tr><td>${escapeHtml(ex.name)}</td><td>${escapeHtml(ex.sets)}</td><td>${escapeHtml(ex.reps)}</td><td>${escapeHtml(ex.rir)}</td><td>${escapeHtml(ex.tempo)}</td><td>${escapeHtml(ex.descanso)}</td></tr>`
                 )
                 .join('')}
             </tbody>

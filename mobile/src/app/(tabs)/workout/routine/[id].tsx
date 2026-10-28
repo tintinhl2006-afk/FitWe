@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Alert, Modal, PanResponder, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Print from 'expo-print';
+import { escapeHtml } from '../../../../lib/escapeHtml';
 import * as Sharing from 'expo-sharing';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
@@ -313,11 +314,11 @@ export default function RoutineDetailScreen() {
         .map(
           (re) => `
             <tr>
-              <td>${re.exercise.name}</td>
-              <td>${re.exercise.muscleGroup}${re.exercise.equipment ? ` • ${re.exercise.equipment}` : ''}</td>
-              <td>${re.sets}</td>
-              <td>${re.repsList || re.reps}</td>
-              <td>${re.lastHistory || 'Sin registros previos'}</td>
+              <td>${escapeHtml(re.exercise.name)}</td>
+              <td>${escapeHtml(re.exercise.muscleGroup)}${re.exercise.equipment ? ` • ${escapeHtml(re.exercise.equipment)}` : ''}</td>
+              <td>${escapeHtml(re.sets)}</td>
+              <td>${escapeHtml(re.repsList || re.reps)}</td>
+              <td>${escapeHtml(re.lastHistory || 'Sin registros previos')}</td>
             </tr>`
         )
         .join('');
@@ -337,7 +338,7 @@ export default function RoutineDetailScreen() {
           </head>
           <body>
             <h1>FitWe</h1>
-            <p class="subtitle">Plan de Entrenamiento — ${routine.name}</p>
+            <p class="subtitle">Plan de Entrenamiento — ${escapeHtml(routine.name)}</p>
             <p class="subtitle">Creada el ${new Date(routine.createdAt).toLocaleDateString('es-ES')}</p>
             <table>
               <thead>

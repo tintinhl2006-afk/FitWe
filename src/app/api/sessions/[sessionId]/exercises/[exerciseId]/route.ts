@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getRequestUserId } from "@/lib/apiAuth";
+import { visibleExercisesWhere } from "@/lib/exerciseAccess";
 
 // PATCH: replace every set of one exercise in a live session with a different exercise
 export async function PATCH(
@@ -27,7 +28,7 @@ export async function PATCH(
     }
 
     if (newExerciseId !== undefined) {
-      const newExercise = await prisma.exercise.findUnique({ where: { id: newExerciseId } });
+      const newExercise = await prisma.exercise.findFirst({ where: { id: newExerciseId, ...(await visibleExercisesWhere(userId)) } });
       if (!newExercise) {
         return NextResponse.json({ message: "Ejercicio no encontrado" }, { status: 404 });
       }

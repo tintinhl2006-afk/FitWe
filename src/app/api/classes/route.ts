@@ -93,11 +93,17 @@ export async function GET(req: Request) {
 
       // Un usuario con perfil privado no muestra su nombre/foto a otros socios, solo
       // cuenta a efectos de aforo/plazas. A sí mismo siempre se le muestra su propio nombre.
-      const attendees = c.bookings.map((b) => ({
-        id: b.userId,
-        name: !b.user.isPrivate || b.userId === userId ? b.user.name : null,
-        image: !b.user.isPrivate || b.userId === userId ? b.user.image : null,
-      }));
+      const attendees = c.bookings.map((b, idx) => {
+        const visible = !b.user.isPrivate || b.userId === userId;
+        return {
+          // A private member must not expose a stable id: the same UUID across classes would
+          // let anyone rebuild the attendance pattern the privacy flag hides. The opaque value
+          // below is only unique within this class.
+          id: visible ? b.userId : `private-${c.id}-${idx}`,
+          name: visible ? b.user.name : null,
+          image: visible ? b.user.image : null,
+        };
+      });
 
       return {
         id: c.id,

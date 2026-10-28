@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyRoutineAccess } from "@/lib/routineAccess";
 import { getRequestAuth } from "@/lib/apiAuth";
+import { visibleExercisesWhere } from "@/lib/exerciseAccess";
+import { MAX_REPS, MAX_SETS, MAX_WEIGHT, boundedInt, boundedNumber } from "@/lib/trainingLimits";
 
 export async function POST(
   req: Request,
@@ -25,6 +27,20 @@ export async function POST(
       );
     }
 
+    // Unbounded `sets` was persisted as-is and later drove a loop in POST /api/sessions/start.
+    const safeSets = boundedInt(sets, 1, MAX_SETS);
+    const safeReps = boundedInt(reps, 0, MAX_REPS);
+    const safeWeight = boundedNumber(weight, 0, MAX_WEIGHT);
+    if (
+      typeof exerciseId !== "string" ||
+      safeSets === null ||
+      safeReps === null ||
+      safeWeight === null ||
+      (repsList != null && (typeof repsList !== "string" || repsList.length > 500))
+    ) {
+      return NextResponse.json({ message: "Datos de ejercicio no válidos" }, { status: 400 });
+    }
+
     // Verificar acceso (usuario dueño O gimnasio del cliente)
     const routine = await verifyRoutineAccess(routineId, auth.id, auth.role);
 
@@ -33,6 +49,16 @@ export async function POST(
         { message: "Rutina no encontrada o no autorizada" },
         { status: 404 }
       );
+    }
+
+    // The exercise must exist and be one this user may use. Previously any id was accepted, so
+    // another member's private exercise could be attached by guessing its UUID.
+    const usable = await prisma.exercise.findFirst({
+      where: { id: exerciseId, ...(await visibleExercisesWhere(auth.id)) },
+      select: { id: true },
+    });
+    if (!usable) {
+      return NextResponse.json({ message: "Ejercicio no encontrado" }, { status: 404 });
     }
 
     // Obtener el orden máximo actual
@@ -47,10 +73,10 @@ export async function POST(
       data: {
         routineId,
         exerciseId,
-        sets,
-        reps,
+        sets: safeSets,
+        reps: safeReps,
         repsList: repsList || null,
-        weight,
+        weight: safeWeight,
         order: nextOrder,
       },
     });

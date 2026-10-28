@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { generateWorkoutPlan, WorkoutPreference } from "@/lib/workoutEngine";
 import { getRequestUserId } from "@/lib/apiAuth";
+import { MAX_REPS, MAX_SETS, boundedInt } from "@/lib/trainingLimits";
+import { visibleExercisesWhere } from "@/lib/exerciseAccess";
 
 export async function POST(req: Request) {
   try {
@@ -17,6 +19,40 @@ export async function POST(req: Request) {
     if (savePlan) {
       if (!Array.isArray(savePlan) || savePlan.length === 0) {
         return NextResponse.json({ message: "Plan de entrenamiento no válido o vacío" }, { status: 400 });
+      }
+
+      // Bound the bulk insert: one request used to be able to create unlimited routines and rows.
+      const planInvalid = () =>
+        NextResponse.json({ message: "Plan de entrenamiento no válido" }, { status: 400 });
+      if (savePlan.length > 14) return planInvalid();
+      for (const r of savePlan) {
+        if (typeof r?.name !== "string" || !r.name.trim() || r.name.length > 100) return planInvalid();
+        const exs = r.exercises == null ? [] : r.exercises;
+        if (!Array.isArray(exs) || exs.length > 60) return planInvalid();
+        for (const item of exs) {
+          if (
+            typeof item?.exerciseId !== "string" ||
+            boundedInt(item.sets, 1, MAX_SETS) === null ||
+            boundedInt(item.reps, 0, MAX_REPS) === null ||
+            (item.repsList != null && (typeof item.repsList !== "string" || item.repsList.length > 500))
+          ) {
+            return planInvalid();
+          }
+        }
+      }
+
+      // Every exercise in the plan must be one this user may use.
+      type PlanRoutine = { exercises?: { exerciseId: string }[] | null };
+      const wantedIds = Array.from(
+        new Set((savePlan as PlanRoutine[]).flatMap((r) => (r.exercises ?? []).map((i) => i.exerciseId)))
+      );
+      if (wantedIds.length > 0) {
+        const usableCount = await prisma.exercise.count({
+          where: { id: { in: wantedIds }, ...(await visibleExercisesWhere(userId)) },
+        });
+        if (usableCount !== wantedIds.length) {
+          return NextResponse.json({ message: "El plan contiene ejercicios no disponibles" }, { status: 400 });
+        }
       }
 
       const createdRoutines = await prisma.$transaction(async (tx) => {
@@ -65,7 +101,10 @@ export async function POST(req: Request) {
     }
 
     // 1. Fetch available exercises from the DB
+    // Generated plans draw from the shared catalog only, never from exercises other members
+    // created (those carry arbitrary names and have no equipment data the engine relies on).
     const dbExercises = await prisma.exercise.findMany({
+      where: { userId: null },
       select: {
         id: true,
         name: true,

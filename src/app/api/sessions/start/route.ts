@@ -43,15 +43,17 @@ export async function POST(req: Request) {
     });
 
     // Crear los sets iniciales basados en la rutina
+    // Cap independently of write-time validation, so a routine saved before the limits existed
+    // cannot be used to exhaust the function's memory with one request.
+    const MAX_SETS_PER_EXERCISE = 50;
     const workoutSetsData = [];
     for (const re of routine.exercises) {
-      // @ts-ignore
       const repsListStr = re.repsList as string | null;
       const repsArray = repsListStr
         ? repsListStr.split(",").map((val) => parseInt(val.trim(), 10))
         : [];
 
-      for (let i = 0; i < re.sets; i++) {
+      for (let i = 0; i < Math.min(re.sets, MAX_SETS_PER_EXERCISE); i++) {
         const targetReps =
           repsArray[i] !== undefined && !isNaN(repsArray[i])
             ? repsArray[i]
