@@ -301,7 +301,7 @@ export default function GenerateRoutinesScreen() {
     : [];
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent' }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16 }}>
         <View style={{ height: 38, width: 38, borderRadius: 14, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center' }}>
           <Sparkles size={18} color={colors.primaryAccent} />

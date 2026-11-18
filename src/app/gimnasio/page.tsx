@@ -21,6 +21,7 @@ export default function GimnasioPage() {
   const [filterMuscle, setFilterMuscle] = useState("");
   const [filterEquipment, setFilterEquipment] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
 
   // Form states
   const [isCreating, setIsCreating] = useState(false);
@@ -38,9 +39,17 @@ export default function GimnasioPage() {
       if (res.ok) {
         const data = await res.json();
         setExercises(data);
+        setLoadError("");
+      } else {
+        setLoadError(
+          res.status === 401
+            ? "Tu sesión ha caducado. Vuelve a iniciar sesión."
+            : `No se pudo cargar el catálogo (error ${res.status}).`
+        );
       }
     } catch (error) {
       console.error("Error al cargar ejercicios:", error);
+      setLoadError("No se pudo conectar con el servidor.");
     } finally {
       setIsLoading(false);
     }
@@ -237,6 +246,12 @@ export default function GimnasioPage() {
             </select>
           </div>
         </div>
+
+        {loadError && (
+          <div className="rounded-2xl bg-red-50 dark:bg-red-950/30 p-3 text-sm text-red-600 dark:text-red-400">
+            {loadError}
+          </div>
+        )}
 
         {isLoading ? (
           <div className="flex h-32 items-center justify-center">

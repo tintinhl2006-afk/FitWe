@@ -9,6 +9,8 @@ import { Card, EmptyState } from '../../../../components/ui';
 import { ExerciseAvatar } from '../../../../components/workout/ExerciseAvatar';
 import { Palette } from '../../../../constants/theme';
 import { api } from '../../../../lib/apiClient';
+import { exerciseGifUrl } from '../../../../lib/exerciseMedia';
+import { Image } from 'expo-image';
 
 interface Exercise {
   id: string;
@@ -52,6 +54,8 @@ export default function ExerciseDetailScreen() {
   const [chartData, setChartData] = useState<ChartPoint[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [tab, setTab] = useState<Tab>('historial');
+  const [gifFailed, setGifFailed] = useState(false);
+  const gifUrl = exerciseGifUrl(exercise?.imageUrl);
 
   useEffect(() => {
     async function load() {
@@ -71,7 +75,7 @@ export default function ExerciseDetailScreen() {
 
   if (isLoading || !exercise) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center' }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent', alignItems: 'center', justifyContent: 'center' }}>
         <ActivityIndicator color={colors.primary} size="large" />
       </SafeAreaView>
     );
@@ -80,14 +84,14 @@ export default function ExerciseDetailScreen() {
   const isCardio = exercise.muscleGroup.toLowerCase() === 'cardio';
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent' }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16 }}>
         <TouchableOpacity onPress={() => router.back()} style={{ height: 36, width: 36, borderRadius: 12, backgroundColor: colors.surfaceAlt, alignItems: 'center', justifyContent: 'center' }}>
           <ArrowLeft size={18} color={colors.textPrimary} />
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 0, paddingBottom: 40 }}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 0, paddingBottom: 110 }}>
         <View style={{ alignItems: 'center', marginBottom: 20 }}>
           <ExerciseAvatar imageUrl={exercise.imageUrl} equipment={exercise.equipment} muscleGroup={exercise.muscleGroup} size={96} />
           <Text style={{ fontSize: 20, fontWeight: '900', color: colors.textPrimary, marginTop: 12, textAlign: 'center' }}>{exercise.name}</Text>
@@ -106,6 +110,17 @@ export default function ExerciseDetailScreen() {
         {tab === 'indicaciones' &&
           (exercise.description ? (
             <Card>
+              {gifUrl && !gifFailed && (
+                <View style={{ alignItems: 'center', marginBottom: 16, borderRadius: 14, overflow: 'hidden', backgroundColor: colors.surfaceSunken }}>
+                  <Image
+                    source={{ uri: gifUrl }}
+                    style={{ width: '100%', aspectRatio: 1 }}
+                    contentFit="contain"
+                    onError={() => setGifFailed(true)}
+                    accessibilityLabel={`Técnica de ${exercise.name}`}
+                  />
+                </View>
+              )}
               <Text style={{ fontSize: 13, color: colors.textSecondary, lineHeight: 20 }}>{exercise.description}</Text>
             </Card>
           ) : (

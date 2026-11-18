@@ -65,7 +65,7 @@ export function Sidebar() {
               className={cn(
                 "flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-all",
                 isActive
-                  ? "bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white"
+                  ? "bg-white/70 text-slate-900 shadow-sm ring-1 ring-white/80 dark:bg-white/10 dark:ring-white/10 dark:text-white"
                   : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 hover:text-slate-900 dark:hover:text-white"
               )}
             >
@@ -149,7 +149,7 @@ export function Sidebar() {
   return (
     <>
       {/* Mobile Header Bar */}
-      <div className="flex lg:hidden fixed top-0 left-0 right-0 w-full px-4 py-3 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 z-40 items-center justify-between">
+      <div className="flex lg:hidden fixed top-0 left-0 right-0 w-full px-4 py-3 glass glass-strong !rounded-none !border-x-0 !border-t-0 z-40 items-center justify-between">
         <button
           onClick={() => setIsMobileOpen(true)}
           className="p-2 -ml-2 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
@@ -176,7 +176,7 @@ export function Sidebar() {
       {/* Sidebar - Desktop: sticky, Mobile: slide-in overlay */}
       <aside
         className={cn(
-          "fixed lg:sticky top-0 left-0 h-[100dvh] w-72 flex-col border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 z-50 transition-transform duration-300 ease-in-out flex px-4 py-6 shadow-2xl lg:shadow-none",
+          "glass glass-strong fixed lg:sticky top-0 left-0 h-[100dvh] lg:h-[calc(100dvh-1.5rem)] lg:m-3 w-72 flex-col border rounded-r-3xl lg:rounded-3xl z-50 transition-transform duration-300 ease-in-out flex px-4 py-6",
           isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
       >

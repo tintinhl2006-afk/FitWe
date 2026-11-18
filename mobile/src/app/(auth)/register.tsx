@@ -62,7 +62,7 @@ export default function RegisterScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={{ flex: 1, backgroundColor: '#0f172a' }}
+      style={{ flex: 1, backgroundColor: 'transparent' }}
     >
       <ScrollView
         contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 24 }}
@@ -73,14 +73,14 @@ export default function RegisterScreen() {
           style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 24 }}
         >
           <ArrowLeft size={20} color="#94a3b8" />
-          <Text style={{ color: '#94a3b8', fontSize: 14 }}>Volver</Text>
+          <Text style={{ color: '#cbd5e1', fontSize: 14 }}>Volver</Text>
         </TouchableOpacity>
 
         <View style={{ marginBottom: 32 }}>
           <Text style={{ fontSize: 28, fontWeight: 'bold', color: '#ffffff' }}>
             Crear Cuenta
           </Text>
-          <Text style={{ fontSize: 14, color: '#94a3b8', marginTop: 4 }}>
+          <Text style={{ fontSize: 14, color: '#cbd5e1', marginTop: 4 }}>
             Únete a FitWe y empieza a entrenar con tu plan inteligente.
           </Text>
         </View>
@@ -106,15 +106,15 @@ export default function RegisterScreen() {
 
         <View style={{ gap: 16 }}>
           <View>
-            <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 8, letterSpacing: 0.5 }}>
+            <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#cbd5e1', textTransform: 'uppercase', marginBottom: 8, letterSpacing: 0.5 }}>
               Nombre Completo
             </Text>
             <View
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
-                backgroundColor: '#1e293b',
-                borderColor: '#334155',
+                backgroundColor: 'rgba(255,255,255,0.08)',
+                borderColor: 'rgba(255,255,255,0.18)',
                 borderWidth: 1,
                 borderRadius: 16,
                 paddingHorizontal: 16,
@@ -133,15 +133,15 @@ export default function RegisterScreen() {
           </View>
 
           <View>
-            <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 8, letterSpacing: 0.5 }}>
+            <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#cbd5e1', textTransform: 'uppercase', marginBottom: 8, letterSpacing: 0.5 }}>
               Correo Electrónico
             </Text>
             <View
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
-                backgroundColor: '#1e293b',
-                borderColor: '#334155',
+                backgroundColor: 'rgba(255,255,255,0.08)',
+                borderColor: 'rgba(255,255,255,0.18)',
                 borderWidth: 1,
                 borderRadius: 16,
                 paddingHorizontal: 16,
@@ -162,15 +162,15 @@ export default function RegisterScreen() {
           </View>
 
           <View>
-            <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 8, letterSpacing: 0.5 }}>
+            <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#cbd5e1', textTransform: 'uppercase', marginBottom: 8, letterSpacing: 0.5 }}>
               Contraseña
             </Text>
             <View
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
-                backgroundColor: '#1e293b',
-                borderColor: '#334155',
+                backgroundColor: 'rgba(255,255,255,0.08)',
+                borderColor: 'rgba(255,255,255,0.18)',
                 borderWidth: 1,
                 borderRadius: 16,
                 paddingHorizontal: 16,
@@ -190,15 +190,15 @@ export default function RegisterScreen() {
           </View>
 
           <View>
-            <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 8, letterSpacing: 0.5 }}>
+            <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#cbd5e1', textTransform: 'uppercase', marginBottom: 8, letterSpacing: 0.5 }}>
               Código de Gimnasio
             </Text>
             <View
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
-                backgroundColor: '#1e293b',
-                borderColor: '#334155',
+                backgroundColor: 'rgba(255,255,255,0.08)',
+                borderColor: 'rgba(255,255,255,0.18)',
                 borderWidth: 1,
                 borderRadius: 16,
                 paddingHorizontal: 16,
@@ -216,7 +216,7 @@ export default function RegisterScreen() {
                 style={{ flex: 1, color: '#ffffff', fontSize: 15 }}
               />
             </View>
-            <Text style={{ fontSize: 12, color: '#64748b', marginTop: 6 }}>
+            <Text style={{ fontSize: 12, color: '#9aa8bd', marginTop: 6 }}>
               Te lo facilita tu gimnasio al darte de alta.
             </Text>
           </View>
@@ -225,7 +225,7 @@ export default function RegisterScreen() {
             onPress={handleRegister}
             disabled={submitting}
             style={{
-              backgroundColor: '#06b6d4',
+              backgroundColor: '#0e7490',
               height: 52,
               borderRadius: 16,
               alignItems: 'center',
@@ -252,7 +252,7 @@ export default function RegisterScreen() {
           onPress={() => router.replace('/(auth)/login')}
           style={{ marginTop: 24, alignItems: 'center' }}
         >
-          <Text style={{ color: '#94a3b8', fontSize: 14 }}>
+          <Text style={{ color: '#cbd5e1', fontSize: 14 }}>
             ¿Ya tienes una cuenta? <Text style={{ color: '#06b6d4', fontWeight: 'bold' }}>Inicia Sesión</Text>
           </Text>
         </TouchableOpacity>

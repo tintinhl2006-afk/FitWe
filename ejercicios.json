@@ -2,7 +2,7 @@
   {
     "id": "54041da5-13d6-43a6-be86-7b50f91671ef",
     "name": "Abducción de Cadera",
-    "description": "Máquina de abrir piernas. Trabaja glúteo medio.",
+    "description": "Músculos trabajados: Glúteo medio y menor, tensor de la fascia lata.\n\nPosición inicial: Siéntate con la espalda apoyada en el respaldo, pelvis pegada al asiento y las almohadillas en la cara externa de los muslos. Rodillas a unos 90°.\n\nEjecución: Abre las piernas hasta un rango cómodo sin que la pelvis se despegue y mantén 1 s la contracción. Vuelve en 2-3 s sin dejar que las placas choquen.\n\nRespiración y ritmo: Espira al abrir y inspira al cerrar. Tempo 1-1-3 (abrir, pausa, cerrar). 12-20 repeticiones.\n\nClaves técnicas: Inclinar ligeramente el tronco hacia delante desplaza el trabajo hacia el glúteo medio y menor. Piensa en llevar las rodillas hacia fuera, no en empujar con los pies.\n\nErrores comunes: Usar impulso de tronco, balancear la pelvis, cerrar de golpe y cargar tanto que el rango se queda en la mitad.",
     "muscleGroup": "Pierna",
     "equipment": "Máquina",
     "imageUrl": "/abducciones_maquina.jpeg"
@@ -10,7 +10,7 @@
   {
     "id": "ce773da2-887c-475b-9be0-b68d53792a4b",
     "name": "Aperturas Inclinadas",
-    "description": "Aislamiento para el pecho superior. No bajes excesivamente para proteger el hombro.",
+    "description": "Músculos trabajados: Pecho (porción clavicular), deltoides anterior.\n\nPosición inicial: Banco a 30°, escápulas retraídas y deprimidas, mancuernas sobre el pecho con las palmas enfrentadas y codos ligeramente flexionados.\n\nEjecución: Abre los brazos en arco manteniendo la misma flexión de codo hasta sentir estiramiento del pecho, con las mancuernas a la altura del pecho. Cierra juntando el pecho, no con los brazos. Inspira al bajar, espira al subir.\n\nRespiración y ritmo: Inspira al bajar (2-3 s) y espira al cerrar. 10-15 repeticiones con carga moderada.\n\nClaves técnicas: Imagina que abrazas un árbol: el movimiento nace del pecho y la articulación del hombro, no del codo. Cuando sientas el máximo estiramiento, invierte el movimiento.\n\nErrores comunes: Doblar y extender los codos (se convierte en press), bajar de más y sobrecargar el hombro, perder el apoyo escapular.",
     "muscleGroup": "Pecho",
     "equipment": "Mancuernas",
     "imageUrl": "/aperturas_inclinadas.jpeg"
@@ -18,7 +18,7 @@
   {
     "id": "26ec54a8-3f1b-47f7-a1b3-331926722391",
     "name": "Aperturas con Mancuernas",
-    "description": "Movimiento de aislamiento. Mantén una ligera flexión de codo y abre los brazos como si fueras a dar un abrazo.",
+    "description": "Músculos trabajados: Pectoral mayor, deltoides anterior.\n\nPosición inicial: Tumbado en banco plano con pies firmes en el suelo, escápulas juntas, mancuernas sobre el pecho y codos con flexión suave (~15-20°).\n\nEjecución: Baja en arco abriendo los brazos hasta que los codos queden a la altura del banco o un poco por debajo. Sube siguiendo el mismo arco apretando el pecho. Controla la fase excéntrica 2-3 s.\n\nRespiración y ritmo: Inspira al abrir, espira al cerrar. Tempo 3-0-1. 10-15 repeticiones.\n\nClaves técnicas: Mantén el ángulo del codo constante todo el recorrido. Elige un peso que te permita controlar la bajada; es un ejercicio de aislamiento, no de fuerza máxima.\n\nErrores comunes: Bajar demasiado, estirar los codos del todo, usar un peso que obligue a hacer press, despegar los glúteos del banco.",
     "muscleGroup": "Pecho",
     "equipment": "Mancuernas",
     "imageUrl": "/aperturas_mancuerna.jpeg"
@@ -26,7 +26,7 @@
   {
     "id": "0befafe5-af84-4b93-ba9b-1993544f9d10",
     "name": "Bicicleta Estática",
-    "description": "Cardio de bajo impacto articular.",
+    "description": "Músculos trabajados: Cuádriceps, glúteos, isquiotibiales, gemelos; trabajo cardiovascular.\n\nPosición inicial: Ajusta el sillín para que la rodilla quede con 25-35° de flexión en el punto más bajo del pedal. Manillar a una altura que permita espalda neutra.\n\nEjecución: Pedalea con cadencia constante de 70-90 rpm, empujando y tirando del pedal con la planta apoyada. Controla la intensidad con la resistencia y la frecuencia cardíaca.\n\nRespiración y ritmo: Respiración rítmica y nasal-bucal continua, sin bloquear. Sesiones de 20-45 min a un esfuerzo en el que aún puedas hablar frases cortas (zona 2) o intervalos de 30-60 s intensos con recuperación.\n\nClaves técnicas: Pedalea haciendo un círculo completo: empuja arriba y delante, tira atrás y arriba. Revisa la altura del sillín al principio de cada sesión.\n\nErrores comunes: Sillín demasiado bajo (sobrecarga de rodilla), balancear las caderas, encorvar la espalda, agarrar el manillar con tensión.",
     "muscleGroup": "Cardio",
     "equipment": "Máquina",
     "imageUrl": "/bicicleta.jpg"
@@ -34,7 +34,7 @@
   {
     "id": "2c04f9d4-6597-4bdc-ab08-7977b3c5efda",
     "name": "Cinta de Correr",
-    "description": "Trabajo aeróbico o HIIT caminando, trotando o corriendo.",
+    "description": "Músculos trabajados: Sistema cardiovascular, cuádriceps, glúteos, isquiotibiales, gemelos.\n\nPosición inicial: Sube con la cinta en marcha lenta, colócate en el centro y comprueba el cierre del cordón de seguridad. Postura alta, mirada al frente.\n\nEjecución: Aterriza con el pie bajo el centro de gravedad, con zancada corta y cadencia de 160-180 pasos/min. Brazos a 90° moviéndose adelante y atrás, hombros relajados. Progresa velocidad e inclinación poco a poco.\n\nRespiración y ritmo: Respira de forma rítmica, por ejemplo 2 pasos al inspirar y 2 al espirar. Calienta 5 min caminando o trotando suave antes de subir la velocidad.\n\nClaves técnicas: Una inclinación del 1-2 % imita mejor la carrera al aire libre. Si notas que te agarras a las barras, baja la velocidad.\n\nErrores comunes: Agarrarse a las barras, dar zancadas largas aterrizando con el talón por delante, mirar los pies, saltar de la cinta en marcha.",
     "muscleGroup": "Cardio",
     "equipment": "Máquina",
     "imageUrl": "/cinta_correr.jpg"
@@ -42,7 +42,7 @@
   {
     "id": "a8a5ef76-cc78-411c-a0cf-10e7eb27f119",
     "name": "Cruce de Poleas Alto",
-    "description": "Tira de las poleas desde arriba hacia el centro de tu cadera. Excelente para el pecho inferior.",
+    "description": "Músculos trabajados: Pectoral mayor (porción inferior y esternal), deltoides anterior.\n\nPosición inicial: Poleas a la altura más alta, un paso al frente con los pies en zancada, tronco inclinado ligeramente hacia delante, codos ligeramente flexionados.\n\nEjecución: Lleva las manos en arco hacia abajo y al frente hasta cruzarlas a la altura del ombligo-cadera, apretando el pecho 1 s. Vuelve controlando hasta notar estiramiento sin que el peso se apoye en la pila.\n\nRespiración y ritmo: Espira al cruzar y inspira al abrir. Tempo 2-1-3. 10-15 repeticiones.\n\nClaves técnicas: Piensa en abrazar hacia abajo y adentro. Mantén la postura fija: solo se mueven los brazos desde el hombro.\n\nErrores comunes: Tirar con los brazos en vez de con el pecho, flexionar y extender los codos, balancear el tronco, soltar el peso en la vuelta.",
     "muscleGroup": "Pecho",
     "equipment": "Polea",
     "imageUrl": "/cruce_polea_alto.jpg"
@@ -50,7 +50,7 @@
   {
     "id": "42fc6f68-5547-4a3e-b598-c17a7e843446",
     "name": "Cruce de Poleas Bajo",
-    "description": "Desde las poleas bajas, eleva los brazos hacia el pecho superior.",
+    "description": "Músculos trabajados: Pectoral mayor (porción clavicular), deltoides anterior.\n\nPosición inicial: Poleas en posición baja, paso al frente, tronco ligeramente inclinado, palmas hacia arriba y codos con flexión suave.\n\nEjecución: Sube las manos en arco hasta cruzarlas a la altura de la cara-pecho alto, juntando el pecho. Baja lento hasta sentir el estiramiento.\n\nRespiración y ritmo: Espira al subir y cruzar, inspira al bajar. Tempo 2-1-3. 10-15 repeticiones.\n\nClaves técnicas: Mantén los hombros bajos y la clavícula abierta. El recorrido termina cuando las manos se cruzan; subir más solo carga el hombro.\n\nErrores comunes: Elevar los hombros hacia las orejas, impulsarse con las piernas, hacer un press con los codos, arquear la zona lumbar.",
     "muscleGroup": "Pecho",
     "equipment": "Polea",
     "imageUrl": "/cruces_polea_bajo.jpg"
@@ -58,7 +58,7 @@
   {
     "id": "c23af9c0-b7df-4846-bf77-13d1d1ea2478",
     "name": "Cruce de Poleas Medio",
-    "description": "Tira de las poleas a la altura de tu pecho. Gran contracción máxima.",
+    "description": "Músculos trabajados: Pectoral mayor (porción esternal), deltoides anterior.\n\nPosición inicial: Poleas a la altura del pecho, paso al frente, tronco recto con ligera inclinación, codos flexionados unos 15-20°.\n\nEjecución: Junta las manos delante del pecho en arco horizontal, aprieta 1 s y vuelve abriendo hasta que los codos estén a la altura del tronco. Inspira al abrir, espira al cerrar.\n\nRespiración y ritmo: Espira al cerrar, inspira al abrir. 10-15 repeticiones, con pausa de 1 s al cerrar.\n\nClaves técnicas: Ideal para terminar la sesión de pecho. Prioriza sentir el pecho trabajando antes que subir el peso.\n\nErrores comunes: Abrir de más el brazo hacia atrás (carga la cápsula del hombro), perder la posición del tronco, cargar de más y acortar el recorrido.",
     "muscleGroup": "Pecho",
     "equipment": "Polea",
     "imageUrl": "/cruce_poleas_medio.jpg"
@@ -66,7 +66,7 @@
   {
     "id": "e47b43f6-9e49-4ef2-969a-bc30ca3143c0",
     "name": "Crunch Abdominal",
-    "description": "Encogimiento clásico. Eleva solo los hombros del suelo apretando el abdomen.",
+    "description": "Músculos trabajados: Recto abdominal, oblicuos como estabilizadores.\n\nPosición inicial: Tumbado boca arriba, rodillas flexionadas y pies en el suelo, lumbar neutra, manos junto a las sienes o cruzadas en el pecho.\n\nEjecución: Espira y enrolla el tronco subiendo solo las escápulas del suelo, acercando costillas a pelvis. Mantén 1 s arriba y baja lento sin relajar el abdomen.\n\nRespiración y ritmo: Espira fuerte al subir (vaciando el aire se contrae más el abdomen) e inspira al bajar. 15-25 repeticiones.\n\nClaves técnicas: Imagina acercar el esternón a la pelvis, no la cabeza a las rodillas. El recorrido es corto; si sientes el cuello, baja las manos al pecho.\n\nErrores comunes: Tirar del cuello con las manos, subir todo el tronco hasta sentarse (trabajan los flexores de cadera), ir rápido con impulso.",
     "muscleGroup": "Core",
     "equipment": "Peso Corporal",
     "imageUrl": "/crunch_abdominal.jpg"
@@ -74,7 +74,7 @@
   {
     "id": "89be1984-dbd2-4ce1-89e6-3142d78702bc",
     "name": "Crunch en Polea",
-    "description": "De rodillas, sujeta la cuerda tras el cuello y enrolla tu torso hacia abajo.",
+    "description": "Músculos trabajados: Recto abdominal.\n\nPosición inicial: De rodillas frente a la polea alta con la cuerda a ambos lados de la cabeza, cadera sobre las rodillas y espalda recta.\n\nEjecución: Enrolla el tronco llevando los codos hacia las rodillas, redondeando la columna y espirando. La cadera no se mueve. Vuelve despacio hasta casi extender el tronco.\n\nRespiración y ritmo: Espira al enrollar, inspira al volver. Tempo 2-1-3. 12-20 repeticiones.\n\nClaves técnicas: Permite progresar la carga de forma segura. La flexión ocurre en la columna, no en la cadera: si la cadera se mueve, estás tirando con los flexores de cadera.\n\nErrores comunes: Mover las caderas atrás y adelante, tirar con los brazos, usar tanta carga que se pierde la flexión de columna.",
     "muscleGroup": "Core",
     "equipment": "Polea",
     "imageUrl": "/crunch_polea.jpg"
@@ -82,7 +82,7 @@
   {
     "id": "588ed878-6609-4d04-bfad-44820a314854",
     "name": "Curl Bayesian",
-    "description": "De espaldas a la polea. Permite estirar el bíceps detrás de la línea del cuerpo.",
+    "description": "Músculos trabajados: Bíceps braquial (cabeza larga), braquial.\n\nPosición inicial: De pie de espaldas a la polea baja, con la cuerda o asa en una mano, el brazo hacia atrás con el hombro en extensión (codo detrás del cuerpo). Un pie adelantado.\n\nEjecución: Flexiona el codo llevando la mano hacia el hombro sin adelantar el codo, aprieta arriba y extiende lento notando el estiramiento del bíceps en la posición estirada.\n\nRespiración y ritmo: Espira al flexionar, inspira al extender. Tempo 2-1-3. 10-15 repeticiones por brazo.\n\nClaves técnicas: Con el brazo por detrás del cuerpo la cabeza larga del bíceps trabaja estirada, lo que lo hace muy eficaz para el volumen. Usa menos peso que en un curl normal.\n\nErrores comunes: Adelantar el codo, balancear el tronco, soltar la fase excéntrica, rotar el hombro hacia dentro.",
     "muscleGroup": "Brazo",
     "equipment": "Polea",
     "imageUrl": "/curl_bayesian.jpg"
@@ -90,7 +90,7 @@
   {
     "id": "dd45156e-5cb6-4d64-8d70-56efe05c48b4",
     "name": "Curl Concentrado",
-    "description": "Apoya el codo en la cara interna del muslo para estricto aislamiento.",
+    "description": "Músculos trabajados: Bíceps braquial (pico del bíceps), braquial.\n\nPosición inicial: Sentado en banco con piernas abiertas, apoya el codo en la cara interna del muslo con el brazo colgando y la mancuerna con agarre supino.\n\nEjecución: Flexiona el codo subiendo la mancuerna hacia el hombro, gira ligeramente la muñeca hacia fuera arriba y aprieta 1 s. Baja en 2-3 s hasta casi extender.\n\nRespiración y ritmo: Espira al subir, inspira al bajar. Tempo 2-1-3. 10-15 repeticiones por brazo.\n\nClaves técnicas: Es un ejercicio de aislamiento y de bajo peso: busca la contracción máxima en lugar de la carga.\n\nErrores comunes: Despegar el codo del muslo, balancear el torso, subir el hombro, bajar de golpe.",
     "muscleGroup": "Brazo",
     "equipment": "Mancuernas",
     "imageUrl": "/curl_concentrado.jpg"
@@ -98,7 +98,7 @@
   {
     "id": "5dc7d67b-871b-41da-858e-4b1ba27f0b74",
     "name": "Curl Femoral Sentado",
-    "description": "Aislamiento para isquiosurales. Mantiene el músculo en mayor elongación inicial.",
+    "description": "Músculos trabajados: Isquiotibiales (bíceps femoral, semitendinoso, semimembranoso), gemelos.\n\nPosición inicial: Ajusta la máquina para que el eje de giro coincida con la rodilla. Espalda apoyada, almohadilla justo por encima del talón y muslo fijado.\n\nEjecución: Flexiona las rodillas llevando los talones hacia el glúteo hasta el máximo rango, mantén 1 s y vuelve en 2-3 s sin que la pila toque.\n\nRespiración y ritmo: Espira al flexionar, inspira al extender. Tempo 2-1-3. 10-15 repeticiones.\n\nClaves técnicas: En posición sentada la cadera está flexionada, lo que pone a los isquiotibiales en estiramiento y los activa más. Ajusta bien el respaldo para que la rodilla quede alineada con el eje.\n\nErrores comunes: Levantar la cadera del asiento, usar impulso, acortar el rango, posición del eje mal ajustada.",
     "muscleGroup": "Pierna",
     "equipment": "Máquina",
     "imageUrl": "/curl_femoral.jpg"
@@ -106,7 +106,7 @@
   {
     "id": "b48214f0-8462-45ae-ac6e-849181f86cc6",
     "name": "Curl Femoral Tumbado",
-    "description": "Aislamiento para isquiosurales recostado boca abajo.",
+    "description": "Músculos trabajados: Isquiotibiales, gemelos.\n\nPosición inicial: Tumbado boca abajo con las rodillas fuera del banco alineadas con el eje y la almohadilla sobre los talones. Agarra las asas y mantén la pelvis pegada al banco.\n\nEjecución: Flexiona las rodillas hasta unos 90° o más, aprieta y baja controlado hasta casi extender sin soltar el peso. Espira al subir.\n\nRespiración y ritmo: Espira al subir y inspira al bajar. Tempo 2-1-3. 8-15 repeticiones.\n\nClaves técnicas: Mantén la cadera plana contra el banco: si se despega, estás compensando con la lumbar. Puntas de los pies hacia ti para implicar menos los gemelos.\n\nErrores comunes: Levantar la pelvis del banco (arquea la lumbar), balancear, dejar caer el peso.",
     "muscleGroup": "Pierna",
     "equipment": "Máquina",
     "imageUrl": "/curl_femoral.jpg"
@@ -114,7 +114,7 @@
   {
     "id": "d4b94ae5-d269-4b96-b79c-5b2d2b9ab6fb",
     "name": "Curl Martillo",
-    "description": "Agarre neutro. Trabaja el bíceps braquial y braquiorradial (antebrazo).",
+    "description": "Músculos trabajados: Braquial, braquiorradial, bíceps braquial.\n\nPosición inicial: De pie con mancuernas en agarre neutro (palmas enfrentadas), codos pegados al torso y hombros atrás.\n\nEjecución: Flexiona el codo manteniendo el agarre neutro hasta que la mancuerna llegue al hombro. Aprieta y baja lento hasta extender. Alterna o hazlo a la vez.\n\nRespiración y ritmo: Espira al subir, inspira al bajar. Tempo 2-0-3. 8-12 repeticiones.\n\nClaves técnicas: Trabaja el braquial, que empuja el bíceps desde abajo y da grosor al brazo. Mantén las muñecas rectas, sin doblarlas.\n\nErrores comunes: Balancear el cuerpo, mover los codos hacia delante, girar la muñeca, usar impulso con la espalda.",
     "muscleGroup": "Brazo",
     "equipment": "Mancuernas",
     "imageUrl": "/curl_martillo.jpg"
@@ -122,7 +122,7 @@
   {
     "id": "9b4fb8d9-8d4a-421d-8b71-de3b2cf8587f",
     "name": "Curl Predicador (Banco Scott)",
-    "description": "Elimina todo impulso. Asegura la máxima contracción del bíceps.",
+    "description": "Músculos trabajados: Bíceps braquial (cabeza corta), braquial.\n\nPosición inicial: Sentado en el banco Scott, con las axilas contra el borde superior del apoyo y los brazos extendidos sobre la almohadilla. Barra con agarre supino a la anchura de los hombros.\n\nEjecución: Flexiona los codos subiendo la barra hasta justo antes de perder tensión arriba. Baja lento sin llegar a bloquear del todo el codo en la extensión máxima.\n\nRespiración y ritmo: Espira al subir e inspira al bajar. Tempo 2-1-3. 8-12 repeticiones.\n\nClaves técnicas: El banco elimina el impulso, así que usa menos peso que en el curl de pie. No relajes del todo abajo y no llegues a bloquear el codo.\n\nErrores comunes: Extender completamente el codo en la parte baja con carga (riesgo de lesión del tendón), levantar los codos de la almohadilla, impulso con la espalda.",
     "muscleGroup": "Brazo",
     "equipment": "Barra",
     "imageUrl": "/curl_predicador_barra.jpg"
@@ -130,7 +130,7 @@
   {
     "id": "fa02e00b-9546-4059-b6ad-04affc4bec33",
     "name": "Curl con Barra",
-    "description": "Construcción de masa básica para bíceps. No balancees el cuerpo.",
+    "description": "Músculos trabajados: Bíceps braquial, braquial, antebrazo.\n\nPosición inicial: De pie, pies a la anchura de caderas, barra recta con agarre supino a la anchura de hombros, codos pegados a las costillas y espalda neutra.\n\nEjecución: Flexiona los codos subiendo la barra hasta la altura del pecho sin adelantar los codos. Aprieta 1 s y baja en 2-3 s hasta casi extender. Espira al subir.\n\nRespiración y ritmo: Espira al subir, inspira al bajar. Tempo 2-1-3. 6-12 repeticiones.\n\nClaves técnicas: Si balanceas el tronco, el peso es demasiado alto. Contrae glúteos y abdomen para que el cuerpo sea un bloque fijo y el bíceps haga todo el trabajo.\n\nErrores comunes: Balancear el tronco, adelantar los codos, arquear la lumbar, no completar el rango, usar un peso excesivo.",
     "muscleGroup": "Brazo",
     "equipment": "Barra",
     "imageUrl": "/curl_barra_ez.jpg"
@@ -138,7 +138,7 @@
   {
     "id": "a35ed97d-af28-4d39-ac73-7ae4155dc345",
     "name": "Curl con Barra EZ",
-    "description": "Versión más amigable con las muñecas gracias al agarre curvado.",
+    "description": "Músculos trabajados: Bíceps braquial, braquial; menos tensión en muñecas.\n\nPosición inicial: De pie con barra EZ agarrada en las curvas, agarre semisupino, codos junto al cuerpo y hombros atrás.\n\nEjecución: Flexiona los codos hasta el pecho, aprieta y baja controlando. La barra EZ reduce la rotación de la muñeca y se pueden hacer agarres más cerrados o abiertos para variar el énfasis.\n\nRespiración y ritmo: Espira al subir, inspira al bajar. Tempo 2-1-3. 8-12 repeticiones.\n\nClaves técnicas: Agarre estrecho en las curvas interiores enfatiza la cabeza externa del bíceps; agarre ancho, la interna. La posición semisupina es más amable con las muñecas.\n\nErrores comunes: Balanceo del tronco, codos que se abren, muñecas flexionadas, bajar sin control.",
     "muscleGroup": "Brazo",
     "equipment": "Barra",
     "imageUrl": "/curl_barra_ez.jpg"
@@ -146,7 +146,7 @@
   {
     "id": "9391532b-1a84-4883-8d22-4a7bdff52f72",
     "name": "Curl de Bíceps Alterno",
-    "description": "Sube una mancuerna y luego la otra, supinando la muñeca.",
+    "description": "Músculos trabajados: Bíceps braquial, braquial.\n\nPosición inicial: De pie o sentado con las mancuernas a los lados, palmas hacia delante o neutras, codos pegados.\n\nEjecución: Sube una mancuerna rotando la muñeca hasta la supinación mientras flexiona el codo, aprieta arriba y baja lento. Alterna los brazos y mantén el tronco inmóvil.\n\nRespiración y ritmo: Espira al subir cada brazo, inspira al bajar. 8-12 repeticiones por lado.\n\nClaves técnicas: Gira la muñeca a medida que subes (supinación): así el bíceps trabaja en su función completa. Alterna con calma, sin prisas.\n\nErrores comunes: Balancear, subir el hombro, no completar la extensión, apresurar la bajada.",
     "muscleGroup": "Brazo",
     "equipment": "Mancuernas",
     "imageUrl": "/curl_biceps_alterno.jpg"
@@ -154,7 +154,7 @@
   {
     "id": "7d1b36af-60ad-4ba7-b30b-19049fd3d119",
     "name": "Curl en Polea Baja",
-    "description": "Usa barra recta o cuerda. Tensión constante en todo momento.",
+    "description": "Músculos trabajados: Bíceps braquial.\n\nPosición inicial: De pie frente a la polea baja con barra recta o EZ, agarre supino, pies a la anchura de caderas, codos pegados al cuerpo.\n\nEjecución: Flexiona los codos hasta el pecho con tensión constante. Mantén 1 s y baja lento sin que el peso descanse en la pila.\n\nRespiración y ritmo: Espira al subir, inspira al bajar. Tempo 2-1-3. 10-15 repeticiones.\n\nClaves técnicas: La polea mantiene la tensión durante todo el recorrido, incluida la parte inferior, donde las mancuernas dejan de trabajar. Aléjate un poco de la polea para que el cable tire ligeramente.\n\nErrores comunes: Echarse hacia atrás, adelantar los codos, no mantener la tensión en la parte baja.",
     "muscleGroup": "Brazo",
     "equipment": "Polea",
     "imageUrl": "/curl_biceps_polea.jpg"
@@ -162,7 +162,7 @@
   {
     "id": "8ae32a9e-163d-411c-9114-0d316d1d3109",
     "name": "Dominadas Prinas",
-    "description": "Agarre ancho. Sube hasta pasar la barbilla por encima de la barra.",
+    "description": "Músculos trabajados: Dorsal ancho, redondo mayor, bíceps, romboides.\n\nPosición inicial: Cuelga de la barra con agarre prono algo más ancho que los hombros, hombros activos (escápulas deprimidas), abdomen apretado.\n\nEjecución: Tira de los codos hacia abajo y a los costados hasta que la barbilla pase la barra. Baja controlado hasta casi extender los brazos, manteniendo las escápulas activas.\n\nRespiración y ritmo: Espira al subir e inspira al bajar. Tempo 2-1-3. 4-10 repeticiones, o las que permitan una técnica limpia.\n\nClaves técnicas: Si no llegas a las repeticiones, usa una banda elástica o la máquina asistida y progresa poco a poco. Inicia el movimiento llevando las escápulas hacia abajo antes de doblar los codos.\n\nErrores comunes: Balancearse (kipping), no extender del todo abajo, adelantar la cabeza, subir los hombros hacia las orejas.",
     "muscleGroup": "Espalda",
     "equipment": "Peso Corporal",
     "imageUrl": "/dominadas.jpg"
@@ -170,7 +170,7 @@
   {
     "id": "4ec8e640-9f6f-47f8-a933-9b3981eb53e9",
     "name": "Dominadas Pronas",
-    "description": "Agarre ancho. Sube hasta pasar la barbilla por encima de la barra.",
+    "description": "Músculos trabajados: Dorsal ancho, redondo mayor, bíceps, romboides, trapecio inferior.\n\nPosición inicial: Agarre prono un poco más ancho que los hombros, cuelga con los brazos extendidos, escápulas deprimidas y retraídas, piernas juntas.\n\nEjecución: Lleva el pecho hacia la barra tirando con los codos hacia abajo y atrás. Sube hasta que la barbilla supere la barra y baja en 2-3 s. Espira al subir.\n\nRespiración y ritmo: Espira al subir e inspira al bajar. Tempo 2-1-3. 4-10 repeticiones.\n\nClaves técnicas: Piensa en llevar los codos a los bolsillos del pantalón. Si no llegas a las repeticiones, prueba con excéntricas lentas (subir con salto y bajar en 4-5 s) o con banda.\n\nErrores comunes: Impulso con las piernas, rango incompleto, encoger los hombros, hiperextender la lumbar.",
     "muscleGroup": "Espalda",
     "equipment": "Peso Corporal",
     "imageUrl": "/dominadas.jpg"
@@ -178,7 +178,7 @@
   {
     "id": "d9bd92ba-a1ea-4e43-a081-9386dfd98194",
     "name": "Dominadas Supinas (Chin-ups)",
-    "description": "Agarre invertido (palmas hacia ti). Involucra más fuertemente el bíceps.",
+    "description": "Músculos trabajados: Dorsal ancho, bíceps braquial (mayor implicación), braquial, romboides.\n\nPosición inicial: Agarre supino (palmas hacia ti) a la anchura de los hombros, cuelga con los brazos extendidos y el core firme.\n\nEjecución: Sube llevando el pecho a la barra con los codos pegados al cuerpo. Baja controlado hasta extender los codos casi por completo.\n\nRespiración y ritmo: Espira al subir e inspira al bajar. Tempo 2-1-3. 5-10 repeticiones.\n\nClaves técnicas: Es la variante más sencilla porque el bíceps ayuda más. Usa agarre a la anchura de los hombros y mantén el pecho abierto.\n\nErrores comunes: Balanceo, tirar con el cuello adelantando la cabeza, bajar de golpe, rango parcial.",
     "muscleGroup": "Espalda",
     "equipment": "Peso Corporal",
     "imageUrl": "/dominadas.jpg"
@@ -186,7 +186,7 @@
   {
     "id": "8c155599-fb4d-4dce-8c39-c287bb43cf31",
     "name": "Elevaciones Frontales",
-    "description": "Levanta el peso hacia el frente hasta la altura de los ojos.",
+    "description": "Músculos trabajados: Deltoides anterior, pectoral clavicular.\n\nPosición inicial: De pie con una mancuerna en cada mano frente a los muslos, agarre prono o neutro, espalda neutra, codos ligeramente flexionados.\n\nEjecución: Eleva los brazos al frente hasta la altura de los hombros. Baja lento sin descansar. Puedes alternar los brazos.\n\nRespiración y ritmo: Espira al subir e inspira al bajar. Tempo 2-0-3. 10-15 repeticiones.\n\nClaves técnicas: El deltoides anterior ya trabaja mucho en los press, así que este ejercicio es complementario. Usa poco peso y cuida los hombros.\n\nErrores comunes: Balancear el tronco, subir por encima de los hombros, usar carga excesiva, encoger los trapecios.",
     "muscleGroup": "Hombro",
     "equipment": "Mancuernas",
     "imageUrl": "/elevaciones_frontales.jpg"
@@ -194,7 +194,7 @@
   {
     "id": "033f6166-8607-4ebe-8cf9-a562b2ff8813",
     "name": "Elevaciones Laterales",
-    "description": "Aislamiento clave para la anchura de hombros. Eleva los codos ligeramente por delante del torso.",
+    "description": "Músculos trabajados: Deltoides lateral, supraespinoso.\n\nPosición inicial: De pie con mancuernas a los lados, ligera inclinación del tronco hacia delante, codos ligeramente flexionados y escápulas estables.\n\nEjecución: Eleva los brazos hacia los lados hasta la altura de los hombros, con el codo ligeramente por encima de la muñeca, como si vertieras una jarra. Baja en 2-3 s.\n\nRespiración y ritmo: Espira al subir, inspira al bajar. Tempo 2-1-3. 12-20 repeticiones.\n\nClaves técnicas: Lidera el movimiento con los codos, no con las manos. Con las manos algo por debajo del codo evitas que el trapecio tome el control. Menos peso y más control dan más resultado.\n\nErrores comunes: Usar impulso, subir los hombros, elevar por encima de los hombros, mancuernas demasiado pesadas, rotar con el dedo meñique hacia abajo en exceso.",
     "muscleGroup": "Hombro",
     "equipment": "Mancuernas",
     "imageUrl": "/elevaciones_laterales_mancuerna.jpg"
@@ -202,7 +202,7 @@
   {
     "id": "43c635bc-164b-4f7f-a2d1-a2aada444641",
     "name": "Elevaciones Laterales en Polea",
-    "description": "Mantiene tensión constante en todo el recorrido. Cruza el cable por detrás o delante.",
+    "description": "Músculos trabajados: Deltoides lateral.\n\nPosición inicial: De pie de lado a la polea baja, agarra el asa con la mano más lejana, brazo cruzado delante del cuerpo y ligera flexión del codo.\n\nEjecución: Eleva el brazo hacia fuera hasta la altura del hombro, con tensión constante gracias a la polea. Baja lento hasta cruzar el cuerpo.\n\nRespiración y ritmo: Espira al subir, inspira al bajar. Tempo 2-1-3. 12-20 repeticiones por brazo.\n\nClaves técnicas: La polea da tensión desde el primer grado de movimiento, algo que las mancuernas no hacen. Ajusta la altura de la polea al nivel de la cadera o más baja.\n\nErrores comunes: Inclinarse hacia el lado contrario, balancear el cuerpo, subir el hombro, soltar la tensión abajo.",
     "muscleGroup": "Hombro",
     "equipment": "Polea",
     "imageUrl": "/elevaciones_laterales_polea.jpg"
@@ -210,7 +210,7 @@
   {
     "id": "5eab31a4-4ae7-4e79-a093-37b1cde4d70c",
     "name": "Elevación de Gemelos Sentado",
-    "description": "Rodillas flexionadas. Enfatiza el músculo sóleo.",
+    "description": "Músculos trabajados: Sóleo (con la rodilla flexionada), gemelos en menor medida.\n\nPosición inicial: Sentado con la almohadilla sobre los muslos cerca de las rodillas y la parte anterior de los pies en el borde de la plataforma, talones libres.\n\nEjecución: Sube sobre las puntas llevando los talones lo más alto posible, mantén 1-2 s y baja hasta estirar bien el talón por debajo del nivel de la plataforma.\n\nRespiración y ritmo: Espira al subir e inspira al bajar. Tempo 2-2-3. 12-20 repeticiones.\n\nClaves técnicas: La pausa abajo en estiramiento y arriba en contracción es lo que más resultados da. El sóleo responde bien a series largas.\n\nErrores comunes: Rebotar, rango corto, mover las rodillas, ir demasiado rápido.",
     "muscleGroup": "Pierna",
     "equipment": "Máquina",
     "imageUrl": "/elevacion_gemelo_sentado.jpg"
@@ -218,7 +218,7 @@
   {
     "id": "c90503fd-5dcd-455b-a20c-91f41a440e4f",
     "name": "Elevación de Gemelos de Pie",
-    "description": "Rodillas estiradas. Enfatiza el gastrocnemio.",
+    "description": "Músculos trabajados: Gemelos (gastrocnemio) y sóleo.\n\nPosición inicial: De pie con la parte anterior de los pies en el borde de la plataforma, hombros bajo las almohadillas (máquina) y rodillas casi extendidas.\n\nEjecución: Baja los talones hasta sentir el estiramiento completo y sube a la máxima extensión del tobillo. Mantén 1-2 s arriba y baja lento.\n\nRespiración y ritmo: Espira al subir e inspira al bajar. Tempo 2-2-3. 10-20 repeticiones.\n\nClaves técnicas: Los gemelos soportan mucha carga a diario, así que responden bien al trabajo pesado y a pausas de 1-2 s en los extremos. Mantén las rodillas casi bloqueadas.\n\nErrores comunes: Rebotar, doblar las rodillas, acortar el rango, apoyar el peso en el borde externo del pie.",
     "muscleGroup": "Pierna",
     "equipment": "Máquina",
     "imageUrl": "/elevacion_gemelo_de_pie.jpg"
@@ -226,7 +226,7 @@
   {
     "id": "5d173d01-f14b-4e54-8054-8ee19b680da3",
     "name": "Elevación de Piernas Colgado",
-    "description": "Colgado en barra, sube las rodillas o pies rectos hacia el pecho.",
+    "description": "Músculos trabajados: Recto abdominal inferior, flexores de cadera.\n\nPosición inicial: Cuelga de la barra con agarre prono, hombros activos, piernas juntas y estiradas o con ligera flexión de rodilla.\n\nEjecución: Eleva las piernas llevando la pelvis hacia arriba (retroversión) hasta que estén por encima de la cadera. Baja lento sin balancearte.\n\nRespiración y ritmo: Espira al subir e inspira al bajar. Tempo 2-1-3. 8-15 repeticiones.\n\nClaves técnicas: Piensa en enrollar la pelvis hacia las costillas. Para hacerlo más fácil, flexiona las rodillas; para más dificultad, mantén las piernas rectas.\n\nErrores comunes: Balancear el cuerpo, usar impulso, subir solo con flexores de cadera sin curvar la pelvis, bajar de golpe.",
     "muscleGroup": "Core",
     "equipment": "Peso Corporal",
     "imageUrl": "/elevacion_piernas_colgado.jpg"
@@ -234,7 +234,7 @@
   {
     "id": "4d1ef733-61db-44e8-9120-d40789a0869e",
     "name": "Elevación de Piernas Tumbado",
-    "description": "Trabajo de abdomen inferior. Controla el descenso de las piernas.",
+    "description": "Músculos trabajados: Recto abdominal inferior, flexores de cadera.\n\nPosición inicial: Tumbado boca arriba con las manos bajo los glúteos o a los lados, lumbar pegada al suelo y piernas estiradas.\n\nEjecución: Sube las piernas hasta la vertical, eleva ligeramente la pelvis al final, y baja lento hasta unos 10-15 cm del suelo sin que la lumbar se despegue.\n\nRespiración y ritmo: Espira al subir e inspira al bajar. Tempo 2-0-3. 10-20 repeticiones.\n\nClaves técnicas: Baja solo hasta el punto donde puedas mantener la lumbar pegada al suelo. Si se despega, flexiona las rodillas o reduce el rango.\n\nErrores comunes: Arquear la lumbar al bajar, dejar caer las piernas, ir demasiado rápido, subir la cabeza y el cuello tensos.",
     "muscleGroup": "Core",
     "equipment": "Peso Corporal",
     "imageUrl": "/elevacion_piernas_tumbado.jpg"
@@ -242,7 +242,7 @@
   {
     "id": "9aac8c24-0a53-41a9-9142-20dd1628adbe",
     "name": "Elíptica",
-    "description": "Movimiento global de brazos y piernas sin impacto.",
+    "description": "Músculos trabajados: Cuádriceps, glúteos, isquiotibiales, hombros y brazos (con las asas).\n\nPosición inicial: Sube a los pedales con la espalda recta, mirada al frente y manos en las asas sin apretar.\n\nEjecución: Mantén un movimiento fluido y constante, empujando con toda la planta, a una cadencia de 120-150 pasos/min. Ajusta la resistencia y la inclinación según el objetivo.\n\nRespiración y ritmo: Respiración rítmica y continua. Sesiones de 20-40 min en zona 2 o intervalos de 1-2 min.\n\nClaves técnicas: Es de bajo impacto, ideal para articulaciones sensibles. Cambia el sentido de giro de vez en cuando para trabajar distintos músculos.\n\nErrores comunes: Agarrarse con fuerza al manillar, inclinarse hacia delante, apoyar solo las puntas, ir con demasiada resistencia con técnica irregular.",
     "muscleGroup": "Cardio",
     "equipment": "Máquina",
     "imageUrl": "/eliptica.jpg"
@@ -250,7 +250,7 @@
   {
     "id": "f41fefc8-2fa4-4690-97c8-4c1591de80ef",
     "name": "Encogimientos (Shrugs)",
-    "description": "Ejercicio para trapecios. Encoge los hombros hacia las orejas sin rotar.",
+    "description": "Músculos trabajados: Trapecio superior, elevador de la escápula.\n\nPosición inicial: De pie con la barra frente a los muslos, agarre prono a la anchura de los hombros, brazos extendidos y espalda neutra.\n\nEjecución: Eleva los hombros verticalmente hacia las orejas, mantén 1-2 s arriba y baja lento. Sin rotar los hombros ni flexionar los codos.\n\nRespiración y ritmo: Espira al subir e inspira al bajar. Tempo 2-1-3. 10-15 repeticiones.\n\nClaves técnicas: Piensa en llevar los hombros hacia las orejas, no hacia atrás. Mantén la barbilla recta y el cuello relajado.\n\nErrores comunes: Rotar los hombros en círculo, flexionar los codos, inclinarse hacia delante, usar impulso con las piernas.",
     "muscleGroup": "Hombro",
     "equipment": "Barra",
     "imageUrl": "/encogimientos_barra.jpg"
@@ -258,7 +258,7 @@
   {
     "id": "de77484b-bfb7-4a36-8ee3-758b471fcfb9",
     "name": "Encogimientos con Mancuernas",
-    "description": "Permite un agarre más natural a los lados del cuerpo.",
+    "description": "Músculos trabajados: Trapecio superior, elevador de la escápula, antebrazos.\n\nPosición inicial: De pie con una mancuerna en cada mano a los costados, brazos rectos, mirada al frente y hombros relajados abajo.\n\nEjecución: Sube los hombros en línea recta hacia las orejas, aprieta 1-2 s y baja lento hasta el estiramiento. Espira al subir.\n\nRespiración y ritmo: Espira al subir e inspira al bajar. Tempo 2-1-3. 10-15 repeticiones.\n\nClaves técnicas: Las mancuernas permiten un movimiento más natural que la barra. Si las sueltas del agarre, usa correas.\n\nErrores comunes: Rotar los hombros, adelantar la cabeza, flexionar los codos, rango corto.",
     "muscleGroup": "Hombro",
     "equipment": "Mancuernas",
     "imageUrl": "/encogimiento_mancuerna.jpg"
@@ -266,7 +266,7 @@
   {
     "id": "b7057bfa-8d7a-4bfe-b883-1ccb8760270c",
     "name": "Extensiones de Cuádriceps",
-    "description": "Aislamiento puro para cuádriceps. Aprieta fuerte un segundo arriba.",
+    "description": "Músculos trabajados: Cuádriceps (recto femoral, vasto lateral, medial e intermedio).\n\nPosición inicial: Sentado con la espalda apoyada, eje de la máquina alineado con la rodilla y almohadilla sobre el empeine, justo encima del tobillo.\n\nEjecución: Extiende las rodillas hasta casi bloquear, aprieta 1 s arriba y baja en 2-3 s sin que la pila toque. Espira al subir.\n\nRespiración y ritmo: Espira al extender, inspira al flexionar. Tempo 2-1-3. 10-15 repeticiones.\n\nClaves técnicas: Ajusta el respaldo para que la rodilla quede en el borde del asiento. Evita cargas excesivas con la rodilla en el tramo final de extensión.\n\nErrores comunes: Levantar los glúteos del asiento, patear con impulso, bloquear con fuerza la rodilla, cargar en exceso.",
     "muscleGroup": "Pierna",
     "equipment": "Máquina",
     "imageUrl": "/extension_cuadriceps.jpg"
@@ -274,7 +274,7 @@
   {
     "id": "cfa20bb4-5411-48f9-b796-289c1eafa688",
     "name": "Extensión Tras Nuca con Mancuerna",
-    "description": "Sostiene la mancuerna por detrás del cuello y estira los brazos.",
+    "description": "Músculos trabajados: Tríceps braquial (cabeza larga).\n\nPosición inicial: De pie o sentado con una mancuerna sujeta con ambas manos sobre la cabeza, brazos extendidos y codos apuntando al frente, core activo.\n\nEjecución: Flexiona los codos bajando la mancuerna detrás de la cabeza hasta sentir el estiramiento. Extiende sin abrir los codos. Mantén los brazos verticales.\n\nRespiración y ritmo: Espira al extender, inspira al flexionar. Tempo 2-1-3. 10-15 repeticiones.\n\nClaves técnicas: Con el brazo por encima de la cabeza la cabeza larga del tríceps se estira, lo que la activa mucho. Usa un peso moderado para cuidar los codos.\n\nErrores comunes: Abrir los codos hacia los lados, arquear la lumbar, mover los hombros, peso excesivo.",
     "muscleGroup": "Brazo",
     "equipment": "Mancuernas",
     "imageUrl": "/extension_tras_nuca_con_mancuerna.jpg"
@@ -282,7 +282,7 @@
   {
     "id": "43ef8e48-d331-4ab5-8fd5-114be2425203",
     "name": "Extensión Tras Nuca en Polea",
-    "description": "Codos arriba. Enfatiza la cabeza larga del tríceps.",
+    "description": "Músculos trabajados: Tríceps braquial (cabeza larga).\n\nPosición inicial: De espaldas a la polea alta con la cuerda por detrás de la cabeza, paso adelante, tronco ligeramente inclinado y codos apuntando al frente.\n\nEjecución: Extiende los codos hacia delante y arriba hasta estirar del todo, separando la cuerda al final. Vuelve controlando hasta el estiramiento.\n\nRespiración y ritmo: Espira al extender, inspira al flexionar. Tempo 2-1-3. 10-15 repeticiones.\n\nClaves técnicas: La polea mantiene la tensión en todo el recorrido. Mantén los codos fijos como bisagras, apuntando hacia delante.\n\nErrores comunes: Mover los codos, inclinar el tronco de más, arquear la lumbar, tirar con los hombros.",
     "muscleGroup": "Brazo",
     "equipment": "Polea",
     "imageUrl": "/extension_tras_nuca_polea.jpg"
@@ -290,7 +290,7 @@
   {
     "id": "ea00b7d6-5ff0-4e4c-8cb2-72ea4b3ab787",
     "name": "Extensión de Tríceps con Barra",
-    "description": "Empuje hacia abajo manteniendo codos fijos pegados al torso.",
+    "description": "Músculos trabajados: Tríceps braquial (cabeza lateral y medial).\n\nPosición inicial: De pie frente a la polea alta con barra recta y agarre prono a la anchura de los hombros, codos pegados a las costillas y tronco ligeramente inclinado.\n\nEjecución: Extiende los codos hacia abajo hasta bloquear, aprieta 1 s y sube hasta que los antebrazos estén algo por encima de los 90° sin mover los codos.\n\nRespiración y ritmo: Espira al empujar hacia abajo, inspira al subir. Tempo 2-1-3. 8-15 repeticiones.\n\nClaves técnicas: Imagina que los codos están clavados a los costados. Agarra la barra con las muñecas rectas y no dejes que los hombros avancen.\n\nErrores comunes: Despegar los codos, inclinarse sobre la barra y empujar con el peso corporal, balancear los hombros, subir demasiado.",
     "muscleGroup": "Brazo",
     "equipment": "Polea",
     "imageUrl": "/extension_triceps_barra.jpg"
@@ -298,7 +298,7 @@
   {
     "id": "422ca1b5-8082-417d-877a-d59580489c90",
     "name": "Extensión de Tríceps con Cuerda",
-    "description": "Abre la cuerda al final del movimiento para mayor contracción lateral.",
+    "description": "Músculos trabajados: Tríceps braquial, especialmente cabeza lateral.\n\nPosición inicial: De pie frente a la polea alta con cuerda, codos pegados al torso, muñecas neutras y ligera inclinación del tronco.\n\nEjecución: Extiende los codos hacia abajo separando los extremos de la cuerda al final del recorrido. Mantén 1 s y sube controlado sin separar los codos del cuerpo.\n\nRespiración y ritmo: Espira al empujar, inspira al subir. Tempo 2-1-3. 10-15 repeticiones.\n\nClaves técnicas: Separa los extremos de la cuerda al final para una contracción mayor del tríceps. Mantén los antebrazos en un plano y no los lleves hacia delante.\n\nErrores comunes: Mover los codos hacia delante, usar impulso del tronco, no abrir la cuerda, soltar el peso al subir.",
     "muscleGroup": "Brazo",
     "equipment": "Polea",
     "imageUrl": "/extension_triceps_cuerda.jpg"
@@ -306,7 +306,7 @@
   {
     "id": "e7241d45-eaa9-4c9a-8528-a966c2f4f9e5",
     "name": "Face Pull",
-    "description": "Usa la cuerda en polea alta y tira hacia tu cara, separando las manos al final.",
+    "description": "Músculos trabajados: Deltoides posterior, manguito rotador (infraespinoso, redondo menor), trapecio medio e inferior, romboides.\n\nPosición inicial: Polea a la altura de la cara con cuerda, agarre neutro, paso atrás con los brazos extendidos y ligeramente inclinado hacia atrás con el core activo.\n\nEjecución: Tira de la cuerda hacia la cara separando las manos, con los codos altos y rotación externa del hombro, hasta que las manos queden a los lados de las orejas. Aprieta las escápulas 1 s y vuelve controlado.\n\nRespiración y ritmo: Espira al tirar e inspira al volver. Tempo 2-2-3. 12-20 repeticiones.\n\nClaves técnicas: Es un ejercicio de salud de hombro: usa poco peso. Piensa en 'tirar para separar' la cuerda y llevar las manos a la altura de las orejas.\n\nErrores comunes: Tirar hacia el pecho en lugar de la cara, bajar los codos, inclinarse hacia atrás para ayudarse del peso, carga excesiva.",
     "muscleGroup": "Hombro",
     "equipment": "Polea",
     "imageUrl": "/face_pull.jpg"
@@ -314,7 +314,7 @@
   {
     "id": "11d1e384-3b88-4f76-ae64-3beed384ef3a",
     "name": "Flexiones (Push-ups)",
-    "description": "Ejercicio clásico de peso corporal. Mantén el core apretado y baja hasta rozar el suelo.",
+    "description": "Músculos trabajados: Pectoral mayor, deltoides anterior, tríceps, core.\n\nPosición inicial: Manos algo más anchas que los hombros bajo ellos, cuerpo en línea recta de cabeza a talones, glúteos y abdomen apretados.\n\nEjecución: Baja con los codos a unos 45° del tronco hasta que el pecho roce casi el suelo. Empuja hasta extender los brazos sin bloquear los codos de golpe. Inspira al bajar, espira al subir.\n\nRespiración y ritmo: Inspira al bajar y espira al subir. Tempo 2-0-1. 8-20 repeticiones.\n\nClaves técnicas: Si no llegas a las repeticiones, apoya las manos en un banco (más fácil) o las rodillas. Para más dificultad, eleva los pies o añade peso.\n\nErrores comunes: Dejar caer la cadera o elevarla, abrir los codos a 90°, no bajar suficiente, adelantar la cabeza.",
     "muscleGroup": "Pecho",
     "equipment": "Peso Corporal",
     "imageUrl": "/flexiones.jpg"
@@ -322,7 +322,7 @@
   {
     "id": "ba3bc9d0-ad98-4dc2-9870-96deef4a00b7",
     "name": "Fondos de Tríceps",
-    "description": "Manos apoyadas detrás en un banco. Baja la cadera rectamente.",
+    "description": "Músculos trabajados: Tríceps braquial, deltoides anterior, pectoral menor.\n\nPosición inicial: Apoya las manos en un banco o paralelas con los brazos extendidos y el tronco vertical, cerca del apoyo, con los hombros lejos de las orejas.\n\nEjecución: Flexiona los codos hacia atrás (sin abrirlos) hasta unos 90°, manteniendo el tronco vertical y la espalda pegada al banco. Extiende empujando con las palmas hasta casi bloquear.\n\nRespiración y ritmo: Inspira al bajar y espira al subir. Tempo 2-0-1. 8-15 repeticiones.\n\nClaves técnicas: Es una versión más sencilla que los fondos en paralelas. Flexiona las rodillas para reducir la dificultad, o estíralas para aumentarla.\n\nErrores comunes: Abrir los codos, bajar demasiado (sobrecarga del hombro), encoger los hombros, alejarse del banco con la cadera.",
     "muscleGroup": "Brazo",
     "equipment": "Peso Corporal",
     "imageUrl": "/fondos_triceps.jpg"
@@ -330,7 +330,7 @@
   {
     "id": "4645f678-db09-4896-8cfd-a89ad4dc5a54",
     "name": "Fondos en Paralelas",
-    "description": "Inclina el torso hacia adelante para enfatizar el trabajo en el pectoral.",
+    "description": "Músculos trabajados: Pectoral mayor (porción inferior), tríceps, deltoides anterior.\n\nPosición inicial: Sostente sobre las paralelas con los brazos extendidos, hombros deprimidos, tronco inclinado hacia delante unos 30° y piernas cruzadas detrás.\n\nEjecución: Baja con los codos hacia atrás y ligeramente abiertos hasta que los hombros queden a la altura de los codos. Empuja hasta casi extender. Inclinado = más pecho; vertical = más tríceps.\n\nRespiración y ritmo: Inspira al bajar y espira al subir. Tempo 3-0-1. 6-12 repeticiones.\n\nClaves técnicas: Deprime y retrae las escápulas al empezar. Si te duele el hombro, reduce el recorrido o usa la máquina asistida.\n\nErrores comunes: Bajar de más, balancear las piernas, encogerse de hombros, abrir demasiado los codos, perder la inclinación.",
     "muscleGroup": "Pecho",
     "equipment": "Peso Corporal",
     "imageUrl": "/fondos_paralela.jpg"
@@ -338,7 +338,7 @@
   {
     "id": "6ea0d16b-01ca-4a47-b00d-ccb5c669c8fe",
     "name": "Hip Thrust (Empuje de Cadera)",
-    "description": "El mejor ejercicio para aislar el glúteo. Empuja con fuerza usando los talones.",
+    "description": "Músculos trabajados: Glúteo mayor, isquiotibiales, aductores.\n\nPosición inicial: Apoya la parte alta de la espalda (bajo las escápulas) en un banco, con la barra sobre la cadera protegida con almohadilla. Pies a la anchura de caderas, tibias verticales en la posición superior.\n\nEjecución: Empuja con los talones extendiendo la cadera hasta alinear rodillas, cadera y hombros. Aprieta los glúteos 1-2 s, con la barbilla pegada al pecho y una leve retroversión pélvica. Baja controlado.\n\nRespiración y ritmo: Espira al subir y aprieta los glúteos; inspira al bajar. Tempo 1-2-2. 8-15 repeticiones.\n\nClaves técnicas: Mira al frente al principio y pliega la barbilla al subir. Usa una almohadilla en la barra y las caderas bien colocadas; la progresión de carga es importante.\n\nErrores comunes: Hiperextender la lumbar arriba, apoyarse en las puntas, pies demasiado adelantados o atrasados, subir las costillas.",
     "muscleGroup": "Pierna",
     "equipment": "Barra",
     "imageUrl": "/hip_thrust.jpg"
@@ -346,7 +346,7 @@
   {
     "id": "2bf36b3f-ff1f-4d69-a090-188c6f61ac1c",
     "name": "Hiperextensiones",
-    "description": "En banco romano. Enfocado en los erectores espinales (zona lumbar).",
+    "description": "Músculos trabajados: Erectores espinales, glúteo mayor, isquiotibiales.\n\nPosición inicial: Ajusta el banco para que el apoyo quede bajo las crestas ilíacas, talones bloqueados y cuerpo recto de cabeza a pies. Brazos cruzados sobre el pecho.\n\nEjecución: Flexiona la cadera bajando el tronco con la espalda neutra hasta unos 90° y vuelve extendiendo la cadera con glúteos e isquios hasta quedar en línea recta con las piernas.\n\nRespiración y ritmo: Inspira al bajar y espira al subir. Tempo 2-1-2. 10-15 repeticiones.\n\nClaves técnicas: Para enfatizar el glúteo, redondea ligeramente la espalda alta y gira los pies hacia fuera; para la lumbar, mantén la espalda recta. Para más dificultad, sujeta un disco.\n\nErrores comunes: Hiperextender la lumbar arriba, redondear la espalda, usar impulso, apoyar demasiado alto en el abdomen.",
     "muscleGroup": "Espalda",
     "equipment": "Peso Corporal",
     "imageUrl": "/hiperextensiones.jpg"
@@ -354,7 +354,7 @@
   {
     "id": "913bc911-77f4-45b8-a420-7ce25a4fc53b",
     "name": "Jalón al Pecho",
-    "description": "Tira de la barra hacia la clavícula retrayendo las escápulas. No te balancees excesivamente.",
+    "description": "Músculos trabajados: Dorsal ancho, redondo mayor, bíceps, trapecio inferior.\n\nPosición inicial: Sentado con los muslos fijos bajo las almohadillas, agarre prono algo más ancho que los hombros, tronco ligeramente inclinado atrás (~10-15°), pecho alto.\n\nEjecución: Deprime las escápulas y tira de la barra hacia la parte alta del pecho llevando los codos abajo y atrás. Aprieta el dorsal 1 s y sube controlado hasta estirar completamente.\n\nRespiración y ritmo: Espira al tirar e inspira al subir. Tempo 2-1-3. 8-12 repeticiones.\n\nClaves técnicas: Inicia el movimiento deprimiendo las escápulas y piensa en llevar los codos a los bolsillos. La barra llega a la parte alta del pecho, no más abajo.\n\nErrores comunes: Tirar de la barra tras la nuca, balancear el tronco, usar los brazos más que la espalda, encoger los hombros.",
     "muscleGroup": "Espalda",
     "equipment": "Polea",
     "imageUrl": "/jalon_al_pecho.jpg"
@@ -362,7 +362,7 @@
   {
     "id": "fcc06580-42c6-4ce5-86a5-7dfbe7843c81",
     "name": "Jalón con Triángulo",
-    "description": "Agarre estrecho y neutro. Mayor enfoque en el dorsal ancho inferior.",
+    "description": "Músculos trabajados: Dorsal ancho (porción inferior), redondo mayor, bíceps, romboides.\n\nPosición inicial: Sentado con el agarre en V (triángulo) en la polea alta, pecho alto, ligera inclinación del tronco hacia atrás, muslos fijos.\n\nEjecución: Tira del agarre hacia la parte baja del pecho con los codos pegados a los costados. Aprieta las escápulas y vuelve estirando por completo los brazos sin perder la postura.\n\nRespiración y ritmo: Espira al tirar e inspira al subir. Tempo 2-1-3. 8-12 repeticiones.\n\nClaves técnicas: El agarre neutro es cómodo para los hombros y permite una mayor contracción del dorsal. Mantén el pecho alto durante toda la serie.\n\nErrores comunes: Tirar con impulso de la espalda, redondear la espalda, subir los hombros, no estirar del todo.",
     "muscleGroup": "Espalda",
     "equipment": "Polea",
     "imageUrl": "/jalon_triangulo.jpg"
@@ -370,7 +370,7 @@
   {
     "id": "26b027aa-ab1a-483f-b533-62713ff0e85e",
     "name": "Máquina de Escaleras",
-    "description": "Quemagrasas muy exigente para glúteos y piernas.",
+    "description": "Músculos trabajados: Glúteos, cuádriceps, gemelos, sistema cardiovascular.\n\nPosición inicial: Sube con la espalda erguida, manos sobre las barras sin apoyarte, pies completos sobre los escalones.\n\nEjecución: Mantén un ritmo regular apoyando toda la planta y llevando el peso sobre las piernas, con el tronco erguido y el core activo. Ajusta la velocidad para mantener la zona de esfuerzo deseada.\n\nRespiración y ritmo: Respiración rítmica y continua. Sesiones de 15-30 min, o intervalos de 1-2 min.\n\nClaves técnicas: Sube pisando con toda la planta para trabajar glúteo y cuádriceps; si te apoyas en las puntas, trabajarás más el gemelo. Evita sostenerte con las barras.\n\nErrores comunes: Apoyarse del todo en las barras, ir de puntillas, encorvar la espalda, dar pasos demasiado cortos o rápidos.",
     "muscleGroup": "Cardio",
     "equipment": "Máquina",
     "imageUrl": "/maquina_escaleras.jpg"
@@ -378,7 +378,7 @@
   {
     "id": "fe945b8d-eb02-4936-98e9-faa33e76a79b",
     "name": "Paseo del Granjero",
-    "description": "Agarra dos pesas pesadas y camina. Fortalece agarre, core y trapecios.",
+    "description": "Músculos trabajados: Antebrazos, agarre, trapecio, core, glúteos.\n\nPosición inicial: De pie con una mancuerna pesada en cada mano a los costados, hombros atrás y abajo, pecho alto y core firme.\n\nEjecución: Camina con pasos cortos y controlados durante una distancia o tiempo fijo manteniendo el tronco erguido, hombros estables y las mancuernas sin balancearse.\n\nRespiración y ritmo: Respiración tranquila y continua, sin contener el aire. 20-40 m o 30-60 s, 3-4 series.\n\nClaves técnicas: Aprieta las mancuernas con fuerza y camina como si llevaras un libro sobre la cabeza. Es excelente para el agarre y la estabilidad del core.\n\nErrores comunes: Inclinarse hacia un lado, encoger los hombros, pasos largos, perder la postura por exceso de peso.",
     "muscleGroup": "Core",
     "equipment": "Mancuernas",
     "imageUrl": "/paseo_granjero.jpg"
@@ -386,7 +386,7 @@
   {
     "id": "ce955e64-f4f8-4198-90b3-c2c5800070dd",
     "name": "Patada de Tríceps",
-    "description": "Torso paralelo al suelo. Extiende el codo hacia atrás.",
+    "description": "Músculos trabajados: Tríceps braquial.\n\nPosición inicial: Inclina el tronco con la espalda neutra y paralela al suelo (apoya una mano en un banco si quieres), con el codo pegado al torso y flexionado a 90° con la mancuerna.\n\nEjecución: Extiende el codo llevando la mancuerna hacia atrás hasta alinear el brazo con el cuerpo, aprieta 1 s y vuelve sin mover el brazo superior.\n\nRespiración y ritmo: Espira al extender, inspira al flexionar. Tempo 2-1-2. 10-15 repeticiones por brazo.\n\nClaves técnicas: Usa poco peso: el tríceps tiene su máxima contracción con el brazo extendido. Mantén el brazo superior paralelo al torso durante toda la serie.\n\nErrores comunes: Balancear el brazo, dejar caer el codo, usar impulso, redondear la espalda, peso excesivo.",
     "muscleGroup": "Brazo",
     "equipment": "Mancuernas",
     "imageUrl": "/patada_triceps.jpg"
@@ -394,7 +394,7 @@
   {
     "id": "ec13c03a-307e-4d30-80b6-029582bd3f2c",
     "name": "Peck Deck (Contracción Pectoral)",
-    "description": "Máquina guiada para aislar el pectoral sin requerir estabilización.",
+    "description": "Músculos trabajados: Pectoral mayor, deltoides anterior.\n\nPosición inicial: Sentado con la espalda apoyada, asiento ajustado para que las asas queden a la altura del pecho, escápulas retraídas y codos ligeramente flexionados.\n\nEjecución: Junta los brazos delante del pecho apretando 1 s, sin que los hombros se adelanten. Vuelve abriendo hasta notar un buen estiramiento sin pasar la línea de los hombros.\n\nRespiración y ritmo: Espira al cerrar, inspira al abrir. Tempo 2-1-3. 10-15 repeticiones.\n\nClaves técnicas: Cerrar con los codos a la altura del pecho enfatiza el pectoral. No dejes que los codos pasen la línea de la espalda al abrir.\n\nErrores comunes: Despegar la espalda, adelantar los hombros, abrir demasiado el brazo hacia atrás, usar impulso.",
     "muscleGroup": "Pecho",
     "equipment": "Máquina",
     "imageUrl": "/peck_deck.jpg"
@@ -402,7 +402,7 @@
   {
     "id": "476a7c1b-d99d-46ae-bb81-5e5d85bd9f56",
     "name": "Peso Muerto Clásico",
-    "description": "Levanta el peso desde el suelo con espalda recta. Trabaja cadena posterior completa.",
+    "description": "Músculos trabajados: Erectores espinales, glúteo mayor, isquiotibiales, dorsal, trapecio, antebrazos.\n\nPosición inicial: Pies a la anchura de caderas con la barra sobre el medio del pie. Agarra la barra a la anchura de los hombros, caderas altas respecto a la sentadilla, espalda neutra, pecho alto, dorsales activos y barra pegada a las tibias.\n\nEjecución: Empuja el suelo con las piernas y extiende la cadera manteniendo la barra pegada al cuerpo hasta quedar erguido, con los glúteos apretados. Baja empujando la cadera atrás, la barra rozando las piernas. Respira y bloquea el core antes de cada repetición.\n\nRespiración y ritmo: Inspira profundo y bloquea el core antes de despegar; espira arriba o al finalizar la repetición. 3-6 repeticiones con técnica limpia, con descanso de 2-3 min.\n\nClaves técnicas: Antes de tirar, 'quita la holgura' de la barra: tensa los dorsales y las piernas hasta que la barra casi se despegue. Empuja el suelo en lugar de tirar de la barra.\n\nErrores comunes: Redondear la espalda, tirar con los brazos, separar la barra del cuerpo, hiperextender arriba, tirones bruscos desde el suelo.",
     "muscleGroup": "Espalda",
     "equipment": "Barra",
     "imageUrl": "/peso_muerto.jpg"
@@ -410,7 +410,7 @@
   {
     "id": "da820c68-093a-4db0-9972-c6253fadd7c1",
     "name": "Peso Muerto Piernas Rígidas",
-    "description": "Mayor tensión isométrica. Las rodillas no se flexionan durante la bajada.",
+    "description": "Músculos trabajados: Isquiotibiales, glúteo mayor, erectores espinales.\n\nPosición inicial: De pie con la barra sujeta frente a los muslos, pies a la anchura de caderas, rodillas casi extendidas con una mínima flexión y espalda neutra.\n\nEjecución: Lleva la cadera atrás bajando la barra pegada a las piernas hasta notar el estiramiento de los isquios (normalmente bajo la rodilla). Vuelve empujando la cadera al frente. La flexión de rodilla se mantiene fija.\n\nRespiración y ritmo: Inspira al bajar y espira al subir. Tempo 3-1-1. 6-10 repeticiones.\n\nClaves técnicas: Piensa en la cadera yendo hacia atrás, no el pecho hacia abajo. Cuando sientas el estiramiento máximo en los isquios sin perder la espalda neutra, es suficiente.\n\nErrores comunes: Redondear la espalda, flexionar las rodillas más durante la bajada (sale un peso muerto), separar la barra, bajar más allá del rango sin perder la neutralidad lumbar.",
     "muscleGroup": "Pierna",
     "equipment": "Barra",
     "imageUrl": "/peso_muerto_piernas_rigidas.jpg"
@@ -418,7 +418,7 @@
   {
     "id": "cab64bb0-4509-4e3a-88f1-f7b77fd63f07",
     "name": "Peso Muerto Rumano",
-    "description": "Piernas semiflexionadas. Echa la cadera hacia atrás hasta sentir el estiramiento en isquiosurales.",
+    "description": "Músculos trabajados: Isquiotibiales, glúteo mayor, erectores espinales.\n\nPosición inicial: De pie con la barra frente a los muslos, agarre prono, rodillas con flexión suave (~15-20°), escápulas retraídas y espalda neutra.\n\nEjecución: Empuja la cadera hacia atrás como si cerraras una puerta con el glúteo, bajando la barra pegada a las piernas hasta la mitad de la espinilla o antes de perder la neutralidad lumbar. Sube apretando glúteos.\n\nRespiración y ritmo: Inspira al bajar y espira al subir. Tempo 3-1-1. 6-12 repeticiones.\n\nClaves técnicas: La barra siempre debe rozar las piernas. Es un ejercicio de bisagra de cadera, no de espalda: la espalda se mantiene fija y el movimiento ocurre en la cadera.\n\nErrores comunes: Convertirlo en una sentadilla, redondear la espalda, separar la barra, hiperextender la lumbar arriba.",
     "muscleGroup": "Pierna",
     "equipment": "Barra",
     "imageUrl": "/peso_muerto_rumano.jpg"
@@ -426,7 +426,7 @@
   {
     "id": "7a44b156-5db1-42f5-b767-632ef948f4f4",
     "name": "Peso Muerto Sumo",
-    "description": "Postura abierta de piernas. Reduce la tensión lumbar comparado con el clásico.",
+    "description": "Músculos trabajados: Glúteo mayor, aductores, cuádriceps, erectores espinales.\n\nPosición inicial: Pies muy abiertos (más que los hombros) con las puntas hacia fuera ~30-45°, agarre estrecho dentro de las piernas, tronco más vertical, espalda neutra y rodillas en línea con los pies.\n\nEjecución: Empuja el suelo abriendo las rodillas hacia fuera y extiende la cadera, manteniendo la barra pegada al cuerpo. Sube hasta quedar erguido y baja controlado.\n\nRespiración y ritmo: Inspira y bloquea el core antes de tirar; espira al terminar. 3-6 repeticiones.\n\nClaves técnicas: Piensa en 'abrir el suelo' con los pies. Mantén el pecho alto y las rodillas empujando hacia fuera todo el tiempo.\n\nErrores comunes: Rodillas que colapsan hacia dentro, cadera que sube antes que el pecho, redondear la espalda, barra alejada del cuerpo.",
     "muscleGroup": "Espalda",
     "equipment": "Barra",
     "imageUrl": "/peso_muerto_sumo.jpg"
@@ -434,7 +434,7 @@
   {
     "id": "74b4574d-d340-4343-9081-2fe63d9c4113",
     "name": "Plancha Abdominal (Plank)",
-    "description": "Isométrico apoyado en antebrazos. Mantén el cuerpo en línea recta.",
+    "description": "Músculos trabajados: Recto abdominal, transverso, oblicuos, glúteos, hombros.\n\nPosición inicial: Apoya antebrazos y puntas de los pies, con los codos bajo los hombros y el cuerpo en línea recta de cabeza a talones.\n\nEjecución: Mantén la posición apretando abdomen y glúteos, con una ligera retroversión pélvica y respirando de forma continua. Mantén el cuello neutro, mirando al suelo.\n\nRespiración y ritmo: Respira de forma continua y controlada, sin aguantar el aire. 3 series de 20-60 s.\n\nClaves técnicas: Aprieta glúteos y abdomen como si te fueran a dar un golpe. Si la cadera se hunde, termina la serie: la calidad es más importante que el tiempo.\n\nErrores comunes: Hundir o elevar la cadera, encoger los hombros, aguantar la respiración, mirar hacia delante forzando el cuello.",
     "muscleGroup": "Core",
     "equipment": "Peso Corporal",
     "imageUrl": "/plancha.jpg"
@@ -442,7 +442,7 @@
   {
     "id": "c72a974d-692b-48cf-b031-5e888ebc3025",
     "name": "Prensa de Piernas",
-    "description": "Ajusta los pies bajos y juntos para cuádriceps, o altos y separados para glúteos e isquios.",
+    "description": "Músculos trabajados: Cuádriceps, glúteo mayor, aductores, isquiotibiales.\n\nPosición inicial: Sentado con la espalda y la pelvis pegadas al respaldo, pies a la anchura de los hombros en el centro de la plataforma. Rodillas alineadas con las puntas de los pies.\n\nEjecución: Baja la plataforma hasta unos 90° de flexión de rodilla (o más sin que la pelvis se despegue) y empuja con toda la planta hasta casi extender, sin bloquear. Espira al empujar.\n\nRespiración y ritmo: Inspira al bajar y espira al empujar. Tempo 3-0-1. 8-15 repeticiones.\n\nClaves técnicas: Pies más altos en la plataforma = más glúteo e isquios; más bajos y juntos = más cuádriceps. No bajes más de lo que permita mantener la pelvis pegada al respaldo.\n\nErrores comunes: Despegar la pelvis o la lumbar del respaldo, bloquear las rodillas, dejar que las rodillas se metan hacia dentro, rebotar abajo.",
     "muscleGroup": "Pierna",
     "equipment": "Máquina",
     "imageUrl": "/prensa.jpg"
@@ -450,7 +450,7 @@
   {
     "id": "97fe9ff6-2047-4663-b7d7-37d32b8706b3",
     "name": "Press Arnold",
-    "description": "Variante que incluye rotación de muñeca. Involucra las tres cabezas del deltoides.",
+    "description": "Músculos trabajados: Deltoides (anterior, lateral y posterior), tríceps.\n\nPosición inicial: Sentado con respaldo, mancuernas delante del pecho con las palmas hacia ti y los codos flexionados.\n\nEjecución: Empuja las mancuernas hacia arriba mientras rotas las palmas hacia delante, hasta extender los brazos sobre la cabeza. Baja rotando de nuevo a la posición inicial de forma controlada.\n\nRespiración y ritmo: Espira al empujar e inspira al bajar. Tempo 2-0-2. 8-12 repeticiones.\n\nClaves técnicas: La rotación se hace de forma continua junto con la subida. Usa menos peso que en un press normal: el recorrido es más largo y más exigente.\n\nErrores comunes: Arquear la lumbar, no rotar de forma fluida, bloquear los codos de golpe, usar impulso con las piernas.",
     "muscleGroup": "Hombro",
     "equipment": "Mancuernas",
     "imageUrl": "/press_arnold.jpg"
@@ -458,7 +458,7 @@
   {
     "id": "d417ae58-4820-459c-ac75-95e061734c91",
     "name": "Press Francés",
-    "description": "Tumbado, lleva la barra hacia la frente o detrás de la cabeza flexionando los codos.",
+    "description": "Músculos trabajados: Tríceps braquial (cabeza larga y medial).\n\nPosición inicial: Tumbado en banco plano con la barra (EZ preferible) con los brazos extendidos sobre el pecho o ligeramente inclinados hacia atrás, agarre prono a la anchura de los hombros.\n\nEjecución: Flexiona los codos bajando la barra hacia la frente o por detrás de la cabeza, manteniendo los codos fijos y apuntando al techo. Extiende hasta casi bloquear.\n\nRespiración y ritmo: Inspira al bajar y espira al subir. Tempo 3-0-1. 8-12 repeticiones.\n\nClaves técnicas: Baja la barra hacia la frente o ligeramente detrás de la cabeza para mantener tensión en el tríceps. Una barra EZ cuida las muñecas y los codos.\n\nErrores comunes: Abrir los codos, mover los brazos hacia delante (convierte en press), bajar sin control, peso excesivo.",
     "muscleGroup": "Brazo",
     "equipment": "Barra",
     "imageUrl": "/press_frances_barra.jpg"
@@ -466,7 +466,7 @@
   {
     "id": "1d4db433-4c82-421e-913a-c0d4ff0c457c",
     "name": "Press Inclinado con Mancuernas",
-    "description": "Ideal para hipertrofia del pecho superior. Controla la bajada para sentir el estiramiento.",
+    "description": "Músculos trabajados: Pectoral mayor (porción clavicular), deltoides anterior, tríceps.\n\nPosición inicial: Banco a 30-45°, pies firmes, escápulas retraídas y deprimidas, mancuernas sobre el pecho alto con las palmas hacia delante.\n\nEjecución: Baja controlado hasta que los codos queden a unos 45-60° del tronco y las mancuernas a la altura del pecho superior. Empuja hacia arriba y ligeramente hacia dentro hasta extender los brazos.\n\nRespiración y ritmo: Inspira al bajar y espira al subir. Tempo 3-0-1. 8-12 repeticiones.\n\nClaves técnicas: El recorrido más amplio que con barra permite un mayor estiramiento del pecho. Mantén las escápulas fijas contra el banco durante toda la serie.\n\nErrores comunes: Banco demasiado inclinado (>45°, trabaja más el hombro), codos abiertos a 90°, rebotar, despegar los glúteos.",
     "muscleGroup": "Pecho",
     "equipment": "Mancuernas",
     "imageUrl": "/press_inclinado_mancuerna.jpg"
@@ -474,7 +474,7 @@
   {
     "id": "7e711e35-f1ae-4279-ab7f-8d8a9e75ee26",
     "name": "Press Militar de Pie",
-    "description": "Empuje vertical por excelencia. Aprieta glúteos y core para no arquear la espalda.",
+    "description": "Músculos trabajados: Deltoides anterior y lateral, tríceps, trapecio superior, core.\n\nPosición inicial: De pie con la barra apoyada en la clavícula, agarre algo más ancho que los hombros, antebrazos verticales, glúteos y abdomen apretados.\n\nEjecución: Empuja la barra en línea recta hacia arriba, echando ligeramente la cabeza atrás para dejar pasar la barra y metiéndola de nuevo bajo la barra al final. Bloquea sobre la cabeza y baja controlado a la clavícula.\n\nRespiración y ritmo: Inspira y bloquea el core antes de empujar, espira al pasar el punto difícil. 5-10 repeticiones.\n\nClaves técnicas: Aprieta glúteos y abdomen para que el tronco sea sólido. Cuando la barra pasa la frente, mete la cabeza bajo la barra para que quede sobre la columna.\n\nErrores comunes: Arquear la lumbar, abrir las costillas, empujar con impulso de piernas, trayectoria que se va hacia delante.",
     "muscleGroup": "Hombro",
     "equipment": "Barra",
     "imageUrl": "/press_militar.jpg"
@@ -482,7 +482,7 @@
   {
     "id": "28b7c8a8-a544-4fcc-835f-fc92b1b08bfe",
     "name": "Press banca",
-    "description": "",
+    "description": "Músculos trabajados: Pectoral mayor, deltoides anterior, tríceps.\n\nPosición inicial: Tumbado en banco plano con los ojos bajo la barra, pies firmes en el suelo, escápulas retraídas y deprimidas, agarre algo más ancho que los hombros y arco lumbar natural.\n\nEjecución: Descuelga la barra controlada hasta rozar la parte baja del pecho con los antebrazos verticales, codos a unos 45-60°. Empuja la barra hacia arriba y ligeramente hacia atrás hasta extender. Inspira al bajar, espira al subir.\n\nRespiración y ritmo: Inspira al bajar, espira al subir. Tempo 2-1-1. 5-10 repeticiones.\n\nClaves técnicas: Pasa por el pecho de forma controlada y empuja el suelo con los pies para generar tensión en todo el cuerpo. Siempre con seguro o ayuda en cargas altas.\n\nErrores comunes: Rebotar la barra en el pecho, despegar los glúteos, abrir los codos a 90°, muñecas dobladas, perder la retracción escapular.",
     "muscleGroup": "Pecho",
     "equipment": null,
     "imageUrl": "/press_banca.jpg"
@@ -490,7 +490,7 @@
   {
     "id": "3765725f-a9e2-46f7-a512-fc3fddda15d7",
     "name": "Press con Mancuernas",
-    "description": "Permite mayor rango de recorrido que la barra. Junta las mancuernas arriba sin que lleguen a chocar.",
+    "description": "Músculos trabajados: Pectoral mayor, deltoides anterior, tríceps.\n\nPosición inicial: Tumbado en banco plano, escápulas retraídas, pies firmes, mancuernas sobre el pecho con las palmas hacia delante o neutras.\n\nEjecución: Baja las mancuernas hasta que los codos queden a la altura del banco con un buen estiramiento del pecho. Empuja hacia arriba y ligeramente al centro sin chocar las mancuernas.\n\nRespiración y ritmo: Inspira al bajar y espira al subir. Tempo 3-0-1. 8-12 repeticiones.\n\nClaves técnicas: Las mancuernas permiten un mayor recorrido y corrigen desequilibrios entre lados. Al subir, junta las mancuernas sin chocarlas.\n\nErrores comunes: Descender demasiado, abrir los codos a 90°, descoordinar las dos mancuernas, golpear las mancuernas arriba.",
     "muscleGroup": "Pecho",
     "equipment": "Mancuernas",
     "imageUrl": "/press_mancuerna.jpg"
@@ -498,7 +498,7 @@
   {
     "id": "4d63a04b-9fa0-408b-92a5-7f0de23ef00d",
     "name": "Press de Banca",
-    "description": "Ejercicio básico para el pectoral. Acuéstate en el banco, agarra la barra a una anchura ligeramente superior a los hombros y bájala hasta rozar el pecho medio.",
+    "description": "Músculos trabajados: Pectoral mayor, deltoides anterior, tríceps braquial.\n\nPosición inicial: Tumbado con los ojos bajo la barra, pies firmes, escápulas juntas y bajas, pecho alto, agarre algo más ancho que los hombros y muñecas rectas sobre los codos.\n\nEjecución: Baja la barra controlada a la línea de los pezones/parte baja del pecho con los codos a unos 45-60° del tronco, rozando sin rebotar. Empuja el suelo con los pies y sube la barra hasta extender los codos. Inspira al bajar, espira al subir.\n\nRespiración y ritmo: Inspira al bajar, espira al subir. Tempo 2-1-1. 5-10 repeticiones, con descanso de 2-3 min en las series pesadas.\n\nClaves técnicas: Mantén cinco puntos de apoyo: cabeza, hombros, glúteos y ambos pies. Muñecas rectas sobre los antebrazos y agarre firme con el pulgar rodeando la barra.\n\nErrores comunes: Rebotar en el pecho, levantar los glúteos del banco, abrir los codos a 90°, perder la retracción escapular, muñecas hacia atrás, no bloquear la barra con el pulgar (agarre falso).",
     "muscleGroup": "Pecho",
     "equipment": "Barra",
     "imageUrl": "/press_banca.jpg"
@@ -506,7 +506,7 @@
   {
     "id": "9546ac8b-2a95-4420-b7dc-157700fdad49",
     "name": "Press de Banca Agarre Cerrado",
-    "description": "Manos a la anchura de los hombros. Empuja priorizando la fuerza de los tríceps.",
+    "description": "Músculos trabajados: Tríceps braquial, pectoral mayor (porción interna), deltoides anterior.\n\nPosición inicial: Tumbado en banco plano con la barra agarrada con las manos a la anchura de los hombros (no más estrecho para no forzar las muñecas), escápulas retraídas y codos pegados.\n\nEjecución: Baja la barra a la parte baja del pecho manteniendo los codos cerca del cuerpo (~30°) y empuja hasta extender los codos apretando el tríceps.\n\nRespiración y ritmo: Inspira al bajar, espira al subir. Tempo 2-0-1. 6-10 repeticiones.\n\nClaves técnicas: Un agarre ligeramente más estrecho que los hombros desplaza el trabajo al tríceps; si lo cierras demasiado, las muñecas sufren.\n\nErrores comunes: Agarre excesivamente estrecho que fuerza las muñecas, abrir los codos, rebotar la barra, despegar los glúteos.",
     "muscleGroup": "Brazo",
     "equipment": "Barra",
     "imageUrl": "/press_banca.jpg"
@@ -514,7 +514,7 @@
   {
     "id": "4ae2783a-7990-4fa0-b778-ce20acc3142e",
     "name": "Press de Banca Declinado",
-    "description": "Enfocado en la porción inferior del pectoral. Banco declinado. Baja la barra hasta la parte baja del esternón.",
+    "description": "Músculos trabajados: Pectoral mayor (porción inferior), tríceps, deltoides anterior.\n\nPosición inicial: Tumbado en banco declinado (15-30°) con las piernas aseguradas, escápulas retraídas y agarre algo más ancho que los hombros.\n\nEjecución: Baja la barra controlada a la parte baja del pecho y empuja hasta extender los codos. Usa un compañero o un soporte seguro para sacar y recolocar la barra.\n\nRespiración y ritmo: Inspira al bajar, espira al subir. Tempo 2-1-1. 6-10 repeticiones.\n\nClaves técnicas: Es útil para trabajar la parte inferior del pecho, pero requiere cuidado: asegúrate de que el soporte es estable y de tener ayuda.\n\nErrores comunes: Banco con demasiada declinación, rebotar, no tener ayuda de seguridad, abrir los codos, bajar sin control.",
     "muscleGroup": "Pecho",
     "equipment": "Barra",
     "imageUrl": "/press_banca.jpg"
@@ -522,7 +522,7 @@
   {
     "id": "6e58f1fe-eb72-4cf2-99b3-132da3854f56",
     "name": "Press de Banca Inclinado",
-    "description": "Enfocado en el haz clavicular (pecho superior). Banco a 30-45 grados. Baja la barra hasta la parte alta del pecho.",
+    "description": "Músculos trabajados: Pectoral mayor (porción clavicular), deltoides anterior, tríceps.\n\nPosición inicial: Banco a 30-45°, pies firmes, escápulas retraídas, agarre algo más ancho que los hombros, barra sobre la parte alta del pecho.\n\nEjecución: Baja la barra a la parte alta del pecho (clavícula/pecho superior) con los codos a ~45-60° y empuja hasta extender. Mantén la espalda apoyada y las escápulas juntas.\n\nRespiración y ritmo: Inspira al bajar, espira al subir. Tempo 2-1-1. 6-10 repeticiones.\n\nClaves técnicas: Una inclinación de 30° trabaja mejor el pecho superior; por encima de 45° pasa a ser más de hombro. La barra baja a la parte alta del pecho.\n\nErrores comunes: Inclinación excesiva (se convierte en press de hombro), rebotar, despegar los glúteos, arquear la espalda en exceso.",
     "muscleGroup": "Pecho",
     "equipment": "Barra",
     "imageUrl": "/press_banca.jpg"
@@ -530,7 +530,7 @@
   {
     "id": "476456c7-b28e-4ae7-9e11-b5a8fe7d92f7",
     "name": "Press de Hombro Sentado",
-    "description": "Sentado con banco a 90 grados. Empuja las mancuernas por encima de la cabeza.",
+    "description": "Músculos trabajados: Deltoides anterior y lateral, tríceps, trapecio superior.\n\nPosición inicial: Sentado con respaldo a 90° (o ligeramente inclinado), mancuernas a la altura de los hombros con los codos a unos 90° y las palmas hacia delante.\n\nEjecución: Empuja las mancuernas hacia arriba hasta extender los brazos sin bloquear de golpe, juntándolas ligeramente. Baja controlado hasta que los codos queden a la altura de las orejas.\n\nRespiración y ritmo: Espira al empujar e inspira al bajar. Tempo 2-0-2. 8-12 repeticiones.\n\nClaves técnicas: Mantén los antebrazos verticales durante toda la serie. El respaldo ayuda a evitar la hiperextensión lumbar.\n\nErrores comunes: Arquear la lumbar, subir los hombros hacia las orejas, descenso corto, descoordinar las mancuernas.",
     "muscleGroup": "Hombro",
     "equipment": "Mancuernas",
     "imageUrl": "/press_hombro_sentado.jpg"
@@ -538,7 +538,7 @@
   {
     "id": "3a6254f8-a8e9-4a1e-b8ef-5375bf3c99a6",
     "name": "Press de Pecho en Máquina",
-    "description": "Versión guiada del press. Ideal para llegar al fallo muscular con seguridad.",
+    "description": "Músculos trabajados: Pectoral mayor, deltoides anterior, tríceps.\n\nPosición inicial: Sentado con la espalda apoyada y el asiento ajustado para que las asas queden a la altura del pecho, escápulas retraídas y pies firmes.\n\nEjecución: Empuja las asas al frente hasta casi extender los codos y vuelve controlado hasta sentir el estiramiento del pecho sin que la pila descanse. Espira al empujar.\n\nRespiración y ritmo: Espira al empujar e inspira al volver. Tempo 2-1-3. 8-15 repeticiones.\n\nClaves técnicas: Es una opción segura para trabajar al fallo sin ayuda. Ajusta el asiento para que las asas queden a la altura de la mitad del pecho.\n\nErrores comunes: Encoger los hombros, despegar la espalda, bloquear los codos, asiento mal ajustado.",
     "muscleGroup": "Pecho",
     "equipment": "Máquina",
     "imageUrl": "/press_pecho_maquina.jpg"
@@ -546,7 +546,7 @@
   {
     "id": "ee48667b-a07a-4786-a227-ae439b1fe8cb",
     "name": "Pullover con Mancuerna",
-    "description": "Trabaja el pecho y la espalda (dorsal). Cruza el banco perpendicularmente.",
+    "description": "Músculos trabajados: Pectoral mayor, dorsal ancho, serrato anterior, tríceps (cabeza larga).\n\nPosición inicial: Tumbado en un banco con los hombros sobre él, sujeta una mancuerna con ambas manos sobre el pecho con los codos ligeramente flexionados y la cadera baja.\n\nEjecución: Baja la mancuerna en arco por detrás de la cabeza hasta sentir el estiramiento del pecho y dorsal, manteniendo los codos fijos. Sube en el mismo arco hasta la vertical.\n\nRespiración y ritmo: Inspira al bajar (expandiendo la caja torácica) y espira al subir. Tempo 3-1-2. 10-15 repeticiones.\n\nClaves técnicas: Mantén los codos con una ligera flexión fija. Solo baja hasta donde sientas el estiramiento sin forzar el hombro ni arquear la lumbar.\n\nErrores comunes: Flexionar y extender los codos, arquear la lumbar, bajar demasiado forzando el hombro, usar un peso excesivo.",
     "muscleGroup": "Pecho",
     "equipment": "Mancuernas",
     "imageUrl": "/pullover_mancuerna.jpg"
@@ -554,7 +554,7 @@
   {
     "id": "9bf5db49-398b-4d3d-b4d4-a712d76207d9",
     "name": "Pullover en Polea Alta",
-    "description": "Brazos semiflexionados. Lleva la barra recta desde arriba hasta tus muslos aislando el dorsal.",
+    "description": "Músculos trabajados: Dorsal ancho, redondo mayor, tríceps (cabeza larga).\n\nPosición inicial: De pie frente a la polea alta con la barra o cuerda con los brazos extendidos y ligeramente flexionados, tronco inclinado unos 30° y core firme.\n\nEjecución: Baja los brazos casi rectos en arco hasta los muslos apretando el dorsal. Vuelve controlado hasta sentir el estiramiento sin separar demasiado los brazos.\n\nRespiración y ritmo: Espira al bajar e inspira al volver. Tempo 2-1-3. 10-15 repeticiones.\n\nClaves técnicas: Mantén los brazos casi rectos y piensa en empujar con los dorsales, no con los tríceps. Es un buen ejercicio de aislamiento del dorsal.\n\nErrores comunes: Doblar los codos y convertirlo en extensión de tríceps, balancear el tronco, hacerlo con los hombros, soltar la tensión arriba.",
     "muscleGroup": "Espalda",
     "equipment": "Polea",
     "imageUrl": "/pullover_polea.jpg"
@@ -562,7 +562,7 @@
   {
     "id": "55ba7ca7-27df-4e2b-bb13-27c366537b0f",
     "name": "Pájaros (Elevaciones Posteriores)",
-    "description": "Torso inclinado hacia adelante. Abre los brazos para aislar el deltoides posterior.",
+    "description": "Músculos trabajados: Deltoides posterior, romboides, trapecio medio.\n\nPosición inicial: De pie con el tronco inclinado casi paralelo al suelo con la espalda neutra, mancuernas colgando bajo el pecho y codos ligeramente flexionados.\n\nEjecución: Eleva los brazos hacia los lados hasta que estén a la altura del tronco, apretando las escápulas. Baja controlado en 2-3 s.\n\nRespiración y ritmo: Espira al subir e inspira al bajar. Tempo 2-1-3. 12-20 repeticiones.\n\nClaves técnicas: Con poco peso y mucha conexión: lleva los codos hacia atrás y hacia fuera. Si el trapecio toma el control, baja el peso.\n\nErrores comunes: Usar impulso del tronco, subir demasiado el peso, encoger los trapecios, no mantener la espalda neutra.",
     "muscleGroup": "Hombro",
     "equipment": "Mancuernas",
     "imageUrl": "/pajaros_en_maquina.jpg"
@@ -570,7 +570,7 @@
   {
     "id": "1d972cd4-cdd6-4453-afbd-065b8b8ca6ba",
     "name": "Pájaros en Máquina (Peck Deck Inverso)",
-    "description": "Siéntate al revés en la máquina de pecho y abre hacia atrás.",
+    "description": "Músculos trabajados: Deltoides posterior, romboides, trapecio medio.\n\nPosición inicial: Sentado frente al respaldo con el pecho apoyado, asas a la altura de los hombros con agarre neutro o prono y codos ligeramente flexionados.\n\nEjecución: Abre los brazos hacia atrás hasta la línea del tronco apretando las escápulas 1 s. Vuelve lentamente sin dejar que la pila descanse.\n\nRespiración y ritmo: Espira al abrir e inspira al cerrar. Tempo 2-1-3. 12-20 repeticiones.\n\nClaves técnicas: Una forma sencilla de trabajar el deltoides posterior sin necesidad de estabilizar el tronco. Imagina empujar las asas hacia fuera, no hacia atrás.\n\nErrores comunes: Apoyar el pecho de forma que se mueva el cuerpo, encoger los hombros, usar demasiado peso con impulso, tirar con los bíceps.",
     "muscleGroup": "Hombro",
     "equipment": "Máquina",
     "imageUrl": "/pajaros_en_maquina.jpg"
@@ -578,7 +578,7 @@
   {
     "id": "c1da1539-b8a9-4991-b961-b57a99cfd3d4",
     "name": "Remo Ergómetro",
-    "description": "Cardio exigente de cuerpo completo, empuje de piernas y tirón de espalda.",
+    "description": "Músculos trabajados: Cuádriceps, glúteos, dorsal, romboides, bíceps, core; cardio.\n\nPosición inicial: Siéntate con los pies sujetos, las espinillas verticales, la espalda recta, brazos extendidos agarrando el asa y el tronco ligeramente inclinado hacia delante.\n\nEjecución: Secuencia: 1) empuja con las piernas, 2) inclina el tronco hacia atrás, 3) tira del asa hacia el abdomen. Vuelve en orden inverso: brazos, tronco, piernas. Ritmo 1:2 (empuje:recuperación).\n\nRespiración y ritmo: Espira al empujar y tirar; inspira en la recuperación. 20-30 paladas/min en trabajo continuo, o intervalos de 250-500 m.\n\nClaves técnicas: El 60 % de la potencia viene de las piernas, el 20 % del tronco y el 20 % de los brazos. Ajusta la resistencia del ventilador (damper) a 3-5 en lugar de ponerlo al máximo.\n\nErrores comunes: Tirar primero con los brazos, encorvar la espalda, inclinarse demasiado atrás, ir demasiado rápido en la recuperación.",
     "muscleGroup": "Cardio",
     "equipment": "Máquina",
     "imageUrl": "/remo_ergometro.jpg"
@@ -586,7 +586,7 @@
   {
     "id": "cb23b5bb-3fe9-4576-b0ec-ea4cb5349d4c",
     "name": "Remo Gironda (Polea Baja)",
-    "description": "Sentado en el suelo, tira del triángulo hacia el estómago manteniendo la espalda neutra.",
+    "description": "Músculos trabajados: Dorsal ancho, romboides, trapecio medio, bíceps, erectores.\n\nPosición inicial: Sentado con los pies en los apoyos, rodillas ligeramente flexionadas, espalda recta y brazos estirados agarrando el triángulo.\n\nEjecución: Tira del agarre hacia el abdomen llevando los codos atrás pegados al cuerpo y juntando las escápulas. Mantén 1 s y vuelve estirando los brazos con control, sin redondear la espalda.\n\nRespiración y ritmo: Espira al tirar e inspira al volver. Tempo 2-1-3. 8-12 repeticiones.\n\nClaves técnicas: Mantén el pecho alto y siente cómo se juntan las escápulas. Permite una ligera inclinación del tronco al estirar, pero sin redondear la espalda.\n\nErrores comunes: Balancear el tronco, redondear la espalda al estirar, encoger los hombros, tirar solo con los brazos.",
     "muscleGroup": "Espalda",
     "equipment": "Polea",
     "imageUrl": "/remo_gironda.jpg"
@@ -594,7 +594,7 @@
   {
     "id": "2e820299-8055-447c-9175-a1415b0e73fc",
     "name": "Remo Pendlay",
-    "description": "Torso paralelo al suelo. La barra descansa en el suelo en cada repetición. Pura fuerza.",
+    "description": "Músculos trabajados: Dorsal ancho, romboides, trapecio, erectores espinales, bíceps.\n\nPosición inicial: Con los pies a la anchura de caderas y la barra en el suelo sobre el medio del pie, inclínate hasta que el tronco quede paralelo al suelo, espalda neutra y agarre prono algo más ancho que los hombros.\n\nEjecución: Tira de la barra explosivamente desde el suelo hacia la parte baja del pecho/abdomen, con el tronco quieto. Baja hasta apoyar la barra en el suelo en cada repetición y reinicia.\n\nRespiración y ritmo: Inspira y bloquea el core en el suelo, espira al subir. 5-8 repeticiones.\n\nClaves técnicas: Cada repetición empieza desde parado en el suelo: eso elimina el impulso y entrena la fuerza explosiva. Mantén el tronco paralelo al suelo.\n\nErrores comunes: Subir el tronco para ayudar, redondear la espalda, tirar de los brazos sin escápulas, no apoyar la barra en el suelo.",
     "muscleGroup": "Espalda",
     "equipment": "Barra",
     "imageUrl": "/remo_pendlay.jpg"
@@ -602,7 +602,7 @@
   {
     "id": "c8b2c07d-b9b2-42d7-a851-b4a23f3f3c47",
     "name": "Remo al Cuello (Upright Row)",
-    "description": "Agarre a la anchura de los hombros, tira de la barra hacia la barbilla levantando los codos.",
+    "description": "Músculos trabajados: Deltoides lateral, trapecio superior, bíceps.\n\nPosición inicial: De pie con la barra frente a los muslos y agarre prono algo más ancho que los hombros (no demasiado estrecho para cuidar las muñecas y los hombros).\n\nEjecución: Sube la barra pegada al cuerpo llevando los codos hacia arriba y fuera, hasta la altura del pecho/clavícula, sin superar la altura del hombro con los codos. Baja controlado.\n\nRespiración y ritmo: Espira al subir e inspira al bajar. Tempo 2-0-2. 8-12 repeticiones.\n\nClaves técnicas: Si te molestan los hombros, agarra más ancho y sube solo hasta la altura del esternón, o sustitúyelo por elevaciones laterales. Los codos siempre por encima de las muñecas.\n\nErrores comunes: Subir por encima de los hombros, agarre muy estrecho, balancear el tronco, tirar con las muñecas en vez de los codos.",
     "muscleGroup": "Hombro",
     "equipment": "Barra",
     "imageUrl": "/remo_al_cuello.jpg"
@@ -610,7 +610,7 @@
   {
     "id": "9fd4b830-9b77-49b6-9c09-bbc6f49cb746",
     "name": "Remo con Barra",
-    "description": "Inclina el torso a unos 45 grados. Lleva la barra hacia tu ombligo.",
+    "description": "Músculos trabajados: Dorsal ancho, romboides, trapecio medio e inferior, erectores, bíceps.\n\nPosición inicial: De pie con los pies a la anchura de caderas, bisagra de cadera hasta ~45° de inclinación del tronco, rodillas ligeramente flexionadas, espalda neutra y barra colgando con agarre prono.\n\nEjecución: Tira de la barra hacia el abdomen bajo llevando los codos atrás y cerca del cuerpo, juntando las escápulas. Baja controlado hasta estirar los brazos sin cambiar la inclinación.\n\nRespiración y ritmo: Inspira al estirar, espira al tirar. Tempo 2-1-2. 6-12 repeticiones.\n\nClaves técnicas: Mantén la inclinación del tronco fija. Con un agarre supino aumentas la participación del bíceps y llevas la barra algo más baja.\n\nErrores comunes: Subir y bajar el tronco para impulsarse, redondear la espalda, tirar hacia el pecho alto, peso excesivo.",
     "muscleGroup": "Espalda",
     "equipment": "Barra",
     "imageUrl": "/remo_barra.jpg"
@@ -618,7 +618,7 @@
   {
     "id": "a1fe424a-a373-433b-ab80-8d930117c5a6",
     "name": "Remo con Mancuerna a 1 Mano",
-    "description": "Apoya una rodilla y mano en un banco. Tira de la mancuerna llevando el codo hacia la cadera.",
+    "description": "Músculos trabajados: Dorsal ancho, romboides, trapecio medio, bíceps, deltoides posterior.\n\nPosición inicial: Apoya una mano y la rodilla del mismo lado en un banco con la espalda paralela al suelo y neutra. La otra mano sostiene la mancuerna con el brazo colgando.\n\nEjecución: Tira de la mancuerna hacia la cadera llevando el codo atrás y pegado al cuerpo, juntando la escápula. Baja con control hasta estirar el dorsal sin rotar el tronco.\n\nRespiración y ritmo: Espira al tirar, inspira al bajar. Tempo 2-1-3. 8-12 repeticiones por lado.\n\nClaves técnicas: Imagina que arrancas una motosierra: el codo va hacia el techo y atrás. Deja que la escápula se desplace al bajar para estirar el dorsal.\n\nErrores comunes: Rotar el torso, tirar hacia el hombro y no a la cadera, balancear, encoger el hombro.",
     "muscleGroup": "Espalda",
     "equipment": "Mancuernas",
     "imageUrl": "/remo_mancuerna_1_mano.jpg"
@@ -626,7 +626,7 @@
   {
     "id": "1c30fda3-b02f-41b4-95a5-536edc73da41",
     "name": "Remo en Máquina",
-    "description": "Remo soportado en el pecho, aísla la espalda al eliminar el trabajo del lumbar.",
+    "description": "Músculos trabajados: Dorsal ancho, romboides, trapecio medio, deltoides posterior, bíceps.\n\nPosición inicial: Sentado con el pecho apoyado en la almohadilla, asiento ajustado para que las asas queden a la altura del pecho, espalda recta y brazos extendidos.\n\nEjecución: Tira de las asas hacia atrás llevando los codos pegados al cuerpo y apretando las escápulas 1 s. Vuelve lento estirando los brazos sin despegar el pecho.\n\nRespiración y ritmo: Espira al tirar e inspira al volver. Tempo 2-1-3. 8-15 repeticiones.\n\nClaves técnicas: El apoyo en el pecho permite aislar la espalda sin cargar la lumbar. Cambia el agarre (neutro, prono) para variar el énfasis.\n\nErrores comunes: Despegar el pecho de la almohadilla, encoger los hombros, ir con impulso, no estirar del todo.",
     "muscleGroup": "Espalda",
     "equipment": "Máquina",
     "imageUrl": "/remo_maquina.jpg"
@@ -634,7 +634,7 @@
   {
     "id": "4f6cd22d-6e33-4d1f-90df-b804e0c81426",
     "name": "Remo en Punta (T-Bar)",
-    "description": "Usa una barra anclada en una esquina o máquina específica. Tira hacia el estómago.",
+    "description": "Músculos trabajados: Dorsal ancho, romboides, trapecio medio, erectores, bíceps.\n\nPosición inicial: Colócate sobre la barra con los pies a ambos lados, flexión de cadera con la espalda neutra y el tronco a ~45°, agarrando el asa de la barra.\n\nEjecución: Tira del peso hacia el pecho/abdomen alto llevando los codos atrás y juntando las escápulas. Baja controlado hasta estirar los brazos manteniendo el tronco fijo.\n\nRespiración y ritmo: Espira al tirar e inspira al bajar. Tempo 2-1-2. 6-12 repeticiones.\n\nClaves técnicas: Lleva el pecho hacia el soporte o la barra; el agarre neutro cuida las muñecas. Mantén la espalda recta y la mirada al suelo, unos metros por delante.\n\nErrores comunes: Redondear la espalda, subir el tronco al tirar, usar el impulso, tirar con los brazos.",
     "muscleGroup": "Espalda",
     "equipment": "Barra",
     "imageUrl": "/remo_en_punta.jpg"
@@ -642,7 +642,7 @@
   {
     "id": "e6730ceb-2413-449c-b13a-9850677cd07f",
     "name": "Rueda Abdominal",
-    "description": "Gran estiramiento del core. Rueda hacia adelante desde las rodillas y vuelve.",
+    "description": "Músculos trabajados: Recto abdominal, transverso, oblicuos, dorsal, hombros.\n\nPosición inicial: De rodillas con la rueda bajo los hombros, espalda neutra, ligera retroversión pélvica y core apretado.\n\nEjecución: Rueda hacia delante extendiendo los brazos mientras mantienes el abdomen activo y la pelvis retrasada, hasta donde controles sin que la lumbar se hunda. Vuelve contrayendo el abdomen.\n\nRespiración y ritmo: Inspira al rodar hacia delante, espira al volver. Tempo 3-1-2. 6-12 repeticiones.\n\nClaves técnicas: Es un ejercicio exigente. Empieza con recorrido corto y, si la lumbar se hunde, reduce el rango. Aprieta glúteos para proteger la espalda.\n\nErrores comunes: Hundir la lumbar, tirar con la cadera, recorrido demasiado largo sin control, mantener la cabeza hacia atrás.",
     "muscleGroup": "Core",
     "equipment": "Peso Corporal",
     "imageUrl": "/rueda_abdominal.jpg"
@@ -650,7 +650,7 @@
   {
     "id": "549d45fd-12a2-48c7-92fe-2efe1e322712",
     "name": "Russian Twists",
-    "description": "Giro de torso sentado para oblicuos.",
+    "description": "Músculos trabajados: Oblicuos, recto abdominal, flexores de cadera.\n\nPosición inicial: Sentado con las rodillas flexionadas, pies en el suelo o elevados, tronco inclinado atrás ~45° con la espalda neutra y las manos juntas (o con un peso).\n\nEjecución: Rota el tronco a un lado y al otro llevando las manos junto a la cadera, moviendo las costillas y no solo los brazos. Espira en cada giro.\n\nRespiración y ritmo: Espira al girar a cada lado. 10-20 giros por lado.\n\nClaves técnicas: Rota desde la caja torácica y no desde los brazos. Si es demasiado difícil, apoya los talones; si es muy fácil, añade un disco o balón medicinal.\n\nErrores comunes: Redondear la espalda, mover solo los brazos, ir rápido sin control, balancear las piernas.",
     "muscleGroup": "Core",
     "equipment": "Peso Corporal",
     "imageUrl": "/russian_twist.jpg"
@@ -658,7 +658,7 @@
   {
     "id": "5d662996-42d8-42da-9292-e8337cc533cb",
     "name": "Salto a la Comba",
-    "description": "Trabajo de resistencia, agilidad y coordinación.",
+    "description": "Músculos trabajados: Gemelos, cuádriceps, hombros, antebrazos; cardio.\n\nPosición inicial: De pie con la cuerda detrás, codos pegados al cuerpo, manos a la altura de la cadera y mirada al frente.\n\nEjecución: Gira la cuerda con las muñecas, no con los brazos, y salta unos 2-3 cm aterrizando suave sobre la parte anterior del pie. Mantén el tronco erguido y el core activo.\n\nRespiración y ritmo: Respiración rítmica y natural. Series de 30-60 s, con descansos cortos, o 5-15 min seguidos.\n\nClaves técnicas: Los saltos son pequeños y rápidos; el movimiento viene de las muñecas. Mantén la longitud adecuada: la cuerda debe llegar a las axilas al pisarla.\n\nErrores comunes: Saltar demasiado alto, apoyar el talón, abrir los codos, mirar los pies, cuerda de longitud incorrecta.",
     "muscleGroup": "Cardio",
     "equipment": "Peso Corporal",
     "imageUrl": "/salto_a_comba.jpg"
@@ -666,7 +666,7 @@
   {
     "id": "4b7af089-7c0b-411a-ac8b-f6313053060a",
     "name": "Sentadilla Búlgara",
-    "description": "Unilateral. Apoya el pie trasero en un banco y baja el peso de forma controlada.",
+    "description": "Músculos trabajados: Cuádriceps, glúteo mayor, isquiotibiales, aductores, core.\n\nPosición inicial: De espaldas a un banco con el empeine del pie trasero apoyado en él, el pie delantero a unos 60-80 cm con la rodilla alineada con el pie. Mancuernas a los lados y tronco ligeramente inclinado.\n\nEjecución: Baja verticalmente doblando ambas rodillas hasta que el muslo delantero quede paralelo al suelo, con el peso en el talón/medio pie. Sube empujando con la pierna delantera.\n\nRespiración y ritmo: Inspira al bajar y espira al subir. Tempo 3-0-1. 8-12 repeticiones por pierna.\n\nClaves técnicas: Más inclinación del tronco = más glúteo; más vertical = más cuádriceps. Ajusta la distancia del pie delantero hasta encontrar la posición cómoda y estable.\n\nErrores comunes: Pie delantero demasiado cerca (rodilla se adelanta de más), perder el equilibrio, que la rodilla colapse hacia dentro, apoyarse en la pierna trasera.",
     "muscleGroup": "Pierna",
     "equipment": "Mancuernas",
     "imageUrl": "/sentadilla_bulgara.jpg"
@@ -674,7 +674,7 @@
   {
     "id": "8a8ca034-62d7-4d34-bfb6-e400ef923778",
     "name": "Sentadilla Frontal",
-    "description": "Barra apoyada en clavículas. Exige más verticalidad y enfoca más los cuádriceps.",
+    "description": "Músculos trabajados: Cuádriceps, glúteo mayor, core, erectores espinales.\n\nPosición inicial: Barra apoyada sobre los deltoides anteriores y las clavículas, codos altos y paralelos al suelo, pies a la anchura de los hombros con las puntas ligeramente abiertas.\n\nEjecución: Baja con el tronco erguido flexionando cadera y rodillas hasta romper la paralela. Sube empujando el suelo con todo el pie, con los codos altos todo el tiempo.\n\nRespiración y ritmo: Inspira y bloquea el core antes de bajar, espira al subir. Tempo 3-0-1. 5-10 repeticiones.\n\nClaves técnicas: La postura de codos altos es la clave. Si no te alcanza la movilidad de muñeca, usa agarre cruzado o correas.\n\nErrores comunes: Dejar caer los codos (la barra se cae), redondear la espalda alta, talones que se levantan, rodillas que se hunden hacia dentro.",
     "muscleGroup": "Pierna",
     "equipment": "Barra",
     "imageUrl": "/sentadilla_frontal.jpg"
@@ -682,7 +682,7 @@
   {
     "id": "47cf0b7d-c1e3-4cce-9992-ffdeeadd5589",
     "name": "Sentadilla Goblet",
-    "description": "Sostén una mancuerna o kettlebell pegada al pecho y haz sentadillas.",
+    "description": "Músculos trabajados: Cuádriceps, glúteo mayor, core, hombros.\n\nPosición inicial: De pie con los pies un poco más anchos que los hombros y las puntas ligeramente abiertas, sujetando una mancuerna o kettlebell contra el pecho con los codos hacia abajo.\n\nEjecución: Baja entre las piernas con el tronco erguido hasta que los muslos superen la horizontal, con los codos entre las rodillas. Sube empujando con los talones y apretando glúteos.\n\nRespiración y ritmo: Inspira al bajar y espira al subir. Tempo 3-1-1. 8-15 repeticiones.\n\nClaves técnicas: La carga delante del pecho te ayuda a mantener el tronco erguido. Es ideal para aprender el patrón de la sentadilla y para calentar.\n\nErrores comunes: Redondear la espalda, que los talones se levanten, las rodillas colapsen hacia dentro, soltar la mancuerna del pecho.",
     "muscleGroup": "Pierna",
     "equipment": "Mancuernas",
     "imageUrl": "/sentadilla_goblet.jpg"
@@ -690,7 +690,7 @@
   {
     "id": "2b39539f-77c5-4297-8fb6-d2bba1404a6d",
     "name": "Sentadilla Hack",
-    "description": "Sentadilla guiada. Ideal para enfatizar cuádriceps al permitir bajar muy profundo con seguridad.",
+    "description": "Músculos trabajados: Cuádriceps, glúteo mayor, isquiotibiales.\n\nPosición inicial: Espalda y cabeza apoyadas en el respaldo, hombros bajo las almohadillas, pies a la anchura de los hombros en la plataforma, ligeramente adelantados.\n\nEjecución: Baja controlado hasta que los muslos queden paralelos o por debajo, con la pelvis pegada al respaldo, y empuja con toda la planta hasta casi extender las rodillas.\n\nRespiración y ritmo: Inspira al bajar y espira al subir. Tempo 3-0-1. 8-15 repeticiones.\n\nClaves técnicas: Pies más adelantados = más glúteo e isquios; más abajo y juntos = más cuádriceps. Mantén la espalda siempre apoyada.\n\nErrores comunes: Despegar la pelvis del respaldo, bloquear las rodillas, levantar los talones, rebotar abajo.",
     "muscleGroup": "Pierna",
     "equipment": "Máquina",
     "imageUrl": "/sentadilla_hack.jpg"
@@ -698,7 +698,7 @@
   {
     "id": "5904927e-5142-4e98-8090-efe1414ca665",
     "name": "Sentadilla Libre",
-    "description": "El rey de los ejercicios. Barra en la espalda alta, desciende hasta romper el paralelo.",
+    "description": "Músculos trabajados: Cuádriceps, glúteo mayor, aductores, isquiotibiales, erectores espinales, core.\n\nPosición inicial: Barra sobre el trapecio (alta) o los deltoides posteriores (baja), pies a la anchura de los hombros o algo más con las puntas abiertas ~15-30°, pecho alto y core firme tras inspirar.\n\nEjecución: Baja flexionando cadera y rodillas a la vez, con las rodillas siguiendo la dirección de los pies y la espalda neutra, hasta que la cadera supere la rodilla. Sube empujando el suelo con todo el pie manteniendo la espalda y el core firmes. Inspira abajo, espira al subir.\n\nRespiración y ritmo: Inspira profundo y bloquea el core antes de bajar, espira al subir pasando el punto difícil. Tempo 3-1-1. 5-10 repeticiones, o 3-6 en trabajo de fuerza.\n\nClaves técnicas: Empuja las rodillas hacia fuera, mantén el pecho alto y el peso repartido por todo el pie. Calienta con series progresivas y usa siempre los soportes de seguridad.\n\nErrores comunes: Rodillas que colapsan hacia dentro, talones que se levantan, redondear la espalda baja (\"butt wink\"), ir con el tronco muy inclinado, rango corto.",
     "muscleGroup": "Pierna",
     "equipment": "Barra",
     "imageUrl": "/sentadilla_barra.jpg"
@@ -706,7 +706,7 @@
   {
     "id": "2cad83db-6daa-476f-b9b2-8bb3039a9c6f",
     "name": "Sentadilla en Máquina Smith",
-    "description": "Sentadilla guiada con barra fija. Ajusta los pies ligeramente hacia adelante.",
+    "description": "Músculos trabajados: Cuádriceps, glúteo mayor, isquiotibiales.\n\nPosición inicial: Barra en el trapecio, pies ligeramente adelantados respecto a la barra, a la anchura de los hombros, core firme y espalda neutra.\n\nEjecución: Baja doblando cadera y rodillas hasta que los muslos queden paralelos o por debajo, controlando la trayectoria fija. Sube empujando con los talones sin bloquear las rodillas.\n\nRespiración y ritmo: Inspira al bajar y espira al subir. Tempo 3-0-1. 8-12 repeticiones.\n\nClaves técnicas: Coloca los pies algo adelantados para que la sentadilla sea más segura para las rodillas. Es útil para trabajar cerca del fallo con seguridad.\n\nErrores comunes: Pies directamente bajo la barra (carga las rodillas y la lumbar), redondear la espalda, usar la guía para compensar un mal control, rango corto.",
     "muscleGroup": "Pierna",
     "equipment": "Máquina",
     "imageUrl": "/sentadilla_smith.jpg"
@@ -714,7 +714,7 @@
   {
     "id": "df599bd6-80a7-44a8-b5a7-6b58354ced11",
     "name": "Woodchopper",
-    "description": "Movimiento diagonal de leñador para trabajar oblicuos rotando el torso.",
+    "description": "Músculos trabajados: Oblicuos, recto abdominal, transverso, hombros.\n\nPosición inicial: De pie de lado a la polea alta, pies a la anchura de los hombros, agarra el asa con las dos manos y brazos extendidos.\n\nEjecución: Tira en diagonal desde arriba hacia la cadera contraria rotando el tronco y pivotando el pie, con los brazos casi rectos. Vuelve controlado sin dejar que la pila descanse.\n\nRespiración y ritmo: Espira al tirar, inspira al volver. Tempo 2-1-3. 10-15 repeticiones por lado.\n\nClaves técnicas: Pivota el pie trasero y gira desde el tronco. También puedes hacerlo de abajo hacia arriba para variar el trabajo en los oblicuos.\n\nErrores comunes: Tirar con los brazos en vez de con el tronco, rotar la lumbar sin controlar, mover las caderas de forma descontrolada, usar demasiado peso.",
     "muscleGroup": "Core",
     "equipment": "Polea",
     "imageUrl": "/woodchopper.jpg"
@@ -722,7 +722,7 @@
   {
     "id": "bc20e549-cfe6-4771-8b12-72a46ce43050",
     "name": "Zancadas Caminando",
-    "description": "Avanza en cada repetición. Muy demandante cardiovascularmente.",
+    "description": "Músculos trabajados: Cuádriceps, glúteo mayor, isquiotibiales, core.\n\nPosición inicial: De pie con mancuernas a los costados, tronco erguido y mirada al frente.\n\nEjecución: Da un paso largo al frente, baja hasta que ambas rodillas formen ~90° con la rodilla trasera casi rozando el suelo, y empuja con la pierna delantera para avanzar al siguiente paso. Alterna las piernas.\n\nRespiración y ritmo: Inspira al bajar y espira al subir. Tempo 2-0-1. 10-12 pasos por pierna.\n\nClaves técnicas: Da pasos amplios para trabajar más el glúteo y cortos para el cuádriceps. Mantén el tronco erguido y mira al frente.\n\nErrores comunes: Paso demasiado corto (la rodilla pasa mucho de la punta), tronco inclinado, que la rodilla colapse hacia dentro, perder el equilibrio.",
     "muscleGroup": "Pierna",
     "equipment": "Mancuernas",
     "imageUrl": "/zancadas_caminando.jpg"
@@ -730,7 +730,7 @@
   {
     "id": "0e08628e-5687-488b-a0bd-811799b70847",
     "name": "Zancadas Estáticas (Lunges)",
-    "description": "Sube y baja en el sitio manteniendo el torso recto.",
+    "description": "Músculos trabajados: Cuádriceps, glúteo mayor, isquiotibiales, aductores.\n\nPosición inicial: De pie en postura de zancada con un pie adelante y otro atrás, con la rodilla delantera sobre el tobillo, mancuernas a los lados y tronco recto.\n\nEjecución: Baja verticalmente flexionando ambas rodillas hasta que el muslo delantero quede paralelo, con la rodilla trasera cerca del suelo. Sube empujando con la pierna delantera sin mover los pies.\n\nRespiración y ritmo: Inspira al bajar y espira al subir. Tempo 3-0-1. 8-12 repeticiones por pierna.\n\nClaves técnicas: Es más estable que las zancadas caminando, lo que permite cargar más. Prueba una inclinación del tronco para trabajar más glúteo.\n\nErrores comunes: Inclinar el tronco, empujar con la pierna trasera, rodilla que se va hacia dentro, base de apoyo demasiado estrecha.",
     "muscleGroup": "Pierna",
     "equipment": "Mancuernas",
     "imageUrl": "/zancadas_estaticas.jpg"

@@ -26,7 +26,8 @@ export const Palette = {
 
   cyan400: '#22d3ee',
   cyan500: '#06b6d4',
-  cyan600: '#0891b2', // == --color-primary on web
+  cyan600: '#0891b2',
+  cyan700: '#0e7490',
   cyan50: '#ecfeff',
 
   emerald400: '#34d399',
@@ -81,15 +82,15 @@ export interface ThemeColors {
 
 export const Colors: { light: ThemeColors; dark: ThemeColors } = {
   light: {
-    background: Palette.slate50, // bg-slate-50 (DashboardLayout)
-    surface: Palette.white, // bg-white (cards)
-    surfaceAlt: Palette.slate100, // bg-slate-100 (pills, chips)
-    surfaceSunken: Palette.slate50, // bg-slate-50 (inset panels)
-    border: Palette.slate200, // border-slate-200
-    borderLight: Palette.slate100,
+    background: '#eaf1f6', // base under the ambient glass backdrop
+    surface: 'rgba(255,255,255,0.62)', // frosted glass card
+    surfaceAlt: 'rgba(15,23,42,0.06)', // pills, chips
+    surfaceSunken: 'rgba(255,255,255,0.4)', // inset panels
+    border: 'rgba(100,116,139,0.22)', // hairline
+    borderLight: 'rgba(100,116,139,0.12)',
     textPrimary: Palette.slate900, // text-slate-900
-    textSecondary: Palette.slate500, // text-slate-500
-    textMuted: Palette.slate400, // text-slate-400 (uppercase labels)
+    textSecondary: Palette.slate600, // darkened for AA on glass
+    textMuted: Palette.slate500, // darkened for AA on glass
     primary: Palette.cyan600, // text-primary / bg-primary
     primaryAccent: Palette.cyan600, // cyan accent text in light mode
     primarySoft: Palette.cyan50, // bg-cyan-50
@@ -98,22 +99,28 @@ export const Colors: { light: ThemeColors; dark: ThemeColors } = {
     tabIconSelected: Palette.cyan600,
   },
   dark: {
-    background: Palette.slate950, // bg-slate-950
-    surface: Palette.slate900, // bg-slate-900
+    background: '#050b16', // base under the ambient glass backdrop
+    surface: 'rgba(255,255,255,0.07)', // frosted glass card
     surfaceAlt: 'rgba(255,255,255,0.05)', // bg-white/5
     surfaceSunken: 'rgba(2,6,23,0.4)', // bg-slate-950/40
-    border: Palette.slate800, // border-slate-800
+    border: 'rgba(255,255,255,0.12)', // hairline
     borderLight: 'rgba(255,255,255,0.1)', // border-white/10
     textPrimary: Palette.white,
-    textSecondary: Palette.slate400, // text-slate-400
-    textMuted: Palette.slate500, // text-slate-500
-    primary: Palette.cyan600,
+    textSecondary: Palette.slate300, // lightened for AA on glass
+    textMuted: '#a3b1c6', // lightened for AA on glass
+    primary: Palette.cyan700,
     primaryAccent: Palette.cyan400, // dark:text-cyan-400
     primarySoft: 'rgba(8,145,178,0.15)', // dark:bg-cyan-950/30 approximation
     icon: Palette.slate400,
     tabIconDefault: Palette.slate500,
     tabIconSelected: Palette.cyan400,
   },
+} as const;
+
+/** Liquid glass materials shared by cards, tab bar and sheets. */
+export const Glass = {
+  light: { edge: 'rgba(255,255,255,0.9)', tint: 'rgba(255,255,255,0.38)', sheen: ['rgba(255,255,255,0.65)', 'rgba(255,255,255,0.08)', 'rgba(255,255,255,0.3)'] as const, shadow: '#0e5a78', orbs: ['rgba(34,211,238,0.75)', 'rgba(251,191,136,0.55)', 'rgba(52,211,153,0.55)'] },
+  dark: { edge: 'rgba(255,255,255,0.16)', tint: 'rgba(12,20,36,0.35)', sheen: ['rgba(255,255,255,0.16)', 'rgba(255,255,255,0.02)', 'rgba(255,255,255,0.08)'] as const, shadow: '#000000', orbs: ['rgba(8,160,200,0.6)', 'rgba(59,90,220,0.5)', 'rgba(16,185,129,0.42)'] },
 } as const;
 
 export type ThemeMode = 'light' | 'dark';

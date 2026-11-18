@@ -215,8 +215,8 @@ export default function HomeScreen() {
   const streakLabel = weeklyStreak !== null ? `semana${weeklyStreak !== 1 ? 's' : ''} de racha` : `día${(data?.streak ?? 0) !== 1 ? 's' : ''} de racha`;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent' }}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 110 }}>
         {/* Hero Header */}
         <View
           style={{

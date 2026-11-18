@@ -83,7 +83,7 @@ export default function ExerciseLibraryScreen() {
   }, [exercises, search, filterMuscle, filterEquipment]);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent' }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16 }}>
         <TouchableOpacity onPress={() => router.back()} style={{ height: 36, width: 36, borderRadius: 12, backgroundColor: colors.surfaceAlt, alignItems: 'center', justifyContent: 'center' }}>
           <ArrowLeft size={18} color={colors.textPrimary} />
@@ -94,7 +94,7 @@ export default function ExerciseLibraryScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 40 }}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 110 }}>
         {isCreating && (
           <Card style={{ marginBottom: 16 }}>
             <Text style={{ fontSize: 14, fontWeight: 'bold', color: colors.textPrimary, marginBottom: 12 }}>Nuevo Ejercicio</Text>

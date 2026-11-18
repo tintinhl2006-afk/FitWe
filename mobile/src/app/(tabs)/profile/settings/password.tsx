@@ -41,7 +41,7 @@ export default function PasswordSettingsScreen() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent' }}>
       <SettingsHeader title="Cambiar Contraseña" colors={colors} />
       <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4 }}>
         <Field colors={colors} label="Contraseña Actual">

@@ -481,7 +481,7 @@ export default function DashboardPage() {
                         <Lock className="h-5 w-5" />
                       </div>
                       <h4 className="text-sm font-bold text-slate-900 dark:text-white">Acceso Restringido</h4>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-455 mt-1 max-w-[190px] leading-normal font-medium">
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 max-w-[190px] leading-normal font-medium">
                         Tu cuota ha expirado o está inactiva en el centro. Renuévala para activar tu código QR de acceso.
                       </p>
                       <Link

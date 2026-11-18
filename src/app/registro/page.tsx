@@ -40,7 +40,7 @@ export default function RegistroClientePage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-slate-950 relative overflow-hidden">
+    <div className="always-dark flex min-h-screen bg-slate-950 relative overflow-hidden">
       {/* Global Background glows */}
       <div className="pointer-events-none absolute inset-0 z-0">
         <div className="absolute -top-32 -left-32 h-[600px] w-[600px] rounded-full bg-primary/20 blur-[120px]" />

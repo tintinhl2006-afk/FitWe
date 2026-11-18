@@ -141,8 +141,8 @@ export default function ClassesScreen() {
   }, {});
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent' }}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 110 }}>
         {/* Header */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 6 }}>
           <Calendar size={22} color={colors.primaryAccent} />

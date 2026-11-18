@@ -40,7 +40,7 @@ export default function AdminQRScannerScreen() {
         </Text>
         <TouchableOpacity
           onPress={permission.canAskAgain ? requestPermission : () => Linking.openSettings()}
-          style={{ backgroundColor: '#06b6d4', paddingHorizontal: 24, paddingVertical: 14, borderRadius: 14 }}
+          style={{ backgroundColor: '#0e7490', paddingHorizontal: 24, paddingVertical: 14, borderRadius: 14 }}
         >
           <Text style={{ color: '#ffffff', fontWeight: 'bold' }}>{permission.canAskAgain ? 'Conceder Permiso' : 'Abrir Ajustes'}</Text>
         </TouchableOpacity>
@@ -134,7 +134,7 @@ export default function AdminQRScannerScreen() {
             style={{
               position: 'absolute',
               bottom: 24,
-              backgroundColor: '#06b6d4',
+              backgroundColor: '#0e7490',
               paddingHorizontal: 20,
               paddingVertical: 12,
               borderRadius: 14,

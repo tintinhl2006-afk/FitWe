@@ -108,7 +108,7 @@ function ResetPasswordContent() {
 
           {/* Nueva Contraseña */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-bold text-slate-500 dark:text-slate-450 uppercase tracking-wider">
+            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Nueva Contraseña
             </label>
             <div className="relative">
@@ -134,7 +134,7 @@ function ResetPasswordContent() {
 
           {/* Confirmar Contraseña */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-bold text-slate-500 dark:text-slate-450 uppercase tracking-wider">
+            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Confirmar Contraseña
             </label>
             <div className="relative">

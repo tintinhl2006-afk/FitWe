@@ -146,7 +146,7 @@ export default function PagosPage() {
                 ? "Activo"
                 : "Expirado"}
             </span>
-            <span className="text-xs text-slate-500 dark:text-slate-450 mt-1 block">
+            <span className="text-xs text-slate-500 dark:text-slate-400 mt-1 block">
               {session?.user?.subscriptionEndDate ? (
                 <>Vence el {new Date(session.user.subscriptionEndDate).toLocaleDateString("es-ES")}</>
               ) : (

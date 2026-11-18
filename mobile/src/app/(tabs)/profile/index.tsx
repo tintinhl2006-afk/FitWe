@@ -218,7 +218,7 @@ export default function ProfileScreen() {
 
   if (isLoading || !data) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center' }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent', alignItems: 'center', justifyContent: 'center' }}>
         <ActivityIndicator color={colors.primary} size="large" />
       </SafeAreaView>
     );
@@ -243,8 +243,8 @@ export default function ProfileScreen() {
   const maxMinutes = Math.max(...data.stats.weeklyChartData.map((d) => d.minutos), 1);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent' }}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 110 }}>
         {/* Header row */}
         <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginBottom: 4 }}>
           <TouchableOpacity

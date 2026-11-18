@@ -334,13 +334,13 @@ export default function PaymentPage() {
 
                 {/* Resumen del Pedido */}
                 <div className="rounded-xl bg-slate-50 dark:bg-slate-950 p-4 border border-slate-100 dark:border-slate-850 space-y-2.5 text-sm">
-                  <div className="flex justify-between gap-4 text-slate-500 dark:text-slate-455">
+                  <div className="flex justify-between gap-4 text-slate-500 dark:text-slate-400">
                     <span className="shrink-0">Membresía:</span>
                     <span className="font-semibold text-slate-800 dark:text-slate-200 text-right">
                       {displayPlanName}
                     </span>
                   </div>
-                  <div className="flex justify-between gap-4 text-slate-500 dark:text-slate-455">
+                  <div className="flex justify-between gap-4 text-slate-500 dark:text-slate-400">
                     <span className="shrink-0">Duración:</span>
                     <span className="font-semibold text-slate-800 dark:text-slate-200 text-right">
                       {formatDuration(displayDuration)}

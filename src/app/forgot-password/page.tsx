@@ -93,7 +93,7 @@ export default function ForgotPasswordPage() {
 
             {/* Email */}
             <div className="space-y-1.5">
-              <label className="block text-xs font-bold text-slate-500 dark:text-slate-450 uppercase tracking-wider">
+              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                 Correo Electrónico
               </label>
               <input

@@ -249,7 +249,7 @@ export default function PaymentScreen() {
 
   if (step === 'loading') {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center' }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent', alignItems: 'center', justifyContent: 'center' }}>
         <ActivityIndicator color={colors.primary} size="large" />
       </SafeAreaView>
     );
@@ -281,7 +281,7 @@ export default function PaymentScreen() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent' }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16 }}>
         <TouchableOpacity onPress={() => router.back()} style={{ height: 36, width: 36, borderRadius: 12, backgroundColor: colors.surfaceAlt, alignItems: 'center', justifyContent: 'center' }}>
           <ArrowLeft size={18} color={colors.textPrimary} />
@@ -289,7 +289,7 @@ export default function PaymentScreen() {
         <Text style={{ fontSize: 18, fontWeight: '900', color: colors.textPrimary }}>Mi Suscripción y Cuotas</Text>
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 40 }}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 110 }}>
         {step === 'verifying' && (
           <View style={{ alignItems: 'center', paddingVertical: 40, gap: 14 }}>
             <ActivityIndicator color={colors.primary} size="large" />

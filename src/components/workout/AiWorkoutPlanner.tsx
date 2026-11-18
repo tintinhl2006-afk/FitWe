@@ -963,7 +963,7 @@ export default function AiWorkoutPlanner({ onClose, onSaved }: AiWorkoutPlannerP
                           )}
                         >
                           <span className="font-bold text-slate-900 dark:text-white">{g.label}</span>
-                          <span className="text-[10px] text-slate-550 dark:text-slate-455">{g.desc}</span>
+                          <span className="text-[10px] text-slate-550 dark:text-slate-400">{g.desc}</span>
                         </button>
                       ))}
                     </div>
@@ -1000,7 +1000,7 @@ export default function AiWorkoutPlanner({ onClose, onSaved }: AiWorkoutPlannerP
                           )}
                         >
                           <span className="font-bold text-slate-900 dark:text-white">{lvl.label}</span>
-                          <span className="text-[10px] text-slate-550 dark:text-slate-455">{lvl.desc}</span>
+                          <span className="text-[10px] text-slate-550 dark:text-slate-400">{lvl.desc}</span>
                         </button>
                       ))}
                     </div>
@@ -1030,7 +1030,7 @@ export default function AiWorkoutPlanner({ onClose, onSaved }: AiWorkoutPlannerP
                           )}
                         >
                           <span className="font-bold text-slate-900 dark:text-white">{spl.label}</span>
-                          <span className="text-[10px] text-slate-550 dark:text-slate-455">{spl.desc}</span>
+                          <span className="text-[10px] text-slate-550 dark:text-slate-400">{spl.desc}</span>
                         </button>
                       ))}
                     </div>

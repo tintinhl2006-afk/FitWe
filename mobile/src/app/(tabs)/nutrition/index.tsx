@@ -341,8 +341,8 @@ export default function NutritionScreen() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent' }}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 110 }}>
         <Text style={{ fontSize: 22, fontWeight: '900', color: colors.textPrimary }}>Diario de Nutrición</Text>
         <Text style={{ fontSize: 13, color: colors.textSecondary, marginTop: 4, marginBottom: 16 }}>
           Registra tus comidas y controla tus macros.

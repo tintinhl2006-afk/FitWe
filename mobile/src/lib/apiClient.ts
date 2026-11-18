@@ -1,7 +1,12 @@
+import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 
 // Default production API URL
-export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://fit-we.vercel.app';
+// In the browser preview, metro.config.js proxies /api/* to the local Next server (same origin, no CORS).
+export const API_BASE_URL =
+  Platform.OS === 'web' && typeof window !== 'undefined'
+    ? window.location.origin
+    : process.env.EXPO_PUBLIC_API_URL || 'https://fit-we.vercel.app';
 
 if (__DEV__ && !process.env.EXPO_PUBLIC_API_URL) {
   console.warn(

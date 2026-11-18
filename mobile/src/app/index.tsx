@@ -18,7 +18,7 @@ export default function IndexRedirectScreen() {
   }, [user, isLoading]);
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#0f172a', justifyContent: 'center', alignItems: 'center' }}>
+    <View style={{ flex: 1, backgroundColor: 'transparent', justifyContent: 'center', alignItems: 'center' }}>
       <ActivityIndicator size="large" color="#06b6d4" />
     </View>
   );

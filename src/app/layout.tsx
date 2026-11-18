@@ -40,7 +40,7 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/fitwe-icon.png" sizes="any" />
       </head>
-      <body className="min-h-full flex flex-col bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors">
+      <body className="min-h-full flex flex-col text-slate-900 dark:text-slate-100 transition-colors">
         {/* Contenedor oculto para Google Translate */}
         <div id="google_translate_element" />
 

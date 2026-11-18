@@ -385,14 +385,14 @@ export default function RoutineDetailScreen() {
 
   if (isLoading || !routine) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center' }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent', alignItems: 'center', justifyContent: 'center' }}>
         <ActivityIndicator color={colors.primary} size="large" />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent' }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16 }}>
         <TouchableOpacity onPress={() => router.back()} style={{ height: 36, width: 36, borderRadius: 12, backgroundColor: colors.surfaceAlt, alignItems: 'center', justifyContent: 'center' }}>
           <ArrowLeft size={18} color={colors.textPrimary} />
@@ -428,7 +428,7 @@ export default function RoutineDetailScreen() {
         )}
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 4, paddingBottom: 40 }} scrollEnabled={!isReordering}>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 4, paddingBottom: 110 }} scrollEnabled={!isReordering}>
         {!isReordering && (
           <>
             <View style={{ flexDirection: 'row', gap: 10, marginBottom: 10 }}>

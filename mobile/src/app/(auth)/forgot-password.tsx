@@ -43,7 +43,7 @@ export default function ForgotPasswordScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={{ flex: 1, backgroundColor: '#0f172a' }}
+      style={{ flex: 1, backgroundColor: 'transparent' }}
     >
       <ScrollView
         contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 24 }}
@@ -54,14 +54,14 @@ export default function ForgotPasswordScreen() {
           style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 24 }}
         >
           <ArrowLeft size={20} color="#94a3b8" />
-          <Text style={{ color: '#94a3b8', fontSize: 14 }}>Volver</Text>
+          <Text style={{ color: '#cbd5e1', fontSize: 14 }}>Volver</Text>
         </TouchableOpacity>
 
         <View style={{ marginBottom: 32 }}>
           <Text style={{ fontSize: 28, fontWeight: 'bold', color: '#ffffff' }}>
             Recuperar Contraseña
           </Text>
-          <Text style={{ fontSize: 14, color: '#94a3b8', marginTop: 4 }}>
+          <Text style={{ fontSize: 14, color: '#cbd5e1', marginTop: 4 }}>
             Te enviaremos un enlace a tu email para restablecer tu contraseña.
           </Text>
         </View>
@@ -100,22 +100,22 @@ export default function ForgotPasswordScreen() {
             <Text style={{ color: '#e2e8f0', fontSize: 14, textAlign: 'center' }}>
               {successMessage}
             </Text>
-            <Text style={{ color: '#94a3b8', fontSize: 12, textAlign: 'center', marginTop: 8 }}>
+            <Text style={{ color: '#cbd5e1', fontSize: 12, textAlign: 'center', marginTop: 8 }}>
               El enlace se abrirá en tu navegador para completar el restablecimiento.
             </Text>
           </View>
         ) : (
           <View style={{ gap: 16 }}>
             <View>
-              <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 8, letterSpacing: 0.5 }}>
+              <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#cbd5e1', textTransform: 'uppercase', marginBottom: 8, letterSpacing: 0.5 }}>
                 Correo Electrónico
               </Text>
               <View
                 style={{
                   flexDirection: 'row',
                   alignItems: 'center',
-                  backgroundColor: '#1e293b',
-                  borderColor: '#334155',
+                  backgroundColor: 'rgba(255,255,255,0.08)',
+                  borderColor: 'rgba(255,255,255,0.18)',
                   borderWidth: 1,
                   borderRadius: 16,
                   paddingHorizontal: 16,
@@ -139,7 +139,7 @@ export default function ForgotPasswordScreen() {
               onPress={handleSubmit}
               disabled={submitting}
               style={{
-                backgroundColor: '#06b6d4',
+                backgroundColor: '#0e7490',
                 height: 52,
                 borderRadius: 16,
                 alignItems: 'center',

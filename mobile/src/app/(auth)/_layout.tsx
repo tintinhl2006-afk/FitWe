@@ -1,11 +1,13 @@
 import { Stack } from 'expo-router';
+import { useSceneStyle } from '../../components/ui/AmbientBackground';
 
 export default function AuthLayout() {
+  const scene = useSceneStyle();
   return (
     <Stack
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: '#0f172a' },
+        contentStyle: scene,
       }}
     >
       <Stack.Screen name="login" />

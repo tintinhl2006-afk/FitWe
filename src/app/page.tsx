@@ -13,7 +13,7 @@ import { LegalFooter } from "@/components/layout/LegalFooter";
 
 export default function LandingPage() {
   return (
-    <div className="relative min-h-screen bg-slate-950 text-white overflow-hidden">
+    <div className="always-dark relative min-h-screen bg-slate-950 text-white overflow-hidden">
       {/* ── Ambient background effects ── */}
       <div className="pointer-events-none fixed inset-0">
         {/* Top-left glow */}

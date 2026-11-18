@@ -9,6 +9,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { usePreferences } from "@/context/PreferencesContext";
+import { exerciseGifUrl } from "@/lib/exerciseMedia";
 
 interface Exercise {
   id: string;
@@ -42,6 +43,8 @@ export default function ExerciseDetailPage({ params }: { params: Promise<{ id: s
   const [chartData, setChartData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"indicaciones" | "historial" | "estadisticas">("historial");
+  const [gifFailed, setGifFailed] = useState(false);
+  const gifUrl = exerciseGifUrl(exercise?.imageUrl);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -169,6 +172,17 @@ export default function ExerciseDetailPage({ params }: { params: Promise<{ id: s
           {activeTab === "indicaciones" && (
             <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm">
               <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Cómo realizar el ejercicio</h3>
+              {gifUrl && !gifFailed && (
+                <div className="mb-6 flex justify-center overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- animated GIF, must not go through the image optimizer */}
+                  <img
+                    src={gifUrl}
+                    alt={`Técnica de ${exercise.name}`}
+                    onError={() => setGifFailed(true)}
+                    className="max-h-80 w-auto max-w-full object-contain"
+                  />
+                </div>
+              )}
               {exercise.description ? (
                 <p className="text-slate-600 dark:text-slate-400 whitespace-pre-wrap leading-relaxed">
                   {exercise.description}

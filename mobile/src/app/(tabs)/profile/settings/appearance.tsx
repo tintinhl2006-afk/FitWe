@@ -15,7 +15,7 @@ export default function AppearanceSettingsScreen() {
   const { colors, preference, setPreference, theme } = useAppTheme();
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent' }}>
       <SettingsHeader title="Apariencia" colors={colors} />
       <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4 }}>
         <Text style={{ fontSize: 13, color: colors.textSecondary, marginBottom: 20 }}>Cambia el aspecto visual de la aplicación.</Text>

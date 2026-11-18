@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, ViewStyle, TextStyle, TextInputProps } from 'react-native';
 import { useAppTheme } from '../../context/ThemeContext';
+import { GlassView } from './Glass';
 
 /**
  * Shared presentational primitives used across mobile screens, so screens don't
@@ -9,11 +10,10 @@ import { useAppTheme } from '../../context/ThemeContext';
  */
 
 export function Card({ children, style, padding = 18 }: { children: React.ReactNode; style?: ViewStyle | ViewStyle[]; padding?: number }) {
-  const { colors } = useAppTheme();
   return (
-    <View style={[{ backgroundColor: colors.surface, borderRadius: 20, padding, borderWidth: 1, borderColor: colors.border }, style]}>
+    <GlassView radius={24} style={[{ padding }, ...(Array.isArray(style) ? style : [style])]}>
       {children}
-    </View>
+    </GlassView>
   );
 }
 

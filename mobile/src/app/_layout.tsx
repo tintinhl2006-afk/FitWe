@@ -8,25 +8,34 @@ import { PreferencesProvider } from '../context/PreferencesContext';
 import { LiveWorkoutProvider, useLiveWorkout } from '../context/LiveWorkoutContext';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import LiveWorkoutOverlay from '../components/workout/LiveWorkoutOverlay';
+import { DarkTheme, DefaultTheme, ThemeProvider as NavigationThemeProvider } from '@react-navigation/native';
+import { AmbientBackground, useSceneStyle } from '../components/ui/AmbientBackground';
 import { MiniWorkoutBar } from '../components/workout/MiniWorkoutBar';
 
 function ThemedStack() {
-  const { theme, colors } = useAppTheme();
+  const { theme } = useAppTheme();
+  const scene = useSceneStyle();
 
   return (
-    <>
+    <NavigationThemeProvider
+      value={{
+        ...(theme === 'dark' ? DarkTheme : DefaultTheme),
+        colors: { ...(theme === 'dark' ? DarkTheme : DefaultTheme).colors, background: 'transparent', card: 'transparent' },
+      }}
+    >
+      <AmbientBackground />
       <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
       <Stack
         screenOptions={{
           headerShown: false,
-          contentStyle: { backgroundColor: colors.background },
+          contentStyle: scene,
           animation: 'fade',
         }}
       >
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       </Stack>
-    </>
+    </NavigationThemeProvider>
   );
 }
 

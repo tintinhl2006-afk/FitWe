@@ -452,7 +452,7 @@ export default function MetodosPagoPage() {
               <form onSubmit={handleSubmitMethod} className="flex flex-col flex-1 min-h-0">
               <div className="p-5 space-y-4 overflow-y-auto min-h-0">
                 <div>
-                  <h4 className="text-xs font-bold text-slate-500 dark:text-slate-450 uppercase tracking-wider mb-3">
+                  <h4 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">
                     Datos fiscales de facturación
                   </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -569,7 +569,7 @@ export default function MetodosPagoPage() {
 
                 {selectedGateway === "REDSYS" && (
                   <div>
-                    <h4 className="text-xs font-bold text-slate-500 dark:text-slate-450 uppercase tracking-wider mb-3">
+                    <h4 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">
                       Credenciales del TPV
                     </h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

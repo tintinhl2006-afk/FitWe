@@ -10,7 +10,7 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
-    <div className="flex h-[100dvh] w-full bg-slate-50 dark:bg-slate-950 transition-colors overflow-hidden">
+    <div className="flex h-[100dvh] w-full transition-colors overflow-hidden">
       <Sidebar />
       <main className="flex-1 flex flex-col h-[100dvh] min-w-0 max-w-full overflow-hidden">
         <div className="flex-1 overflow-y-auto overflow-x-hidden pt-20 lg:pt-0">

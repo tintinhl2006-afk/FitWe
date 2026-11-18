@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
+import { GlassView } from '../../components/ui/Glass';
 import { Lock, Mail, AlertCircle, ArrowRight } from 'lucide-react-native';
 
 export default function LoginScreen() {
@@ -51,7 +52,7 @@ export default function LoginScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={{ flex: 1, backgroundColor: '#0f172a' }}
+      style={{ flex: 1, backgroundColor: 'transparent' }}
     >
       <ScrollView
         contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 24 }}
@@ -66,7 +67,7 @@ export default function LoginScreen() {
           <Text style={{ fontSize: 28, fontWeight: 'bold', color: '#ffffff', textAlign: 'center' }}>
             FitWe
           </Text>
-          <Text style={{ fontSize: 14, color: '#94a3b8', textAlign: 'center', marginTop: 4 }}>
+          <Text style={{ fontSize: 14, color: '#cbd5e1', textAlign: 'center', marginTop: 4 }}>
             Tu plataforma inteligente de fitness y gimnasio
           </Text>
         </View>
@@ -90,17 +91,17 @@ export default function LoginScreen() {
           </View>
         )}
 
-        <View style={{ gap: 16 }}>
+        <GlassView radius={28} style={{ padding: 22, gap: 16 }}>
           <View>
-            <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 8, letterSpacing: 0.5 }}>
+            <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#cbd5e1', textTransform: 'uppercase', marginBottom: 8, letterSpacing: 0.5 }}>
               Correo Electrónico
             </Text>
             <View
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
-                backgroundColor: '#1e293b',
-                borderColor: '#334155',
+                backgroundColor: 'rgba(255,255,255,0.08)',
+                borderColor: 'rgba(255,255,255,0.18)',
                 borderWidth: 1,
                 borderRadius: 16,
                 paddingHorizontal: 16,
@@ -121,15 +122,15 @@ export default function LoginScreen() {
           </View>
 
           <View>
-            <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 8, letterSpacing: 0.5 }}>
+            <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#cbd5e1', textTransform: 'uppercase', marginBottom: 8, letterSpacing: 0.5 }}>
               Contraseña
             </Text>
             <View
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
-                backgroundColor: '#1e293b',
-                borderColor: '#334155',
+                backgroundColor: 'rgba(255,255,255,0.08)',
+                borderColor: 'rgba(255,255,255,0.18)',
                 borderWidth: 1,
                 borderRadius: 16,
                 paddingHorizontal: 16,
@@ -160,7 +161,7 @@ export default function LoginScreen() {
             onPress={handleLogin}
             disabled={submitting}
             style={{
-              backgroundColor: '#06b6d4',
+              backgroundColor: '#0e7490',
               height: 52,
               borderRadius: 16,
               alignItems: 'center',
@@ -168,6 +169,12 @@ export default function LoginScreen() {
               flexDirection: 'row',
               gap: 8,
               marginTop: 8,
+              shadowColor: '#06b6d4',
+              shadowOpacity: 0.55,
+              shadowRadius: 18,
+              shadowOffset: { width: 0, height: 8 },
+              borderWidth: 1,
+              borderColor: 'rgba(255,255,255,0.35)',
             }}
           >
             {submitting ? (
@@ -181,13 +188,13 @@ export default function LoginScreen() {
               </>
             )}
           </TouchableOpacity>
-        </View>
+        </GlassView>
 
         <TouchableOpacity
           onPress={() => router.push('/(auth)/register')}
           style={{ marginTop: 24, alignItems: 'center' }}
         >
-          <Text style={{ color: '#94a3b8', fontSize: 14 }}>
+          <Text style={{ color: '#cbd5e1', fontSize: 14 }}>
             ¿No tienes cuenta? <Text style={{ color: '#06b6d4', fontWeight: 'bold' }}>Regístrate</Text>
           </Text>
         </TouchableOpacity>

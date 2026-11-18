@@ -42,7 +42,7 @@ export default function UnitsSettingsScreen() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent' }}>
       <SettingsHeader title="Unidades de Medida" colors={colors} />
       <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4 }}>
         <UnitGroup

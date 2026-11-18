@@ -1,9 +1,11 @@
 import React from 'react';
 import { Stack } from 'expo-router';
+import { useSceneStyle } from '../../../components/ui/AmbientBackground';
 
 export default function ProfileStackLayout() {
+  const scene = useSceneStyle();
   return (
-    <Stack screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
+    <Stack screenOptions={{ contentStyle: scene, headerShown: false, animation: 'slide_from_right' }}>
       <Stack.Screen name="index" />
       <Stack.Screen name="settings/index" />
       <Stack.Screen name="settings/account" />
