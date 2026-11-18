@@ -337,3 +337,54 @@ describe("bridge config", () => {
     assert.throws(() => loadConfig({ file: write({ ...valid, readers: [{ port: "COM3", direction: "entry", door: 0 }] }), env: {} }), /door/);
   });
 });
+
+// ───────────────────────── puerto serie ─────────────────────────
+describe("bridge serial reader", () => {
+  const Module = require("node:module");
+  const { EventEmitter } = require("node:events");
+
+  // El módulo falso debe seguir activo mientras corre el test: serial.js hace require("serialport")
+  // al abrir el puerto, no al cargarse. Devuelve también cómo restaurar el original.
+  function installFakeSerialPort(FakePort) {
+    const origLoad = Module._load;
+    Module._load = function (request, ...rest) {
+      return request === "serialport" ? { SerialPort: FakePort } : origLoad.call(this, request, ...rest);
+    };
+    delete require.cache[require.resolve("../bridge/src/serial")];
+    return { serial: require("../bridge/src/serial"), restore: () => { Module._load = origLoad; } };
+  }
+
+  it("activa DTR y RTS al abrir, y entrega las lecturas como líneas", async () => {
+    const made = [];
+    class FakePort extends EventEmitter {
+      constructor(opts) {
+        super();
+        this.opts = opts;
+        this.isOpen = false;
+        this.setCalls = [];
+        made.push(this);
+      }
+      open(cb) { this.isOpen = true; cb(null); }
+      set(flags, cb) { this.setCalls.push(flags); cb(null); }
+      close() { this.isOpen = false; }
+    }
+    const { serial, restore } = installFakeSerialPort(FakePort);
+    const lines = [];
+    let handle;
+    try {
+      handle = serial.openReader({ name: "entrada", port: "COM3", baudRate: 9600 }, (l) => lines.push(l), silent);
+    } finally {
+      restore();
+    }
+
+    const port = made[0];
+    assert.deepEqual(port.opts, { path: "COM3", baudRate: 9600, autoOpen: false });
+    assert.deepEqual(port.setCalls, [{ dtr: true, rts: true }]);
+
+    // La lectura llega partida en dos trozos, como en el lector real.
+    port.emit("data", Buffer.from(TOKEN.slice(0, 27)));
+    port.emit("data", Buffer.from(TOKEN.slice(27) + "\r\n"));
+    assert.deepEqual(lines, [TOKEN]);
+    handle.close();
+  });
+});

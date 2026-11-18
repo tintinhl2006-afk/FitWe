@@ -28,6 +28,11 @@ function openReader(reader, onLine, log = console) {
         log.warn(`[${reader.name}] no se pudo abrir ${reader.port}: ${err.message}; reintentando en ${RETRY_MS / 1000} s`);
         timer = setTimeout(connect, RETRY_MS);
       } else {
+        // Muchos lectores USB-serie no transmiten hasta que el PC activa DTR/RTS (como hace un
+        // programa de terminal). Sin esto el puerto se abre bien pero no llega nada.
+        port.set({ dtr: true, rts: true }, (setErr) => {
+          if (setErr) log.warn(`[${reader.name}] no se pudo activar DTR/RTS: ${setErr.message}`);
+        });
         log.info(`[${reader.name}] escuchando en ${reader.port} a ${reader.baudRate} baudios`);
       }
     });
