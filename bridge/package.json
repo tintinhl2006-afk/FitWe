@@ -1,0 +1,17 @@
+{
+  "name": "fitwe-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Programa local para el PC de recepción: lee el lector de QR USB (puerto serie), valida con FitWe y abre el torno a través de la controladora Hikvision.",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "check": "node src/index.js --check"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "serialport": "^13.0.0"
+  }
+}

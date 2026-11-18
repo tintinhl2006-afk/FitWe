@@ -22,7 +22,12 @@ const h = createHarness({
   "next-auth/jwt": { encode: async () => "signed-token" },
   "@/lib/apiAuth": {
     getRequestUserId: async () => state.userId,
-    getRequestAuth: async () => (state.userId ? { id: state.userId, role: "USER" } : null),
+    getRequestAuth: async () =>
+      state.session?.user
+        ? { id: state.session.user.id, role: state.session.user.role }
+        : state.userId
+          ? { id: state.userId, role: "USER" }
+          : null,
     reissueBearerToken: async () => state.reissued,
   },
   "@/lib/rateLimit": {

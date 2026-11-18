@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getRequestAuth } from "@/lib/apiAuth";
 import { prisma } from "@/lib/prisma";
 import { verifyAccessCode } from "@/lib/cryptoUtils";
 import { getNow } from "@/lib/timeUtils";
@@ -10,9 +9,11 @@ const TOKEN_EXPIRY_MS = 20 * 1000; // 20 seconds validity
 
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    // Cookie de la web o `Authorization: Bearer` (el programa del lector USB en el PC de recepción
+    // inicia sesión con /api/auth/mobile-login y no tiene cookie).
+    const auth = await getRequestAuth(req);
 
-    if (!session?.user?.id || session.user.role !== "GYM") {
+    if (!auth?.id || auth.role !== "GYM") {
       return NextResponse.json(
         { message: "No autorizado" },
         { status: 401 }
@@ -29,7 +30,7 @@ export async function POST(req: Request) {
     if (token) {
       const verified = verifyAccessCode(token);
       if (!verified) {
-        logger.warn(`Intento de acceso denegado: firma QR inválida en gimnasio ${session.user.id}`);
+        logger.warn(`Intento de acceso denegado: firma QR inválida en gimnasio ${auth.id}`);
         return NextResponse.json({
           status: "DENIED",
           reason: "INVALID_SIGNATURE",
@@ -44,7 +45,7 @@ export async function POST(req: Request) {
       // Search user by email or exact UUID
       const user = await prisma.user.findFirst({
         where: {
-          gymId: session.user.id,
+          gymId: auth.id,
           OR: [
             { email: trimmedInput },
             ...(trimmedInput.length === 36 ? [{ id: trimmedInput }] : []),
@@ -54,7 +55,7 @@ export async function POST(req: Request) {
       });
 
       if (!user) {
-        logger.warn(`Intento de acceso denegado: usuario manual '${trimmedInput}' no encontrado en gimnasio ${session.user.id}`);
+        logger.warn(`Intento de acceso denegado: usuario manual '${trimmedInput}' no encontrado en gimnasio ${auth.id}`);
         return NextResponse.json({
           status: "DENIED",
           reason: "USER_NOT_FOUND",
@@ -90,12 +91,12 @@ export async function POST(req: Request) {
     }
 
     // Verify the client belongs to the logged-in gym
-    if (client.gymId !== session.user.id) {
-      logger.warn(`Intento de acceso denegado: Cliente ${client.id} pertenece al gimnasio ${client.gymId}, no a ${session.user.id}`);
+    if (client.gymId !== auth.id) {
+      logger.warn(`Intento de acceso denegado: Cliente ${client.id} pertenece al gimnasio ${client.gymId}, no a ${auth.id}`);
       await prisma.accessLog.create({
         data: {
           userId: client.id,
-          gymId: session.user.id,
+          gymId: auth.id,
           status: "DENIED",
           reason: "WRONG_GYM",
           direction,
@@ -118,11 +119,11 @@ export async function POST(req: Request) {
       const isExpiredToken = nowMs - verifiedToken.timestamp > (TOKEN_EXPIRY_MS + DRIFT_BUFFER_MS);
 
       if (isFutureToken || isExpiredToken) {
-        logger.warn(`Intento de acceso denegado: Token QR ${isFutureToken ? 'futuro' : 'expirado'} para el cliente ${client.id} (gimnasio ${session.user.id})`);
+        logger.warn(`Intento de acceso denegado: Token QR ${isFutureToken ? 'futuro' : 'expirado'} para el cliente ${client.id} (gimnasio ${auth.id})`);
         await prisma.accessLog.create({
           data: {
             userId: client.id,
-            gymId: session.user.id,
+            gymId: auth.id,
             status: "DENIED",
             reason: "EXPIRED",
             direction,
@@ -150,7 +151,7 @@ export async function POST(req: Request) {
       const alreadyUsed = await prisma.accessLog.findFirst({
         where: {
           userId: client.id,
-          gymId: session.user.id,
+          gymId: auth.id,
           status: "GRANTED",
           createdAt: { gte: new Date(verifiedToken.timestamp) },
         },
@@ -158,11 +159,11 @@ export async function POST(req: Request) {
       });
 
       if (alreadyUsed) {
-        logger.warn(`Intento de acceso denegado: Token QR ya utilizado para el cliente ${client.id} (gimnasio ${session.user.id})`);
+        logger.warn(`Intento de acceso denegado: Token QR ya utilizado para el cliente ${client.id} (gimnasio ${auth.id})`);
         await prisma.accessLog.create({
           data: {
             userId: client.id,
-            gymId: session.user.id,
+            gymId: auth.id,
             status: "DENIED",
             reason: "ALREADY_USED",
             direction,
@@ -180,11 +181,11 @@ export async function POST(req: Request) {
     // La salida no comprueba suscripción ni créditos — se asume que el cliente ya estaba
     // dentro; solo queda constancia de que salió (aforo/duración de visita a futuro).
     if (direction === "EXIT") {
-      logger.info(`Salida registrada para cliente ${client.id} en gimnasio ${session.user.id}`);
+      logger.info(`Salida registrada para cliente ${client.id} en gimnasio ${auth.id}`);
       await prisma.accessLog.create({
         data: {
           userId: client.id,
-          gymId: session.user.id,
+          gymId: auth.id,
           status: "GRANTED",
           direction: "EXIT",
         },
@@ -208,11 +209,11 @@ export async function POST(req: Request) {
     const isExpired = client.subscriptionEndDate && client.subscriptionEndDate < serverNow;
 
     if (client.subscriptionStatus !== "ACTIVE" || isExpired) {
-      logger.warn(`Intento de acceso denegado: Suscripción inactiva/vencida para cliente ${client.id} (gimnasio ${session.user.id})`);
+      logger.warn(`Intento de acceso denegado: Suscripción inactiva/vencida para cliente ${client.id} (gimnasio ${auth.id})`);
       await prisma.accessLog.create({
         data: {
           userId: client.id,
-          gymId: session.user.id,
+          gymId: auth.id,
           status: "DENIED",
           reason: "INACTIVE_SUBSCRIPTION",
         },
@@ -236,11 +237,11 @@ export async function POST(req: Request) {
     // Tarifas de bono: sin créditos no hay acceso, aunque la fecha de vigencia siga activa.
     const isCreditsPlan = client.plan?.billingType === "CREDITS";
     if (isCreditsPlan && (!client.creditsRemaining || client.creditsRemaining <= 0)) {
-      logger.warn(`Intento de acceso denegado: sin créditos para cliente ${client.id} (gimnasio ${session.user.id})`);
+      logger.warn(`Intento de acceso denegado: sin créditos para cliente ${client.id} (gimnasio ${auth.id})`);
       await prisma.accessLog.create({
         data: {
           userId: client.id,
-          gymId: session.user.id,
+          gymId: auth.id,
           status: "DENIED",
           reason: "NO_CREDITS",
         },
@@ -272,11 +273,11 @@ export async function POST(req: Request) {
       });
 
       if (decremented.count === 0) {
-        logger.warn(`Intento de acceso denegado: sin créditos (carrera perdida) para cliente ${client.id} (gimnasio ${session.user.id})`);
+        logger.warn(`Intento de acceso denegado: sin créditos (carrera perdida) para cliente ${client.id} (gimnasio ${auth.id})`);
         await prisma.accessLog.create({
           data: {
             userId: client.id,
-            gymId: session.user.id,
+            gymId: auth.id,
             status: "DENIED",
             reason: "NO_CREDITS",
           },
@@ -300,11 +301,11 @@ export async function POST(req: Request) {
       updatedCredits = refreshed?.creditsRemaining ?? 0;
     }
 
-    logger.info(`Acceso PERMITIDO para cliente ${client.id} en gimnasio ${session.user.id}`);
+    logger.info(`Acceso PERMITIDO para cliente ${client.id} en gimnasio ${auth.id}`);
     await prisma.accessLog.create({
       data: {
         userId: client.id,
-        gymId: session.user.id,
+        gymId: auth.id,
         status: "GRANTED",
         direction: "ENTRY",
       },

@@ -46,3 +46,7 @@ next-env.d.ts
 /frames-import/
 /frames-pendientes.md
 /frames/
+
+# Programa local de recepción: dependencias y configuración con credenciales
+bridge/node_modules
+bridge/config.json

@@ -1,0 +1,16 @@
+{
+  "fitwe": {
+    "url": "https://TU-DOMINIO-DE-FITWE",
+    "email": "correo-de-la-cuenta-del-gimnasio",
+    "password": "contraseña-de-esa-cuenta"
+  },
+  "controller": {
+    "url": "http://192.168.1.64",
+    "user": "admin",
+    "password": "contraseña-que-pusiste-al-activar-la-controladora"
+  },
+  "readers": [
+    { "name": "entrada", "port": "COM3", "baudRate": 9600, "direction": "entry", "door": 1 },
+    { "name": "salida",  "port": "COM4", "baudRate": 9600, "direction": "exit",  "door": 2 }
+  ]
+}
