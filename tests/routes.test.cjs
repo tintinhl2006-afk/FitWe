@@ -401,3 +401,79 @@ describe("mobile registration validates its input", () => {
     assert.doesNotMatch(JSON.stringify(r.body), /ECONNREFUSED|secret-host/);
   });
 });
+
+// ───────────────────────── historial de accesos ─────────────────────────
+describe("gym access log: persistent, paginated, scoped to the gym", () => {
+  const log = h.load("app/api/admin-gym/access/log/route.ts");
+
+  const row = (n, over = {}) => ({
+    id: `log${n}`, status: "GRANTED", reason: null, direction: "ENTRY",
+    createdAt: new Date(Date.UTC(2026, 10, 18, 12, 0, n)),
+    user: { name: "Ana", lastName: "Pérez", email: `a${n}@x`, image: null, password: "no-debe-salir" },
+    ...over,
+  });
+  function makeDb(rows) {
+    const calls = { find: null, count: null };
+    state.prisma = {
+      accessLog: {
+        findMany: async (args) => { calls.find = args; return rows; },
+        count: async (args) => { calls.count = args; return 7; },
+      },
+    };
+    return calls;
+  }
+  const get = (qs = "") => log.GET(new Request(`http://localhost/api/admin-gym/access/log${qs}`));
+
+  beforeEach(() => {
+    state.session = { user: { id: "gym1", role: "GYM" } };
+  });
+
+  it("rejects anonymous callers and non-gym accounts", async () => {
+    makeDb([]);
+    state.session = null;
+    assert.equal((await get()).status, 401);
+    state.session = { user: { id: "u1", role: "USER" } };
+    assert.equal((await get()).status, 403);
+  });
+
+  it("only reads the calling gym's accesses, newest first", async () => {
+    const calls = makeDb([row(1)]);
+    await get();
+    assert.equal(calls.find.where.gymId, "gym1");
+    assert.deepEqual(calls.find.orderBy, [{ createdAt: "desc" }, { id: "desc" }]);
+    assert.equal(calls.count.where.gymId, "gym1");
+  });
+
+  it("paginates and reports totals", async () => {
+    const calls = makeDb([row(1), row(2)]);
+    const r = await get("?page=2&pageSize=3");
+    assert.deepEqual([calls.find.skip, calls.find.take], [3, 3]);
+    assert.deepEqual([r.body.page, r.body.pageSize, r.body.total, r.body.totalPages], [2, 3, 7, 3]);
+  });
+
+  it("caps the page size", async () => {
+    const calls = makeDb([]);
+    await get("?pageSize=100000");
+    assert.equal(calls.find.take, 100);
+  });
+
+  it("applies the status and direction filters, ignoring unknown values", async () => {
+    let calls = makeDb([]);
+    await get("?status=DENIED&direction=EXIT");
+    assert.deepEqual([calls.find.where.status, calls.find.where.direction], ["DENIED", "EXIT"]);
+    calls = makeDb([]);
+    await get("?status=%27%3B%20DROP&direction=SIDEWAYS");
+    assert.equal("status" in calls.find.where, false);
+    assert.equal("direction" in calls.find.where, false);
+  });
+
+  it("returns only the fields the screen needs (never the member's password)", async () => {
+    makeDb([row(1, { status: "DENIED", reason: "EXPIRED" })]);
+    const r = await get();
+    assert.deepEqual(r.body.items[0], {
+      id: "log1", status: "DENIED", reason: "EXPIRED", direction: "ENTRY",
+      createdAt: "2026-11-18T12:00:01.000Z",
+      user: { name: "Ana Pérez", email: "a1@x", image: null },
+    });
+  });
+});

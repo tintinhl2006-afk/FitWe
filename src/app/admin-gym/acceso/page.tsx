@@ -32,14 +32,28 @@ interface ValidationResult {
   };
 }
 
-interface ScanLogItem {
+interface AccessLogItem {
   id: string;
-  name: string;
-  email: string;
   status: "GRANTED" | "DENIED";
-  time: string;
-  message: string;
+  reason: string | null;
+  direction: "ENTRY" | "EXIT";
+  createdAt: string;
+  user: { name: string; email: string; image: string | null };
 }
+
+type LogFilter = "ALL" | "GRANTED" | "DENIED";
+
+const LOG_PAGE_SIZE = 10;
+const LOG_REFRESH_MS = 5000;
+
+const REASON_LABELS: Record<string, string> = {
+  EXPIRED: "QR caducado",
+  ALREADY_USED: "QR ya usado",
+  INACTIVE_SUBSCRIPTION: "Cuota inactiva",
+  NO_CREDITS: "Sin créditos",
+  WRONG_GYM: "Otro gimnasio",
+  USER_NOT_FOUND: "No encontrado",
+};
 
 export default function AccessControlPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -47,7 +61,13 @@ export default function AccessControlPage() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<ValidationResult | null>(null);
-  const [history, setHistory] = useState<ScanLogItem[]>([]);
+  const [log, setLog] = useState<AccessLogItem[]>([]);
+  const [logPage, setLogPage] = useState(1);
+  const [logTotal, setLogTotal] = useState(0);
+  const [logTotalPages, setLogTotalPages] = useState(1);
+  const [logFilter, setLogFilter] = useState<LogFilter>("ALL");
+  const [logLoading, setLogLoading] = useState(true);
+  const [logError, setLogError] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cameraActive, setCameraActive] = useState(true);
   const [scanMode, setScanMode] = useState<"entry" | "exit">("entry");
@@ -136,21 +156,8 @@ export default function AccessControlPage() {
         playSound("failure");
       }
 
-      // Añadir al registro de historial de la sesión
-      const clientName = data.client?.name || payload.manualInput || "Usuario Desconocido";
-      const clientEmail = data.client?.email || "";
-      
-      setHistory(prev => [
-        {
-          id: Math.random().toString(),
-          name: clientName,
-          email: clientEmail,
-          status: data.status,
-          message: data.message,
-          time: new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
-        },
-        ...prev.slice(0, 19), // Limitar a las últimas 20 entradas en memoria
-      ]);
+      // El historial vive en la base de datos: se vuelve a leer para que aparezca este acceso.
+      loadLogRef.current();
 
     } catch (err) {
       setError(getErrorMessage(err) || "Error al procesar el acceso.");
@@ -159,6 +166,41 @@ export default function AccessControlPage() {
       setIsLoading(false);
     }
   };
+
+  // Historial persistente (tabla AccessLog): incluye los accesos del programa de recepción, que no
+  // pasan por esta página. Se refresca solo mientras se mira la primera página.
+  const loadLog = async () => {
+    try {
+      const qs = new URLSearchParams({ page: String(logPage), pageSize: String(LOG_PAGE_SIZE) });
+      if (logFilter !== "ALL") qs.set("status", logFilter);
+      const res = await fetch(`/api/admin-gym/access/log?${qs}`);
+      if (!res.ok) throw new Error("log");
+      const data = await res.json();
+      setLog(data.items);
+      setLogTotal(data.total);
+      setLogTotalPages(data.totalPages);
+      setLogError(false);
+    } catch {
+      setLogError(true);
+    } finally {
+      setLogLoading(false);
+    }
+  };
+  const loadLogRef = useRef(loadLog);
+  loadLogRef.current = loadLog;
+
+  useEffect(() => {
+    setLogLoading(true);
+    loadLogRef.current();
+  }, [logPage, logFilter]);
+
+  useEffect(() => {
+    if (logPage !== 1) return;
+    const timer = setInterval(() => {
+      if (document.visibilityState === "visible") loadLogRef.current();
+    }, LOG_REFRESH_MS);
+    return () => clearInterval(timer);
+  }, [logPage, logFilter]);
 
   // Entrada común de la cámara y del lector USB: evita validar dos veces el mismo código seguido.
   const handleDecodedToken = (decodedText: string) => {
@@ -594,49 +636,105 @@ export default function AccessControlPage() {
             )}
           </div>
 
-          {/* Historial Corto del Scanner */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm h-[200px] flex flex-col">
-            <h2 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-              <History className="h-4 w-4 text-cyan-500" /> Registro Reciente de Accesos
-            </h2>
+          {/* Historial persistente de accesos */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm flex flex-col min-w-0">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+              <h2 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                <History className="h-4 w-4 text-cyan-500" /> Historial de accesos
+              </h2>
+              <select
+                aria-label="Filtrar accesos"
+                value={logFilter}
+                onChange={(e) => {
+                  setLogFilter(e.target.value as LogFilter);
+                  setLogPage(1);
+                }}
+                className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-2.5 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300"
+              >
+                <option value="ALL">Todos</option>
+                <option value="GRANTED">Permitidos</option>
+                <option value="DENIED">Denegados</option>
+              </select>
+            </div>
 
-            <div className="flex-1 overflow-y-auto space-y-2 pr-1 scrollbar-thin">
-              {history.length === 0 ? (
-                <div className="h-full flex items-center justify-center text-xs text-slate-400 dark:text-slate-600 italic">
-                  No se han registrado accesos en esta sesión.
+            <div className="space-y-2 min-h-[120px]">
+              {logLoading ? (
+                <div className="h-[120px] flex items-center justify-center">
+                  <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
+                </div>
+              ) : logError ? (
+                <div className="h-[120px] flex items-center justify-center text-xs text-red-500 text-center">
+                  No se pudo cargar el historial.
+                </div>
+              ) : log.length === 0 ? (
+                <div className="h-[120px] flex items-center justify-center text-xs text-slate-400 dark:text-slate-600 italic text-center">
+                  No hay accesos registrados.
                 </div>
               ) : (
-                history.map((log) => (
-                  <div 
-                    key={log.id} 
-                    className="flex items-center justify-between text-xs p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-900/80 animate-in slide-in-from-top-1"
+                log.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between gap-3 text-xs p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-900/80"
                   >
                     <div className="flex items-center gap-2 min-w-0">
-                      {log.status === "GRANTED" ? (
-                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/10 shrink-0" />
-                      ) : (
-                        <span className="w-2.5 h-2.5 rounded-full bg-red-500 shadow-sm shadow-red-500/10 shrink-0" />
-                      )}
+                      <span
+                        className={cn(
+                          "w-2.5 h-2.5 rounded-full shrink-0",
+                          item.status === "GRANTED" ? "bg-emerald-500" : "bg-red-500"
+                        )}
+                      />
                       <div className="min-w-0">
-                        <p className="font-bold text-slate-900 dark:text-white truncate">{log.name}</p>
-                        <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate">{log.email}</p>
+                        <p className="font-bold text-slate-900 dark:text-white truncate">{item.user.name}</p>
+                        <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate">
+                          {new Date(item.createdAt).toLocaleString("es-ES", {
+                            day: "2-digit",
+                            month: "2-digit",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            second: "2-digit",
+                          })}
+                          {" · "}
+                          {item.direction === "EXIT" ? "Salida" : "Entrada"}
+                        </p>
                       </div>
                     </div>
-                    
-                    <div className="text-right shrink-0">
-                      <span className={cn(
-                        "text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md",
-                        log.status === "GRANTED"
+
+                    <span
+                      className={cn(
+                        "text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md text-center shrink-0 max-w-[45%]",
+                        item.status === "GRANTED"
                           ? "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400"
                           : "bg-red-50 dark:bg-red-950/20 text-red-500 dark:text-red-400"
-                      )}>
-                        {log.time}
-                      </span>
-                    </div>
+                      )}
+                    >
+                      {item.status === "GRANTED" ? "Permitido" : (item.reason && REASON_LABELS[item.reason]) || "Denegado"}
+                    </span>
                   </div>
                 ))
               )}
             </div>
+
+            {logTotalPages > 1 && (
+              <div className="flex items-center justify-between gap-2 pt-3 mt-3 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  onClick={() => setLogPage((p) => Math.max(1, p - 1))}
+                  disabled={logPage <= 1 || logLoading}
+                  className="rounded-xl border border-slate-200 dark:border-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 disabled:opacity-40 cursor-pointer"
+                >
+                  Anterior
+                </button>
+                <span className="text-[11px] text-slate-400 text-center">
+                  Página {logPage} de {logTotalPages} · {logTotal} accesos
+                </span>
+                <button
+                  onClick={() => setLogPage((p) => Math.min(logTotalPages, p + 1))}
+                  disabled={logPage >= logTotalPages || logLoading}
+                  className="rounded-xl border border-slate-200 dark:border-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 disabled:opacity-40 cursor-pointer"
+                >
+                  Siguiente
+                </button>
+              </div>
+            )}
           </div>
 
         </div>
