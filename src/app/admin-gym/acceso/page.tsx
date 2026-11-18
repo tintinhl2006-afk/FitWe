@@ -16,6 +16,7 @@ import {
 import { cn } from "@/lib/utils";
 
 import { getErrorMessage } from "@/lib/errors";
+import { createScannerBuffer, normalizeScannerToken } from "@/lib/scannerInput";
 interface ValidationResult {
   status: "GRANTED" | "DENIED";
   message: string;
@@ -159,6 +160,55 @@ export default function AccessControlPage() {
     }
   };
 
+  // Entrada común de la cámara y del lector USB: evita validar dos veces el mismo código seguido.
+  const handleDecodedToken = (decodedText: string) => {
+    const now = Date.now();
+    // Si es el mismo código QR y ha pasado menos de 5 segundos, ignorarlo
+    // para evitar spam de llamadas de red y pitidos repetidos
+    if (
+      decodedText === lastScannedTokenRef.current &&
+      now - lastScanTimestampRef.current < 5000
+    ) {
+      return;
+    }
+
+    // Actualizar registros de prevención de doble escaneo
+    lastScannedTokenRef.current = decodedText;
+    lastScanTimestampRef.current = now;
+
+    processCheckIn({ token: decodedText });
+  };
+  const handleDecodedTokenRef = useRef(handleDecodedToken);
+  handleDecodedTokenRef.current = handleDecodedToken;
+  const isLoadingRef = useRef(isLoading);
+  isLoadingRef.current = isLoading;
+
+  // Lector de QR USB en modo teclado: escribe el código muy rápido y termina con Enter. Se escucha
+  // en toda la página para que funcione sin tener ningún campo enfocado.
+  useEffect(() => {
+    const scanner = createScannerBuffer();
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.altKey || e.metaKey) return;
+
+      const burst = scanner.push(e.key, performance.now());
+      if (burst === null) return;
+
+      const token = normalizeScannerToken(burst);
+      if (!token) return; // Enter de una persona o lectura que no es un QR de acceso.
+
+      e.preventDefault();
+      // Si el lector escribió dentro del buscador manual, no dejar el código ahí.
+      setSearchQuery("");
+      setShowSuggestions(false);
+      if (isLoadingRef.current) return;
+      handleDecodedTokenRef.current(token);
+    };
+
+    window.addEventListener("keydown", onKeyDown, true);
+    return () => window.removeEventListener("keydown", onKeyDown, true);
+  }, []);
+
   // Cargar sugerencias de clientes por búsqueda de nombre
   useEffect(() => {
     if (searchQuery.trim().length < 2) {
@@ -210,23 +260,8 @@ export default function AccessControlPage() {
         },
         (decodedText) => {
           // Evitar lecturas duplicadas mientras se procesa
-          if (isLoading) return;
-
-          const now = Date.now();
-          // Si es el mismo código QR y ha pasado menos de 5 segundos, ignorarlo
-          // para evitar spam de llamadas de red y pitidos repetidos
-          if (
-            decodedText === lastScannedTokenRef.current &&
-            now - lastScanTimestampRef.current < 5000
-          ) {
-            return;
-          }
-
-          // Actualizar registros de prevención de doble escaneo
-          lastScannedTokenRef.current = decodedText;
-          lastScanTimestampRef.current = now;
-
-          processCheckIn({ token: decodedText });
+          if (isLoadingRef.current) return;
+          handleDecodedTokenRef.current(decodedText);
         },
         (errorMessage) => {
           // Silenciar errores ordinarios de escaneo
@@ -263,6 +298,7 @@ export default function AccessControlPage() {
           </h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1">
             Valide los accesos de clientes mediante escaneo de código QR o búsqueda manual.
+            Con un lector USB conectado, basta con acercar el QR al lector.
           </p>
         </div>
 
