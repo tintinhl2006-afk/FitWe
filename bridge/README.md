@@ -24,18 +24,35 @@ Lector USB (puerto serie) ──► este programa ──► FitWe (valida)
 - Una cuenta de **gimnasio** de FitWe (tipo GYM).
 - La controladora ya activada (con SADP), con IP fija y contraseña de administrador.
 
-## Instalación
+## Instalación (con el instalador)
 
-1. Copia la carpeta `bridge/` al PC de recepción (por ejemplo `C:\fitwe-bridge`).
-2. En esa carpeta: `npm install`
-3. Copia `config.example.json` a `config.json` y rellénalo:
-   - `fitwe`: la URL de FitWe y el correo/contraseña de la cuenta del gimnasio.
-   - `controller`: la IP de la controladora y su usuario/contraseña.
-   - `readers`: un bloque por lector. `port` es el puerto COM (ver abajo), `direction` es
-     `entry` o `exit`, y `door` es la "puerta" de la controladora que abre ese lector
-     (1 para un sentido del torno, 2 para el otro).
-4. `npm run check` — comprueba la sesión en FitWe, la controladora y que el puerto del lector existe.
-5. `npm start` — arranca. Cada lectura queda escrita en la consola con la hora.
+1. En tu PC de desarrollo, genera el paquete: `powershell -File bridge\installer\empaquetar.ps1`
+   (crea `bridge\dist\FitWe-Bridge.zip`, unos 20 KB, sin credenciales).
+2. Lleva el `.zip` al PC de recepción y extráelo.
+3. **Doble clic en `Instalar.bat`.** No hace falta ser administrador. El asistente:
+   - usa el Node.js del PC o, si no hay (o es antiguo), descarga una copia propia y comprueba su integridad;
+   - copia el programa a `C:\FitWeBridge` e instala las dependencias (hace falta internet);
+   - te pregunta: dirección de FitWe, cuenta del gimnasio, IP y credenciales de la controladora, y
+     los puertos COM de los lectores (te muestra los que detecta);
+   - guarda `config.json` protegido (solo lo lee el usuario que instala);
+   - hace una comprobación (`--check`);
+   - crea una tarea de Windows que **arranca el programa al iniciar sesión** y lo reinicia si falla.
+4. Para desinstalar: doble clic en `C:\FitWeBridge\Desinstalar.bat`.
+
+Opciones avanzadas de `install.ps1`: `-InstallDir`, `-ConfigFile` (un `config.json` ya preparado, sin
+preguntas), `-NoAutostart`, `-SkipCheck`.
+
+El registro de lo que ocurre está en `C:\FitWeBridge\bridge.log` (se rota solo a partir de 5 MB).
+Para cambiar la configuración: edita `config.json` y reinicia el PC (o la tarea `FitWeBridge`).
+
+### Instalación manual (alternativa)
+
+1. Instala Node.js 20+ y copia la carpeta `bridge/` al PC.
+2. `npm install`
+3. Copia `config.example.json` a `config.json` y rellénalo (`fitwe`, `controller` y un bloque de
+   `readers` por lector: `port` = puerto COM, `direction` = `entry` o `exit`, `door` = puerta de la
+   controladora que abre ese lector).
+4. `npm run check` y después `npm start`.
 
 ## Poner el lector en modo "puerto serie USB"
 
@@ -46,19 +63,15 @@ ese es el `port` de `config.json`. (Si se conecta en otro USB, el número COM pu
 
 No escanees "Restore default settings": lo devuelve a fábrica.
 
-## Que arranque solo con el PC
+## Arranque automático: qué cubre y qué no
 
-Lo más sencillo es **NSSM** (https://nssm.cc), que convierte un programa en un servicio de Windows:
-
-```
-nssm install FitWeBridge "C:\Program Files\nodejs\node.exe" "C:\fitwe-bridge\src\index.js"
-nssm set FitWeBridge AppDirectory C:\fitwe-bridge
-nssm set FitWeBridge AppStdout C:\fitwe-bridge\bridge.log
-nssm set FitWeBridge AppStderr C:\fitwe-bridge\bridge.log
-nssm start FitWeBridge
-```
-
-(No se ha probado en el PC real.) Hay que desactivar la suspensión del PC en las opciones de energía.
+- La tarea arranca **al iniciar sesión** en Windows y se reinicia sola si el programa falla.
+- Si el PC se reinicia y **nadie inicia sesión**, no arranca. Para recepción lo normal es activar el
+  inicio de sesión automático del usuario, o instalar el programa como servicio de Windows
+  (p. ej. con NSSM, https://nssm.cc, ejecutándolo como administrador; no probado).
+- Desactiva la suspensión del PC en Opciones de energía.
+- Probado en este PC de desarrollo (Windows PowerShell 5.1): instalación, arranque, reinicio de la
+  tarea y desinstalación. **No probado todavía en el PC de recepción.**
 
 ## Qué pasa en cada caso
 

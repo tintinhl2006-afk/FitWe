@@ -50,3 +50,4 @@ next-env.d.ts
 # Programa local de recepción: dependencias y configuración con credenciales
 bridge/node_modules
 bridge/config.json
+bridge/dist
